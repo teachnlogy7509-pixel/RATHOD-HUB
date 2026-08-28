@@ -42,10 +42,10 @@ drop trigger if exists profile_level_sync on public.profiles; create trigger pro
 -- ===== HUB EVENTS + DAILY XP + SPIN & WIN + GLOBAL BACKGROUND (run once) =====
 create or replace function public.is_admin() returns boolean language sql stable as $$ select exists(select 1 from public.profiles where id=auth.uid() and role='admin') $$;
 
-create table if not exists public.hub_events (id uuid primary key default gen_random_uuid(), title text not null, description text, starts_at timestamptz not null, ends_at timestamptz not null, is_active boolean not null default true, questions jsonb not null default '[]'::jsonb, created_by uuid references auth.users(id), created_at timestamptz not null default now());
+create table if not exists public.hub_events (id uuid primary key default gen_random_uuid(), title text not null, description text, start_at timestamptz not null, ends_at timestamptz not null, is_active boolean not null default true, questions jsonb not null default '[]'::jsonb, created_by uuid references auth.users(id), created_at timestamptz not null default now());
 alter table public.hub_events enable row level security;
 drop policy if exists "hub_events read" on public.hub_events; drop policy if exists "hub_events admin insert" on public.hub_events; drop policy if exists "hub_events admin update" on public.hub_events; drop policy if exists "hub_events admin delete" on public.hub_events;
-create policy "hub_events read" on public.hub_events for select to authenticated using (public.is_admin() or (is_active and now() between starts_at and ends_at));
+create policy "hub_events read" on public.hub_events for select to authenticated using (public.is_admin() or (is_active and now() between start_at and ends_at));
 create policy "hub_events admin insert" on public.hub_events for insert to authenticated with check (public.is_admin());
 create policy "hub_events admin update" on public.hub_events for update to authenticated using (public.is_admin()) with check (public.is_admin());
 create policy "hub_events admin delete" on public.hub_events for delete to authenticated using (public.is_admin());
@@ -265,6 +265,10 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 <div class="flex justify-between items-center mb-3"><h3 class="font-bold text-slate-300">Community Feed</h3><span id="post-count" class="text-xs text-slate-400"></span></div>
 <div id="posts-box" class="space-y-4"></div>
 </div>
+<div class="bg-slate-800/95 border border-indigo-500/30 rounded-2xl p-5">
+ <div class="flex justify-between items-center mb-3"><div><h3 class="font-bold text-indigo-300">👥 People</h3><p class="text-xs text-slate-400 mt-1">Members ko follow/unfollow karo.</p></div><span class="text-[10px] text-slate-500">Following <b id="my-following-count">0</b> • Followers <b id="my-followers-count">0</b></span></div>
+ <input id="people-search" oninput="renderPeople()" placeholder="Search members..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm mb-3"><div id="people-box" class="space-y-2"></div>
+</div>
 </section>
 
 <section id="section-chatroom" class="hidden">
@@ -327,7 +331,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 <div><label class="block text-[10px] uppercase text-slate-400 mb-1">End</label><input id="event-end" type="datetime-local" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm"></div>
 </div>
 <label class="flex items-center gap-2 text-xs text-slate-300"><input id="event-active" type="checkbox" checked>Active</label>
-<div id="event-questions" class="space-y-3"></div>
+<div class="flex justify-between items-center gap-2"><span class="text-xs text-slate-400">Questions manually add karo — 5 ka fixed limit nahi hai.</span><span id="event-question-count" class="text-[10px] text-amber-300">0 questions</span></div><div id="event-questions" class="space-y-3"></div><button type="button" onclick="addEventQuestion()" class="w-full bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-sm font-bold">＋ Add Question</button>
 <button id="event-btn" class="w-full bg-red-600 hover:bg-red-500 py-2.5 rounded-lg text-sm font-bold">Create Event</button>
 </form>
 <div id="hub-events-list" class="mt-4 space-y-2"></div>
@@ -362,7 +366,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 <section id="section-studyrooms" class="hidden space-y-5">
 <div class="bg-slate-800/95 rounded-2xl p-5">
 <h3 class="font-bold text-slate-200"><i class="fa-solid fa-door-open mr-2 text-teal-400"></i>Study Rooms</h3>
-<p class="text-xs text-slate-400 mt-1">Ek room join karo, members dekho aur live voice se saath padho.</p>
+<p class="text-xs text-slate-400 mt-1">Room join karo, phir Live Voice दबाकर साथ पढ़ो. Microphone permission allow karna hoga.</p>
 </div>
 <div id="study-rooms-box" class="grid md:grid-cols-3 gap-4"></div>
 </section>
@@ -445,7 +449,7 @@ async function boot(){
  document.getElementById('admin-panel').classList.toggle('hidden',profile.role!=='admin');
  document.getElementById('admin-bg-panel').classList.toggle('hidden',profile.role!=='admin');
  document.getElementById('hub-admin-composer').classList.toggle('hidden',profile.role!=='admin');
- setDefaultDiaryDate(); await Promise.all([loadMaterials(),loadPosts(),loadChatMessages(),loadDiary(),loadStories(),loadVault(),loadLeaderboard(),loadHubEvents(),loadSpinStatus()]); await initGamePresence(); subscribeToChat(); renderStudyRooms();
+ setDefaultDiaryDate(); await Promise.all([loadMaterials(),loadPosts(),loadPeople(),loadChatMessages(),loadDiary(),loadStories(),loadVault(),loadLeaderboard(),loadHubEvents(),loadSpinStatus()]); await initGamePresence(); subscribeToChat(); renderStudyRooms();
  if(profile.role==='admin')populateBackgroundForm();
 }
 db.auth.onAuthStateChange((event,s)=>{if(event==='SIGNED_OUT')cleanupChatSubscription();if(s&&!session)setTimeout(boot,0)});
@@ -454,7 +458,7 @@ async function logout(){await cleanupChatSubscription();await cleanupGamePresenc
 function switchTab(tab){
   ['ai','quiz','materials','community','chatroom','diary','stories','games','vault','hubevents','studyrooms','leaderboard'].forEach(x=>{const s=document.getElementById('section-'+x),b=document.getElementById('btn-'+x);if(s)s.classList.add('hidden');if(b)b.className='tabbtn text-slate-400 py-3 rounded-xl'});
   document.getElementById('section-'+tab).classList.remove('hidden');document.getElementById('btn-'+tab).className='tabbtn bg-teal-600 text-white py-3 rounded-xl';
-  if(tab==='chatroom')scrollChatToBottom();if(tab==='stories')loadStories();if(tab==='games')renderOnlinePlayers();if(tab==='vault')loadVault();if(tab==='leaderboard')loadLeaderboard();if(tab==='hubevents')loadHubEvents();if(tab==='studyrooms')renderStudyRooms();
+  if(tab==='chatroom')scrollChatToBottom();if(tab==='stories')loadStories();if(tab==='games')renderOnlinePlayers();if(tab==='vault')loadVault();if(tab==='leaderboard')loadLeaderboard();if(tab==='hubevents')loadHubEvents();if(tab==='studyrooms')renderStudyRooms();if(tab==='community')loadPeople();
 }
 
 async function loadChatMessages(){
@@ -554,6 +558,11 @@ document.getElementById('post-form').addEventListener('submit',async e=>{
  }catch(err){toast(err.message||'Post failed',false)}finally{btn.disabled=false;btn.textContent='Post'}
 });
 
+let people=[],followingIds=new Set(),followerCount=0;
+async function loadPeople(){if(!user)return;const [{data:pd,error:pe},{data:fd,error:fe},{data:rd,error:re}]=await Promise.all([db.from('profiles').select('id,name,pfp_url,role').order('name',{ascending:true}).limit(200),db.from('hub_follows').select('following_id').eq('follower_id',user.id),db.from('hub_follows').select('follower_id').eq('following_id',user.id)]);if(pe||fe||re){console.warn(pe||fe||re);const b=document.getElementById('people-box');if(b)b.innerHTML='<div class="text-xs text-slate-500 p-3">Follow system ka SQL Supabase me run karo.</div>';return}people=(pd||[]).filter(p=>p.id!==user.id);followingIds=new Set((fd||[]).map(x=>x.following_id));followerCount=(rd||[]).length;updateFollowCounts();renderPeople()}
+function updateFollowCounts(){document.getElementById('my-following-count')?.replaceChildren(document.createTextNode(followingIds.size));document.getElementById('my-followers-count')?.replaceChildren(document.createTextNode(followerCount))}
+function renderPeople(){const box=document.getElementById('people-box');if(!box)return;const q=(document.getElementById('people-search')?.value||'').toLowerCase().trim();const arr=people.filter(p=>!q||String(p.name||'Member').toLowerCase().includes(q));box.innerHTML=arr.length?arr.map(p=>{const f=followingIds.has(p.id);return `<div class="bg-slate-900/80 border border-slate-700 rounded-xl p-3 flex items-center gap-3"><div class="w-10 h-10 rounded-full overflow-hidden bg-slate-700 flex items-center justify-center">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}" class="w-full h-full object-cover">`:'👤'}</div><div class="min-w-0 flex-1"><b class="block truncate text-sm">${esc(p.name||'Member')}</b><span class="text-[10px] text-slate-500">${p.role==='admin'?'ADMIN':'MEMBER'}</span></div><button onclick="toggleFollow('${p.id}')" class="${f?'bg-slate-700':'bg-indigo-600 hover:bg-indigo-500'} px-3 py-2 rounded-lg text-xs font-bold">${f?'Following':'Follow'}</button></div>`}).join(''):'<div class="text-center py-6 text-slate-500 text-sm">Koi member nahi mila.</div>'}
+async function toggleFollow(targetId){if(!user||targetId===user.id)return;const f=followingIds.has(targetId);try{if(f){const {error}=await db.from('hub_follows').delete().eq('follower_id',user.id).eq('following_id',targetId);if(error)throw error;followingIds.delete(targetId);toast('Unfollowed')}else{const {error}=await db.from('hub_follows').insert({follower_id:user.id,following_id:targetId});if(error&&error.code!=='23505')throw error;followingIds.add(targetId);toast('Following ✓')}updateFollowCounts();renderPeople()}catch(e){toast(e.message||'Follow action failed',false)}}
 async function loadPosts(){const {data,error}=await db.from('posts').select('*').eq('is_material',false).order('created_at',{ascending:false});if(error){console.error(error);return}posts=data||[];renderPosts()}
 function renderPosts(){
  document.getElementById('post-count').textContent=`${posts.length} posts`;
@@ -1307,25 +1316,27 @@ document.getElementById('forgot-form').addEventListener('submit',async e=>{
 
 /* ==================== HUB EVENTS + DAILY 5 QUESTIONS XP ==================== */
 let hubEvents=[],hubActiveEvent=null,hubDailyAnswered={};
-function renderEventQuestionInputs(){
+let eventQuestionCount=0;
+function addEventQuestion(){
  const box=document.getElementById('event-questions');if(!box)return;
- box.innerHTML=Array.from({length:5}).map((_,i)=>`
-  <div class="bg-slate-900/70 border border-slate-700 rounded-xl p-3 space-y-2">
-   <input id="eq-q-${i}" required placeholder="Question ${i+1}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
-   <div class="grid grid-cols-2 gap-2">
-    ${Array.from({length:4}).map((__,j)=>`<div class="flex items-center gap-2"><input type="radio" name="eq-correct-${i}" value="${j}" ${j===0?'checked':''}><input id="eq-o-${i}-${j}" required placeholder="Option ${j+1}" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs"></div>`).join('')}
-   </div>
-  </div>`).join('');
+ const i=eventQuestionCount++;
+ const wrap=document.createElement('div');wrap.id=`event-question-${i}`;
+ wrap.className='bg-slate-900/70 border border-slate-700 rounded-xl p-3 space-y-2';
+ wrap.innerHTML=`<div class="flex justify-between items-center gap-2"><b class="text-xs text-amber-300">Question ${i+1}</b><button type="button" onclick="removeEventQuestion(${i})" class="text-red-400 text-xs font-bold">✕ Remove</button></div><input id="eq-q-${i}" required placeholder="Question ${i+1}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm"><div class="grid grid-cols-2 gap-2">${Array.from({length:4}).map((__,j)=>`<div class="flex items-center gap-2"><input type="radio" name="eq-correct-${i}" value="${j}" ${j===0?'checked':''}><input id="eq-o-${i}-${j}" required placeholder="Option ${j+1}" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs"></div>`).join('')}</div>`;
+ box.appendChild(wrap);updateEventQuestionNumbers();
 }
+function removeEventQuestion(i){document.getElementById(`event-question-${i}`)?.remove();updateEventQuestionNumbers()}
+function updateEventQuestionNumbers(){const items=[...document.querySelectorAll('#event-questions > div')];items.forEach((el,n)=>{el.querySelector('b')?.replaceChildren(document.createTextNode(`Question ${n+1}`));});const c=document.getElementById('event-question-count');if(c)c.textContent=`${items.length} question${items.length===1?'':'s'}`}
+function renderEventQuestionInputs(){const box=document.getElementById('event-questions');if(!box)return;box.innerHTML='';eventQuestionCount=0;updateEventQuestionNumbers()}
 renderEventQuestionInputs();
 
 async function loadHubEvents(){
  if(!user)return;
  const {data,error}=await db.from('hub_events').select('*').order('created_at',{ascending:false});
- if(error){console.error(error);return}
+ if(error){console.error(error);if(String(error.message||'').toLowerCase().includes('ends_at'))document.getElementById('hub-no-event').textContent='Supabase me ends_at column/schema cache update pending hai.';return}
  hubEvents=data||[];
  const now=new Date();
- hubActiveEvent=hubEvents.find(e=>e.is_active&&new Date(e.starts_at)<=now&&new Date(e.ends_at)>now)||null;
+ hubActiveEvent=hubEvents.find(e=>e.is_active&&new Date(e.start_at)<=now&&new Date(e.ends_at)>now)||null;
  await renderHubActiveEvent();
  if(profile?.role==='admin')renderHubEventsAdminList();
 }
@@ -1350,8 +1361,8 @@ function renderHubQuestions(){
  const box=document.getElementById('hub-questions-box');if(!box)return;
  const qs=Array.isArray(hubActiveEvent?.questions)?hubActiveEvent.questions:[];
  const correctCount=Object.keys(hubDailyAnswered).length;
- document.getElementById('hub-progress-label').textContent=`${correctCount}/${qs.length||5}`;
- document.getElementById('hub-progress-bar').style.width=(correctCount/(qs.length||5)*100)+'%';
+ document.getElementById('hub-progress-label').textContent=`${correctCount}/${qs.length}`;
+ document.getElementById('hub-progress-bar').style.width=(qs.length?correctCount/qs.length*100:0)+'%';
  box.innerHTML=qs.map((q,i)=>{
   const locked=!!hubDailyAnswered[i];
   const opts=Array.isArray(q.options)?q.options:[];
@@ -1390,7 +1401,7 @@ setInterval(()=>{if(user)loadHubEvents()},30000);
 function renderHubEventsAdminList(){
  const box=document.getElementById('hub-events-list');if(!box)return;
  box.innerHTML=hubEvents.length?hubEvents.map(ev=>{
-  const now=new Date(),live=ev.is_active&&new Date(ev.starts_at)<=now&&new Date(ev.ends_at)>now;
+  const now=new Date(),live=ev.is_active&&new Date(ev.start_at)<=now&&new Date(ev.ends_at)>now;
   return `<div class="bg-slate-900/70 border border-slate-700 rounded-xl p-3 flex justify-between items-center gap-2">
    <div class="min-w-0"><b class="text-sm block truncate">${esc(ev.title)}</b><span class="text-[10px] ${live?'text-emerald-400':'text-slate-500'}">${live?'● LIVE':(ev.is_active?'Scheduled/Ended':'Inactive')}</span></div>
    <div class="flex gap-2 shrink-0"><button onclick="toggleEventActive('${ev.id}',${!ev.is_active})" class="bg-slate-700 hover:bg-slate-600 px-2 py-1.5 rounded-lg text-[10px] font-bold">${ev.is_active?'Deactivate':'Activate'}</button><button onclick="deleteHubEvent('${ev.id}')" class="bg-red-600 hover:bg-red-500 px-2 py-1.5 rounded-lg text-[10px] font-bold">Delete</button></div>
@@ -1411,19 +1422,17 @@ document.getElementById('hub-event-form').addEventListener('submit',async e=>{
  if(profile?.role!=='admin')return toast('Admin only',false);
  const btn=document.getElementById('event-btn');btn.disabled=true;btn.textContent='Creating...';
  try{
-  const questions=Array.from({length:5}).map((_,i)=>{
-   const options=Array.from({length:4}).map((__,j)=>document.getElementById(`eq-o-${i}-${j}`).value.trim());
-   const correctEl=document.querySelector(`input[name="eq-correct-${i}"]:checked`);
-   return {question:document.getElementById(`eq-q-${i}`).value.trim(),options,correct_index:Number(correctEl?.value||0)};
-  });
+  const items=[...document.querySelectorAll('#event-questions > div')];
+  if(!items.length)throw new Error('Kam se kam 1 question add karo.');
+  const questions=items.map(el=>{const qInput=el.querySelector('input[id^="eq-q-"]');const idx=qInput.id.replace('eq-q-','');const options=Array.from({length:4}).map((__,j)=>document.getElementById(`eq-o-${idx}-${j}`).value.trim());const correctEl=el.querySelector(`input[name="eq-correct-${idx}"]:checked`);return {question:qInput.value.trim(),options,correct_index:Number(correctEl?.value||0)}});
   if(questions.some(q=>!q.question||q.options.some(o=>!o)))throw new Error('Har question aur 4 options bharna zaroori hai.');
-  const starts_at=new Date(document.getElementById('event-start').value).toISOString();
+  const start_at=new Date(document.getElementById('event-start').value).toISOString();
   const ends_at=new Date(document.getElementById('event-end').value).toISOString();
-  if(new Date(ends_at)<=new Date(starts_at))throw new Error('End time start time se baad hona chahiye.');
+  if(new Date(ends_at)<=new Date(start_at))throw new Error('End time start time se baad hona chahiye.');
   const {error}=await db.from('hub_events').insert({
    title:document.getElementById('event-title').value.trim(),
    description:document.getElementById('event-desc').value.trim(),
-   starts_at,ends_at,
+   start_at,ends_at,
    is_active:document.getElementById('event-active').checked,
    questions,created_by:user.id
   });
@@ -1492,13 +1501,17 @@ async function spinWheel(){
  setTimeout(()=>{toast(`🎉 ${pick.label}!`);renderSpinStatus()},3000);
 }
 
-/* ==================== STUDY ROOMS + LIVE VOICE (WebRTC mesh via Supabase signaling) ==================== */
+/* ==================== STUDY ROOMS + LIVE VOICE (WebRTC mesh, max 5) ==================== */
 const STUDY_ROOMS=[
  {key:'physics',name:'Physics Room',icon:'⚛️'},
- {key:'maths',name:'Maths Room',icon:'📐'},
+ {key:'biology',name:'Biology Room',icon:'🧬'},
  {key:'general',name:'General Study',icon:'📚'}
 ];
-const RTC_CONFIG={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
+const MAX_VOICE_USERS=5;
+const RTC_CONFIG={iceServers:[
+ {urls:'stun:stun.l.google.com:19302'},
+ {urls:'stun:stun1.l.google.com:19302'}
+]};
 let roomChannels={},voiceState={};
 
 function studyRoomCardHtml(r){
@@ -1510,7 +1523,7 @@ function studyRoomCardHtml(r){
    <button id="room-leave-${r.key}" onclick="leaveStudyRoom('${r.key}')" class="hidden flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-lg text-xs font-bold">Leave</button>
   </div>
   <div id="room-voice-${r.key}" class="hidden mt-3 pt-3 border-t border-slate-700">
-   <div class="flex justify-between items-center"><span class="text-[10px] uppercase text-slate-400">🎙 Live Voice</span><span id="room-voice-count-${r.key}" class="text-[10px] text-fuchsia-300"></span></div>
+   <div class="flex justify-between items-center"><span class="text-[10px] uppercase text-slate-400">🎙 Live Voice</span><span id="room-voice-count-${r.key}" class="text-[10px] text-fuchsia-300">0/${MAX_VOICE_USERS}</span></div>
    <div id="room-speakers-${r.key}" class="mt-2 flex flex-wrap gap-1"></div>
    <div class="mt-2 flex gap-2">
     <button id="voice-join-${r.key}" onclick="joinVoice('${r.key}')" class="flex-1 bg-fuchsia-600 hover:bg-fuchsia-500 py-2 rounded-lg text-xs font-bold">Join Voice</button>
@@ -1527,17 +1540,31 @@ function renderStudyRooms(){
  STUDY_ROOMS.forEach(r=>ensureRoomChannel(r.key));
 }
 function ensureRoomChannel(key){
- if(!user||roomChannels[key])return;
- const ch=db.channel('study-room-'+key,{config:{presence:{key:user.id},broadcast:{self:false}}})
-  .on('presence',{event:'sync'},()=>renderRoomMembers(key))
+ if(!user)return null;
+ if(roomChannels[key])return roomChannels[key];
+ const ch=db.channel('study-room-'+key,{config:{presence:{key:user.id},broadcast:{self:false}}});
+ const rc={channel:ch,joined:false,ready:null};roomChannels[key]=rc;
+ ch.on('presence',{event:'sync'},()=>renderRoomMembers(key))
   .on('presence',{event:'join'},()=>renderRoomMembers(key))
   .on('presence',{event:'leave'},({leftPresences})=>{
    renderRoomMembers(key);
-   (leftPresences||[]).forEach(p=>{if(p?.user_id)closePeer(key,p.user_id)});
+   (leftPresences||[]).forEach(p=>{if(p?.user_id){closePeer(key,p.user_id);removeVoiceReservation(key,p.user_id)}});
   })
-  .on('broadcast',{event:'voice-signal'},x=>handleVoiceSignal(key,x.payload))
-  .subscribe();
- roomChannels[key]={channel:ch,joined:false};
+  .on('broadcast',{event:'voice-signal'},x=>handleVoiceSignal(key,x.payload));
+ rc.ready=new Promise((resolve,reject)=>{
+  const timeout=setTimeout(()=>reject(new Error('Realtime connection timeout')),10000);
+  ch.subscribe(status=>{
+   if(status==='SUBSCRIBED'){clearTimeout(timeout);resolve(true)}
+   else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){clearTimeout(timeout);reject(new Error('Realtime channel connection failed'))}
+  });
+ });
+ rc.ready.catch(e=>console.warn('Room channel:',key,e));
+ return rc;
+}
+function getVoicePeople(key){
+ const rc=roomChannels[key];if(!rc)return [];
+ const state=rc.channel.presenceState();
+ return Object.values(state).flat().filter((p,i,a)=>p&&p.user_id&&p.voice&&a.findIndex(x=>x.user_id===p.user_id)===i);
 }
 function renderRoomMembers(key){
  const rc=roomChannels[key];if(!rc)return;
@@ -1547,124 +1574,141 @@ function renderRoomMembers(key){
  const membersEl=document.getElementById(`room-members-${key}`);
  if(membersEl)membersEl.innerHTML=people.length?people.map(p=>`<span class="text-[10px] bg-slate-900 border border-slate-700 rounded-full px-2 py-1">${esc(p.name||'Member')}</span>`).join(''):'<span class="text-[10px] text-slate-500">Koi member nahi</span>';
  const speakers=people.filter(p=>p.voice);
- const vc=document.getElementById(`room-voice-count-${key}`);if(vc)vc.textContent=`${speakers.length} speaking`;
+ const vc=document.getElementById(`room-voice-count-${key}`);if(vc)vc.textContent=`${speakers.length}/${MAX_VOICE_USERS} in voice`;
  const sp=document.getElementById(`room-speakers-${key}`);
  if(sp)sp.innerHTML=speakers.length?speakers.map(p=>`<span class="text-[10px] bg-fuchsia-500/10 text-fuchsia-300 border border-fuchsia-500/30 rounded-full px-2 py-1">🎙 ${esc(p.name||'Member')}</span>`).join(''):'<span class="text-[10px] text-slate-500">Koi bol nahi raha</span>';
+ const vb=document.getElementById(`voice-join-${key}`);
+ if(vb&&!ensureVoiceState(key).joined)vb.disabled=speakers.length>=MAX_VOICE_USERS;
 }
 async function joinStudyRoom(key){
- ensureRoomChannel(key);
- const rc=roomChannels[key];if(!rc||rc.joined)return;
- await rc.channel.track({user_id:user.id,name:profile?.name||user.email||'Member',voice:false});
+ const rc=ensureRoomChannel(key);if(!rc||rc.joined)return;
+ try{await rc.ready;await rc.channel.track({user_id:user.id,name:profile?.name||user.email||'Member',voice:false})}
+ catch(e){console.error(e);return toast('Study room connect nahi ho pa raha. Internet/realtime check karein.',false)}
  rc.joined=true;
  document.getElementById(`room-join-${key}`).classList.add('hidden');
  document.getElementById(`room-leave-${key}`).classList.remove('hidden');
  document.getElementById(`room-voice-${key}`).classList.remove('hidden');
+ renderRoomMembers(key);
 }
 async function leaveStudyRoom(key){
  await leaveVoice(key);
  const rc=roomChannels[key];if(!rc||!rc.joined)return;
- await rc.channel.untrack();
+ try{await rc.channel.untrack()}catch(e){}
  rc.joined=false;
  document.getElementById(`room-join-${key}`).classList.remove('hidden');
  document.getElementById(`room-leave-${key}`).classList.add('hidden');
  document.getElementById(`room-voice-${key}`).classList.add('hidden');
 }
 function ensureVoiceState(key){
- if(!voiceState[key])voiceState[key]={joined:false,muted:false,stream:null,peers:{}};
+ if(!voiceState[key])voiceState[key]={joined:false,muted:false,stream:null,peers:{},pendingIce:{},heartbeat:null};
  return voiceState[key];
 }
+async function reserveVoiceSlot(key){
+ const {data,error}=await db.rpc('join_hub_voice_room',{p_room:key});
+ if(error)throw error;
+ if(!data?.ok)throw new Error(data?.message||`Voice room full (${MAX_VOICE_USERS}/${MAX_VOICE_USERS})`);
+ return data;
+}
+async function releaseVoiceSlot(key){
+ try{await db.rpc('leave_hub_voice_room',{p_room:key})}catch(e){console.warn('voice slot release failed',e)}
+}
+function startVoiceHeartbeat(key){
+ const vs=ensureVoiceState(key);clearInterval(vs.heartbeat);
+ vs.heartbeat=setInterval(async()=>{
+  if(!vs.joined)return;
+  try{const {data}=await db.rpc('join_hub_voice_room',{p_room:key});if(!data?.ok)await leaveVoice(key)}catch(e){console.warn('voice heartbeat failed',e)}
+ },30000);
+}
+function stopVoiceHeartbeat(key){const vs=voiceState[key];if(vs?.heartbeat)clearInterval(vs.heartbeat);if(vs)vs.heartbeat=null}
 async function joinVoice(key){
- const vs=ensureVoiceState(key);
- if(vs.joined)return;
- const rc=roomChannels[key];
- if(!rc||!rc.joined)return toast('Pehle room join karein.',false);
+ const vs=ensureVoiceState(key);if(vs.joined)return;
+ const rc=roomChannels[key];if(!rc||!rc.joined)return toast('Pehle room join karein.',false);
+ if(!window.isSecureContext&&location.hostname!=='localhost')return toast('Live Voice ke liye HTTPS site zaroori hai.',false);
+ if(!navigator.mediaDevices?.getUserMedia)return toast('Is browser/device me microphone support nahi hai.',false);
+ const current=getVoicePeople(key);
+ if(current.length>=MAX_VOICE_USERS)return toast(`Live Voice full hai — maximum ${MAX_VOICE_USERS} log hi join kar sakte hain.`,false);
  try{
-  vs.stream=await navigator.mediaDevices.getUserMedia({audio:true});
- }catch(e){toast('Microphone permission denied',false);return}
- vs.joined=true;vs.muted=false;
- await rc.channel.track({user_id:user.id,name:profile?.name||user.email||'Member',voice:true});
- await rc.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'join',fromId:user.id}});
- document.getElementById(`voice-join-${key}`).classList.add('hidden');
- const mb=document.getElementById(`voice-mute-${key}`);mb.classList.remove('hidden');mb.textContent='Mute';
- document.getElementById(`voice-leave-${key}`).classList.remove('hidden');
+  await rc.ready;
+  await reserveVoiceSlot(key);
+  try{
+   vs.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+  }catch(e){await releaseVoiceSlot(key);throw e}
+  vs.joined=true;vs.muted=false;
+  await rc.channel.track({user_id:user.id,name:profile?.name||user.email||'Member',voice:true});
+  startVoiceHeartbeat(key);
+  await rc.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'join',fromId:user.id}});
+  document.getElementById(`voice-join-${key}`).classList.add('hidden');
+  const mb=document.getElementById(`voice-mute-${key}`);mb.classList.remove('hidden');mb.textContent='Mute';
+  document.getElementById(`voice-leave-${key}`).classList.remove('hidden');
+  renderRoomMembers(key);
+ }catch(e){
+  console.error('joinVoice failed',e);
+  if(vs.stream)vs.stream.getTracks().forEach(t=>t.stop());vs.stream=null;vs.joined=false;
+  if(e?.message?.toLowerCase().includes('full')||e?.message?.includes('maximum'))toast(`Live Voice full hai — maximum ${MAX_VOICE_USERS} log.`,false);
+  else if(e?.name==='NotAllowedError')toast('Microphone permission allow karo.',false);
+  else if(String(e?.message||'').toLowerCase().includes('function')||String(e?.message||'').toLowerCase().includes('rpc'))toast('Supabase Voice SQL setup pehle Run karo.',false);
+  else toast(e?.message||'Live Voice start nahi hua.',false);
+ }
 }
 function createPeer(key,peerId){
- const vs=ensureVoiceState(key);
- if(vs.peers[peerId])return vs.peers[peerId];
- let pc;
- try{pc=new RTCPeerConnection(RTC_CONFIG)}catch(e){console.warn('RTCPeerConnection failed',e);return null}
+ const vs=ensureVoiceState(key);if(vs.peers[peerId])return vs.peers[peerId];
+ let pc;try{pc=new RTCPeerConnection(RTC_CONFIG)}catch(e){console.warn('RTCPeerConnection failed',e);return null}
  if(vs.stream)vs.stream.getTracks().forEach(t=>pc.addTrack(t,vs.stream));
  pc.onicecandidate=e=>{if(e.candidate)roomChannels[key]?.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'ice',fromId:user.id,targetId:peerId,candidate:e.candidate}})};
  pc.ontrack=e=>{
   let audio=document.getElementById(`voice-audio-${key}-${peerId}`);
-  if(!audio){audio=document.createElement('audio');audio.id=`voice-audio-${key}-${peerId}`;audio.autoplay=true;document.getElementById(`room-audio-${key}`).appendChild(audio)}
-  audio.srcObject=e.streams[0];
+  if(!audio){audio=document.createElement('audio');audio.id=`voice-audio-${key}-${peerId}`;audio.autoplay=true;audio.playsInline=true;audio.controls=false;document.getElementById(`room-audio-${key}`).appendChild(audio)}
+  audio.srcObject=e.streams[0];audio.play().catch(()=>toast('Voice audio play karne ke liye page par ek baar tap/click karein.',false));
  };
  pc.onconnectionstatechange=()=>{if(['failed','closed','disconnected'].includes(pc.connectionState))closePeer(key,peerId)};
- vs.peers[peerId]=pc;
- return pc;
+ vs.peers[peerId]=pc;return pc;
 }
 function closePeer(key,peerId){
- const vs=voiceState[key];if(!vs)return;
- const pc=vs.peers[peerId];if(pc){try{pc.close()}catch(e){}delete vs.peers[peerId]}
- const audio=document.getElementById(`voice-audio-${key}-${peerId}`);if(audio)audio.remove();
+ const vs=voiceState[key];if(!vs)return;const pc=vs.peers[peerId];if(pc){try{pc.close()}catch(e){}delete vs.peers[peerId]}
+ delete vs.pendingIce?.[peerId];const audio=document.getElementById(`voice-audio-${key}-${peerId}`);if(audio)audio.remove();
 }
+function removeVoiceReservation(key,peerId){ if(peerId&&peerId!==user.id){} }
 async function handleVoiceSignal(key,payload){
  if(!payload||payload.fromId===user.id)return;
- const vs=ensureVoiceState(key);
+ const vs=ensureVoiceState(key),rc=roomChannels[key];if(!rc||!vs.joined)return;
  try{
   if(payload.type==='join'){
-   if(!vs.joined)return;
+   // Deterministic initiator prevents simultaneous-offer/glare when two people join together.
+   if(String(user.id)>String(payload.fromId))return;
    const pc=createPeer(key,payload.fromId);if(!pc)return;
    const offer=await pc.createOffer();await pc.setLocalDescription(offer);
-   await roomChannels[key].channel.send({type:'broadcast',event:'voice-signal',payload:{type:'offer',fromId:user.id,targetId:payload.fromId,sdp:offer}});
+   await rc.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'offer',fromId:user.id,targetId:payload.fromId,sdp:offer}});
   }else if(payload.type==='offer'&&payload.targetId===user.id){
-   if(!vs.joined)return;
    const pc=createPeer(key,payload.fromId);if(!pc)return;
    await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+   const pending=vs.pendingIce?.[payload.fromId]||[];for(const c of pending)await pc.addIceCandidate(c).catch(()=>{});delete vs.pendingIce[payload.fromId];
    const answer=await pc.createAnswer();await pc.setLocalDescription(answer);
-   await roomChannels[key].channel.send({type:'broadcast',event:'voice-signal',payload:{type:'answer',fromId:user.id,targetId:payload.fromId,sdp:answer}});
+   await rc.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'answer',fromId:user.id,targetId:payload.fromId,sdp:answer}});
   }else if(payload.type==='answer'&&payload.targetId===user.id){
-   const pc=vs.peers[payload.fromId];if(pc)await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+   const pc=vs.peers[payload.fromId];if(pc&&!pc.remoteDescription)await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
   }else if(payload.type==='ice'&&payload.targetId===user.id){
-   const pc=vs.peers[payload.fromId];if(pc)await pc.addIceCandidate(payload.candidate);
-  }else if(payload.type==='leave'){
-   closePeer(key,payload.fromId);
-  }
+   const pc=vs.peers[payload.fromId];if(!pc)return;
+   if(pc.remoteDescription?.type)await pc.addIceCandidate(payload.candidate).catch(()=>{});else (vs.pendingIce[payload.fromId]??=[]).push(payload.candidate);
+  }else if(payload.type==='leave')closePeer(key,payload.fromId);
  }catch(e){console.warn('Voice signaling failed',e)}
 }
 function toggleMute(key){
- const vs=voiceState[key];if(!vs||!vs.stream)return;
- vs.muted=!vs.muted;
- vs.stream.getAudioTracks().forEach(t=>t.enabled=!vs.muted);
+ const vs=voiceState[key];if(!vs||!vs.stream)return;vs.muted=!vs.muted;vs.stream.getAudioTracks().forEach(t=>t.enabled=!vs.muted);
  document.getElementById(`voice-mute-${key}`).textContent=vs.muted?'Unmute':'Mute';
 }
 async function leaveVoice(key){
  const vs=voiceState[key];if(!vs||!vs.joined)return;
+ stopVoiceHeartbeat(key);
  Object.keys(vs.peers).forEach(pid=>closePeer(key,pid));
- if(vs.stream)vs.stream.getTracks().forEach(t=>t.stop());
- vs.stream=null;vs.joined=false;vs.muted=false;
- const rc=roomChannels[key];
- if(rc){
-  try{await rc.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'leave',fromId:user.id}})}catch(e){}
-  if(rc.joined)try{await rc.channel.track({user_id:user.id,name:profile?.name||user.email||'Member',voice:false})}catch(e){}
- }
+ if(vs.stream)vs.stream.getTracks().forEach(t=>t.stop());vs.stream=null;vs.joined=false;vs.muted=false;
+ const rc=roomChannels[key];if(rc){try{await rc.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'leave',fromId:user.id}})}catch(e){};if(rc.joined)try{await rc.channel.track({user_id:user.id,name:profile?.name||user.email||'Member',voice:false})}catch(e){}}
+ await releaseVoiceSlot(key);
  const jb=document.getElementById(`voice-join-${key}`),mb=document.getElementById(`voice-mute-${key}`),lb=document.getElementById(`voice-leave-${key}`),ab=document.getElementById(`room-audio-${key}`);
- if(jb)jb.classList.remove('hidden');if(mb)mb.classList.add('hidden');if(lb)lb.classList.add('hidden');if(ab)ab.innerHTML='';
+ if(jb)jb.classList.remove('hidden');if(mb)mb.classList.add('hidden');if(lb)lb.classList.add('hidden');if(ab)ab.innerHTML='';renderRoomMembers(key);
 }
 function stopAllVoiceAndRooms(){
- Object.keys(voiceState).forEach(key=>{
-  const vs=voiceState[key];if(!vs)return;
-  Object.keys(vs.peers).forEach(pid=>closePeer(key,pid));
-  if(vs.stream)vs.stream.getTracks().forEach(t=>t.stop());
- });
- voiceState={};
- Object.keys(roomChannels).forEach(key=>{
-  const rc=roomChannels[key];if(!rc)return;
-  try{rc.channel.untrack()}catch(e){}
-  try{db.removeChannel(rc.channel)}catch(e){}
- });
- roomChannels={};
+ Object.keys(voiceState).forEach(key=>{const vs=voiceState[key];if(!vs)return;stopVoiceHeartbeat(key);Object.keys(vs.peers).forEach(pid=>closePeer(key,pid));if(vs.stream)vs.stream.getTracks().forEach(t=>t.stop());try{releaseVoiceSlot(key)}catch(e){}});
+ voiceState={};Object.keys(roomChannels).forEach(key=>{const rc=roomChannels[key];if(!rc)return;try{rc.channel.untrack()}catch(e){}try{db.removeChannel(rc.channel)}catch(e){}});roomChannels={};
 }
 window.addEventListener('pagehide',()=>{try{stopAllVoiceAndRooms()}catch(e){}});
 window.addEventListener('beforeunload',()=>{try{stopAllVoiceAndRooms()}catch(e){}});
