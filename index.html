@@ -56,7 +56,7 @@ drop policy if exists "hub_daily_answers select own" on public.hub_daily_answers
 create policy "hub_daily_answers select own" on public.hub_daily_answers for select to authenticated using (auth.uid()=user_id);
 create policy "hub_daily_answers insert own" on public.hub_daily_answers for insert to authenticated with check (auth.uid()=user_id);
 
-create table if not exists public.hub_spins (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, spin_date date not null default current_date, reward_label text, reward_xp integer not null default 0, created_at timestamptz not null default now(), unique(user_id,spin_date));
+create table if not exists public.hub_spins (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, spin_date date not null default current_date, reward text, xp_awarded integer not null default 0, created_at timestamptz not null default now(), unique(user_id,spin_date));
 alter table public.hub_spins enable row level security;
 drop policy if exists "hub_spins select own" on public.hub_spins; drop policy if exists "hub_spins insert own" on public.hub_spins;
 create policy "hub_spins select own" on public.hub_spins for select to authenticated using (auth.uid()=user_id);
@@ -1467,7 +1467,7 @@ const SPIN_REWARDS=[
 async function loadSpinStatus(){
  if(!user)return;
  const today=localDateValue();
- const {data,error}=await db.from('hub_spins').select('*').eq('user_id',user.id).eq('spin_date',today).maybeSingle();
+ const {data,error}=await db.from('hub_spins').select('user_id,spin_date,reward,xp_awarded').eq('user_id',user.id).eq('spin_date',today).maybeSingle();
  if(error){console.error(error);return}
  hubSpinToday=data||null;
  renderSpinStatus();
@@ -1477,7 +1477,7 @@ function renderSpinStatus(){
  if(!btn||!res)return;
  if(hubSpinToday){
   btn.disabled=true;btn.textContent='Spin Used';
-  res.textContent=`Aaj ka spin already use ho chuka hai. Reward: ${hubSpinToday.reward_label} (+${hubSpinToday.reward_xp} XP)`;
+  res.textContent=`Aaj ka spin already use ho chuka hai. Reward: +${hubSpinToday.xp_awarded} XP`;
  }else{
   btn.disabled=false;btn.textContent='Spin Now';res.textContent='';
  }
@@ -1488,13 +1488,13 @@ async function spinWheel(){
  const btn=document.getElementById('spin-btn');btn.disabled=true;
  const pick=SPIN_REWARDS[Math.floor(Math.random()*SPIN_REWARDS.length)];
  const today=localDateValue();
- const {error}=await db.from('hub_spins').insert({user_id:user.id,spin_date:today,reward_label:pick.label,reward_xp:pick.xp});
+ const {error}=await db.from('hub_spins').insert({user_id:user.id,spin_date:today,reward:pick.label,xp_awarded:pick.xp});
  if(error){
   if(error.code==='23505'){await loadSpinStatus();toast('Aaj ka spin already use ho chuka hai.',false);}
   else{toast(error.message||'Spin failed',false);btn.disabled=false;}
   return;
  }
- hubSpinToday={reward_label:pick.label,reward_xp:pick.xp,spin_date:today};
+ hubSpinToday={reward:pick.label,xp_awarded:pick.xp,spin_date:today};
  const wheel=document.getElementById('spin-wheel');
  if(wheel)wheel.style.transform=`rotate(${5*360+(360-pick.angle)}deg)`;
  await grantXP(pick.xp);
