@@ -2195,11 +2195,30 @@ function notifyFocus(title,body){if('Notification'in window&&Notification.permis
 function testFocusNotification(){if('Notification'in window&&Notification.permission==='granted')notifyFocus('🔔 RATHOD HUB Test','Notifications sahi se kaam kar rahi hain.');else requestFocusNotifications()}
 let focusLastBroadcast=0;
 function broadcastFocusThrottled(){if(Date.now()-focusLastBroadcast<4000)return;broadcastFocus()}
-async function broadcastFocus(){if(!focusChannel||!user||!focusReady)return;focusLastBroadcast=Date.now();try{await focusChannel.track({user_id:user.id,name:profile?.name||user.email||'Member',pfp_url:profile?.pfp_url||null,subject:focusState.subject||'Other',status:focusState.status,break:!!focusState.break,started_at:focusState.startedAt||null,remaining:Math.ceil(focusRemaining())})}catch(e){}}
+async function broadcastFocus(){
+  if(!focusChannel||!user||!focusReady)return;
+  focusLastBroadcast=Date.now();
+  const payload={
+    user_id:user.id,
+    name:profile?.name||user.email||'Member',
+    pfp_url:profile?.pfp_url||null,
+    subject:focusState.subject||'Other',
+    status:focusState.status,
+    break:!!focusState.break,
+    started_at:focusState.startedAt||null,
+    remaining:Math.ceil(focusRemaining())
+  };
+  try{
+    await focusChannel.track(payload);
+    await focusChannel.send({type:'broadcast',event:'timer_ping',payload});
+  }catch(e){}
+}
 function renderLiveFocusUsers(){
   if(!focusChannel)return;
   const state=focusChannel.presenceState(),people=[];
-  Object.values(state).flat().forEach(p=>{if(p?.user_id&&!people.some(x=>x.user_id===p.user_id))people.push(p)});
+  Object.values(state).flat().forEach(p=>{
+    if(p&&p.user_id&&!people.some(x=>x.user_id===p.user_id))people.push(p);
+  });
   const active=people.filter(p=>p.status==='running');
   const badge=document.getElementById('focus-live-badge');if(badge)badge.textContent=`● ${active.length} STUDYING`;
   const c=document.getElementById('focus-online-count');if(c)c.textContent=`${active.length} studying`;
@@ -2220,11 +2239,21 @@ async function initFocusSystem(){
   const st=readFocusStats();
   if(!st.goalHours)st.goalHours=4;
   writeFocusStats(st);
-  focusChannel=db.channel('rathod-hub-focus-live',{config:{presence:{key:user.id}}})
+  if(focusChannel){try{await db.removeChannel(focusChannel)}catch(e){}}
+  focusChannel=db.channel('rathod-hub-focus-live',{config:{presence:{key:user.id},broadcast:{self:false}}})
     .on('presence',{event:'sync'},renderLiveFocusUsers)
     .on('presence',{event:'join'},renderLiveFocusUsers)
     .on('presence',{event:'leave'},renderLiveFocusUsers)
-    .subscribe(async status=>{if(status==='SUBSCRIBED')broadcastFocus()});
+    .on('broadcast',{event:'timer_ping'},e=>{
+      if(!e?.payload||e.payload.user_id===user.id)return;
+      renderLiveFocusUsers();
+    })
+    .subscribe(async status=>{
+      if(status==='SUBSCRIBED'){
+        await broadcastFocus();
+        renderLiveFocusUsers();
+      }
+    });
   renderFocusDashboard();
   renderHomeDashboard();
   updateNotifyStatus();
