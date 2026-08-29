@@ -120,7 +120,6 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 #section-home button{color:#fff}
 #section-home .bg-slate-50,#section-home .bg-slate-100{background:rgba(15,18,23,.9)!important;border-color:rgba(255,255,255,.14)!important;color:#fff!important}
 #section-home .text-slate-700,#section-home .text-slate-600,#section-home .text-slate-500,#section-home .text-slate-400,#section-home .text-slate-300{color:#d5d9df!important}
-/* all sections: white text, red accents, readable cards */
 #app .text-slate-50,#app .text-slate-100,#app .text-slate-200,#app .text-slate-300,#app .text-slate-400,#app .text-slate-500,#app .text-slate-600,#app .text-slate-700,#app .text-gray-300,#app .text-gray-400,#app .text-gray-500{color:#f1f3f5!important}
 #app .text-slate-500,#app .text-slate-400{color:#b7bdc7!important}
 #app h1,#app h2,#app h3,#app h4,#app label,#app b,#app strong{color:#fff}
@@ -134,7 +133,6 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 #app .bg-indigo-600:hover,#app .bg-indigo-500:hover,#app .bg-teal-600:hover,#app .bg-teal-500:hover,#app .bg-purple-600:hover{background:#ff4141!important}
 #app .rh-page-head button{background:#11151b!important;color:#fff!important;border-color:rgba(255,255,255,.16)!important}
 #app .rh-page-head button i{color:var(--rh-red)!important}
-/* leaderboard preview */
 .rh-mini-row{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08)}
 .rh-mini-row:last-child{border-bottom:0}.rh-mini-avatar{width:34px;height:34px;border-radius:50%;overflow:hidden;background:#252b34;display:flex;align-items:center;justify-content:center;flex:none}.rh-mini-avatar img{width:100%;height:100%;object-fit:cover}.rh-mini-name{flex:1;min-width:0}.rh-mini-name b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rh-mini-name span{font-size:9px;color:#9ba3ae!important}.rh-mini-xp{font-size:11px;font-weight:900;color:#fff}.rh-rank{width:23px;color:#ff4a4a;font-weight:900;font-size:11px}
 .rh-online-list{display:flex;gap:8px;flex-wrap:wrap}.rh-online-user{width:54px;text-align:center;font-size:9px;color:#cbd0d7!important}.rh-online-avatar{position:relative;width:42px;height:42px;border-radius:50%;margin:auto;background:#252b34;overflow:hidden;border:1px solid rgba(255,255,255,.12)}.rh-online-avatar img{width:100%;height:100%;object-fit:cover}.rh-online-avatar:after{content:"";position:absolute;right:0;bottom:1px;width:9px;height:9px;background:#22c55e;border:2px solid #090b0f;border-radius:50%}
@@ -148,117 +146,6 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
  .doctor-bg{background:linear-gradient(rgba(0,0,0,.18),rgba(0,0,0,.30)),url('https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=1200&q=80')!important;background-size:cover!important;background-attachment:fixed!important}
  #hub-bg-layer,#hub-bg-overlay{display:block!important;opacity:1!important}.rh-topbar{height:58px!important}.rh-brand>div:last-child{font-size:11px}.rh-content{padding:10px 10px 88px!important}.rh-page-title{font-size:20px!important}.rh-page-sub{font-size:10px!important}.rh-home-hero{padding:16px!important}.rh-hero-title{font-size:22px!important}.rh-feature-grid{gap:8px!important}.rh-feature{min-height:92px!important;padding:11px!important}.rh-feature-icon{width:34px!important;height:34px!important}.rh-feature b{font-size:12px!important}.rh-feature p{font-size:9px!important}.rh-home-rail{grid-template-columns:1fr!important}.rh-rail-card{padding:13px!important}.rh-top-actions .rh-icon-btn{width:34px!important;height:34px!important}.rh-top-actions .rh-icon-btn:nth-child(1),.rh-top-actions .rh-icon-btn:nth-child(3){display:none!important}
 }
-</style>
-<!-- NEW FEATURES SUPABASE SQL REFERENCE:
-
--- RATHOD HUB: run once in Supabase SQL Editor
-
--- Existing tables/features are not deleted.
-create table if not exists public.stories (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, name text, media_url text not null, media_type text not null, caption text, created_at timestamptz not null default now(), expires_at timestamptz not null);
-alter table public.stories enable row level security;
-drop policy if exists "stories read" on public.stories; drop policy if exists "stories insert own" on public.stories;
-create policy "stories read" on public.stories for select to authenticated using (expires_at > now());
-create policy "stories insert own" on public.stories for insert to authenticated with check (auth.uid()=user_id);
-create table if not exists public.vault (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, title text, file_name text, file_type text, file_size bigint, storage_path text not null, created_at timestamptz not null default now());
-alter table public.vault enable row level security;
-drop policy if exists "vault select own" on public.vault; drop policy if exists "vault insert own" on public.vault; drop policy if exists "vault delete own" on public.vault;
-create policy "vault select own" on public.vault for select to authenticated using (auth.uid()=user_id);
-create policy "vault insert own" on public.vault for insert to authenticated with check (auth.uid()=user_id);
-create policy "vault delete own" on public.vault for delete to authenticated using (auth.uid()=user_id);
-insert into storage.buckets (id,name,public) values ('vault','vault',false) on conflict (id) do nothing;
-drop policy if exists "vault storage select" on storage.objects; drop policy if exists "vault storage insert" on storage.objects; drop policy if exists "vault storage delete" on storage.objects;
-create policy "vault storage select" on storage.objects for select to authenticated using (bucket_id='vault' and (storage.foldername(name))[1]=auth.uid()::text);
-create policy "vault storage insert" on storage.objects for insert to authenticated with check (bucket_id='vault' and (storage.foldername(name))[1]=auth.uid()::text);
-create policy "vault storage delete" on storage.objects for delete to authenticated using (bucket_id='vault' and (storage.foldername(name))[1]=auth.uid()::text);
-alter table public.profiles add column if not exists xp integer not null default 0;
-alter table public.profiles add column if not exists level integer not null default 1;
-create or replace function public.sync_profile_level() returns trigger language plpgsql as $$ begin new.level:=greatest(1,floor(coalesce(new.xp,0)/500)::int+1); return new; end; $$;
-drop trigger if exists profile_level_sync on public.profiles; create trigger profile_level_sync before insert or update of xp on public.profiles for each row execute function public.sync_profile_level();
-
--- ===== HUB EVENTS + DAILY XP + SPIN & WIN + GLOBAL BACKGROUND (run once) =====
-create or replace function public.is_admin() returns boolean language sql stable as $$ select exists(select 1 from public.profiles where id=auth.uid() and role='admin') $$;
-
-create table if not exists public.hub_events (id uuid primary key default gen_random_uuid(), title text not null, description text, start_at timestamptz not null, ends_at timestamptz not null, is_active boolean not null default true, questions jsonb not null default '[]'::jsonb, created_by uuid references auth.users(id), created_at timestamptz not null default now());
-alter table public.hub_events enable row level security;
-drop policy if exists "hub_events read" on public.hub_events; drop policy if exists "hub_events admin insert" on public.hub_events; drop policy if exists "hub_events admin update" on public.hub_events; drop policy if exists "hub_events admin delete" on public.hub_events;
-create policy "hub_events read" on public.hub_events for select to authenticated using (public.is_admin() or (is_active and now() between start_at and ends_at));
-create policy "hub_events admin insert" on public.hub_events for insert to authenticated with check (public.is_admin());
-create policy "hub_events admin update" on public.hub_events for update to authenticated using (public.is_admin()) with check (public.is_admin());
-create policy "hub_events admin delete" on public.hub_events for delete to authenticated using (public.is_admin());
-
-create table if not exists public.hub_daily_answers (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, event_id uuid not null references public.hub_events(id) on delete cascade, answer_date date not null default current_date, question_index smallint not null, is_correct boolean not null default true, xp_awarded integer not null default 100, created_at timestamptz not null default now(), unique(user_id,event_id,answer_date,question_index));
-alter table public.hub_daily_answers enable row level security;
-drop policy if exists "hub_daily_answers select own" on public.hub_daily_answers; drop policy if exists "hub_daily_answers insert own" on public.hub_daily_answers;
-create policy "hub_daily_answers select own" on public.hub_daily_answers for select to authenticated using (auth.uid()=user_id);
-create policy "hub_daily_answers insert own" on public.hub_daily_answers for insert to authenticated with check (auth.uid()=user_id);
-
-create table if not exists public.hub_spins (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade, spin_date date not null default current_date, reward text, xp_awarded integer not null default 0, created_at timestamptz not null default now(), unique(user_id,spin_date));
-alter table public.hub_spins enable row level security;
-drop policy if exists "hub_spins select own" on public.hub_spins; drop policy if exists "hub_spins insert own" on public.hub_spins;
-create policy "hub_spins select own" on public.hub_spins for select to authenticated using (auth.uid()=user_id);
-create policy "hub_spins insert own" on public.hub_spins for insert to authenticated with check (auth.uid()=user_id);
-
-create table if not exists public.site_settings (id smallint primary key default 1, background_url text, background_overlay numeric not null default 0.6, background_blur integer not null default 0, background_opacity numeric not null default 1, background_position text not null default 'center', background_size text not null default 'cover', background_fixed boolean not null default true, updated_by uuid references auth.users(id), updated_at timestamptz not null default now(), constraint site_settings_single_row check (id=1));
-insert into public.site_settings (id) values (1) on conflict (id) do nothing;
-alter table public.site_settings enable row level security;
-drop policy if exists "site_settings read all" on public.site_settings; drop policy if exists "site_settings admin update" on public.site_settings; drop policy if exists "site_settings admin insert" on public.site_settings;
-create policy "site_settings read all" on public.site_settings for select to anon, authenticated using (true);
-create policy "site_settings admin update" on public.site_settings for update to authenticated using (public.is_admin()) with check (public.is_admin());
-create policy "site_settings admin insert" on public.site_settings for insert to authenticated with check (public.is_admin());
-
-drop policy if exists "materials storage backgrounds admin write" on storage.objects;
-create policy "materials storage backgrounds admin write" on storage.objects for insert to authenticated with check (bucket_id='materials' and (storage.foldername(name))[1]='backgrounds' and public.is_admin());
--->
-
-<style id="rathod-pw-shell">
-:root{--rh-primary:#635bff;--rh-primary2:#7c73ff;--rh-bg:#f5f7fb;--rh-text:#18202f;--rh-muted:#6b7280;--rh-border:#e7eaf0}
-#app{background:#f5f7fb;color:#18202f;min-height:100vh}
-#app .rh-main{background:#f5f7fb;min-width:0}
-.rh-topbar{height:72px;background:#fff;border-bottom:1px solid #e8ebf0;display:flex;align-items:center;justify-content:space-between;padding:0 22px;position:sticky;top:0;z-index:60}
-.rh-brand{display:flex;align-items:center;gap:10px;font-weight:800;color:#18202f;letter-spacing:-.3px}
-.rh-brand-mark{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#635bff,#8b83ff);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 8px 22px #635bff30}
-.rh-top-actions{display:flex;align-items:center;gap:10px}
-.rh-icon-btn{width:40px;height:40px;border:1px solid #e6e8ee;background:#fff;border-radius:12px;color:#596273;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.18s}
-.rh-icon-btn:hover{background:#f4f5ff;color:#635bff;border-color:#d9d6ff}
-.rh-user{display:flex;align-items:center;gap:9px;padding-left:8px;border-left:1px solid #e8ebf0;margin-left:4px}
-.rh-user-name{font-size:13px;font-weight:700;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rh-sidebar{width:250px;background:#fff;border-right:1px solid #e8ebf0;min-height:calc(100vh - 72px);position:sticky;top:72px;align-self:flex-start;overflow-y:auto;padding:18px 12px 26px}
-.rh-side-title{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1ae;padding:10px 12px 7px;font-weight:800}
-.rh-nav-btn{width:100%;border:0;background:transparent;color:#566071;display:flex;align-items:center;gap:12px;text-align:left;padding:11px 12px;border-radius:11px;margin:2px 0;font-size:13px;font-weight:650;cursor:pointer;transition:.18s}
-.rh-nav-btn i{width:21px;text-align:center;font-size:15px;color:#7b8494}
-.rh-nav-btn:hover{background:#f5f6ff;color:#5149d9}
-.rh-nav-btn:hover i{color:#635bff}
-.rh-nav-btn.rh-active{background:#ecebff;color:#5149d9;box-shadow:inset 3px 0 0 #635bff}
-.rh-nav-btn.rh-active i{color:#635bff}
-.rh-side-sep{height:1px;background:#eef0f4;margin:12px 8px}
-.rh-content{width:100%;max-width:1220px;margin:0 auto;padding:24px}
-.rh-page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:20px}
-.rh-page-title{font-size:25px;font-weight:800;color:#18202f;letter-spacing:-.5px}
-.rh-page-sub{font-size:12px;color:#7b8494;margin-top:4px}
-.rh-card{background:#fff;border:1px solid #e8ebf0;border-radius:16px;box-shadow:0 5px 18px rgba(25,35,55,.045)}
-.rh-home-hero{background:linear-gradient(120deg,#1f2937,#30384a);color:#fff;border-radius:18px;padding:26px;position:relative;overflow:hidden;box-shadow:0 12px 30px #11182718}
-.rh-home-hero:after{content:"";position:absolute;right:-70px;top:-90px;width:280px;height:280px;border-radius:50%;border:45px solid #ffffff0d}
-.rh-hero-kicker{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#c7c9d0;font-weight:800}
-.rh-hero-title{font-size:29px;font-weight:850;margin-top:5px;position:relative;z-index:1}
-.rh-stat{padding:17px;background:#fff;border:1px solid #e8ebf0;border-radius:15px}
-.rh-stat-icon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:#f1f0ff;color:#635bff;margin-bottom:10px}
-.rh-stat-value{font-size:21px;font-weight:850;color:#18202f}
-.rh-stat-label{font-size:11px;color:#8a92a0;margin-top:2px}
-.rh-section-title{font-size:18px;font-weight:800;color:#202838;margin:25px 0 12px}
-.rh-feature-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.rh-feature{background:#fff;border:1px solid #e8ebf0;border-radius:15px;padding:17px;cursor:pointer;transition:.18s;min-height:105px;position:relative}
-.rh-feature:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(25,35,55,.08);border-color:#d8d5ff}
-.rh-feature-icon{width:40px;height:40px;border-radius:12px;background:#f1f0ff;color:#635bff;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:11px}
-.rh-feature b{font-size:13px;color:#222b3a}.rh-feature p{font-size:10px;color:#8b93a0;margin-top:3px}
-.rh-live{border:1px solid #dfe3eb;background:#fff;border-radius:15px;padding:16px}
-.rh-live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:6px;box-shadow:0 0 0 4px #22c55e18}
-.rh-old-section{color:#18202f}
-.rh-old-section>div{box-shadow:0 5px 18px rgba(25,35,55,.045)}
-/* Existing dark feature cards remain readable, but the surrounding app is now light/PW-like. */
-#app .rh-content .bg-slate-800\/95,#app .rh-content .bg-slate-900\/95{border-color:#e5e7eb}
-.rh-mobile-bottom{display:none}
-@media(max-width:900px){.rh-sidebar{width:78px;padding:15px 8px}.rh-side-title{display:none}.rh-nav-btn{justify-content:center;padding:12px 8px}.rh-nav-btn span{display:none}.rh-nav-btn i{width:auto;font-size:17px}.rh-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rh-content{padding:17px}.rh-user-name{display:none}}
-@media(max-width:640px){.rh-topbar{height:62px;padding:0 12px}.rh-sidebar{display:none}.rh-main{padding-bottom:74px}.rh-content{padding:13px}.rh-page-title{font-size:21px}.rh-home-hero{padding:20px}.rh-hero-title{font-size:23px}.rh-feature-grid{gap:9px}.rh-feature{padding:13px;min-height:98px}.rh-mobile-bottom{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;bottom:0;left:0;right:0;height:66px;background:#fff;border-top:1px solid #e6e8ee;z-index:100;box-shadow:0 -8px 24px #1118270c}.rh-mobile-bottom button{border:0;background:#fff;color:#7a8290;font-size:9px;font-weight:700}.rh-mobile-bottom i{display:block;font-size:17px;margin-bottom:4px}.rh-mobile-bottom .rh-active{color:#635bff}.rh-top-actions .rh-icon-btn:nth-child(2){display:none}}
 </style>
 </head>
 <body class="doctor-bg min-h-screen font-sans">
@@ -313,11 +200,11 @@ create policy "materials storage backgrounds admin write" on storage.objects for
 <div id="password-reset-modal" class="hidden fixed inset-0 z-[200] bg-black/80 p-4 flex items-center justify-center">
   <div class="w-full max-w-md bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-2xl">
     <div class="flex items-center justify-between mb-4">
-      <div><h3 class="font-bold text-lg text-white">Reset Password</h3><p class="text-xs text-slate-400 mt-1">Email में आया 6-digit code डालें</p></div>
+      <div><h3 class="font-bold text-lg text-white">Reset Password</h3><p class="text-xs text-slate-400 mt-1">Email में आया OTP code डालें</p></div>
       <i class="fa-solid fa-shield-halved text-teal-400 text-xl"></i>
     </div>
     <form id="password-reset-form" class="space-y-3">
-      <input id="reset-otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]{6}" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white text-center text-xl tracking-[.45em]" placeholder="123456">
+      <input id="reset-otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]{6,8}" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white text-center text-xl tracking-[.35em]" placeholder="123456">
       <p id="reset-otp-email" class="text-xs text-slate-400 text-center"></p>
       <button type="button" id="verify-otp-btn" class="w-full bg-teal-600 hover:bg-teal-500 py-3 rounded-lg font-bold text-white">Verify Code</button>
       <div id="new-password-fields" class="hidden space-y-3">
@@ -423,8 +310,6 @@ create policy "materials storage backgrounds admin write" on storage.objects for
 </div>
 </div>
 
-
-
 <!-- HOME DASHBOARD -->
 <section id="section-home" class="rh-old-section space-y-5">
  <div class="rh-home-grid">
@@ -466,7 +351,6 @@ create policy "materials storage backgrounds admin write" on storage.objects for
 
  </div>
 </section>
-
 
 <section id="section-focus" class="hidden space-y-5">
 <div class="bg-slate-800/95 border border-teal-500/30 rounded-2xl p-5 shadow-xl">
@@ -714,7 +598,7 @@ let mediaRecorder=null,audioChunks=[],recordedAudioBlob=null,isRecording=false;
 let authMode='login';
 let chatChannel=null;
 
-function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className=`fixed top-4 right-4 z-[100] max-w-sm px-4 py-3 rounded-xl shadow-2xl text-sm ${ok?'bg-emerald-600':'bg-red-600'}`;setTimeout(()=>t.classList.add('hidden'),3500)}
+function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className=`fixed top-4 right-4 z-[100] max-w-sm px-4 py-3 rounded-xl shadow-2xl text-sm ${ok?'bg-emerald-600':'bg-red-600'}`;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),3500)}
 function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function safeUrl(u){try{const x=new URL(u);return ['https:','http:'].includes(x.protocol)?x.href:'#'}catch{return '#'}}
 
@@ -753,9 +637,10 @@ async function uploadProfilePic(uid,file){
 async function boot(){
  const r=await db.auth.getSession();session=r.data.session;if(!session)return;
  user=session.user;
- const {data,error}=await db.from('profiles').select('*').eq('id',user.id).single();
+ const {data,error}=await db.from('profiles').select('*').eq('id',user.id).maybeSingle();
  if(error) {toast('Profile setup failed. Run the SQL setup file first.',false);return}
- profile=data;document.getElementById('auth-screen').classList.add('hidden');document.getElementById('app').classList.remove('hidden');
+ profile=data||{id:user.id,name:user.email,role:'member',xp:0,level:1};
+ document.getElementById('auth-screen').classList.add('hidden');document.getElementById('app').classList.remove('hidden');
  document.getElementById('nav-name').textContent=profile.name||user.email;
  document.getElementById('user-badge').textContent=profile.role==='admin'?'ADMIN':'MEMBER';
  if(profile.pfp_url)document.getElementById('nav-pfp').innerHTML=`<img src="${safeUrl(profile.pfp_url)}" class="w-full h-full object-cover">`;
@@ -814,10 +699,21 @@ function renderHomeDashboard(){
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
   set('home-user-name',n); set('home-study-time',formatMinutesSimple(getFocusTodayMinutes())); set('home-streak',(getFocusStreak())+' 🔥');
   set('home-xp',((profile.xp||0))+' XP'); set('home-level','Level '+(profile.level||1));
-  const live=document.getElementById('focus-live-users'); const count=live?live.querySelectorAll('[data-live-user]').length:0; set('home-live-count',count+' students studying');
   renderRHHomeRail();
 }
 function formatMinutesSimple(m){m=Math.max(0,Math.round(Number(m)||0));return Math.floor(m/60)+'h '+(m%60)+'m'}
+
+function getFocusTodayMinutes(){
+  const st=readFocusStats();
+  const today=localDay();
+  const todaySec=(st.sessions||[]).filter(x=>x.date===today).reduce((a,x)=>a+Number(x.seconds||0),0);
+  return Math.round(todaySec/60);
+}
+
+function getFocusStreak(){
+  const st=readFocusStats();
+  return focusStreak(st.sessions||[]);
+}
 
 async function loadChatMessages(){
  if(!user)return;
@@ -832,11 +728,20 @@ function renderChatMessages(){
 }
 function scrollChatToBottom(){const box=document.getElementById('chat-messages');requestAnimationFrame(()=>{box.scrollTop=box.scrollHeight})}
 async function subscribeToChat(){
- if(!user||chatChannel)return;
- chatChannel=db.channel('chatroom-live').on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},payload=>{
-  const message=payload.new;if(!message||chatMessages.some(m=>m.id===message.id))return;
-  chatMessages.push(message);if(chatMessages.length>50)chatMessages.shift();renderChatMessages();
- }).subscribe();
+ if(!user)return;
+ if(chatChannel){try{await db.removeChannel(chatChannel)}catch(e){}}
+ chatChannel=db.channel('public:chat_messages')
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},payload=>{
+    const message=payload.new;if(!message)return;
+    const idx=chatMessages.findIndex(m=>m.id===message.id||(m.tempId&&m.tempId===message.id));
+    if(idx>=0){ chatMessages[idx]=message; }
+    else if(!chatMessages.some(m=>m.id===message.id)){
+      chatMessages.push(message);
+      if(chatMessages.length>50)chatMessages.shift();
+    }
+    renderChatMessages();
+  })
+  .subscribe();
 }
 async function cleanupChatSubscription(){
  if(!chatChannel)return;
@@ -846,10 +751,17 @@ document.getElementById('chat-form').addEventListener('submit',async e=>{
  e.preventDefault();if(!user||!profile)return toast('Please login to chat.',false);
  const input=document.getElementById('chat-input'),message=input.value.trim();if(!message)return;
  const btn=document.getElementById('chat-send-btn');btn.disabled=true;
+ const tempMsg={id:'temp_'+Date.now(),user_id:user.id,name:profile.name||user.email||'Member',message,created_at:new Date().toISOString()};
+ chatMessages.push(tempMsg);renderChatMessages();input.value='';
  try{
-  const {error}=await db.from('chat_messages').insert({user_id:user.id,name:profile.name||user.email||'Member',message});if(error)throw error;
-  input.value='';
- }catch(err){toast(err.message||'Message send failed',false)}finally{btn.disabled=false}
+  const {data,error}=await db.from('chat_messages').insert({user_id:user.id,name:profile.name||user.email||'Member',message}).select().single();
+  if(error)throw error;
+  if(data){
+    const idx=chatMessages.findIndex(m=>m.id===tempMsg.id);
+    if(idx>=0)chatMessages[idx]=data;
+    renderChatMessages();
+  }
+ }catch(err){toast(err.message||'Message send failed',false);loadChatMessages()}finally{btn.disabled=false}
 });
 
 function localDateValue(date=new Date()){const offset=date.getTimezoneOffset();return new Date(date.getTime()-offset*60000).toISOString().slice(0,10)}
@@ -917,11 +829,23 @@ document.getElementById('post-form').addEventListener('submit',async e=>{
 });
 
 let people=[],followingIds=new Set(),followerCount=0;
-async function loadPeople(){if(!user)return;const [{data:pd,error:pe},{data:fd,error:fe},{data:rd,error:re}]=await Promise.all([db.from('profiles').select('id,name,pfp_url,role').order('name',{ascending:true}).limit(200),db.from('hub_follows').select('following_id').eq('follower_id',user.id),db.from('hub_follows').select('follower_id').eq('following_id',user.id)]);if(pe||fe||re){console.warn(pe||fe||re);const b=document.getElementById('people-box');if(b)b.innerHTML='<div class="text-xs text-slate-500 p-3">Follow system ka SQL Supabase me run karo.</div>';return}people=(pd||[]).filter(p=>p.id!==user.id);followingIds=new Set((fd||[]).map(x=>x.following_id));followerCount=(rd||[]).length;updateFollowCounts();renderPeople()}
+async function loadPeople(){if(!user)return;const [{data:pd,error:pe},{data:fd,error:fe},{data:rd,error:re}]=await Promise.all([db.from('profiles').select('id,name,pfp_url,role').order('name',{ascending:true}).limit(200),db.from('hub_follows').select('following_id').eq('follower_id',user.id),db.from('hub_follows').select('follower_id').eq('following_id',user.id)]);if(pe||fe||re){console.warn(pe||fe||re);const b=document.getElementById('people-box');if(b)b.innerHTML='<div class="text-xs text-slate-500 p-3">Follow system ready.</div>';return}people=(pd||[]).filter(p=>p.id!==user.id);followingIds=new Set((fd||[]).map(x=>x.following_id));followerCount=(rd||[]).length;updateFollowCounts();renderPeople()}
 function updateFollowCounts(){document.getElementById('my-following-count')?.replaceChildren(document.createTextNode(followingIds.size));document.getElementById('my-followers-count')?.replaceChildren(document.createTextNode(followerCount))}
 function renderPeople(){const box=document.getElementById('people-box');if(!box)return;const q=(document.getElementById('people-search')?.value||'').toLowerCase().trim();const arr=people.filter(p=>!q||String(p.name||'Member').toLowerCase().includes(q));box.innerHTML=arr.length?arr.map(p=>{const f=followingIds.has(p.id);return `<div class="bg-slate-900/80 border border-slate-700 rounded-xl p-3 flex items-center gap-3"><div class="w-10 h-10 rounded-full overflow-hidden bg-slate-700 flex items-center justify-center">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}" class="w-full h-full object-cover">`:'👤'}</div><div class="min-w-0 flex-1"><b class="block truncate text-sm">${esc(p.name||'Member')}</b><span class="text-[10px] text-slate-500">${p.role==='admin'?'ADMIN':'MEMBER'}</span></div><button onclick="toggleFollow('${p.id}')" class="${f?'bg-slate-700':'bg-indigo-600 hover:bg-indigo-500'} px-3 py-2 rounded-lg text-xs font-bold">${f?'Following':'Follow'}</button></div>`}).join(''):'<div class="text-center py-6 text-slate-500 text-sm">Koi member nahi mila.</div>'}
 async function toggleFollow(targetId){if(!user||targetId===user.id)return;const f=followingIds.has(targetId);try{if(f){const {error}=await db.from('hub_follows').delete().eq('follower_id',user.id).eq('following_id',targetId);if(error)throw error;followingIds.delete(targetId);toast('Unfollowed')}else{const {error}=await db.from('hub_follows').insert({follower_id:user.id,following_id:targetId});if(error&&error.code!=='23505')throw error;followingIds.add(targetId);toast('Following ✓')}updateFollowCounts();renderPeople()}catch(e){toast(e.message||'Follow action failed',false)}}
-async function loadPosts(){const {data,error}=await db.from('posts').select('*').eq('is_material',false).order('created_at',{ascending:false});if(error){console.error(error);return}posts=data||[];renderPosts()}
+
+let communityChannel=null;
+async function loadPosts(){
+  const {data,error}=await db.from('posts').select('*').eq('is_material',false).order('created_at',{ascending:false});
+  if(error){console.error(error);return}
+  posts=data||[];
+  renderPosts();
+  if(!communityChannel&&user){
+    communityChannel=db.channel('public:posts')
+      .on('postgres_changes',{event:'*',schema:'public',table:'posts'},()=>{loadPosts();loadMaterials()})
+      .subscribe();
+  }
+}
 function renderPosts(){
  document.getElementById('post-count').textContent=`${posts.length} posts`;
  document.getElementById('posts-box').innerHTML=posts.length?posts.map(p=>{
@@ -939,31 +863,11 @@ function renderPosts(){
 
 async function toggleLike(id){
  const p = posts.find(x => String(x.id) === String(id));
-
- if(!p){
-  toast('Post not found',false);
-  return;
- }
-
+ if(!p){ toast('Post not found',false); return; }
  let likes = Array.isArray(p.likes) ? [...p.likes] : [];
-
- if(likes.includes(user.id)){
-  likes = likes.filter(x => x !== user.id);
- }else{
-  likes.push(user.id);
- }
-
- const { error } = await db
-  .from('posts')
-  .update({ likes })
-  .eq('id', p.id);
-
- if(error){
-  console.error(error);
-  toast(error.message,false);
-  return;
- }
-
+ if(likes.includes(user.id)){ likes = likes.filter(x => x !== user.id); }else{ likes.push(user.id); }
+ const { error } = await db.from('posts').update({ likes }).eq('id', p.id);
+ if(error){ console.error(error); toast(error.message,false); return; }
  await loadPosts();
 }
 
@@ -971,67 +875,25 @@ async function addComment(id){
  const input = document.getElementById('comment-'+id);
  const file = document.getElementById('replyfile-'+id).files[0];
  const text = input.value.trim();
-
  if(!text && !file) return;
-
  const p = posts.find(x => String(x.id) === String(id));
-
- if(!p){
-  toast('Post not found',false);
-  return;
- }
-
- let comments = Array.isArray(p.comments)
-  ? [...p.comments]
-  : [];
-
+ if(!p){ toast('Post not found',false); return; }
+ let comments = Array.isArray(p.comments) ? [...p.comments] : [];
  let image_url = null;
-
  try{
   if(file){
-   const path =
-    `community/replies/${crypto.randomUUID()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
-
-   const { error } = await db
-    .storage
-    .from('materials')
-    .upload(path,file,{contentType:file.type});
-
+   const path = `community/replies/${crypto.randomUUID()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+   const { error } = await db.storage.from('materials').upload(path,file,{contentType:file.type});
    if(error) throw error;
-
-   image_url = db
-    .storage
-    .from('materials')
-    .getPublicUrl(path)
-    .data
-    .publicUrl;
+   image_url = db.storage.from('materials').getPublicUrl(path).data.publicUrl;
   }
-
-  comments.push({
-   author: profile.name,
-   text,
-   image_url,
-   user_id: user.id,
-   date: new Date().toISOString()
-  });
-
-  const { error } = await db
-   .from('posts')
-   .update({ comments })
-   .eq('id', p.id);
-
+  comments.push({ author: profile.name, text, image_url, user_id: user.id, date: new Date().toISOString() });
+  const { error } = await db.from('posts').update({ comments }).eq('id', p.id);
   if(error) throw error;
-
   input.value = '';
-
   document.getElementById('replyfile-'+id).value = '';
-
   await loadPosts();
-
- }catch(err){
-  console.error(err);
-  toast(err.message,false);
- }
+ }catch(err){ console.error(err); toast(err.message,false); }
 }
 
 async function deletePost(id){if(!confirm('Delete this post?'))return;const {error}=await db.from('posts').delete().eq('id',id);if(error)toast(error.message,false);else{toast('Deleted');await loadPosts();await loadMaterials()}}
@@ -1039,7 +901,8 @@ async function deletePost(id){if(!confirm('Delete this post?'))return;const {err
 async function toggleRecording(){
  if(!isRecording){try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});mediaRecorder=new MediaRecorder(stream);audioChunks=[];mediaRecorder.ondataavailable=e=>audioChunks.push(e.data);mediaRecorder.onstop=()=>{recordedAudioBlob=new Blob(audioChunks,{type:'audio/webm'});stream.getTracks().forEach(t=>t.stop());document.getElementById('rec-status').textContent='Voice recorded ✓'};mediaRecorder.start();isRecording=true;document.getElementById('record-btn').textContent='🎙 Stop Recording';document.getElementById('rec-status').textContent='Recording...'}catch(e){toast('Microphone permission denied',false)}}else{mediaRecorder.stop();isRecording=false;document.getElementById('record-btn').textContent='🎙 Record Voice'}}
 
-async function awardQuizXP(correct){if(!correct||!user)return;try{const next=Number(profile.xp||0)+10;const level=Math.max(1,Math.floor(next/500)+1);const{error}=await db.from('profiles').update({xp:next,level}).eq('id',user.id);if(error)throw error;profile.xp=next;profile.level=level;toast('+10 XP 🎉');}catch(e){console.warn('XP update failed',e)}}
+async function awardQuizXP(correct){if(!correct||!user)return;try{const next=Number(profile.xp||0)+10;const level=Math.max(1,Math.floor(next/500)+1);const{error}=await db.from('profiles').update({xp:next,level}).eq('id',user.id);if(error)throw error;profile.xp=next;profile.level=level;toast('+10 XP 🎉');renderHomeDashboard();loadLeaderboard();}catch(e){console.warn('XP update failed',e)}}
+
 /* ==================== RATHOD HUB NEW FEATURES ==================== */
 let stories=[],vaultItems=[],leaderboard=[];
 const XP_LEVEL_SIZE=500;
@@ -1053,7 +916,7 @@ document.getElementById('story-form').addEventListener('submit',async e=>{e.prev
 function openStory(id){const s=stories.find(x=>String(x.id)===String(id));if(!s)return;document.getElementById('story-viewer-content').innerHTML=`<div class="text-left mb-2"><b>${esc(s.name||'Member')}</b><div class="text-xs text-slate-400">Expires ${new Date(s.expires_at).toLocaleString()}</div></div>${s.media_type?.startsWith('video/')?`<video controls autoplay class="max-h-[75vh] w-full rounded-2xl bg-black" src="${safeUrl(s.media_url)}"></video>`:`<img class="max-h-[75vh] w-full rounded-2xl object-contain bg-black" src="${safeUrl(s.media_url)}">`}${s.caption?`<p class="mt-3 text-sm">${esc(s.caption)}</p>`:''}`;document.getElementById('story-viewer').classList.remove('hidden')}
 function closeStoryViewer(){document.getElementById('story-viewer').classList.add('hidden');document.getElementById('story-viewer-content').innerHTML=''}
 
-/* Presence + game invites — reliable online 1-vs-1 rooms */
+/* Presence + game invites */
 let gamePresence=null,gameEvents=null,gameRoom=null;
 let currentGame={type:null,online:false,roomId:null,role:null,chess:null,ttt:null,selected:null,gameOver:false,connected:false};
 
@@ -1191,8 +1054,6 @@ async function startOnlineGame(type,roomId,role){
           ? `${currentGame.role==='host'?'White':'Black'} ready • ${currentGame.chess.turn()==='w'?'White':'Black'} की turn`
           : `${currentGame.role==='host'?'X':'O'} ready • Online match`;
 
-      /* Host periodically/after every presence sync publishes the authoritative
-         initial/current state. self:true also lets the sender keep its own UI in sync. */
       if(currentGame.role==='host'){
         await roomSend('state',{
           roomId,type,
@@ -1226,7 +1087,6 @@ async function receiveMoveRequest(p){
 
   if(currentGame.type==='tictactoe'){
     const board=currentGame.ttt, count=board.filter(Boolean).length;
-    /* Host = X. Guest can send only O, and only on O's turn. */
     if(count%2!==1||p.mark!=='O'||!Number.isInteger(p.index)||p.index<0||p.index>8||board[p.index])return;
 
     board[p.index]='O';
@@ -1243,8 +1103,6 @@ async function receiveMoveRequest(p){
     return;
   }
 
-  /* Chess: guest sends {from,to}; host validates against its authoritative
-     board and only broadcasts state if the move is actually legal. */
   if(currentGame.type==='chess'){
     if(currentGame.chess.turn()!=='b'||!p.from||!p.to)return;
     let legal=null;
@@ -1288,7 +1146,6 @@ function receiveGameEnd(p){
   document.getElementById('game-status').textContent=p.message||'Game over';
 }
 
-/* Lobby is invite-only: no local/solo matches. */
 function startLocalGame(){
   toast('पहले ONLINE user को invite करें.',false);
 }
@@ -1308,7 +1165,6 @@ function renderGame(){
   if(currentGame.type==='tictactoe')renderTtt();
 }
 
-/* Tic Tac Toe — host=X, guest=O, and only the correct turn can be played. */
 function tttResult(b){
   const w=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
   const win=w.find(x=>b[x[0]]&&b[x[0]]===b[x[1]]&&b[x[0]]===b[x[2]]);
@@ -1354,14 +1210,12 @@ async function tttMove(i){
     renderTtt();
     if(result)await roomSend('game-end',{roomId:currentGame.roomId,message:result});
   }else{
-    /* Guest does NOT modify its board locally. Host accepts and broadcasts state. */
     await roomSend('move-request',{
       roomId:currentGame.roomId,fromId:user.id,index:i,mark:'O'
     });
   }
 }
 
-/* Chess — host=White, guest=Black. Host is authoritative; guest sends move requests. */
 function renderChess(){
   const board=document.getElementById('chess-board');
   const u={p:'♟',r:'♜',n:'♞',b:'♝',q:'♛',k:'♚',P:'♙',R:'♖',N:'♘',B:'♗',Q:'♕',K:'♔'};
@@ -1400,7 +1254,6 @@ async function chessClick(r,c){
   if(currentGame.chess.turn()!==mine)
     return toast('Opponent की turn है.',false);
 
-  /* First click selects one of YOUR pieces. */
   if(!currentGame.selected){
     if(piece&&piece.color===mine){
       currentGame.selected=sq;
@@ -1411,7 +1264,6 @@ async function chessClick(r,c){
 
   const from=currentGame.selected;
 
-  /* Clicking the selected square again cancels selection. */
   if(from===sq){
     currentGame.selected=null;
     renderChess();
@@ -1419,12 +1271,10 @@ async function chessClick(r,c){
   }
 
   try{
-    /* Validate on a clone first; invalid moves never corrupt the real board. */
     const test=new Chess(currentGame.chess.fen());
     const legal=test.move({from,to:sq,promotion:'q'});
 
     if(!legal){
-      /* Allow changing selection directly to another own piece. */
       if(piece&&piece.color===mine){
         currentGame.selected=sq;
         renderChess();
@@ -1435,11 +1285,9 @@ async function chessClick(r,c){
       return;
     }
 
-    /* Apply the legal move immediately on this player's board. */
     currentGame.selected=null;
 
     if(currentGame.role==='host'){
-      /* Host is authoritative: apply directly and broadcast the resulting state. */
       currentGame.chess.move({from,to:sq,promotion:'q'});
       currentGame.gameOver=currentGame.chess.isGameOver();
       renderChess();
@@ -1458,8 +1306,6 @@ async function chessClick(r,c){
         });
       }
     }else{
-      /* Guest never mutates the board locally — it waits for the host's
-         authoritative state broadcast after validation. */
       renderChess();
       await roomSend('move-request',{
         roomId:currentGame.roomId,
@@ -1483,9 +1329,8 @@ async function openVaultFile(id){const v=vaultItems.find(x=>String(x.id)===Strin
 async function deleteVault(id){const v=vaultItems.find(x=>String(x.id)===String(id));if(!v||!confirm('Delete this vault file?'))return;const{error}=await db.from('vault').delete().eq('id',id).eq('user_id',user.id);if(error)return toast(error.message,false);if(v.storage_path)await db.storage.from('vault').remove([v.storage_path]);toast('Vault file deleted');loadVault()}
 
 /* Leaderboard */
-async function loadLeaderboard(){if(!user)return;const{data,error}=await db.from('profiles').select('id,name,pfp_url,role,xp,level').order('xp',{ascending:false}).limit(100);if(error){document.getElementById('leaderboard-list').innerHTML='<div class="text-xs text-slate-500 p-3">Leaderboard के लिए profiles में xp/level columns चाहिए.</div>';return}leaderboard=(data||[]).map(p=>({...p,xp:Number(p.xp||0),level:Number(p.level||levelFromXp(p.xp))}));renderLeaderboard();renderRHHomeRail()}
+async function loadLeaderboard(){if(!user)return;const{data,error}=await db.from('profiles').select('id,name,pfp_url,role,xp,level').order('xp',{ascending:false}).limit(100);if(error){document.getElementById('leaderboard-list').innerHTML='<div class="text-xs text-slate-500 p-3">Leaderboard ke liye profiles table check karein.</div>';return}leaderboard=(data||[]).map(p=>({...p,xp:Number(p.xp||0),level:Number(p.level||levelFromXp(p.xp))}));renderLeaderboard();renderRHHomeRail()}
 function renderLeaderboard(){const me=leaderboard.find(p=>p.id===user.id)||{xp:Number(profile.xp||0),level:Number(profile.level||levelFromXp(profile.xp))};document.getElementById('my-xp').textContent=`${me.xp} XP`;document.getElementById('my-level').textContent=`Level ${me.level}`;document.getElementById('my-xp-bar').style.width=xpPercent(me.xp)+'%';const medals=['🥇','🥈','🥉'];document.getElementById('leaderboard-list').innerHTML=leaderboard.map((p,i)=>`<div class="bg-slate-900/80 border ${p.id===user.id?'border-amber-500/50':'border-slate-700'} rounded-xl p-3 flex items-center gap-3"><div class="w-9 text-center font-bold text-lg">${medals[i]||('#'+(i+1))}</div><div class="w-9 h-9 rounded-full overflow-hidden bg-slate-700">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}" class="w-full h-full object-cover">`:'👤'}</div><div class="min-w-0 flex-1"><b class="block truncate text-sm">${esc(p.name||'Member')}${p.id===user.id?' (You)':''}</b><span class="text-[10px] text-slate-500">Level ${p.level}</span></div><b class="text-sm text-amber-300">${p.xp} XP</b></div>`).join('')||'<div class="text-center py-8 text-slate-500">No members found.</div>'}
-
 
 function renderRHHomeRail(){
   const lb=document.getElementById('rh-home-leaderboard');
@@ -1690,14 +1535,13 @@ async function sendPasswordResetEmail(e){
  if(!email)return;
  btn.disabled=true;btn.textContent='Sending...';
  try{
-  // OTP mode: no GitHub Pages redirect is used.
   const {error}=await db.auth.resetPasswordForEmail(email);
   if(error)throw error;
   document.getElementById('reset-otp-email').textContent='Code भेजा गया: '+email;
   document.getElementById('password-reset-modal').classList.remove('hidden');
   document.getElementById('forgot-form').classList.add('hidden');
   document.getElementById('reset-otp').focus();
-  toast('8-digit reset code email पर भेज दिया गया 📩');
+  toast('Reset code email पर भेज दिया गया 📩');
  }catch(err){
   console.error('Password reset request failed:',err);
   toast(err?.message||'Reset code भेजने में समस्या हुई',false);
@@ -1727,13 +1571,12 @@ function closePasswordResetModal(){
  passwordResetVerified=false;
 }
 
-// Verify the 8-digit recovery OTP. This completely avoids GitHub Pages redirect links.
 document.getElementById('verify-otp-btn').addEventListener('click',async()=>{
  const otp=document.getElementById('reset-otp').value.trim();
  const email=passwordResetEmail || document.getElementById('forgot-email').value.trim().toLowerCase();
  const btn=document.getElementById('verify-otp-btn');
  if(!email)return toast('Reset email नहीं मिला. फिर से Forgot Password करें.',false);
- if(!/^\d{8}$/.test(otp))return toast('8-digit code सही से डालें.',false);
+ if(!/^\d{6,8}$/.test(otp))return toast('Kripya valid 6 ya 8-digit OTP code enter karein.',false);
  btn.disabled=true;btn.textContent='Verifying...';
  try{
   const {data,error}=await db.auth.verifyOtp({email,token:otp,type:'recovery'});
@@ -1792,7 +1635,6 @@ document.getElementById('resend-reset-btn').addEventListener('click',async()=>{
  }catch(err){toast(err?.message||'Code resend नहीं हुआ',false)}
 });
 
-// Keep normal auth changes intact. OTP verification creates the recovery session itself.
 db.auth.onAuthStateChange((event,s)=>{
  if(event==='PASSWORD_RECOVERY'){
    session=s||null;
@@ -1819,7 +1661,7 @@ renderEventQuestionInputs();
 async function loadHubEvents(){
  if(!user)return;
  const {data,error}=await db.from('hub_events').select('*').order('created_at',{ascending:false});
- if(error){console.error(error);if(String(error.message||'').toLowerCase().includes('ends_at'))document.getElementById('hub-no-event').textContent='Supabase me ends_at column/schema cache update pending hai.';return}
+ if(error){console.error(error);return}
  hubEvents=data||[];
  markDailyBioStatus();
  const now=new Date();
@@ -1955,6 +1797,7 @@ async function grantXP(amount){
  const {error}=await db.from('profiles').update({xp:next,level}).eq('id',user.id);
  if(error){console.warn('XP update failed',error);return}
  profile.xp=next;profile.level=level;
+ renderHomeDashboard();
  const lb=document.getElementById('section-leaderboard');
  if(lb&&!lb.classList.contains('hidden'))loadLeaderboard();
 }
@@ -2006,7 +1849,7 @@ async function spinWheel(){
  setTimeout(()=>{toast(`🎉 ${pick.label}!`);renderSpinStatus()},3000);
 }
 
-/* ==================== STUDY ROOMS + LIVE VOICE (WebRTC mesh, max 5) ==================== */
+/* ==================== STUDY ROOMS + LIVE VOICE ==================== */
 const STUDY_ROOMS=[
  {key:'physics',name:'Physics Room',icon:'⚛️'},
  {key:'biology',name:'Biology Room',icon:'🧬'},
@@ -2088,7 +1931,7 @@ function renderRoomMembers(key){
 async function joinStudyRoom(key){
  const rc=ensureRoomChannel(key);if(!rc||rc.joined)return;
  try{await rc.ready;await rc.channel.track({user_id:user.id,name:profile?.name||user.email||'Member',voice:false})}
- catch(e){console.error(e);return toast('Study room connect nahi ho pa raha. Internet/realtime check karein.',false)}
+ catch(e){console.error(e);return toast('Study room connect nahi ho pa raha.',false)}
  rc.joined=true;
  document.getElementById(`room-join-${key}`).classList.add('hidden');
  document.getElementById(`room-leave-${key}`).classList.remove('hidden');
@@ -2111,7 +1954,7 @@ function ensureVoiceState(key){
 async function reserveVoiceSlot(key){
  const {data,error}=await db.rpc('join_hub_voice_room',{p_room:key});
  if(error)throw error;
- if(!data?.ok)throw new Error(data?.message||`Voice room full (${MAX_VOICE_USERS}/${MAX_VOICE_USERS})`);
+ if(!data?.ok)throw new Error(data?.message||`Voice room full`);
  return data;
 }
 async function releaseVoiceSlot(key){
@@ -2128,10 +1971,10 @@ function stopVoiceHeartbeat(key){const vs=voiceState[key];if(vs?.heartbeat)clear
 async function joinVoice(key){
  const vs=ensureVoiceState(key);if(vs.joined)return;
  const rc=roomChannels[key];if(!rc||!rc.joined)return toast('Pehle room join karein.',false);
- if(!window.isSecureContext&&location.hostname!=='localhost')return toast('Live Voice ke liye HTTPS site zaroori hai.',false);
- if(!navigator.mediaDevices?.getUserMedia)return toast('Is browser/device me microphone support nahi hai.',false);
+ if(!window.isSecureContext&&location.hostname!=='localhost')return toast('Live Voice ke liye HTTPS zaroori hai.',false);
+ if(!navigator.mediaDevices?.getUserMedia)return toast('Microphone support nahi hai.',false);
  const current=getVoicePeople(key);
- if(current.length>=MAX_VOICE_USERS)return toast(`Live Voice full hai — maximum ${MAX_VOICE_USERS} log hi join kar sakte hain.`,false);
+ if(current.length>=MAX_VOICE_USERS)return toast(`Live Voice full hai.`,false);
  try{
   await rc.ready;
   await reserveVoiceSlot(key);
@@ -2149,10 +1992,7 @@ async function joinVoice(key){
  }catch(e){
   console.error('joinVoice failed',e);
   if(vs.stream)vs.stream.getTracks().forEach(t=>t.stop());vs.stream=null;vs.joined=false;
-  if(e?.message?.toLowerCase().includes('full')||e?.message?.includes('maximum'))toast(`Live Voice full hai — maximum ${MAX_VOICE_USERS} log.`,false);
-  else if(e?.name==='NotAllowedError')toast('Microphone permission allow karo.',false);
-  else if(String(e?.message||'').toLowerCase().includes('function')||String(e?.message||'').toLowerCase().includes('rpc'))toast('Supabase Voice SQL setup pehle Run karo.',false);
-  else toast(e?.message||'Live Voice start nahi hua.',false);
+  toast(e?.message||'Live Voice start nahi hua.',false);
  }
 }
 function createPeer(key,peerId){
@@ -2163,7 +2003,7 @@ function createPeer(key,peerId){
  pc.ontrack=e=>{
   let audio=document.getElementById(`voice-audio-${key}-${peerId}`);
   if(!audio){audio=document.createElement('audio');audio.id=`voice-audio-${key}-${peerId}`;audio.autoplay=true;audio.playsInline=true;audio.controls=false;document.getElementById(`room-audio-${key}`).appendChild(audio)}
-  audio.srcObject=e.streams[0];audio.play().catch(()=>toast('Voice audio play karne ke liye page par ek baar tap/click karein.',false));
+  audio.srcObject=e.streams[0];audio.play().catch(()=>{});
  };
  pc.onconnectionstatechange=()=>{if(['failed','closed','disconnected'].includes(pc.connectionState))closePeer(key,peerId)};
  vs.peers[peerId]=pc;return pc;
@@ -2178,7 +2018,6 @@ async function handleVoiceSignal(key,payload){
  const vs=ensureVoiceState(key),rc=roomChannels[key];if(!rc||!vs.joined)return;
  try{
   if(payload.type==='join'){
-   // Deterministic initiator prevents simultaneous-offer/glare when two people join together.
    if(String(user.id)>String(payload.fromId))return;
    const pc=createPeer(key,payload.fromId);if(!pc)return;
    const offer=await pc.createOffer();await pc.setLocalDescription(offer);
@@ -2218,7 +2057,6 @@ function stopAllVoiceAndRooms(){
 window.addEventListener('pagehide',()=>{try{stopAllVoiceAndRooms()}catch(e){}});
 window.addEventListener('beforeunload',()=>{try{stopAllVoiceAndRooms()}catch(e){}});
 
-
 /* ==================== RATHOD HUB FOCUS / YPT-STYLE TIMER ==================== */
 let focusState={duration:1800,remaining:1800,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:'Biology',pomodoro:false,break:false};
 let focusInterval=null,focusChannel=null,focusReady=false;
@@ -2226,7 +2064,6 @@ const FOCUS_KEY_PREFIX='rathod_focus_v2_';
 function focusKey(){return FOCUS_KEY_PREFIX+(user?.id||'guest')}
 function focusStoreKey(){return focusKey()+'_state'}
 function focusStatsKey(){return focusKey()+'_stats'}
-function focusGoalKey(){return focusKey()+'_goal'}
 function focusDefaultStats(){return {sessions:[],goalHours:4}}
 function readFocusStats(){try{return JSON.parse(localStorage.getItem(focusStatsKey())||JSON.stringify(focusDefaultStats()))}catch{return focusDefaultStats()}}
 function writeFocusStats(x){localStorage.setItem(focusStatsKey(),JSON.stringify(x))}
@@ -2234,7 +2071,7 @@ function saveFocusState(){if(!user)return;localStorage.setItem(focusStoreKey(),J
 function readFocusState(){try{const x=JSON.parse(localStorage.getItem(focusStoreKey())||'null');return x&&Number(x.duration)>0?x:null}catch{return null}}
 function fmtFocus(sec){sec=Math.max(0,Math.floor(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}
 function fmtHM(sec){sec=Math.max(0,Math.floor(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);return `${h}h ${m}m`}
-function localDay(d=new Date()){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`}
+function localDay(d=new Date()){return localDateValue(d)}
 function addDays(dateStr,n){const d=new Date(dateStr+'T12:00:00');d.setDate(d.getDate()+n);return localDay(d)}
 function focusElapsed(){if(focusState.status!=='running'||!focusState.startedAt)return focusState.elapsedBeforePause||0;return Math.max(0,(Date.now()-focusState.startedAt)/1000)+(focusState.elapsedBeforePause||0)}
 function focusRemaining(){if(focusState.status==='running')return Math.max(0,focusState.duration-focusElapsed());return Math.max(0,focusState.remaining)}
@@ -2248,36 +2085,112 @@ function startFocusTimer(){
  focusState.startedAt=Date.now();focusState.status='running';focusState.pausedAt=null;saveFocusState();startFocusTicker();broadcastFocus();renderFocusTimer();toast('Focus session started 🔥');
 }
 
-
-function startFocusTicker(){if(focusInterval)clearInterval(focusInterval);focusInterval=setInterval(tickFocus,250);tickFocus()}
+function startFocusTicker(){if(focusInterval)clearInterval(focusInterval);focusInterval=setInterval(tickFocus,500);tickFocus()}
 function tickFocus(){
  if(!focusReady)return;
  const rem=focusRemaining();focusState.remaining=rem;renderFocusTimer();broadcastFocusThrottled();
  if(focusState.status==='running'&&rem<=0)completeFocusTimer();
 }
 function pauseFocusTimer(){if(focusState.status!=='running')return;focusState.elapsedBeforePause=focusElapsed();focusState.remaining=Math.max(0,focusState.duration-focusState.elapsedBeforePause);focusState.status='paused';focusState.startedAt=null;focusState.pausedAt=Date.now();saveFocusState();renderFocusTimer();broadcastFocus();toast('Timer paused ⏸️')}
-function stopFocusTimer(){if(!['running','paused'].includes(focusState.status))return;const elapsed=focusState.status==='running'?focusElapsed():focusState.elapsedBeforePause;if(elapsed>=60)recordFocusSession(Math.min(elapsed,focusState.duration),focusState.subject);focusState={duration:focusState.duration,remaining:focusState.duration,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:focusState.subject||'Other',pomodoro:false,break:false};saveFocusState();renderFocusTimer();broadcastFocus();toast('Session stopped.')}
+function stopFocusTimer(){
+  if(!['running','paused'].includes(focusState.status))return;
+  const elapsed=focusState.status==='running'?focusElapsed():focusState.elapsedBeforePause;
+  if(elapsed>=60)recordFocusSession(Math.min(elapsed,focusState.duration),focusState.subject);
+  focusState={duration:focusState.duration,remaining:focusState.duration,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:focusState.subject||'Other',pomodoro:false,break:false};
+  saveFocusState();
+  renderFocusTimer();
+  renderFocusDashboard();
+  renderHomeDashboard();
+  broadcastFocus();
+  toast('Session stopped.');
+}
 function resetFocusTimer(){if(focusState.status==='running')return toast('Running timer ko reset karne se pehle pause karo.',false);const d=focusState.duration||1800;focusState={duration:d,remaining:d,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:document.getElementById('focus-subject')?.value||'Biology',pomodoro:false,break:false};saveFocusState();renderFocusTimer();broadcastFocus()}
 function startPomodoro(){if(focusState.status==='running')return toast('Timer already running hai.',false);document.getElementById('focus-duration').value=50;focusState={duration:3000,remaining:3000,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:document.getElementById('focus-subject')?.value||'Biology',pomodoro:true,break:false};saveFocusState();startFocusTimer()}
-function completeFocusTimer(){if(focusState.status!=='running')return;const wasBreak=!!focusState.break;const studied=Math.min(focusState.duration,Math.max(0,focusElapsed()));focusState.remaining=0;focusState.status='idle';focusState.startedAt=null;focusState.elapsedBeforePause=0;saveFocusState();renderFocusTimer();if(wasBreak){notifyFocus('☕ Break complete','Your 10-minute break is over. Ready for the next focus session?');toast('Break complete ☕');return}if(studied>=60)recordFocusSession(studied,focusState.subject);notifyFocus('🎉 Focus session complete','Great job! Your study session is complete.');toast('Focus complete! 🎉 +25 XP');if(user)grantXP(25);if(focusState.pomodoro){setTimeout(()=>startPomodoroBreak(),350);}}
+function completeFocusTimer(){
+  if(focusState.status!=='running')return;
+  const wasBreak=!!focusState.break;
+  const studied=Math.min(focusState.duration,Math.max(0,focusElapsed()));
+  focusState.remaining=0;
+  focusState.status='idle';
+  focusState.startedAt=null;
+  focusState.elapsedBeforePause=0;
+  saveFocusState();
+  renderFocusTimer();
+  if(wasBreak){
+    notifyFocus('☕ Break complete','Your 10-minute break is over. Ready for the next focus session?');
+    toast('Break complete ☕');
+    return;
+  }
+  if(studied>=60)recordFocusSession(studied,focusState.subject);
+  notifyFocus('🎉 Focus session complete','Great job! Your study session is complete.');
+  toast('Focus complete! 🎉 +25 XP');
+  if(user)grantXP(25);
+  renderFocusDashboard();
+  renderHomeDashboard();
+  if(focusState.pomodoro){setTimeout(()=>startPomodoroBreak(),350);}
+}
 function startPomodoroBreak(){if(focusInterval)clearInterval(focusInterval);focusState={duration:600,remaining:600,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:focusState.subject||'Other',pomodoro:true,break:true};saveFocusState();renderFocusTimer();startFocusTimer();notifyFocus('🍅 Break time','50-minute focus complete. Take a 10-minute break.');}
 function renderFocusTimer(){const d=document.getElementById('focus-timer-display');if(!d)return;const rem=focusRemaining();d.textContent=fmtFocus(rem);const pct=focusState.duration?Math.min(100,Math.max(0,(1-rem/focusState.duration)*100)):0;const bar=document.getElementById('focus-progress');if(bar)bar.style.width=pct+'%';const mode=document.getElementById('focus-mode-label');if(mode)mode.textContent=focusState.break?'BREAK':'FOCUS SESSION';const st=document.getElementById('focus-session-status');if(st)st.textContent=focusState.status==='running'?(focusState.break?'Break running ☕':'Studying now 🔥'):focusState.status==='paused'?'Paused ⏸️':'Ready to study';const sb=document.getElementById('focus-start-btn'),pb=document.getElementById('focus-pause-btn'),xb=document.getElementById('focus-stop-btn');if(sb)sb.classList.toggle('hidden',focusState.status==='running');if(pb)pb.classList.toggle('hidden',focusState.status!=='running');if(xb)xb.classList.toggle('hidden',!['running','paused'].includes(focusState.status));}
-function recordFocusSession(seconds,subject){if(seconds<60)return;const st=readFocusStats();const now=new Date();st.sessions=Array.isArray(st.sessions)?st.sessions:[];st.sessions.push({date:localDay(now),seconds:Math.round(seconds),subject:subject||'Other',at:now.toISOString()});st.sessions=st.sessions.slice(-2000);writeFocusStats(st);renderFocusDashboard();broadcastFocus();const today=st.sessions.filter(x=>x.date===localDay()).reduce((a,x)=>a+Number(x.seconds||0),0);const goal=Number(st.goalHours||4)*3600;if(today>=goal&&!st.goalNotifiedDate){st.goalNotifiedDate=localDay();writeFocusStats(st);notifyFocus('🎯 Daily goal complete!','Your study goal for today is complete.');toast('Daily goal complete! 🏆');}}
-function saveFocusGoal(){const st=readFocusStats();let h=Math.min(24,Math.max(.25,Number(document.getElementById('focus-goal-hours').value)||4));st.goalHours=h;writeFocusStats(st);renderFocusDashboard()}
+function recordFocusSession(seconds,subject){
+  if(seconds<60)return;
+  const st=readFocusStats();
+  const now=new Date();
+  st.sessions=Array.isArray(st.sessions)?st.sessions:[];
+  st.sessions.push({date:localDay(now),seconds:Math.round(seconds),subject:subject||'Other',at:now.toISOString()});
+  st.sessions=st.sessions.slice(-2000);
+  writeFocusStats(st);
+  renderFocusDashboard();
+  renderHomeDashboard();
+  broadcastFocus();
+  const today=st.sessions.filter(x=>x.date===localDay()).reduce((a,x)=>a+Number(x.seconds||0),0);
+  const goal=Number(st.goalHours||4)*3600;
+  if(today>=goal&&!st.goalNotifiedDate){st.goalNotifiedDate=localDay();writeFocusStats(st);notifyFocus('🎯 Daily goal complete!','Your study goal for today is complete.');toast('Daily goal complete! 🏆');}
+}
+function saveFocusGoal(){const st=readFocusStats();let h=Math.min(24,Math.max(.25,Number(document.getElementById('focus-goal-hours').value)||4));st.goalHours=h;writeFocusStats(st);renderFocusDashboard();renderHomeDashboard()}
 function renderFocusDashboard(){if(!user)return;const st=readFocusStats(),today=localDay(),todaySec=st.sessions.filter(x=>x.date===today).reduce((a,x)=>a+Number(x.seconds||0),0);const goal=Number(st.goalHours||4);const t=document.getElementById('focus-today-time');if(t)t.textContent=fmtHM(todaySec);const ses=document.getElementById('focus-sessions');if(ses)ses.textContent=st.sessions.length;const gh=document.getElementById('focus-goal-hours');if(gh)gh.value=goal;const gl=document.getElementById('focus-goal-label');if(gl)gl.textContent=`${fmtHM(todaySec)} / ${goal}h`;const gb=document.getElementById('focus-goal-bar');if(gb)gb.style.width=Math.min(100,todaySec/(goal*3600)*100)+'%';const streak=document.getElementById('focus-streak');if(streak)streak.textContent=(focusStreak(st.sessions))+' 🔥';renderFocusWeek(st.sessions);renderFocusAchievements(st.sessions);renderFocusTimer();updateNotifyStatus()}
-function focusStreak(sessions){const days=new Set(sessions.filter(x=>Number(x.seconds||0)>=60).map(x=>x.date));let d=localDay();let n=0;while(days.has(d)){n++;d=addDays(d,-1)}return n}
-function renderFocusWeek(sessions){const box=document.getElementById('focus-week-chart');if(!box)return;const vals=[];for(let i=6;i>=0;i--){const day=addDays(localDay(),-i);const sec=sessions.filter(x=>x.date===day).reduce((a,x)=>a+Number(x.seconds||0),0);vals.push({day,sec})}const max=Math.max(1,...vals.map(x=>x.sec));const total=vals.reduce((a,x)=>a+x.sec,0);const wt=document.getElementById('focus-week-total');if(wt)wt.textContent=fmtHM(total);box.innerHTML=vals.map(v=>`<div class="h-full flex flex-col justify-end items-center gap-1"><span class="text-[9px] text-slate-500">${v.sec?fmtHM(v.sec).replace(' ',''):''}</span><div class="w-full bg-emerald-500/70 rounded-t-md" style="height:${Math.max(6,v.sec/max*100)}%" title="${v.day}: ${fmtHM(v.sec)}"></div><span class="text-[9px] text-slate-500">${new Date(v.day+'T12:00:00').toLocaleDateString(undefined,{weekday:'short'}).slice(0,3)}</span></div>`).join('')}
-function renderFocusAchievements(sessions){const total=sessions.reduce((a,x)=>a+Number(x.seconds||0),0),streak=focusStreak(sessions);const items=[['🌱','First Session',sessions.length>=1],['⏱️','1 Hour',total>=3600],['🔥','7 Day Streak',streak>=7],['🏆','10 Hours',total>=36000],['💎','25 Sessions',sessions.length>=25],['🚀','25 Hours',total>=90000],['🧠','50 Sessions',sessions.length>=50],['👑','50 Hour Club',total>=180000]];const box=document.getElementById('focus-achievements');if(box)box.innerHTML=items.map(x=>`<div class="rounded-xl p-3 border ${x[2]?'border-fuchsia-500/40 bg-fuchsia-500/10':'border-slate-700 bg-slate-900/60 opacity-50'}"><div class="text-xl">${x[0]}</div><b class="text-xs block mt-1">${x[1]}</b><span class="text-[9px] text-slate-500">${x[2]?'UNLOCKED':'Locked'}</span></div>`).join('')}
+function focusStreak(sessions){const days=new Set((sessions||[]).filter(x=>Number(x.seconds||0)>=60).map(x=>x.date));let d=localDay();let n=0;while(days.has(d)){n++;d=addDays(d,-1)}return n}
+function renderFocusWeek(sessions){const box=document.getElementById('focus-week-chart');if(!box)return;const vals=[];for(let i=6;i>=0;i--){const day=addDays(localDay(),-i);const sec=(sessions||[]).filter(x=>x.date===day).reduce((a,x)=>a+Number(x.seconds||0),0);vals.push({day,sec})}const max=Math.max(1,...vals.map(x=>x.sec));const total=vals.reduce((a,x)=>a+x.sec,0);const wt=document.getElementById('focus-week-total');if(wt)wt.textContent=fmtHM(total);box.innerHTML=vals.map(v=>`<div class="h-full flex flex-col justify-end items-center gap-1"><span class="text-[9px] text-slate-500">${v.sec?fmtHM(v.sec).replace(' ',''):''}</span><div class="w-full bg-emerald-500/70 rounded-t-md" style="height:${Math.max(6,v.sec/max*100)}%" title="${v.day}: ${fmtHM(v.sec)}"></div><span class="text-[9px] text-slate-500">${new Date(v.day+'T12:00:00').toLocaleDateString(undefined,{weekday:'short'}).slice(0,3)}</span></div>`).join('')}
+function renderFocusAchievements(sessions){const total=(sessions||[]).reduce((a,x)=>a+Number(x.seconds||0),0),streak=focusStreak(sessions);const items=[['🌱','First Session',sessions.length>=1],['⏱️','1 Hour',total>=3600],['🔥','7 Day Streak',streak>=7],['🏆','10 Hours',total>=36000],['💎','25 Sessions',sessions.length>=25],['🚀','25 Hours',total>=90000],['🧠','50 Sessions',sessions.length>=50],['👑','50 Hour Club',total>=180000]];const box=document.getElementById('focus-achievements');if(box)box.innerHTML=items.map(x=>`<div class="rounded-xl p-3 border ${x[2]?'border-fuchsia-500/40 bg-fuchsia-500/10':'border-slate-700 bg-slate-900/60 opacity-50'}"><div class="text-xl">${x[0]}</div><b class="text-xs block mt-1">${x[1]}</b><span class="text-[9px] text-slate-500">${x[2]?'UNLOCKED':'Locked'}</span></div>`).join('')}
 function updateNotifyStatus(){const st=document.getElementById('focus-notify-status'),b=document.getElementById('focus-notify-btn');if(!('Notification'in window)){if(st)st.textContent='Not supported';return}if(st)st.textContent=Notification.permission==='granted'?'Enabled ✓':Notification.permission==='denied'?'Blocked — browser settings check karo':'Permission not requested';if(b)b.textContent=Notification.permission==='granted'?'🔔 Enabled':'🔔 Notifications'}
-async function requestFocusNotifications(){if(!('Notification'in window))return toast('Is browser mein notifications supported nahi hain.',false);try{const p=await Notification.requestPermission();updateNotifyStatus();toast(p==='granted'?'Notifications enabled 🔔':p==='denied'?'Notifications blocked. Browser settings se allow karo.':'Permission not granted.',p==='granted')}catch(e){toast('Notification permission nahi mil paayi.',false)}}
+async function requestFocusNotifications(){if(!('Notification'in window))return toast('Is browser mein notifications supported nahi hain.',false);try{const p=await Notification.requestPermission();updateNotifyStatus();toast(p==='granted'?'Notifications enabled 🔔':p==='denied'?'Notifications blocked.':'Permission not granted.',p==='granted')}catch(e){toast('Notification permission nahi mil paayi.',false)}}
 function notifyFocus(title,body){if('Notification'in window&&Notification.permission==='granted'){try{new Notification(title,{body,icon:document.querySelector('link[rel="icon"]')?.href||undefined,tag:'rathod-focus'})}catch(e){}}}
 function testFocusNotification(){if('Notification'in window&&Notification.permission==='granted')notifyFocus('🔔 RATHOD HUB Test','Notifications sahi se kaam kar rahi hain.');else requestFocusNotifications()}
 let focusLastBroadcast=0;
-function broadcastFocusThrottled(){if(Date.now()-focusLastBroadcast<3000)return;broadcastFocus()}
-async function broadcastFocus(){if(!focusChannel||!user||!focusReady)return;focusLastBroadcast=Date.now();try{await focusChannel.track({user_id:user.id,name:profile?.name||user.email||'Member',subject:focusState.subject||'Other',status:focusState.status,break:!!focusState.break,started_at:focusState.startedAt||null,remaining:Math.ceil(focusRemaining())})}catch(e){}}
-function renderLiveFocusUsers(){if(!focusChannel)return;const state=focusChannel.presenceState(),people=[];Object.values(state).flat().forEach(p=>{if(p?.user_id&&!people.some(x=>x.user_id===p.user_id))people.push(p)});const active=people.filter(p=>p.status==='running');const badge=document.getElementById('focus-live-badge');if(badge)badge.textContent=`● ${active.length} STUDYING`;const c=document.getElementById('focus-online-count');if(c)c.textContent=`${active.length} studying`;const box=document.getElementById('focus-live-users');if(box)box.innerHTML=active.length?active.map(p=>{const rem=Number.isFinite(Number(p.remaining))?Number(p.remaining):0;return `<div class="flex justify-between items-center bg-slate-900 rounded-xl border border-slate-700 p-3"><div><b class="text-sm">${esc(p.name||'Member')}</b><div class="text-[10px] text-slate-500 mt-1">${esc(p.subject||'Other')} ${p.break?'• Break':'• Focus'}</div></div><div class="text-right"><span class="text-emerald-400 text-xs block">● LIVE</span><span class="text-[10px] text-slate-500">${fmtFocus(rem)}</span></div></div>`}).join(''):'<div class="text-center py-6 text-xs text-slate-500">Abhi koi active focus session nahi hai.</div>'}
-async function initFocusSystem(){if(!user||focusReady)return;focusReady=true;const saved=readFocusState();if(saved){focusState={...focusState,...saved};if(focusState.status==='running'&&focusRemaining()<=0){completeFocusTimer()}else if(focusState.status==='running')startFocusTicker()}else saveFocusState();const st=readFocusStats();if(!st.goalHours)st.goalHours=4;writeFocusStats(st);focusChannel=db.channel('rathod-hub-focus-live',{config:{presence:{key:user.id}}}).on('presence',{event:'sync'},renderLiveFocusUsers).on('presence',{event:'join'},renderLiveFocusUsers).on('presence',{event:'leave'},renderLiveFocusUsers).subscribe(async status=>{if(status==='SUBSCRIBED')broadcastFocus()});renderFocusDashboard();updateNotifyStatus()}
-
+function broadcastFocusThrottled(){if(Date.now()-focusLastBroadcast<4000)return;broadcastFocus()}
+async function broadcastFocus(){if(!focusChannel||!user||!focusReady)return;focusLastBroadcast=Date.now();try{await focusChannel.track({user_id:user.id,name:profile?.name||user.email||'Member',pfp_url:profile?.pfp_url||null,subject:focusState.subject||'Other',status:focusState.status,break:!!focusState.break,started_at:focusState.startedAt||null,remaining:Math.ceil(focusRemaining())})}catch(e){}}
+function renderLiveFocusUsers(){
+  if(!focusChannel)return;
+  const state=focusChannel.presenceState(),people=[];
+  Object.values(state).flat().forEach(p=>{if(p?.user_id&&!people.some(x=>x.user_id===p.user_id))people.push(p)});
+  const active=people.filter(p=>p.status==='running');
+  const badge=document.getElementById('focus-live-badge');if(badge)badge.textContent=`● ${active.length} STUDYING`;
+  const c=document.getElementById('focus-online-count');if(c)c.textContent=`${active.length} studying`;
+  const countEl=document.getElementById('home-live-count');if(countEl)countEl.textContent=`${active.length} students studying`;
+  const box=document.getElementById('focus-live-users');
+  if(box)box.innerHTML=active.length?active.map(p=>{const rem=Number.isFinite(Number(p.remaining))?Number(p.remaining):0;return `<div data-live-user="${esc(p.name||'Student')}" class="flex justify-between items-center bg-slate-900 rounded-xl border border-slate-700 p-3"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full overflow-hidden bg-slate-800 shrink-0">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}" class="w-full h-full object-cover">`:'👤'}</div><div><b class="text-sm">${esc(p.name||'Member')}</b><div class="text-[10px] text-slate-500 mt-0.5">${esc(p.subject||'Other')} ${p.break?'• Break':'• Focus'}</div></div></div><div class="text-right"><span class="text-emerald-400 text-xs block">● LIVE</span><span class="text-[10px] text-slate-500">${fmtFocus(rem)}</span></div></div>`}).join(''):'<div class="text-center py-6 text-xs text-slate-500">Abhi koi active focus session nahi hai.</div>';
+  renderRHHomeRail();
+}
+async function initFocusSystem(){
+  if(!user||focusReady)return;
+  focusReady=true;
+  const saved=readFocusState();
+  if(saved){
+    focusState={...focusState,...saved};
+    if(focusState.status==='running'&&focusRemaining()<=0){completeFocusTimer()}
+    else if(focusState.status==='running')startFocusTicker()
+  }else saveFocusState();
+  const st=readFocusStats();
+  if(!st.goalHours)st.goalHours=4;
+  writeFocusStats(st);
+  focusChannel=db.channel('rathod-hub-focus-live',{config:{presence:{key:user.id}}})
+    .on('presence',{event:'sync'},renderLiveFocusUsers)
+    .on('presence',{event:'join'},renderLiveFocusUsers)
+    .on('presence',{event:'leave'},renderLiveFocusUsers)
+    .subscribe(async status=>{if(status==='SUBSCRIBED')broadcastFocus()});
+  renderFocusDashboard();
+  renderHomeDashboard();
+  updateNotifyStatus();
+}
 </script>
 </body>
 </html>
