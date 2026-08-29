@@ -1323,7 +1323,7 @@ async function chessClick(r,c){
 /* Vault */
 async function loadVault(){if(!user)return;const{data,error}=await db.from('vault').select('*').eq('user_id',user.id).order('created_at',{ascending:false});if(error){document.getElementById('vault-list').innerHTML='<div class="text-xs text-slate-500 p-3">Vault table setup required.</div>';return}vaultItems=data||[];renderVault()}
 function fmtBytes(n){n=Number(n||0);if(n<1024)return n+' B';if(n<1048576)return(n/1024).toFixed(1)+' KB';if(n<1073741824)return(n/1048576).toFixed(1)+' MB';return(n/1073741824).toFixed(1)+' GB'}
-function renderVault(){document.getElementById('vault-count').textContent=`${vaultItems.length} files`;document.getElementById('vault-list').innerHTML=vaultItems.length?vaultItems.map(v=>`<div class="bg-slate-900 border border-slate-700 rounded-xl p-3 flex justify-between items-center gap-3"><div class="min-w-0"><b class="text-sm block truncate">${esc(v.title||v.file_name||'File')}</b><span class="text-[10px] text-slate-500">${esc(v.file_name||'')} • ${fmtBytes(v.file_size)}</span></div><div class="flex gap-2"><button onclick="openVaultFile('${v.id}')" class="bg-violet-600 px-3 py-2 rounded-lg text-xs font-bold">Open</button><button onclick="deleteVault('${v.id}')" class="bg-red-600 px-3 py-2 rounded-lg text-xs font-bold">Delete</button></div></div>`).join(''):'<div class="text-center py-8 text-slate-500 text-sm">Vault खाली है.</div>'}
+function renderVault(){document.getElementById('vault-count').textContent=`${vaultItems.length} files`;document.getElementById('vault-list').innerHTML=vaultItems.length?vaultItems.map(v=>`<div class="bg-slate-900 border border-slate-700 rounded-xl p-3 flex justify-between items-center gap-3"><div class="min-w-0"><b class="text-sm block truncate">${esc(v.title||v.file_name||'File')}</b><span class="text-[10px] text-slate-500">${esc(v.file_name||'')} • ${fmtBytes(v.file_size)}</span></div><div class="flex gap-2"><button onclick="openVaultFile('${v.id}')" class="bg-violet-600 px-3 py-2 rounded-lg text-xs font-bold">Open</button><button onclick="deleteVault('${v.id}')" class="bg-red-600 px-3 py-2 rounded-lg text-xs font-bold">Delete</button></div></div>`).join(''):'<div class="text-center py-8 text-slate-500 text-sm">Vault खाली है.</div>';}
 document.getElementById('vault-form').addEventListener('submit',async e=>{e.preventDefault();const f=document.getElementById('vault-file').files[0];if(!f)return;const b=e.target.querySelector('button');b.disabled=true;b.textContent='Saving...';try{const path=`vault/${user.id}/${crypto.randomUUID()}_${f.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;const{error:up}=await db.storage.from('vault').upload(path,f,{contentType:f.type});if(up)throw up;const{error}=await db.from('vault').insert({user_id:user.id,title:document.getElementById('vault-title').value.trim(),file_name:f.name,file_type:f.type,file_size:f.size,storage_path:path});if(error)throw error;e.target.reset();toast('Saved to private vault');loadVault()}catch(err){toast(err.message||'Vault save failed',false)}finally{b.disabled=false;b.textContent='Save to Vault'}})
 async function openVaultFile(id){const v=vaultItems.find(x=>String(x.id)===String(id));if(!v)return;const{data,error}=await db.storage.from('vault').createSignedUrl(v.storage_path,3600);if(error)return toast(error.message,false);window.open(data.signedUrl,'_blank','noopener')}
 async function deleteVault(id){const v=vaultItems.find(x=>String(x.id)===String(id));if(!v||!confirm('Delete this vault file?'))return;const{error}=await db.from('vault').delete().eq('id',id).eq('user_id',user.id);if(error)return toast(error.message,false);if(v.storage_path)await db.storage.from('vault').remove([v.storage_path]);toast('Vault file deleted');loadVault()}
@@ -2194,11 +2194,11 @@ async function requestFocusNotifications(){if(!('Notification'in window))return 
 function notifyFocus(title,body){if('Notification'in window&&Notification.permission==='granted'){try{new Notification(title,{body,icon:document.querySelector('link[rel="icon"]')?.href||undefined,tag:'rathod-focus'})}catch(e){}}}
 function testFocusNotification(){if('Notification'in window&&Notification.permission==='granted')notifyFocus('🔔 RATHOD HUB Test','Notifications sahi se kaam kar rahi hain.');else requestFocusNotifications()}
 let focusLastBroadcast=0;
-function broadcastFocusThrottled(){if(Date.now()-focusLastBroadcast<4000)return;broadcastFocus()}
+function broadcastFocusThrottled(){if(Date.now()-focusLastBroadcast<3000)return;broadcastFocus()}
 async function broadcastFocus(){
   if(!focusChannel||!user||!focusReady)return;
   focusLastBroadcast=Date.now();
-  const payload={
+  const currentPayload={
     user_id:user.id,
     name:profile?.name||user.email||'Member',
     pfp_url:profile?.pfp_url||null,
@@ -2209,22 +2209,31 @@ async function broadcastFocus(){
     remaining:Math.ceil(focusRemaining())
   };
   try{
-    await focusChannel.track(payload);
-    await focusChannel.send({type:'broadcast',event:'timer_ping',payload});
+    await focusChannel.track(currentPayload);
+    await focusChannel.send({type:'broadcast',event:'timer_ping',payload:currentPayload});
   }catch(e){}
 }
 function renderLiveFocusUsers(){
   if(!focusChannel)return;
-  const state=focusChannel.presenceState(),people=[];
+  const state=focusChannel.presenceState();
+  const people=[];
   Object.values(state).flat().forEach(p=>{
-    if(p&&p.user_id&&!people.some(x=>x.user_id===p.user_id))people.push(p);
+    if(p&&p.user_id&&!people.some(x=>x.user_id===p.user_id)){
+      people.push(p);
+    }
   });
+
   const active=people.filter(p=>p.status==='running');
   const badge=document.getElementById('focus-live-badge');if(badge)badge.textContent=`● ${active.length} STUDYING`;
   const c=document.getElementById('focus-online-count');if(c)c.textContent=`${active.length} studying`;
   const countEl=document.getElementById('home-live-count');if(countEl)countEl.textContent=`${active.length} students studying`;
   const box=document.getElementById('focus-live-users');
-  if(box)box.innerHTML=active.length?active.map(p=>{const rem=Number.isFinite(Number(p.remaining))?Number(p.remaining):0;return `<div data-live-user="${esc(p.name||'Student')}" class="flex justify-between items-center bg-slate-900 rounded-xl border border-slate-700 p-3"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full overflow-hidden bg-slate-800 shrink-0">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}" class="w-full h-full object-cover">`:'👤'}</div><div><b class="text-sm">${esc(p.name||'Member')}</b><div class="text-[10px] text-slate-500 mt-0.5">${esc(p.subject||'Other')} ${p.break?'• Break':'• Focus'}</div></div></div><div class="text-right"><span class="text-emerald-400 text-xs block">● LIVE</span><span class="text-[10px] text-slate-500">${fmtFocus(rem)}</span></div></div>`}).join(''):'<div class="text-center py-6 text-xs text-slate-500">Abhi koi active focus session nahi hai.</div>';
+  if(box){
+    box.innerHTML=active.length?active.map(p=>{
+      const rem=Number.isFinite(Number(p.remaining))?Number(p.remaining):0;
+      return `<div data-live-user="${esc(p.name||'Student')}" class="flex justify-between items-center bg-slate-900 rounded-xl border border-slate-700 p-3"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full overflow-hidden bg-slate-800 shrink-0">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}" class="w-full h-full object-cover">`:'👤'}</div><div><b class="text-sm">${esc(p.name||'Member')}</b><div class="text-[10px] text-slate-500 mt-0.5">${esc(p.subject||'Other')} ${p.break?'• Break':'• Focus'}</div></div></div><div class="text-right"><span class="text-emerald-400 text-xs block">● LIVE</span><span class="text-[10px] text-slate-500">${fmtFocus(rem)}</span></div></div>`
+    }).join(''):'<div class="text-center py-6 text-xs text-slate-500">Abhi koi active focus session nahi hai.</div>';
+  }
   renderRHHomeRail();
 }
 async function initFocusSystem(){
@@ -2245,7 +2254,8 @@ async function initFocusSystem(){
     .on('presence',{event:'join'},renderLiveFocusUsers)
     .on('presence',{event:'leave'},renderLiveFocusUsers)
     .on('broadcast',{event:'timer_ping'},e=>{
-      if(!e?.payload||e.payload.user_id===user.id)return;
+      const payload=e?.payload;
+      if(!payload||!payload.user_id||payload.user_id===user.id)return;
       renderLiveFocusUsers();
     })
     .subscribe(async status=>{
