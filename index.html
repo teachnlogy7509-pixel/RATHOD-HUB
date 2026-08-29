@@ -33,40 +33,40 @@ body{overflow-x:hidden}
   .rh-home-hero{padding:22px}
 }
 @media (max-width:640px){
-  body{background:#f6f7fb!important}
-  .doctor-bg{background:#f6f7fb!important}
-  #hub-bg-layer,#hub-bg-overlay{display:none!important}
-  .rh-topbar{height:62px;padding:0 12px;position:sticky;top:0}
-  .rh-brand{min-width:0}.rh-brand>div:last-child{display:none}
-  .rh-brand-mark{width:38px!important;height:38px!important}
-  .rh-top-actions{gap:4px!important}.rh-top-actions .rh-icon-btn{width:38px!important;height:38px!important}
-  .rh-top-actions .rh-icon-btn:nth-child(1),.rh-top-actions .rh-icon-btn:nth-child(3){display:none}
+  body{background:#07090d!important;color:#f8fafc!important}
+  .doctor-bg{background:linear-gradient(rgba(0,0,0,.30),rgba(0,0,0,.50)),url('https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=1200&q=80')!important;background-size:cover!important;background-attachment:fixed!important}
+  #hub-bg-layer,#hub-bg-overlay{display:block!important}
+  .rh-topbar{height:62px;padding:0 12px;position:fixed;top:0;left:0;right:0}
+  .rh-brand{min-width:0}
+  .rh-brand-mark{width:36px!important;height:36px!important}
+  .rh-top-actions{gap:6px!important}
+  .rh-top-actions .rh-icon-btn{width:36px!important;height:36px!important}
   .rh-user-name,.rh-user>div:nth-child(2){display:none}
-  .rh-user .rh-icon-btn{display:none}
   .rh-sidebar{display:none!important}
-  .rh-main{padding-bottom:82px}
+  .rh-main{margin-left:0!important;width:100%!important;padding-bottom:88px}
   .rh-content{padding:12px;width:100%;max-width:none}
   .rh-page-head{margin-bottom:14px}
   .rh-page-title{font-size:21px}
   .rh-page-sub{font-size:11px}
   .rh-home-hero{padding:18px;border-radius:16px}
   .rh-hero-title{font-size:22px}
-  .rh-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
-  .rh-feature{min-height:96px;padding:13px;border-radius:14px}
+  .rh-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .rh-feature{min-height:104px;padding:12px;border-radius:14px}
   .rh-feature-icon{width:36px;height:36px;margin-bottom:8px}
-  .rh-feature b{font-size:12px}.rh-feature p{font-size:9px}
+  .rh-feature b{font-size:12px}.rh-feature p{font-size:10px}
   .rh-stat{padding:12px}.rh-stat-value{font-size:18px}
-  .rh-mobile-bottom{display:grid!important;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;height:74px;padding-bottom:env(safe-area-inset-bottom);background:rgba(255,255,255,.98);backdrop-filter:blur(14px);border-top:1px solid #e5e7eb;z-index:300;box-shadow:0 -8px 28px rgba(15,23,42,.10)}
-  .rh-mobile-bottom button{border:0;background:transparent;color:#7a8290;font-size:9px;font-weight:800;min-width:0}
-  .rh-mobile-bottom i{display:block;font-size:17px;margin-bottom:4px}.rh-mobile-bottom .rh-active{color:#635bff}
+  .rh-mobile-bottom{display:grid!important;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;height:70px;padding-bottom:env(safe-area-inset-bottom);background:rgba(6,8,12,.98)!important;backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,.12);z-index:500;box-shadow:0 -8px 28px rgba(0,0,0,.4)}
+  .rh-mobile-bottom button{border:0;background:transparent;color:#94a3b8;font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+  .rh-mobile-bottom i{display:block;font-size:17px;margin-bottom:2px}
+  .rh-mobile-bottom .rh-active{color:#ef2b2b!important}
   .rh-old-section>div{border-radius:15px}
   #section-focus .grid.lg\:grid-cols-\[1\.2fr_\.8fr\]{grid-template-columns:1fr!important}
   #focus-timer-display{font-size:clamp(42px,14vw,66px)!important}
   .grid.md\:grid-cols-2,.grid.md\:grid-cols-3,.grid.lg\:grid-cols-2{grid-template-columns:1fr!important}
   .overflow-x-auto{-webkit-overflow-scrolling:touch}
-  input,select,textarea,button{font-size:16px}
+  input,select,textarea,button{font-size:15px}
 }
-@media (max-width:380px){.rh-feature-grid{grid-template-columns:1fr}.rh-mobile-bottom button{font-size:8px}.rh-mobile-bottom i{font-size:15px}}
+@media (max-width:380px){.rh-feature-grid{grid-template-columns:1fr}.rh-mobile-bottom button{font-size:9px}.rh-mobile-bottom i{font-size:15px}}
 
 /* ===== RATHOD HUB / PW-STYLE DESKTOP + MOBILE VISUAL SYSTEM ===== */
 :root{--rh-red:#ef2b2b;--rh-red2:#ff3b30;--rh-bg:#07090d;--rh-panel:rgba(10,13,18,.88);--rh-line:rgba(255,255,255,.16);--rh-muted:#aeb4bf;--rh-white:#f8fafc}
@@ -78,9 +78,9 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 .rh-topbar{position:fixed!important;left:0;right:0;top:0;height:70px!important;background:rgba(5,7,10,.92)!important;border-bottom:1px solid rgba(255,255,255,.12)!important;backdrop-filter:blur(16px);padding:0 20px!important;z-index:500;display:flex;align-items:center;justify-content:space-between}
 .rh-brand{display:flex;align-items:center;gap:10px;min-width:215px;font-weight:900;letter-spacing:.01em;color:#fff!important}
 .rh-brand-mark{width:38px!important;height:38px!important;border-radius:12px!important;background:rgba(239,43,43,.12)!important;border:1px solid rgba(239,43,43,.55)!important;color:var(--rh-red)!important;display:flex;align-items:center;justify-content:center}
-.rh-top-actions{display:flex;align-items:center;gap:12px!important}
-.rh-icon-btn{background:transparent!important;color:#fff!important;border:0!important}
-.rh-icon-btn:hover{color:var(--rh-red)!important}
+.rh-top-actions{display:flex;align-items:center;gap:10px!important}
+.rh-icon-btn{background:rgba(255,255,255,0.06)!important;color:#fff!important;border:1px solid rgba(255,255,255,.14)!important;border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.18s}
+.rh-icon-btn:hover{color:var(--rh-red)!important;border-color:rgba(239,43,43,.5)!important}
 .rh-user{display:flex!important;align-items:center;gap:9px;padding-left:12px;border-left:1px solid rgba(255,255,255,.14)}
 .rh-user-name{color:#fff!important;font-weight:800!important}
 .rh-user span{color:var(--rh-red)!important}
@@ -112,7 +112,7 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 .rh-home-hero b{color:#fff!important}
 .rh-section-title{color:#fff!important;font-weight:900!important;font-size:18px!important}
 .rh-feature-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px!important}
-.rh-feature{background:rgba(8,11,15,.84)!important;border:1px solid rgba(255,255,255,.18)!important;color:#fff!important;border-radius:14px!important;min-height:120px!important;padding:15px!important;transition:.18s ease;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.rh-feature{background:rgba(8,11,15,.84)!important;border:1px solid rgba(255,255,255,.18)!important;color:#fff!important;border-radius:14px!important;min-height:115px!important;padding:15px!important;transition:.18s ease;box-shadow:0 8px 24px rgba(0,0,0,.15)}
 .rh-feature:hover{transform:translateY(-2px);border-color:rgba(239,43,43,.75)!important;background:rgba(20,10,12,.88)!important}
 .rh-feature-icon{color:var(--rh-red)!important;background:rgba(239,43,43,.10)!important;border:1px solid rgba(239,43,43,.24)!important}
 .rh-feature b{color:#fff!important}.rh-feature p{color:#aeb4bf!important}
@@ -224,6 +224,7 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 <header class="rh-topbar">
  <div class="rh-brand"><div class="rh-brand-mark"><i class="fa-solid fa-graduation-cap"></i></div><div><div>RATHOD HUB</div><div style="font-size:9px;color:#8b93a0;font-weight:600;letter-spacing:.08em">NEET LEARNING PLATFORM</div></div></div>
  <div class="rh-top-actions">
+  <button class="rh-icon-btn sm:hidden" onclick="openMobileMenu()" title="All Features"><i class="fa-solid fa-bars"></i></button>
   <button class="rh-icon-btn" onclick="switchTab('focus')" title="Focus Timer"><i class="fa-solid fa-stopwatch"></i></button>
   <button class="rh-icon-btn" onclick="requestFocusNotifications();toast('Notifications permission requested 🔔')" title="Notifications"><i class="fa-regular fa-bell"></i></button>
   <button class="rh-icon-btn" onclick="switchTab('leaderboard')" title="Leaderboard"><i class="fa-solid fa-trophy"></i></button>
@@ -325,6 +326,10 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
   <div class="rh-feature" onclick="switchTab('studyrooms')"><div class="rh-feature-icon"><i class="fa-solid fa-door-open"></i></div><b>Study Rooms</b><p>Live study + voice</p></div>
   <div class="rh-feature" onclick="switchTab('focus')"><div class="rh-feature-icon"><i class="fa-solid fa-stopwatch"></i></div><b>Focus Timer</b><p>YPT-style live timer</p></div>
   <div class="rh-feature" onclick="switchTab('vault')"><div class="rh-feature-icon"><i class="fa-solid fa-lock"></i></div><b>My Vault</b><p>Private saved files</p></div>
+  <div class="rh-feature" onclick="switchTab('diary')"><div class="rh-feature-icon"><i class="fa-solid fa-calendar-check"></i></div><b>Study Diary</b><p>Daily target planner</p></div>
+  <div class="rh-feature" onclick="switchTab('stories')"><div class="rh-feature-icon"><i class="fa-solid fa-circle-play"></i></div><b>Stories</b><p>24h photo & updates</p></div>
+  <div class="rh-feature" onclick="switchTab('games')"><div class="rh-feature-icon"><i class="fa-solid fa-gamepad"></i></div><b>1v1 Games</b><p>Chess & Tic Tac Toe</p></div>
+  <div class="rh-feature" onclick="switchTab('hubevents')"><div class="rh-feature-icon"><i class="fa-solid fa-bolt"></i></div><b>Live Events</b><p>Daily challenge & Quiz</p></div>
   <div class="rh-feature" onclick="switchTab('leaderboard')"><div class="rh-feature-icon"><i class="fa-solid fa-ranking-star"></i></div><b>Leaderboard</b><p>XP • Level • Rank</p></div>
  </div>
  <div class="grid lg:grid-cols-2 gap-4">
@@ -572,7 +577,41 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 <div class="mt-8 bg-slate-900/95 border border-slate-700 rounded-2xl p-5 text-center"><div class="text-xs uppercase tracking-wider text-slate-500 mb-3">Join Us / Contact Us</div><div class="flex justify-center gap-3 flex-wrap"><a href="https://t.me/YPTSTUDY1" target="_blank" rel="noopener" class="bg-sky-600 hover:bg-sky-500 px-4 py-2.5 rounded-xl text-sm font-bold"><i class="fa-brands fa-telegram mr-2"></i>Join Group</a><a href="https://t.me/Ashish_Thakur1" target="_blank" rel="noopener" title="Contact Us" aria-label="Contact Us" class="bg-sky-600 hover:bg-sky-500 w-11 h-11 rounded-full text-lg font-bold flex items-center justify-center"><i class="fa-brands fa-telegram"></i></a></div></div>
 </main></div></div></div>
 
-<nav class="rh-mobile-bottom"><button onclick="switchTab('home')" id="mob-home" class="rh-active"><i class="fa-solid fa-house"></i>Home</button><button onclick="switchTab('materials')" id="mob-materials"><i class="fa-solid fa-book"></i>Study</button><button onclick="switchTab('focus')" id="mob-focus"><i class="fa-solid fa-stopwatch"></i>Focus</button><button onclick="switchTab('chatroom')" id="mob-chat"><i class="fa-solid fa-comments"></i>Chat</button><button onclick="openProfile()" id="mob-profile"><i class="fa-solid fa-user"></i>Profile</button></nav>
+<nav class="rh-mobile-bottom">
+  <button onclick="switchTab('home')" id="mob-home" class="rh-active"><i class="fa-solid fa-house"></i>Home</button>
+  <button onclick="switchTab('materials')" id="mob-materials"><i class="fa-solid fa-book"></i>Study</button>
+  <button onclick="switchTab('focus')" id="mob-focus"><i class="fa-solid fa-stopwatch"></i>Focus</button>
+  <button onclick="switchTab('chatroom')" id="mob-chat"><i class="fa-solid fa-comments"></i>Chat</button>
+  <button onclick="openMobileMenu()" id="mob-more"><i class="fa-solid fa-bars"></i>More</button>
+</nav>
+
+<!-- MOBILE ALL FEATURES DRAWER -->
+<div id="mobile-menu-drawer" class="hidden fixed inset-0 z-[600] bg-black/80 p-4 flex flex-col justify-end backdrop-blur-sm sm:hidden">
+  <div class="bg-slate-900 border border-slate-700 rounded-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto">
+    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+      <b class="text-white text-base">All Features & Modules</b>
+      <button onclick="closeMobileMenu()" class="text-slate-400 hover:text-white text-lg">✕</button>
+    </div>
+    <div class="grid grid-cols-3 gap-2 text-center text-xs">
+      <button onclick="switchTab('ai');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-circle-question text-red-400 text-lg"></i><span>AI Doubt</span></button>
+      <button onclick="switchTab('quiz');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-brain text-teal-400 text-lg"></i><span>AI Quiz</span></button>
+      <button onclick="switchTab('materials');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-folder-open text-amber-400 text-lg"></i><span>Materials</span></button>
+      <button onclick="switchTab('focus');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-stopwatch text-red-500 text-lg"></i><span>Focus</span></button>
+      <button onclick="switchTab('studyrooms');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-door-open text-cyan-400 text-lg"></i><span>Study Rooms</span></button>
+      <button onclick="switchTab('diary');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-calendar-check text-emerald-400 text-lg"></i><span>Study Diary</span></button>
+      <button onclick="switchTab('vault');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-lock text-purple-400 text-lg"></i><span>My Vault</span></button>
+      <button onclick="switchTab('community');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-users text-indigo-400 text-lg"></i><span>Community</span></button>
+      <button onclick="switchTab('chatroom');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-comments text-sky-400 text-lg"></i><span>Live Chat</span></button>
+      <button onclick="switchTab('stories');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-circle-play text-pink-400 text-lg"></i><span>Stories</span></button>
+      <button onclick="switchTab('games');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-gamepad text-fuchsia-400 text-lg"></i><span>1v1 Games</span></button>
+      <button onclick="switchTab('hubevents');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-bolt text-amber-300 text-lg"></i><span>Live Events</span></button>
+      <button onclick="switchTab('leaderboard');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-trophy text-yellow-400 text-lg"></i><span>Leaderboard</span></button>
+      <button onclick="openProfile();closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-user-pen text-slate-300 text-lg"></i><span>Profile</span></button>
+      <button onclick="logout()" class="bg-red-950/60 border border-red-500/30 p-3 rounded-xl flex flex-col items-center gap-2 text-red-400"><i class="fa-solid fa-right-from-bracket text-lg"></i><span>Logout</span></button>
+    </div>
+  </div>
+</div>
+
 <div id="story-viewer" class="hidden fixed inset-0 z-[110] bg-black/95 p-4 flex items-center justify-center"><button onclick="closeStoryViewer()" class="absolute top-5 right-5 text-2xl">✕</button><div id="story-viewer-content" class="max-w-lg w-full max-h-[90vh] text-center"></div></div>
 
 <!-- PROFILE MODAL -->
@@ -601,6 +640,9 @@ let chatChannel=null;
 function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className=`fixed top-4 right-4 z-[9999] max-w-sm px-4 py-3 rounded-xl shadow-2xl text-sm font-semibold transition-all ${ok?'bg-emerald-600 text-white':'bg-red-600 text-white'}`;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),3500)}
 function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function safeUrl(u){try{const x=new URL(u);return ['https:','http:'].includes(x.protocol)?x.href:'#'}catch{return '#'}}
+
+function openMobileMenu(){document.getElementById('mobile-menu-drawer')?.classList.remove('hidden')}
+function closeMobileMenu(){document.getElementById('mobile-menu-drawer')?.classList.add('hidden')}
 
 function showAuth(mode){
  authMode=mode;
@@ -1330,7 +1372,7 @@ async function deleteVault(id){const v=vaultItems.find(x=>String(x.id)===String(
 
 /* Leaderboard */
 async function loadLeaderboard(){if(!user)return;const{data,error}=await db.from('profiles').select('id,name,pfp_url,role,xp,level').order('xp',{ascending:false}).limit(100);if(error){document.getElementById('leaderboard-list').innerHTML='<div class="text-xs text-slate-500 p-3">Leaderboard ke liye profiles table check karein.</div>';return}leaderboard=(data||[]).map(p=>({...p,xp:Number(p.xp||0),level:Number(p.level||levelFromXp(p.xp))}));renderLeaderboard();renderRHHomeRail()}
-function renderLeaderboard(){const me=leaderboard.find(p=>p.id===user.id)||{xp:Number(profile.xp||0),level:Number(profile.level||levelFromXp(profile.xp))};document.getElementById('my-xp').textContent=`${me.xp} XP`;document.getElementById('my-level').textContent=`Level ${me.level}`;document.getElementById('my-xp-bar').style.width=xpPercent(me.xp)+'%';const medals=['🥇','🥈','🥉'];document.getElementById('leaderboard-list').innerHTML=leaderboard.map((p,i)=>`<div class="bg-slate-900/80 border ${p.id===user.id?'border-amber-500/50':'border-slate-700'} rounded-xl p-3 flex items-center gap-3"><div class="w-9 text-center font-bold text-lg">${medals[i]||('#'+(i+1))}</div><div class="w-9 h-9 rounded-full overflow-hidden bg-slate-700">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}" class="w-full h-full object-cover">`:'👤'}</div><div class="min-w-0 flex-1"><b class="block truncate text-sm">${esc(p.name||'Member')}${p.id===user.id?' (You)':''}</b><span class="text-[10px] text-slate-500">Level ${p.level}</span></div><b class="text-sm text-amber-300">${p.xp} XP</b></div>`).join('')||'<div class="text-center py-8 text-slate-500">No members found.</div>'}
+function renderLeaderboard(){const me=leaderboard.find(p=>p.id===user.id)||{xp:Number(profile.xp||0),level:Number(profile.level||levelFromXp(profile.xp))};document.getElementById('my-xp').textContent=`${me.xp} XP`;document.getElementById('my-level').textContent=`Level ${me.level}`;document.getElementById('my-xp-bar').style.width=xpPercent(me.xp)+'%';const medals=['🥇','🥈','🥉'];document.getElementById('leaderboard-list').innerHTML=leaderboard.map((p,i)=>`<div class="bg-slate-900/80 border ${p.id===user.id?'border-amber-500/50':'border-slate-700'} rounded-xl p-3 flex items-center gap-3"><div class="w-9 text-center font-bold text-lg">${medals[i]||('#'+(i+1))}</div><div class="w-9 h-9 rounded-full overflow-hidden bg-slate-700">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}" class="w-full h-full object-cover">`:'👤'}</div><div class="min-w-0 flex-1"><b class="block truncate text-sm">${esc(p.name||'Member')}${p.id===user.id?' (You)':''}</b><span class="text-[10px] text-slate-500">Level ${p.level}</span></div><b class="text-sm text-amber-300">${p.xp} XP</b></div>`).join('')||'<div class="text-center py-8 text-slate-500">No members found.</div>';}
 
 function renderRHHomeRail(){
   const lb=document.getElementById('rh-home-leaderboard');
