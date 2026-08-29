@@ -308,7 +308,7 @@ create policy "materials storage backgrounds admin write" on storage.objects for
 <form id="forgot-form" class="hidden mt-3 space-y-2 bg-slate-900/70 border border-slate-700 rounded-xl p-3">
 <label class="block text-xs uppercase text-slate-400 mb-1">Reset Email</label>
 <input id="forgot-email" type="email" required placeholder="name@example.com" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-sm">
-<button id="forgot-btn" class="w-full bg-teal-700 hover:bg-teal-600 py-2.5 rounded-lg text-sm font-bold">Send Reset Link</button>
+<button id="forgot-btn" class="w-full bg-teal-700 hover:bg-teal-600 py-2.5 rounded-lg text-sm font-bold">Send OTP</button>
 </form>
 <div id="password-reset-modal" class="hidden fixed inset-0 z-[200] bg-black/80 p-4 flex items-center justify-center">
   <div class="w-full max-w-md bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-2xl">
@@ -1702,7 +1702,7 @@ async function sendPasswordResetEmail(e){
   console.error('Password reset request failed:',err);
   toast(err?.message||'Reset code भेजने में समस्या हुई',false);
  }finally{
-  btn.disabled=false;btn.textContent='Send Reset Link';
+  btn.disabled=false;btn.textContent='Send OTP';
  }
 }
 
