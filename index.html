@@ -67,6 +67,87 @@ body{overflow-x:hidden}
   input,select,textarea,button{font-size:16px}
 }
 @media (max-width:380px){.rh-feature-grid{grid-template-columns:1fr}.rh-mobile-bottom button{font-size:8px}.rh-mobile-bottom i{font-size:15px}}
+
+/* ===== RATHOD HUB / PW-STYLE DESKTOP + MOBILE VISUAL SYSTEM ===== */
+:root{--rh-red:#ef2b2b;--rh-red2:#ff3b30;--rh-bg:#07090d;--rh-panel:rgba(10,13,18,.88);--rh-line:rgba(255,255,255,.16);--rh-muted:#aeb4bf;--rh-white:#f8fafc}
+html,body{background:#07090d!important;color:var(--rh-white)!important}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+.doctor-bg{background:linear-gradient(rgba(0,0,0,.30),rgba(0,0,0,.44)),url('https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=1920&q=80')!important;background-size:cover!important;background-position:center!important;background-attachment:fixed!important}
+#hub-bg-overlay{background:rgba(0,0,0,.20)!important}
+#app{background:transparent!important}
+.rh-topbar{position:fixed!important;left:0;right:0;top:0;height:70px!important;background:rgba(5,7,10,.92)!important;border-bottom:1px solid rgba(255,255,255,.12)!important;backdrop-filter:blur(16px);padding:0 20px!important;z-index:500;display:flex;align-items:center;justify-content:space-between}
+.rh-brand{display:flex;align-items:center;gap:10px;min-width:215px;font-weight:900;letter-spacing:.01em;color:#fff!important}
+.rh-brand-mark{width:38px!important;height:38px!important;border-radius:12px!important;background:rgba(239,43,43,.12)!important;border:1px solid rgba(239,43,43,.55)!important;color:var(--rh-red)!important;display:flex;align-items:center;justify-content:center}
+.rh-top-actions{display:flex;align-items:center;gap:12px!important}
+.rh-icon-btn{background:transparent!important;color:#fff!important;border:0!important}
+.rh-icon-btn:hover{color:var(--rh-red)!important}
+.rh-user{display:flex!important;align-items:center;gap:9px;padding-left:12px;border-left:1px solid rgba(255,255,255,.14)}
+.rh-user-name{color:#fff!important;font-weight:800!important}
+.rh-user span{color:var(--rh-red)!important}
+#app>main{max-width:none!important;width:100%!important;margin:0!important;padding:0!important;display:block!important;padding-top:70px!important}
+#app>main>.flex{display:block!important}
+.rh-sidebar{position:fixed!important;left:0;top:70px;bottom:0;width:216px!important;flex:none!important;padding:18px 10px!important;background:rgba(5,7,10,.94)!important;border-right:1px solid rgba(255,255,255,.13)!important;overflow-y:auto;z-index:450}
+.rh-side-title{color:#777f8d!important;font-size:10px!important;text-transform:uppercase!important;letter-spacing:.12em!important;padding:11px 12px 7px!important}
+.rh-side-sep{height:1px;background:rgba(255,255,255,.08);margin:9px 10px}
+.rh-nav-btn{width:100%!important;background:transparent!important;color:#eef1f5!important;border:1px solid transparent!important;border-radius:10px!important;padding:10px 12px!important;min-height:42px!important;display:flex!important;align-items:center!important;gap:13px!important;text-align:left!important;font-weight:750!important;font-size:14px!important;transition:.18s ease!important}
+.rh-nav-btn i{width:20px!important;text-align:center!important;color:#f4f6f8!important;font-size:16px!important}
+.rh-nav-btn:hover{background:rgba(239,43,43,.10)!important;color:#fff!important;border-color:rgba(239,43,43,.28)!important}
+.rh-nav-btn:hover i{color:var(--rh-red)!important}
+.rh-nav-btn.rh-active{background:linear-gradient(90deg,rgba(239,43,43,.22),rgba(239,43,43,.06))!important;border-color:var(--rh-red)!important;box-shadow:inset 3px 0 0 var(--rh-red),0 0 18px rgba(239,43,43,.08)!important;color:#fff!important}
+.rh-nav-btn.rh-active i{color:var(--rh-red)!important}
+.rh-main{margin-left:216px!important;width:calc(100% - 216px)!important;min-width:0!important}
+.rh-content{max-width:none!important;width:100%!important;padding:22px 22px 30px!important}
+.rh-page-head{color:#fff!important;border-bottom:1px solid rgba(255,255,255,.10);padding-bottom:14px}
+.rh-page-title,.rh-page-title *{color:#fff!important;font-weight:900!important}
+.rh-page-sub{color:#aeb4bf!important}
+.rh-home-grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start}
+.rh-home-main{min-width:0;display:flex;flex-direction:column;gap:18px}
+.rh-home-rail{display:flex;flex-direction:column;gap:16px;position:sticky;top:90px}
+.rh-rail-card{background:rgba(7,10,14,.84);border:1px solid rgba(255,255,255,.16);border-radius:16px;padding:16px;box-shadow:0 12px 35px rgba(0,0,0,.20);backdrop-filter:blur(10px)}
+.rh-rail-title{display:flex;align-items:center;justify-content:space-between;font-weight:900;font-size:15px;margin-bottom:12px}
+.rh-rail-title a{color:var(--rh-red);font-size:11px;font-weight:800}
+.rh-home-hero{background:linear-gradient(110deg,rgba(8,10,14,.72),rgba(8,10,14,.30));border:1px solid rgba(255,255,255,.16)!important;border-radius:18px!important;box-shadow:0 15px 40px rgba(0,0,0,.24);overflow:hidden}
+.rh-hero-kicker{color:#ff6a6a!important;letter-spacing:.12em!important}
+.rh-hero-title{color:#fff!important;font-weight:900!important}
+.rh-home-hero b{color:#fff!important}
+.rh-section-title{color:#fff!important;font-weight:900!important;font-size:18px!important}
+.rh-feature-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px!important}
+.rh-feature{background:rgba(8,11,15,.84)!important;border:1px solid rgba(255,255,255,.18)!important;color:#fff!important;border-radius:14px!important;min-height:120px!important;padding:15px!important;transition:.18s ease;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.rh-feature:hover{transform:translateY(-2px);border-color:rgba(239,43,43,.75)!important;background:rgba(20,10,12,.88)!important}
+.rh-feature-icon{color:var(--rh-red)!important;background:rgba(239,43,43,.10)!important;border:1px solid rgba(239,43,43,.24)!important}
+.rh-feature b{color:#fff!important}.rh-feature p{color:#aeb4bf!important}
+.rh-live,.rh-stat{background:rgba(7,10,14,.86)!important;border:1px solid rgba(255,255,255,.15)!important;color:#fff!important;border-radius:14px!important}
+#section-home button{color:#fff}
+#section-home .bg-slate-50,#section-home .bg-slate-100{background:rgba(15,18,23,.9)!important;border-color:rgba(255,255,255,.14)!important;color:#fff!important}
+#section-home .text-slate-700,#section-home .text-slate-600,#section-home .text-slate-500,#section-home .text-slate-400,#section-home .text-slate-300{color:#d5d9df!important}
+/* all sections: white text, red accents, readable cards */
+#app .text-slate-50,#app .text-slate-100,#app .text-slate-200,#app .text-slate-300,#app .text-slate-400,#app .text-slate-500,#app .text-slate-600,#app .text-slate-700,#app .text-gray-300,#app .text-gray-400,#app .text-gray-500{color:#f1f3f5!important}
+#app .text-slate-500,#app .text-slate-400{color:#b7bdc7!important}
+#app h1,#app h2,#app h3,#app h4,#app label,#app b,#app strong{color:#fff}
+#app input,#app textarea,#app select{background:rgba(3,6,10,.92)!important;color:#fff!important;border-color:rgba(255,255,255,.18)!important}
+#app input::placeholder,#app textarea::placeholder{color:#7f8792!important}
+#app .bg-slate-800\/95,#app .bg-slate-900\/95,#app .bg-slate-900\/90,#app .bg-slate-900\/80,#app .bg-slate-900\/70{background:rgba(8,11,15,.90)!important;border-color:rgba(255,255,255,.14)!important}
+#app .bg-slate-700{background:#1a1e25!important}
+#app .border-slate-700,#app .border-slate-200,#app .border-slate-300{border-color:rgba(255,255,255,.16)!important}
+#app .text-indigo-500,#app .text-indigo-600,#app .text-indigo-400,#app .text-teal-300,#app .text-teal-400,#app .text-teal-500,#app .text-purple-300,#app .text-violet-300,#app .text-sky-300{color:var(--rh-red)!important}
+#app .bg-indigo-600,#app .bg-indigo-500,#app .bg-teal-600,#app .bg-teal-500,#app .bg-purple-600{background:var(--rh-red)!important}
+#app .bg-indigo-600:hover,#app .bg-indigo-500:hover,#app .bg-teal-600:hover,#app .bg-teal-500:hover,#app .bg-purple-600:hover{background:#ff4141!important}
+#app .rh-page-head button{background:#11151b!important;color:#fff!important;border-color:rgba(255,255,255,.16)!important}
+#app .rh-page-head button i{color:var(--rh-red)!important}
+/* leaderboard preview */
+.rh-mini-row{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.rh-mini-row:last-child{border-bottom:0}.rh-mini-avatar{width:34px;height:34px;border-radius:50%;overflow:hidden;background:#252b34;display:flex;align-items:center;justify-content:center;flex:none}.rh-mini-avatar img{width:100%;height:100%;object-fit:cover}.rh-mini-name{flex:1;min-width:0}.rh-mini-name b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rh-mini-name span{font-size:9px;color:#9ba3ae!important}.rh-mini-xp{font-size:11px;font-weight:900;color:#fff}.rh-rank{width:23px;color:#ff4a4a;font-weight:900;font-size:11px}
+.rh-online-list{display:flex;gap:8px;flex-wrap:wrap}.rh-online-user{width:54px;text-align:center;font-size:9px;color:#cbd0d7!important}.rh-online-avatar{position:relative;width:42px;height:42px;border-radius:50%;margin:auto;background:#252b34;overflow:hidden;border:1px solid rgba(255,255,255,.12)}.rh-online-avatar img{width:100%;height:100%;object-fit:cover}.rh-online-avatar:after{content:"";position:absolute;right:0;bottom:1px;width:9px;height:9px;background:#22c55e;border:2px solid #090b0f;border-radius:50%}
+.rh-mobile-bottom{background:rgba(6,8,12,.96)!important;border-top:1px solid rgba(255,255,255,.12)!important}.rh-mobile-bottom button{color:#aeb4bf!important}.rh-mobile-bottom .rh-active{color:var(--rh-red)!important}
+@media(max-width:1100px){.rh-home-grid{grid-template-columns:1fr}.rh-home-rail{position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.rh-feature-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:900px){
+ .rh-topbar{height:62px!important;padding:0 12px!important}.rh-brand{min-width:auto}.rh-brand>div:last-child{display:block!important;font-size:12px}.rh-brand>div:last-child>div:last-child{display:none}.rh-brand-mark{width:36px!important;height:36px!important}
+ #app>main{padding-top:62px!important}.rh-sidebar{display:none!important}.rh-main{margin-left:0!important;width:100%!important}.rh-content{padding:14px!important}.rh-home-grid{display:block}.rh-home-rail{display:grid;grid-template-columns:1fr 1fr;margin-top:2px}.rh-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rh-top-actions{gap:3px!important}.rh-user-name{display:none!important}
+}
+@media(max-width:640px){
+ .doctor-bg{background:linear-gradient(rgba(0,0,0,.18),rgba(0,0,0,.30)),url('https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=1200&q=80')!important;background-size:cover!important;background-attachment:fixed!important}
+ #hub-bg-layer,#hub-bg-overlay{display:block!important;opacity:1!important}.rh-topbar{height:58px!important}.rh-brand>div:last-child{font-size:11px}.rh-content{padding:10px 10px 88px!important}.rh-page-title{font-size:20px!important}.rh-page-sub{font-size:10px!important}.rh-home-hero{padding:16px!important}.rh-hero-title{font-size:22px!important}.rh-feature-grid{gap:8px!important}.rh-feature{min-height:92px!important;padding:11px!important}.rh-feature-icon{width:34px!important;height:34px!important}.rh-feature b{font-size:12px!important}.rh-feature p{font-size:9px!important}.rh-home-rail{grid-template-columns:1fr!important}.rh-rail-card{padding:13px!important}.rh-top-actions .rh-icon-btn{width:34px!important;height:34px!important}.rh-top-actions .rh-icon-btn:nth-child(1),.rh-top-actions .rh-icon-btn:nth-child(3){display:none!important}
+}
 </style>
 <!-- NEW FEATURES SUPABASE SQL REFERENCE:
 
@@ -327,6 +408,8 @@ create policy "materials storage backgrounds admin write" on storage.objects for
 
 <!-- HOME DASHBOARD -->
 <section id="section-home" class="rh-old-section space-y-5">
+ <div class="rh-home-grid">
+  <div class="rh-home-main">
  <div class="rh-page-head"><div><div class="rh-page-title">Home</div><div class="rh-page-sub">Aapki NEET preparation ka complete dashboard</div></div><button onclick="switchTab('focus')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm"><i class="fa-solid fa-stopwatch mr-2"></i>Start Studying</button></div>
  <div class="rh-home-hero"><div class="rh-hero-kicker">YOUR STUDY HUB</div><div class="rh-hero-title">Hello, <span id="home-user-name">Student</span> 👋</div><p style="color:#d2d5dc;font-size:12px;margin-top:6px;position:relative;z-index:1">Aaj ka target complete karo aur apna streak maintain rakho.</p><div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-5 relative z-10"><div style="background:#ffffff12;border:1px solid #ffffff18;border-radius:12px;padding:12px"><div style="font-size:10px;color:#c9ccd4">TODAY</div><b id="home-study-time" style="font-size:18px">0h 0m</b></div><div style="background:#ffffff12;border:1px solid #ffffff18;border-radius:12px;padding:12px"><div style="font-size:10px;color:#c9ccd4">STREAK</div><b id="home-streak" style="font-size:18px">0 🔥</b></div><div style="background:#ffffff12;border:1px solid #ffffff18;border-radius:12px;padding:12px"><div style="font-size:10px;color:#c9ccd4">XP</div><b id="home-xp" style="font-size:18px">0 XP</b></div><div style="background:#ffffff12;border:1px solid #ffffff18;border-radius:12px;padding:12px"><div style="font-size:10px;color:#c9ccd4">LEVEL</div><b id="home-level" style="font-size:18px">Level 1</b></div></div></div>
  <div class="rh-section-title">Batch Offerings</div>
@@ -343,6 +426,25 @@ create policy "materials storage backgrounds admin write" on storage.objects for
  <div class="grid lg:grid-cols-2 gap-4">
   <div class="rh-live"><div class="flex justify-between items-center"><div><b style="font-size:14px">Live Students</b><p style="font-size:10px;color:#8b93a0;margin-top:3px">Abhi kaun padh raha hai?</p></div><button onclick="switchTab('focus')" style="font-size:10px;color:#635bff;font-weight:800">View all →</button></div><div class="mt-3 flex items-center"><span class="rh-live-dot"></span><b id="home-live-count" style="font-size:13px">0 students studying</b></div></div>
   <div class="rh-live"><div class="flex justify-between items-center"><div><b style="font-size:14px">Quick Access</b><p style="font-size:10px;color:#8b93a0;margin-top:3px">Jahan se last time छोड़ा tha</p></div></div><div class="grid grid-cols-2 gap-2 mt-3"><button onclick="switchTab('materials')" class="bg-slate-50 border border-slate-200 rounded-lg p-2 text-left text-xs font-bold text-slate-700"><i class="fa-solid fa-book mr-2 text-indigo-500"></i>Materials</button><button onclick="switchTab('chatroom')" class="bg-slate-50 border border-slate-200 rounded-lg p-2 text-left text-xs font-bold text-slate-700"><i class="fa-solid fa-comments mr-2 text-indigo-500"></i>Live Chat</button></div></div>
+ </div>
+
+  </div>
+ <aside class="rh-home-rail">
+  <div class="rh-rail-card">
+   <div class="rh-rail-title"><span>Leaderboard (Top 5)</span><a href="#" onclick="switchTab('leaderboard');return false">सभी देखें →</a></div>
+   <div id="rh-home-leaderboard"></div>
+  </div>
+  <div class="rh-rail-card">
+   <div class="rh-rail-title"><span>Online Students <span style="color:#22c55e">●</span></span><a href="#" onclick="switchTab('focus');return false">सभी देखें →</a></div>
+   <div id="rh-home-online" class="rh-online-list"></div>
+  </div>
+  <div class="rh-rail-card">
+   <div class="rh-rail-title"><span>आज का लक्ष्य</span><a href="#" onclick="switchTab('focus');return false">Edit →</a></div>
+   <div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;font-size:11px"><span>पढ़ाई का समय</span><b id="rh-goal-time">0h 0m</b></div><div style="height:7px;background:#252a31;border-radius:20px;margin-top:7px;overflow:hidden"><div id="rh-goal-time-bar" style="height:100%;width:0%;background:#ef2b2b;border-radius:20px"></div></div></div>
+   <div><div style="display:flex;justify-content:space-between;font-size:11px"><span>Focus Streak</span><b id="rh-goal-streak">0 🔥</b></div><div style="height:7px;background:#252a31;border-radius:20px;margin-top:7px;overflow:hidden"><div id="rh-goal-streak-bar" style="height:100%;width:0%;background:#ef2b2b;border-radius:20px"></div></div></div>
+  </div>
+ </aside>
+
  </div>
 </section>
 
@@ -694,6 +796,7 @@ function renderHomeDashboard(){
   set('home-user-name',n); set('home-study-time',formatMinutesSimple(getFocusTodayMinutes())); set('home-streak',(getFocusStreak())+' 🔥');
   set('home-xp',((profile.xp||0))+' XP'); set('home-level','Level '+(profile.level||1));
   const live=document.getElementById('focus-live-users'); const count=live?live.querySelectorAll('[data-live-user]').length:0; set('home-live-count',count+' students studying');
+  renderRHHomeRail();
 }
 function formatMinutesSimple(m){m=Math.max(0,Math.round(Number(m)||0));return Math.floor(m/60)+'h '+(m%60)+'m'}
 
@@ -1361,9 +1464,28 @@ async function openVaultFile(id){const v=vaultItems.find(x=>String(x.id)===Strin
 async function deleteVault(id){const v=vaultItems.find(x=>String(x.id)===String(id));if(!v||!confirm('Delete this vault file?'))return;const{error}=await db.from('vault').delete().eq('id',id).eq('user_id',user.id);if(error)return toast(error.message,false);if(v.storage_path)await db.storage.from('vault').remove([v.storage_path]);toast('Vault file deleted');loadVault()}
 
 /* Leaderboard */
-async function loadLeaderboard(){if(!user)return;const{data,error}=await db.from('profiles').select('id,name,pfp_url,role,xp,level').order('xp',{ascending:false}).limit(100);if(error){document.getElementById('leaderboard-list').innerHTML='<div class="text-xs text-slate-500 p-3">Leaderboard के लिए profiles में xp/level columns चाहिए.</div>';return}leaderboard=(data||[]).map(p=>({...p,xp:Number(p.xp||0),level:Number(p.level||levelFromXp(p.xp))}));renderLeaderboard()}
+async function loadLeaderboard(){if(!user)return;const{data,error}=await db.from('profiles').select('id,name,pfp_url,role,xp,level').order('xp',{ascending:false}).limit(100);if(error){document.getElementById('leaderboard-list').innerHTML='<div class="text-xs text-slate-500 p-3">Leaderboard के लिए profiles में xp/level columns चाहिए.</div>';return}leaderboard=(data||[]).map(p=>({...p,xp:Number(p.xp||0),level:Number(p.level||levelFromXp(p.xp))}));renderLeaderboard();renderRHHomeRail()}
 function renderLeaderboard(){const me=leaderboard.find(p=>p.id===user.id)||{xp:Number(profile.xp||0),level:Number(profile.level||levelFromXp(profile.xp))};document.getElementById('my-xp').textContent=`${me.xp} XP`;document.getElementById('my-level').textContent=`Level ${me.level}`;document.getElementById('my-xp-bar').style.width=xpPercent(me.xp)+'%';const medals=['🥇','🥈','🥉'];document.getElementById('leaderboard-list').innerHTML=leaderboard.map((p,i)=>`<div class="bg-slate-900/80 border ${p.id===user.id?'border-amber-500/50':'border-slate-700'} rounded-xl p-3 flex items-center gap-3"><div class="w-9 text-center font-bold text-lg">${medals[i]||('#'+(i+1))}</div><div class="w-9 h-9 rounded-full overflow-hidden bg-slate-700">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}" class="w-full h-full object-cover">`:'👤'}</div><div class="min-w-0 flex-1"><b class="block truncate text-sm">${esc(p.name||'Member')}${p.id===user.id?' (You)':''}</b><span class="text-[10px] text-slate-500">Level ${p.level}</span></div><b class="text-sm text-amber-300">${p.xp} XP</b></div>`).join('')||'<div class="text-center py-8 text-slate-500">No members found.</div>'}
 
+
+function renderRHHomeRail(){
+  const lb=document.getElementById('rh-home-leaderboard');
+  if(lb && Array.isArray(leaderboard)){
+    const top=leaderboard.slice(0,5);
+    lb.innerHTML=top.map((p,i)=>`<div class="rh-mini-row"><div class="rh-rank">#${i+1}</div><div class="rh-mini-avatar">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}">`:'👤'}</div><div class="rh-mini-name"><b>${esc(p.name||'Member')}</b><span>Level ${p.level||1}</span></div><div class="rh-mini-xp">${Number(p.xp||0).toLocaleString()} XP</div></div>`).join('') || '<div style="font-size:11px;color:#9ba3ae">No members yet.</div>';
+  }
+  const online=document.getElementById('rh-home-online');
+  if(online){
+    const src=document.querySelectorAll('#focus-live-users [data-live-user]');
+    const nodes=[...src].slice(0,6);
+    online.innerHTML=nodes.map(n=>{const name=n.getAttribute('data-live-user')||'Student';return `<div class="rh-online-user"><div class="rh-online-avatar">${n.querySelector('img')?`<img src="${n.querySelector('img').src}">`:'👤'}</div><div style="margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(name)}</div></div>`}).join('') || '<span style="font-size:11px;color:#9ba3ae">अभी कोई live study नहीं कर रहा.</span>';
+  }
+  const mins=getFocusTodayMinutes();
+  const goal=360;
+  const gb=document.getElementById('rh-goal-time-bar'); if(gb)gb.style.width=Math.min(100,Math.round(mins/goal*100))+'%';
+  const gt=document.getElementById('rh-goal-time'); if(gt)gt.textContent=formatMinutesSimple(mins);
+  const streak=getFocusStreak(); const sb=document.getElementById('rh-goal-streak-bar'); if(sb)sb.style.width=Math.min(100,Math.round(streak/30*100))+'%'; const gs=document.getElementById('rh-goal-streak'); if(gs)gs.textContent=streak+' 🔥';
+}
 async function askAI(){
   const q=document.getElementById('ai-input').value.trim();
   const out=document.getElementById('ai-output');
