@@ -313,13 +313,19 @@ create policy "materials storage backgrounds admin write" on storage.objects for
 <div id="password-reset-modal" class="hidden fixed inset-0 z-[200] bg-black/80 p-4 flex items-center justify-center">
   <div class="w-full max-w-md bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-2xl">
     <div class="flex items-center justify-between mb-4">
-      <div><h3 class="font-bold text-lg text-white">Set New Password</h3><p class="text-xs text-slate-400 mt-1">अपना नया password डालें</p></div>
-      <i class="fa-solid fa-lock text-teal-400 text-xl"></i>
+      <div><h3 class="font-bold text-lg text-white">Reset Password</h3><p class="text-xs text-slate-400 mt-1">Email में आया 6-digit code डालें</p></div>
+      <i class="fa-solid fa-shield-halved text-teal-400 text-xl"></i>
     </div>
     <form id="password-reset-form" class="space-y-3">
-      <input id="new-password" type="password" minlength="6" required autocomplete="new-password" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white" placeholder="New password (minimum 6 characters)">
-      <input id="confirm-password" type="password" minlength="6" required autocomplete="new-password" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white" placeholder="Confirm new password">
-      <button id="save-password-btn" class="w-full bg-teal-600 hover:bg-teal-500 py-3 rounded-lg font-bold text-white">Update Password</button>
+      <input id="reset-otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white text-center text-xl tracking-[.45em]" placeholder="123456">
+      <p id="reset-otp-email" class="text-xs text-slate-400 text-center"></p>
+      <button type="button" id="verify-otp-btn" class="w-full bg-teal-600 hover:bg-teal-500 py-3 rounded-lg font-bold text-white">Verify Code</button>
+      <div id="new-password-fields" class="hidden space-y-3">
+        <input id="new-password" type="password" minlength="6" autocomplete="new-password" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white" placeholder="New password (minimum 6 characters)">
+        <input id="confirm-password" type="password" minlength="6" autocomplete="new-password" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white" placeholder="Confirm new password">
+        <button id="save-password-btn" type="submit" class="w-full bg-teal-600 hover:bg-teal-500 py-3 rounded-lg font-bold text-white">Update Password</button>
+      </div>
+      <button type="button" id="resend-reset-btn" class="w-full text-xs text-teal-400 hover:text-teal-300 underline">Resend code</button>
     </form>
   </div>
 </div>
@@ -1684,16 +1690,17 @@ async function sendPasswordResetEmail(e){
  if(!email)return;
  btn.disabled=true;btn.textContent='Sending...';
  try{
-  // Same URL is used after clicking the email link. Supabase will restore the recovery session.
-  const redirectTo='https://teachnology7509-pixel.github.io/RATHOD-HUB/';
-  const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo});
+  // OTP mode: no GitHub Pages redirect is used.
+  const {error}=await db.auth.resetPasswordForEmail(email);
   if(error)throw error;
-  toast('Password reset email sent. Check your inbox 📩');
+  document.getElementById('reset-otp-email').textContent='Code भेजा गया: '+email;
+  document.getElementById('password-reset-modal').classList.remove('hidden');
   document.getElementById('forgot-form').classList.add('hidden');
-  e.target.reset();
+  document.getElementById('reset-otp').focus();
+  toast('6-digit reset code email पर भेज दिया गया 📩');
  }catch(err){
   console.error('Password reset request failed:',err);
-  toast(err?.message||'Reset email failed',false);
+  toast(err?.message||'Reset code भेजने में समस्या हुई',false);
  }finally{
   btn.disabled=false;btn.textContent='Send Reset Link';
  }
@@ -1701,20 +1708,55 @@ async function sendPasswordResetEmail(e){
 
 document.getElementById('forgot-form').addEventListener('submit',sendPasswordResetEmail);
 
-function openPasswordResetModal(){
+let passwordResetEmail='';
+let passwordResetVerified=false;
+function openPasswordResetModal(email){
  const modal=document.getElementById('password-reset-modal');
  if(modal) modal.classList.remove('hidden');
- document.getElementById('new-password')?.focus();
+ if(email) passwordResetEmail=email;
+ document.getElementById('reset-otp-email').textContent=passwordResetEmail?'Code भेजा गया: '+passwordResetEmail:'';
+ document.getElementById('new-password-fields').classList.add('hidden');
+ document.getElementById('verify-otp-btn').classList.remove('hidden');
+ document.getElementById('reset-otp').focus();
 }
-
 function closePasswordResetModal(){
  const modal=document.getElementById('password-reset-modal');
  if(modal) modal.classList.add('hidden');
  document.getElementById('password-reset-form')?.reset();
+ document.getElementById('new-password-fields')?.classList.add('hidden');
+ passwordResetVerified=false;
 }
+
+// Verify the 6-digit recovery OTP. This completely avoids GitHub Pages redirect links.
+document.getElementById('verify-otp-btn').addEventListener('click',async()=>{
+ const otp=document.getElementById('reset-otp').value.trim();
+ const email=document.getElementById('forgot-email').value.trim().toLowerCase() || passwordResetEmail;
+ const btn=document.getElementById('verify-otp-btn');
+ if(!email)return toast('Reset email नहीं मिला. फिर से Forgot Password करें.',false);
+ if(!/^\d{6}$/.test(otp))return toast('6-digit code सही से डालें.',false);
+ btn.disabled=true;btn.textContent='Verifying...';
+ try{
+  const {data,error}=await db.auth.verifyOtp({email,token:otp,type:'recovery'});
+  if(error)throw error;
+  passwordResetEmail=email;
+  passwordResetVerified=true;
+  document.getElementById('new-password-fields').classList.remove('hidden');
+  btn.classList.add('hidden');
+  document.getElementById('reset-otp').disabled=true;
+  document.getElementById('new-password').focus();
+  toast('Code verified ✅ अब नया password बनाएं');
+ }catch(err){
+  console.error('Recovery OTP verification failed:',err);
+  toast(err?.message||'Code गलत या expire हो गया है.',false);
+ }finally{
+  btn.disabled=false;
+  if(!passwordResetVerified)btn.textContent='Verify Code';
+ }
+});
 
 document.getElementById('password-reset-form').addEventListener('submit',async e=>{
  e.preventDefault();
+ if(!passwordResetVerified)return toast('पहले email वाला code verify करें.',false);
  const password=document.getElementById('new-password').value;
  const confirm=document.getElementById('confirm-password').value;
  const btn=document.getElementById('save-password-btn');
@@ -1726,7 +1768,6 @@ document.getElementById('password-reset-form').addEventListener('submit',async e
   if(error)throw error;
   toast('Password successfully changed ✅');
   closePasswordResetModal();
-  // Recovery session is now a normal authenticated session; continue into the app.
   await boot();
  }catch(err){
   console.error('Password update failed:',err);
@@ -1736,44 +1777,28 @@ document.getElementById('password-reset-form').addEventListener('submit',async e
  }
 });
 
-// Password recovery: handle both Supabase PASSWORD_RECOVERY event and
-// recovery links that arrive with a hash/query before the listener fires.
-let passwordRecoveryHandled=false;
-function isPasswordRecoveryUrl(){
-  const hash=window.location.hash||'';
-  const search=window.location.search||'';
-  return /type=recovery/i.test(hash)||/type=recovery/i.test(search)||/access_token=/.test(hash);
-}
-async function handlePasswordRecovery(){
-  if(passwordRecoveryHandled)return;
-  if(!isPasswordRecoveryUrl())return;
-  try{
-    const {data,error}=await db.auth.getSession();
-    if(error)throw error;
-    if(data?.session){
-      passwordRecoveryHandled=true;
-      session=data.session;
-      user=data.session.user;
-      setTimeout(openPasswordResetModal,50);
-    }
-  }catch(err){
-    console.error('Password recovery session failed:',err);
-    toast('Reset link expired or invalid. Please request a new link.',false);
-  }
-}
-
-db.auth.onAuthStateChange((event,s)=>{
- if(event==='PASSWORD_RECOVERY'){
-   passwordRecoveryHandled=true;
-   session=s||null;
-   user=s?.user||null;
-   setTimeout(openPasswordResetModal,50);
- }
+document.getElementById('resend-reset-btn').addEventListener('click',async()=>{
+ const email=document.getElementById('forgot-email').value.trim().toLowerCase() || passwordResetEmail;
+ if(!email)return toast('Email नहीं मिला. फिर से Forgot Password करें.',false);
+ try{
+  const {error}=await db.auth.resetPasswordForEmail(email);
+  if(error)throw error;
+  document.getElementById('reset-otp').value='';
+  document.getElementById('reset-otp').disabled=false;
+  document.getElementById('new-password-fields').classList.add('hidden');
+  document.getElementById('verify-otp-btn').classList.remove('hidden');
+  passwordResetVerified=false;
+  toast('नया reset code भेज दिया गया 📩');
+ }catch(err){toast(err?.message||'Code resend नहीं हुआ',false)}
 });
 
-// Also check once on page load so recovery works even if the auth event
-// happened before this script registered its listener.
-setTimeout(handlePasswordRecovery,300);
+// Keep normal auth changes intact. OTP verification creates the recovery session itself.
+db.auth.onAuthStateChange((event,s)=>{
+ if(event==='PASSWORD_RECOVERY'){
+   session=s||null;
+   user=s?.user||null;
+ }
+});
 
 /* ==================== HUB EVENTS + DAILY 5 QUESTIONS XP ==================== */
 let hubEvents=[],hubActiveEvent=null,hubDailyAnswered={};
