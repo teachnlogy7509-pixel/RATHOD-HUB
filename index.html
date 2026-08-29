@@ -153,7 +153,7 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 <div id="hub-bg-layer" style="position:fixed;inset:0;z-index:-2;background-repeat:no-repeat;"></div>
 <div id="hub-bg-overlay" style="position:fixed;inset:0;z-index:-1;background:rgba(0,0,0,.6);"></div>
 
-<div id="toast" class="hidden fixed top-4 right-4 z-[9999] max-w-sm px-4 py-3 rounded-xl shadow-2xl text-sm font-semibold"></div>
+<div id="toast" class="hidden fixed top-4 right-4 z-[9999] max-w-sm px-4 py-3 rounded-xl shadow-2xl text-sm font-semibold transition-all"></div>
 
 <!-- AUTH -->
 <section id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
@@ -652,7 +652,7 @@ async function boot(){
  initFocusSystem(); applyRHSectionHeaders(); renderHomeDashboard(); switchTab('home');
 }
 db.auth.onAuthStateChange((event,s)=>{if(event==='SIGNED_OUT')cleanupChatSubscription();if(s&&!session)setTimeout(boot,0)});
-async function cleanupFocusSystem(){if(focusInterval)clearInterval(focusInterval);focusInterval=null;if(focusChannel){try{await db.removeChannel(focusChannel)}catch(e){}focusChannel=null}focusReady=false}
+async function cleanupFocusSystem(){if(focusInterval)clearInterval(focusInterval);focusInterval=null;if(focusHeartbeat)clearInterval(focusHeartbeat);focusHeartbeat=null;if(focusChannel){try{await db.removeChannel(focusChannel)}catch(e){}focusChannel=null}focusReady=false}
 async function logout(){await cleanupChatSubscription();await cleanupGamePresence();await cleanupFocusSystem();stopAllVoiceAndRooms();await db.auth.signOut();location.reload()}
 
 function switchTab(tab){
@@ -2097,7 +2097,8 @@ window.addEventListener('beforeunload',()=>{try{stopAllVoiceAndRooms()}catch(e){
 
 /* ==================== RATHOD HUB FOCUS / YPT-STYLE TIMER ==================== */
 let focusState={duration:1800,remaining:1800,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:'Biology',pomodoro:false,break:false};
-let focusInterval=null,focusChannel=null,focusReady=false;
+let focusInterval=null,focusChannel=null,focusHeartbeat=null,focusReady=false;
+let livePeersMap={};
 const FOCUS_KEY_PREFIX='rathod_focus_v2_';
 function focusKey(){return FOCUS_KEY_PREFIX+(user?.id||'guest')}
 function focusStoreKey(){return focusKey()+'_state'}
@@ -2194,11 +2195,11 @@ async function requestFocusNotifications(){if(!('Notification'in window))return 
 function notifyFocus(title,body){if('Notification'in window&&Notification.permission==='granted'){try{new Notification(title,{body,icon:document.querySelector('link[rel="icon"]')?.href||undefined,tag:'rathod-focus'})}catch(e){}}}
 function testFocusNotification(){if('Notification'in window&&Notification.permission==='granted')notifyFocus('🔔 RATHOD HUB Test','Notifications sahi se kaam kar rahi hain.');else requestFocusNotifications()}
 let focusLastBroadcast=0;
-function broadcastFocusThrottled(){if(Date.now()-focusLastBroadcast<3000)return;broadcastFocus()}
+function broadcastFocusThrottled(){if(Date.now()-focusLastBroadcast<4000)return;broadcastFocus()}
 async function broadcastFocus(){
   if(!focusChannel||!user||!focusReady)return;
   focusLastBroadcast=Date.now();
-  const currentPayload={
+  const payload={
     user_id:user.id,
     name:profile?.name||user.email||'Member',
     pfp_url:profile?.pfp_url||null,
@@ -2206,30 +2207,38 @@ async function broadcastFocus(){
     status:focusState.status,
     break:!!focusState.break,
     started_at:focusState.startedAt||null,
-    remaining:Math.ceil(focusRemaining())
+    remaining:Math.ceil(focusRemaining()),
+    updated_at:Date.now()
   };
+  livePeersMap[user.id]=payload;
+  renderLiveFocusUsers();
   try{
-    await focusChannel.track(currentPayload);
-    await focusChannel.send({type:'broadcast',event:'timer_ping',payload:currentPayload});
+    await focusChannel.track(payload);
+    await focusChannel.send({type:'broadcast',event:'timer_ping',payload});
   }catch(e){}
 }
 function renderLiveFocusUsers(){
   if(!focusChannel)return;
   const state=focusChannel.presenceState();
-  const people=[];
   Object.values(state).flat().forEach(p=>{
-    if(p&&p.user_id&&!people.some(x=>x.user_id===p.user_id)){
-      people.push(p);
+    if(p&&p.user_id){
+      livePeersMap[p.user_id]={...(livePeersMap[p.user_id]||{}),...p};
     }
   });
 
-  const active=people.filter(p=>p.status==='running');
-  const badge=document.getElementById('focus-live-badge');if(badge)badge.textContent=`● ${active.length} STUDYING`;
-  const c=document.getElementById('focus-online-count');if(c)c.textContent=`${active.length} studying`;
-  const countEl=document.getElementById('home-live-count');if(countEl)countEl.textContent=`${active.length} students studying`;
+  const now=Date.now();
+  const people=Object.values(livePeersMap).filter(p=>{
+    if(!p||!p.user_id)return false;
+    if(p.user_id===user?.id)return p.status==='running';
+    return p.status==='running' && (!p.updated_at || (now - p.updated_at < 60000));
+  });
+
+  const badge=document.getElementById('focus-live-badge');if(badge)badge.textContent=`● ${people.length} STUDYING`;
+  const c=document.getElementById('focus-online-count');if(c)c.textContent=`${people.length} studying`;
+  const countEl=document.getElementById('home-live-count');if(countEl)countEl.textContent=`${people.length} students studying`;
   const box=document.getElementById('focus-live-users');
   if(box){
-    box.innerHTML=active.length?active.map(p=>{
+    box.innerHTML=people.length?people.map(p=>{
       const rem=Number.isFinite(Number(p.remaining))?Number(p.remaining):0;
       return `<div data-live-user="${esc(p.name||'Student')}" class="flex justify-between items-center bg-slate-900 rounded-xl border border-slate-700 p-3"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full overflow-hidden bg-slate-800 shrink-0">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}" class="w-full h-full object-cover">`:'👤'}</div><div><b class="text-sm">${esc(p.name||'Member')}</b><div class="text-[10px] text-slate-500 mt-0.5">${esc(p.subject||'Other')} ${p.break?'• Break':'• Focus'}</div></div></div><div class="text-right"><span class="text-emerald-400 text-xs block">● LIVE</span><span class="text-[10px] text-slate-500">${fmtFocus(rem)}</span></div></div>`
     }).join(''):'<div class="text-center py-6 text-xs text-slate-500">Abhi koi active focus session nahi hai.</div>';
@@ -2250,12 +2259,15 @@ async function initFocusSystem(){
   writeFocusStats(st);
   if(focusChannel){try{await db.removeChannel(focusChannel)}catch(e){}}
   focusChannel=db.channel('rathod-hub-focus-live',{config:{presence:{key:user.id},broadcast:{self:false}}})
-    .on('presence',{event:'sync'},renderLiveFocusUsers)
-    .on('presence',{event:'join'},renderLiveFocusUsers)
-    .on('presence',{event:'leave'},renderLiveFocusUsers)
+    .on('presence',{event:'sync'},()=>{renderLiveFocusUsers()})
+    .on('presence',{event:'join'},()=>{renderLiveFocusUsers()})
+    .on('presence',{event:'leave'},({leftPresences})=>{
+      (leftPresences||[]).forEach(lp=>{if(lp?.user_id&&lp.user_id!==user.id)delete livePeersMap[lp.user_id]});
+      renderLiveFocusUsers();
+    })
     .on('broadcast',{event:'timer_ping'},e=>{
-      const payload=e?.payload;
-      if(!payload||!payload.user_id||payload.user_id===user.id)return;
+      if(!e?.payload||!e.payload.user_id||e.payload.user_id===user.id)return;
+      livePeersMap[e.payload.user_id]={...e.payload,updated_at:Date.now()};
       renderLiveFocusUsers();
     })
     .subscribe(async status=>{
@@ -2264,6 +2276,10 @@ async function initFocusSystem(){
         renderLiveFocusUsers();
       }
     });
+
+  if(focusHeartbeat)clearInterval(focusHeartbeat);
+  focusHeartbeat=setInterval(()=>{if(focusState.status==='running')broadcastFocus();},20000);
+
   renderFocusDashboard();
   renderHomeDashboard();
   updateNotifyStatus();
