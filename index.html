@@ -153,7 +153,7 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 <div id="hub-bg-layer" style="position:fixed;inset:0;z-index:-2;background-repeat:no-repeat;"></div>
 <div id="hub-bg-overlay" style="position:fixed;inset:0;z-index:-1;background:rgba(0,0,0,.6);"></div>
 
-<div id="toast" class="hidden fixed top-4 right-4 z-[100] max-w-sm px-4 py-3 rounded-xl shadow-2xl text-sm"></div>
+<div id="toast" class="hidden fixed top-4 right-4 z-[9999] max-w-sm px-4 py-3 rounded-xl shadow-2xl text-sm font-semibold"></div>
 
 <!-- AUTH -->
 <section id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
@@ -598,7 +598,7 @@ let mediaRecorder=null,audioChunks=[],recordedAudioBlob=null,isRecording=false;
 let authMode='login';
 let chatChannel=null;
 
-function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className=`fixed top-4 right-4 z-[100] max-w-sm px-4 py-3 rounded-xl shadow-2xl text-sm ${ok?'bg-emerald-600':'bg-red-600'}`;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),3500)}
+function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className=`fixed top-4 right-4 z-[9999] max-w-sm px-4 py-3 rounded-xl shadow-2xl text-sm font-semibold transition-all ${ok?'bg-emerald-600 text-white':'bg-red-600 text-white'}`;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),3500)}
 function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function safeUrl(u){try{const x=new URL(u);return ['https:','http:'].includes(x.protocol)?x.href:'#'}catch{return '#'}}
 
@@ -1703,6 +1703,7 @@ async function loadHubDailyAnswers(){
  if(error){console.error(error)}else{(data||[]).forEach(r=>hubDailyAnswered[r.question_index]=true)}
  renderHubQuestions();
 }
+
 function renderHubQuestions(){
  const box=document.getElementById('hub-questions-box');if(!box)return;
  const qs=Array.isArray(hubActiveEvent?.questions)?hubActiveEvent.questions:[];
@@ -1712,27 +1713,64 @@ function renderHubQuestions(){
  box.innerHTML=qs.map((q,i)=>{
   const locked=!!hubDailyAnswered[i];
   const opts=Array.isArray(q.options)?q.options:[];
-  return `<div class="bg-slate-800/95 border ${locked?'border-emerald-500/40':'border-slate-700'} rounded-2xl p-4">
-  <div class="flex justify-between items-start gap-2"><b class="text-sm">Q${i+1}. ${esc(q.question)}</b>${locked?'<span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded shrink-0">✓ +100 XP</span>':''}</div>
-  <div class="grid md:grid-cols-2 gap-2 mt-3">${opts.map((o,j)=>`<button ${locked?'disabled':''} onclick="answerHubQuestion(${i},${j})" class="bg-slate-900 hover:bg-slate-700 disabled:opacity-70 disabled:hover:bg-slate-900 p-2 rounded-lg text-left text-sm">${esc(o)}</button>`).join('')}</div>
+  return `<div class="bg-slate-800/95 border ${locked?'border-emerald-500/50 bg-emerald-950/20':'border-slate-700'} rounded-2xl p-4 transition-all">
+  <div class="flex justify-between items-start gap-2"><b class="text-sm text-white">Q${i+1}. ${esc(q.question)}</b>${locked?'<span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded shrink-0 font-bold">✓ Solved (+100 XP)</span>':''}</div>
+  <div class="grid md:grid-cols-2 gap-2 mt-3" id="hub-q-opts-${i}">
+    ${opts.map((o,j)=>`<button ${locked?'disabled':''} onclick="answerHubQuestion(${i},${j},this)" class="bg-slate-900 hover:bg-slate-700 disabled:opacity-75 disabled:cursor-not-allowed p-3 rounded-lg text-left text-sm border border-slate-700 text-slate-200 transition-all">${esc(o)}</button>`).join('')}
+  </div>
   </div>`;
  }).join('')||'<div class="text-center text-slate-500 py-6">Questions available nahi hain.</div>';
 }
-async function answerHubQuestion(qIndex,optIndex){
- if(!user||!hubActiveEvent||hubDailyAnswered[qIndex])return;
+
+async function answerHubQuestion(qIndex,optIndex,btnElem){
+ if(!user)return toast('Pehle login karein.',false);
+ if(!hubActiveEvent)return toast('Koi active event nahi mila.',false);
+ if(hubDailyAnswered[qIndex])return toast('Ye question aap pehle hi solve kar chuke hain.',false);
+ 
  const q=hubActiveEvent.questions[qIndex];if(!q)return;
- if(Number(optIndex)!==Number(q.correct_index)){toast('Galat jawab. Try again!',false);return}
- const today=localDateValue();
- const {error}=await db.from('hub_daily_answers').insert({user_id:user.id,event_id:hubActiveEvent.id,answer_date:today,question_index:qIndex,is_correct:true,xp_awarded:100});
- if(error){
-  if(error.code==='23505'){hubDailyAnswered[qIndex]=true;renderHubQuestions();return}
-  toast(error.message||'Answer save failed',false);return;
+ const parent=document.getElementById(`hub-q-opts-${qIndex}`);
+ const buttons=parent?parent.querySelectorAll('button'):[];
+
+ if(Number(optIndex)!==Number(q.correct_index)){
+  if(btnElem){
+    btnElem.classList.add('bg-red-600','border-red-500','text-white');
+    setTimeout(()=>{
+      btnElem.classList.remove('bg-red-600','border-red-500','text-white');
+    },1500);
+  }
+  toast('Galat jawab! Sahi option select karein.',false);
+  return;
  }
- hubDailyAnswered[qIndex]=true;
- await grantXP(100);
- toast('Correct! +100 XP 🎉');
- renderHubQuestions();
+
+ if(btnElem)btnElem.classList.add('bg-emerald-600','border-emerald-500','text-white');
+ buttons.forEach(b=>b.disabled=true);
+
+ const today=localDateValue();
+ try{
+   const {error}=await db.from('hub_daily_answers').insert({
+     user_id:user.id,
+     event_id:hubActiveEvent.id,
+     answer_date:today,
+     question_index:qIndex,
+     is_correct:true,
+     xp_awarded:100
+   });
+
+   if(error&&error.code!=='23505'){
+     throw error;
+   }
+
+   hubDailyAnswered[qIndex]=true;
+   await grantXP(100);
+   toast('Sahi Jawab! +100 XP 🎉');
+   renderHubQuestions();
+ }catch(err){
+   console.error('Answer save failed:',err);
+   toast(err.message||'Answer save nahi ho saka. Supabase permissions check karein.',false);
+   buttons.forEach(b=>b.disabled=false);
+ }
 }
+
 function tickHubCountdown(){
  const el=document.getElementById('hub-countdown');if(!el)return;
  if(!hubActiveEvent){el.textContent='--:--:--';return}
