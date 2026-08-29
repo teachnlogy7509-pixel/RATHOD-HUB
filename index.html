@@ -2092,53 +2092,154 @@ window.addEventListener('beforeunload',()=>{try{stopAllVoiceAndRooms()}catch(e){
 
 
 /* ==================== RATHOD HUB FOCUS / YPT-STYLE TIMER ==================== */
-let focusState={duration:1800,remaining:1800,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:'Biology',pomodoro:false,break:false};
+let focusState={duration:1800,remaining:1800,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:'Biology',pomodoro:false,break:false,lastPersistAt:null};
 let focusInterval=null,focusChannel=null,focusReady=false;
-const FOCUS_KEY_PREFIX='rathod_focus_v2_';
+const FOCUS_KEY_PREFIX='rathod_focus_v3_';
 function focusKey(){return FOCUS_KEY_PREFIX+(user?.id||'guest')}
 function focusStoreKey(){return focusKey()+'_state'}
 function focusStatsKey(){return focusKey()+'_stats'}
-function focusGoalKey(){return focusKey()+'_goal'}
-function focusDefaultStats(){return {sessions:[],goalHours:4}}
-function readFocusStats(){try{return JSON.parse(localStorage.getItem(focusStatsKey())||JSON.stringify(focusDefaultStats()))}catch{return focusDefaultStats()}}
-function writeFocusStats(x){localStorage.setItem(focusStatsKey(),JSON.stringify(x))}
-function saveFocusState(){if(!user)return;localStorage.setItem(focusStoreKey(),JSON.stringify(focusState))}
+function focusDefaultStats(){return {sessions:[],dailySeconds:{},goalHours:4,goalNotifiedDate:null}}
+function readFocusStats(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(focusStatsKey())||'null');
+    const st=raw&&typeof raw==='object'?raw:focusDefaultStats();
+    st.sessions=Array.isArray(st.sessions)?st.sessions:[];
+    st.dailySeconds=st.dailySeconds&&typeof st.dailySeconds==='object'?st.dailySeconds:{};
+    /* Migrate old saved sessions into the daily totals exactly once. */
+    st.sessions.forEach(x=>{
+      const d=x?.date, sec=Math.max(0,Math.round(Number(x?.seconds)||0));
+      if(d&&sec&&!st.dailySeconds[d])st.dailySeconds[d]=sec;
+    });
+    if(!st.goalHours)st.goalHours=4;
+    return st;
+  }catch{return focusDefaultStats()}
+}
+function writeFocusStats(x){try{localStorage.setItem(focusStatsKey(),JSON.stringify(x))}catch(e){console.warn('Focus stats save failed',e)}}
+function saveFocusState(){if(!user)return;try{localStorage.setItem(focusStoreKey(),JSON.stringify(focusState))}catch(e){}}
 function readFocusState(){try{const x=JSON.parse(localStorage.getItem(focusStoreKey())||'null');return x&&Number(x.duration)>0?x:null}catch{return null}}
 function fmtFocus(sec){sec=Math.max(0,Math.floor(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}
 function fmtHM(sec){sec=Math.max(0,Math.floor(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);return `${h}h ${m}m`}
 function localDay(d=new Date()){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`}
 function addDays(dateStr,n){const d=new Date(dateStr+'T12:00:00');d.setDate(d.getDate()+n);return localDay(d)}
-function focusElapsed(){if(focusState.status!=='running'||!focusState.startedAt)return focusState.elapsedBeforePause||0;return Math.max(0,(Date.now()-focusState.startedAt)/1000)+(focusState.elapsedBeforePause||0)}
-function focusRemaining(){if(focusState.status==='running')return Math.max(0,focusState.duration-focusElapsed());return Math.max(0,focusState.remaining)}
-function setFocusPreset(min){if(focusState.status==='running')return toast('Timer running hai — pehle pause/stop karo.',false);document.getElementById('focus-duration').value=min;focusState.duration=min*60;focusState.remaining=focusState.duration;focusState.break=false;focusState.pomodoro=false;saveFocusState();renderFocusTimer()}
-function setCustomFocusDuration(){if(focusState.status==='running')return;let min=Math.min(720,Math.max(1,Number(document.getElementById('focus-duration').value)||30));document.getElementById('focus-duration').value=min;focusState.duration=min*60;focusState.remaining=focusState.duration;focusState.break=false;focusState.pomodoro=false;saveFocusState();renderFocusTimer()}
+function focusElapsed(){if(focusState.status!=='running'||!focusState.startedAt)return focusState.elapsedBeforePause||0;return Math.max(0,(Date.now()-Number(focusState.startedAt))/1000)+(focusState.elapsedBeforePause||0)}
+function focusRemaining(){if(focusState.status==='running')return Math.max(0,focusState.duration-focusElapsed());return Math.max(0,Number(focusState.remaining)||0)}
+
+/* Persist live study time continuously, split correctly at midnight. */
+function persistFocusTime(force=false){
+  if(focusState.status!=='running'||!focusState.startedAt)return;
+  const now=Date.now();
+  let from=Number(focusState.lastPersistAt||focusState.startedAt||now);
+  if(from>now)from=now;
+  if(!force && now-from<250)return;
+  const end=now;
+  const st=readFocusStats();
+  let cursor=from;
+  while(cursor<end){
+    const a=new Date(cursor);
+    const nextMidnight=new Date(a.getFullYear(),a.getMonth(),a.getDate()+1).getTime();
+    const partEnd=Math.min(end,nextMidnight);
+    const sec=Math.max(0,(partEnd-cursor)/1000);
+    const day=localDay(a);
+    st.dailySeconds[day]=Number(st.dailySeconds[day]||0)+sec;
+    cursor=partEnd;
+  }
+  focusState.lastPersistAt=now;
+  writeFocusStats(st);
+  saveFocusState();
+}
+function getFocusTodaySeconds(){
+  const st=readFocusStats();
+  let sec=Number(st.dailySeconds[localDay()]||0);
+  if(focusState.status==='running'){
+    /* Include unsaved milliseconds immediately in the UI. */
+    const last=Number(focusState.lastPersistAt||focusState.startedAt||Date.now());
+    sec+=Math.max(0,(Date.now()-last)/1000);
+  }
+  return Math.max(0,sec);
+}
+function getFocusTodayMinutes(){return getFocusTodaySeconds()/60}
+function getFocusStreak(){return focusStreak(readFocusStats().sessions)}
+function setFocusPreset(min){if(focusState.status==='running')return toast('Timer running hai — pehle pause/stop karo.',false);document.getElementById('focus-duration').value=min;focusState.duration=min*60;focusState.remaining=focusState.duration;focusState.break=false;focusState.pomodoro=false;focusState.lastPersistAt=null;saveFocusState();renderFocusTimer()}
+function setCustomFocusDuration(){if(focusState.status==='running')return;let min=Math.min(720,Math.max(1,Number(document.getElementById('focus-duration').value)||30));document.getElementById('focus-duration').value=min;focusState.duration=min*60;focusState.remaining=focusState.duration;focusState.break=false;focusState.pomodoro=false;focusState.lastPersistAt=null;saveFocusState();renderFocusTimer()}
 function startFocusTimer(){
  if(!user)return toast('Please login first.',false);
  if(focusState.status==='running')return;
  focusState.subject=document.getElementById('focus-subject')?.value||focusState.subject||'Other';
  if(focusState.remaining<=0||focusState.remaining>focusState.duration)focusState.remaining=focusState.duration;
- focusState.startedAt=Date.now();focusState.status='running';focusState.pausedAt=null;saveFocusState();startFocusTicker();broadcastFocus();renderFocusTimer();toast('Focus session started 🔥');
+ focusState.startedAt=Date.now();
+ focusState.lastPersistAt=focusState.startedAt;
+ focusState.status='running';focusState.pausedAt=null;
+ saveFocusState();
+ startFocusTicker();broadcastFocus();renderFocusTimer();
+ toast('Focus session started 🔥');
 }
-
-
-function startFocusTicker(){if(focusInterval)clearInterval(focusInterval);focusInterval=setInterval(tickFocus,250);tickFocus()}
+function startFocusTicker(){if(focusInterval)clearInterval(focusInterval);focusInterval=setInterval(tickFocus,1000);tickFocus()}
 function tickFocus(){
  if(!focusReady)return;
- const rem=focusRemaining();focusState.remaining=rem;renderFocusTimer();broadcastFocusThrottled();
+ if(focusState.status==='running')persistFocusTime();
+ const rem=focusRemaining();focusState.remaining=rem;renderFocusTimer();renderFocusDashboard();broadcastFocusThrottled();
  if(focusState.status==='running'&&rem<=0)completeFocusTimer();
 }
-function pauseFocusTimer(){if(focusState.status!=='running')return;focusState.elapsedBeforePause=focusElapsed();focusState.remaining=Math.max(0,focusState.duration-focusState.elapsedBeforePause);focusState.status='paused';focusState.startedAt=null;focusState.pausedAt=Date.now();saveFocusState();renderFocusTimer();broadcastFocus();toast('Timer paused ⏸️')}
-function stopFocusTimer(){if(!['running','paused'].includes(focusState.status))return;const elapsed=focusState.status==='running'?focusElapsed():focusState.elapsedBeforePause;if(elapsed>=60)recordFocusSession(Math.min(elapsed,focusState.duration),focusState.subject);focusState={duration:focusState.duration,remaining:focusState.duration,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:focusState.subject||'Other',pomodoro:false,break:false};saveFocusState();renderFocusTimer();broadcastFocus();toast('Session stopped.')}
-function resetFocusTimer(){if(focusState.status==='running')return toast('Running timer ko reset karne se pehle pause karo.',false);const d=focusState.duration||1800;focusState={duration:d,remaining:d,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:document.getElementById('focus-subject')?.value||'Biology',pomodoro:false,break:false};saveFocusState();renderFocusTimer();broadcastFocus()}
-function startPomodoro(){if(focusState.status==='running')return toast('Timer already running hai.',false);document.getElementById('focus-duration').value=50;focusState={duration:3000,remaining:3000,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:document.getElementById('focus-subject')?.value||'Biology',pomodoro:true,break:false};saveFocusState();startFocusTimer()}
-function completeFocusTimer(){if(focusState.status!=='running')return;const wasBreak=!!focusState.break;const studied=Math.min(focusState.duration,Math.max(0,focusElapsed()));focusState.remaining=0;focusState.status='idle';focusState.startedAt=null;focusState.elapsedBeforePause=0;saveFocusState();renderFocusTimer();if(wasBreak){notifyFocus('☕ Break complete','Your 10-minute break is over. Ready for the next focus session?');toast('Break complete ☕');return}if(studied>=60)recordFocusSession(studied,focusState.subject);notifyFocus('🎉 Focus session complete','Great job! Your study session is complete.');toast('Focus complete! 🎉 +25 XP');if(user)grantXP(25);if(focusState.pomodoro){setTimeout(()=>startPomodoroBreak(),350);}}
-function startPomodoroBreak(){if(focusInterval)clearInterval(focusInterval);focusState={duration:600,remaining:600,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:focusState.subject||'Other',pomodoro:true,break:true};saveFocusState();renderFocusTimer();startFocusTimer();notifyFocus('🍅 Break time','50-minute focus complete. Take a 10-minute break.');}
-function renderFocusTimer(){const d=document.getElementById('focus-timer-display');if(!d)return;const rem=focusRemaining();d.textContent=fmtFocus(rem);const pct=focusState.duration?Math.min(100,Math.max(0,(1-rem/focusState.duration)*100)):0;const bar=document.getElementById('focus-progress');if(bar)bar.style.width=pct+'%';const mode=document.getElementById('focus-mode-label');if(mode)mode.textContent=focusState.break?'BREAK':'FOCUS SESSION';const st=document.getElementById('focus-session-status');if(st)st.textContent=focusState.status==='running'?(focusState.break?'Break running ☕':'Studying now 🔥'):focusState.status==='paused'?'Paused ⏸️':'Ready to study';const sb=document.getElementById('focus-start-btn'),pb=document.getElementById('focus-pause-btn'),xb=document.getElementById('focus-stop-btn');if(sb)sb.classList.toggle('hidden',focusState.status==='running');if(pb)pb.classList.toggle('hidden',focusState.status!=='running');if(xb)xb.classList.toggle('hidden',!['running','paused'].includes(focusState.status));}
-function recordFocusSession(seconds,subject){if(seconds<60)return;const st=readFocusStats();const now=new Date();st.sessions=Array.isArray(st.sessions)?st.sessions:[];st.sessions.push({date:localDay(now),seconds:Math.round(seconds),subject:subject||'Other',at:now.toISOString()});st.sessions=st.sessions.slice(-2000);writeFocusStats(st);renderFocusDashboard();broadcastFocus();const today=st.sessions.filter(x=>x.date===localDay()).reduce((a,x)=>a+Number(x.seconds||0),0);const goal=Number(st.goalHours||4)*3600;if(today>=goal&&!st.goalNotifiedDate){st.goalNotifiedDate=localDay();writeFocusStats(st);notifyFocus('🎯 Daily goal complete!','Your study goal for today is complete.');toast('Daily goal complete! 🏆');}}
+function pauseFocusTimer(){
+ if(focusState.status!=='running')return;
+ persistFocusTime(true);
+ focusState.elapsedBeforePause=focusElapsed();
+ focusState.remaining=Math.max(0,focusState.duration-focusState.elapsedBeforePause);
+ focusState.status='paused';focusState.startedAt=null;focusState.lastPersistAt=null;focusState.pausedAt=Date.now();
+ saveFocusState();renderFocusTimer();renderFocusDashboard();broadcastFocus();toast('Timer paused ⏸️');
+}
+function stopFocusTimer(){
+ if(!['running','paused'].includes(focusState.status))return;
+ if(focusState.status==='running')persistFocusTime(true);
+ const elapsed=focusState.status==='running'?focusElapsed():focusState.elapsedBeforePause;
+ if(elapsed>=60)recordFocusSession(Math.min(elapsed,focusState.duration),focusState.subject);
+ const d=focusState.duration,sub=focusState.subject||'Other';
+ focusState={duration:d,remaining:d,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:sub,pomodoro:false,break:false,lastPersistAt:null};
+ saveFocusState();renderFocusTimer();renderFocusDashboard();broadcastFocus();toast('Session stopped.');
+}
+function resetFocusTimer(){if(focusState.status==='running')return toast('Running timer ko reset karne se pehle pause karo.',false);const d=focusState.duration||1800;focusState={duration:d,remaining:d,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:document.getElementById('focus-subject')?.value||'Biology',pomodoro:false,break:false,lastPersistAt:null};saveFocusState();renderFocusTimer();broadcastFocus()}
+function startPomodoro(){if(focusState.status==='running')return toast('Timer already running hai.',false);document.getElementById('focus-duration').value=50;focusState={duration:3000,remaining:3000,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:document.getElementById('focus-subject')?.value||'Biology',pomodoro:true,break:false,lastPersistAt:null};saveFocusState();startFocusTimer()}
+function completeFocusTimer(){
+ if(focusState.status!=='running')return;
+ persistFocusTime(true);
+ const wasBreak=!!focusState.break;
+ const studied=Math.min(focusState.duration,Math.max(0,focusElapsed()));
+ const pomodoro=!!focusState.pomodoro, subject=focusState.subject;
+ focusState.remaining=0;focusState.status='idle';focusState.startedAt=null;focusState.lastPersistAt=null;focusState.elapsedBeforePause=0;
+ saveFocusState();renderFocusTimer();renderFocusDashboard();
+ if(wasBreak){notifyFocus('☕ Break complete','Your 10-minute break is over. Ready for the next focus session?');toast('Break complete ☕');return}
+ if(studied>=60)recordFocusSession(studied,subject);
+ notifyFocus('🎉 Focus session complete','Great job! Your study session is complete.');toast('Focus complete! 🎉 +25 XP');if(user)grantXP(25);
+ if(pomodoro)setTimeout(()=>startPomodoroBreak(),350);
+}
+function startPomodoroBreak(){if(focusInterval)clearInterval(focusInterval);focusState={duration:600,remaining:600,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:focusState.subject||'Other',pomodoro:true,break:true,lastPersistAt:null};saveFocusState();renderFocusTimer();startFocusTimer();notifyFocus('🍅 Break time','50-minute focus complete. Take a 10-minute break.')}
+function renderFocusTimer(){const d=document.getElementById('focus-timer-display');if(!d)return;const rem=focusRemaining();d.textContent=fmtFocus(rem);const pct=focusState.duration?Math.min(100,Math.max(0,(1-rem/focusState.duration)*100)):0;const bar=document.getElementById('focus-progress');if(bar)bar.style.width=pct+'%';const mode=document.getElementById('focus-mode-label');if(mode)mode.textContent=focusState.break?'BREAK':'FOCUS SESSION';const st=document.getElementById('focus-session-status');if(st)st.textContent=focusState.status==='running'?(focusState.break?'Break running ☕':'Studying now 🔥'):focusState.status==='paused'?'Paused ⏸️':'Ready to study';const sb=document.getElementById('focus-start-btn'),pb=document.getElementById('focus-pause-btn'),xb=document.getElementById('focus-stop-btn');if(sb)sb.classList.toggle('hidden',focusState.status==='running');if(pb)pb.classList.toggle('hidden',focusState.status!=='running');if(xb)xb.classList.toggle('hidden',!['running','paused'].includes(focusState.status))}
+function recordFocusSession(seconds,subject){
+ if(seconds<60)return;
+ const st=readFocusStats(),now=new Date();st.sessions.push({date:localDay(now),seconds:Math.round(seconds),subject:subject||'Other',at:now.toISOString()});st.sessions=st.sessions.slice(-2000);writeFocusStats(st);renderFocusDashboard();broadcastFocus();
+ const today=Number(st.dailySeconds[localDay()]||0);const goal=Number(st.goalHours||4)*3600;
+ if(today>=goal&&!st.goalNotifiedDate){st.goalNotifiedDate=localDay();writeFocusStats(st);notifyFocus('🎯 Daily goal complete!','Your study goal for today is complete.');toast('Daily goal complete! 🏆')}
+}
 function saveFocusGoal(){const st=readFocusStats();let h=Math.min(24,Math.max(.25,Number(document.getElementById('focus-goal-hours').value)||4));st.goalHours=h;writeFocusStats(st);renderFocusDashboard()}
-function renderFocusDashboard(){if(!user)return;const st=readFocusStats(),today=localDay(),todaySec=st.sessions.filter(x=>x.date===today).reduce((a,x)=>a+Number(x.seconds||0),0);const goal=Number(st.goalHours||4);const t=document.getElementById('focus-today-time');if(t)t.textContent=fmtHM(todaySec);const ses=document.getElementById('focus-sessions');if(ses)ses.textContent=st.sessions.length;const gh=document.getElementById('focus-goal-hours');if(gh)gh.value=goal;const gl=document.getElementById('focus-goal-label');if(gl)gl.textContent=`${fmtHM(todaySec)} / ${goal}h`;const gb=document.getElementById('focus-goal-bar');if(gb)gb.style.width=Math.min(100,todaySec/(goal*3600)*100)+'%';const streak=document.getElementById('focus-streak');if(streak)streak.textContent=(focusStreak(st.sessions))+' 🔥';renderFocusWeek(st.sessions);renderFocusAchievements(st.sessions);renderFocusTimer();updateNotifyStatus()}
-function focusStreak(sessions){const days=new Set(sessions.filter(x=>Number(x.seconds||0)>=60).map(x=>x.date));let d=localDay();let n=0;while(days.has(d)){n++;d=addDays(d,-1)}return n}
-function renderFocusWeek(sessions){const box=document.getElementById('focus-week-chart');if(!box)return;const vals=[];for(let i=6;i>=0;i--){const day=addDays(localDay(),-i);const sec=sessions.filter(x=>x.date===day).reduce((a,x)=>a+Number(x.seconds||0),0);vals.push({day,sec})}const max=Math.max(1,...vals.map(x=>x.sec));const total=vals.reduce((a,x)=>a+x.sec,0);const wt=document.getElementById('focus-week-total');if(wt)wt.textContent=fmtHM(total);box.innerHTML=vals.map(v=>`<div class="h-full flex flex-col justify-end items-center gap-1"><span class="text-[9px] text-slate-500">${v.sec?fmtHM(v.sec).replace(' ',''):''}</span><div class="w-full bg-emerald-500/70 rounded-t-md" style="height:${Math.max(6,v.sec/max*100)}%" title="${v.day}: ${fmtHM(v.sec)}"></div><span class="text-[9px] text-slate-500">${new Date(v.day+'T12:00:00').toLocaleDateString(undefined,{weekday:'short'}).slice(0,3)}</span></div>`).join('')}
+function renderFocusDashboard(){
+ if(!user)return;
+ const st=readFocusStats(),today=localDay(),todaySec=getFocusTodaySeconds(),goal=Number(st.goalHours||4);
+ const t=document.getElementById('focus-today-time');if(t)t.textContent=fmtHM(todaySec);
+ const ses=document.getElementById('focus-sessions');if(ses)ses.textContent=st.sessions.length;
+ const gh=document.getElementById('focus-goal-hours');if(gh)gh.value=goal;
+ const gl=document.getElementById('focus-goal-label');if(gl)gl.textContent=`${fmtHM(todaySec)} / ${goal}h`;
+ const gb=document.getElementById('focus-goal-bar');if(gb)gb.style.width=Math.min(100,todaySec/(goal*3600)*100)+'%';
+ const streak=document.getElementById('focus-streak');if(streak)streak.textContent=focusStreak(st.sessions)+' 🔥';
+ renderFocusWeek(st);renderFocusAchievements(st.sessions);renderFocusTimer();updateNotifyStatus();
+}
+function focusStreak(sessions){const st=readFocusStats(),days=new Set(Object.entries(st.dailySeconds).filter(([,v])=>Number(v||0)>=60).map(([d])=>d));sessions.filter(x=>Number(x.seconds||0)>=60).forEach(x=>days.add(x.date));let d=localDay(),n=0;while(days.has(d)){n++;d=addDays(d,-1)}return n}
+function renderFocusWeek(stOrSessions){
+ const box=document.getElementById('focus-week-chart');if(!box)return;
+ const st=Array.isArray(stOrSessions)?{sessions:stOrSessions,dailySeconds:{}}:stOrSessions;
+ const vals=[];for(let i=6;i>=0;i--){const day=addDays(localDay(),-i);let sec=Number(st.dailySeconds?.[day]||0);if(!sec&&Array.isArray(st.sessions))sec=st.sessions.filter(x=>x.date===day).reduce((a,x)=>a+Number(x.seconds||0),0);if(day===localDay()&&focusState.status==='running')sec=getFocusTodaySeconds();vals.push({day,sec})}
+ const max=Math.max(1,...vals.map(x=>x.sec));const total=vals.reduce((a,x)=>a+x.sec,0);const wt=document.getElementById('focus-week-total');if(wt)wt.textContent=fmtHM(total);
+ box.innerHTML=vals.map(v=>`<div class="h-full flex flex-col justify-end items-center gap-1"><span class="text-[9px] text-slate-500">${v.sec?fmtHM(v.sec).replace(' ',''):''}</span><div class="w-full bg-emerald-500/70 rounded-t-md" style="height:${Math.max(6,v.sec/max*100)}%" title="${v.day}: ${fmtHM(v.sec)}"></div><span class="text-[9px] text-slate-500">${new Date(v.day+'T12:00:00').toLocaleDateString(undefined,{weekday:'short'}).slice(0,3)}</span></div>`).join('')
+}
 function renderFocusAchievements(sessions){const total=sessions.reduce((a,x)=>a+Number(x.seconds||0),0),streak=focusStreak(sessions);const items=[['🌱','First Session',sessions.length>=1],['⏱️','1 Hour',total>=3600],['🔥','7 Day Streak',streak>=7],['🏆','10 Hours',total>=36000],['💎','25 Sessions',sessions.length>=25],['🚀','25 Hours',total>=90000],['🧠','50 Sessions',sessions.length>=50],['👑','50 Hour Club',total>=180000]];const box=document.getElementById('focus-achievements');if(box)box.innerHTML=items.map(x=>`<div class="rounded-xl p-3 border ${x[2]?'border-fuchsia-500/40 bg-fuchsia-500/10':'border-slate-700 bg-slate-900/60 opacity-50'}"><div class="text-xl">${x[0]}</div><b class="text-xs block mt-1">${x[1]}</b><span class="text-[9px] text-slate-500">${x[2]?'UNLOCKED':'Locked'}</span></div>`).join('')}
 function updateNotifyStatus(){const st=document.getElementById('focus-notify-status'),b=document.getElementById('focus-notify-btn');if(!('Notification'in window)){if(st)st.textContent='Not supported';return}if(st)st.textContent=Notification.permission==='granted'?'Enabled ✓':Notification.permission==='denied'?'Blocked — browser settings check karo':'Permission not requested';if(b)b.textContent=Notification.permission==='granted'?'🔔 Enabled':'🔔 Notifications'}
 async function requestFocusNotifications(){if(!('Notification'in window))return toast('Is browser mein notifications supported nahi hain.',false);try{const p=await Notification.requestPermission();updateNotifyStatus();toast(p==='granted'?'Notifications enabled 🔔':p==='denied'?'Notifications blocked. Browser settings se allow karo.':'Permission not granted.',p==='granted')}catch(e){toast('Notification permission nahi mil paayi.',false)}}
@@ -2148,8 +2249,21 @@ let focusLastBroadcast=0;
 function broadcastFocusThrottled(){if(Date.now()-focusLastBroadcast<3000)return;broadcastFocus()}
 async function broadcastFocus(){if(!focusChannel||!user||!focusReady)return;focusLastBroadcast=Date.now();try{await focusChannel.track({user_id:user.id,name:profile?.name||user.email||'Member',subject:focusState.subject||'Other',status:focusState.status,break:!!focusState.break,started_at:focusState.startedAt||null,remaining:Math.ceil(focusRemaining())})}catch(e){}}
 function renderLiveFocusUsers(){if(!focusChannel)return;const state=focusChannel.presenceState(),people=[];Object.values(state).flat().forEach(p=>{if(p?.user_id&&!people.some(x=>x.user_id===p.user_id))people.push(p)});const active=people.filter(p=>p.status==='running');const badge=document.getElementById('focus-live-badge');if(badge)badge.textContent=`● ${active.length} STUDYING`;const c=document.getElementById('focus-online-count');if(c)c.textContent=`${active.length} studying`;const box=document.getElementById('focus-live-users');if(box)box.innerHTML=active.length?active.map(p=>{const rem=Number.isFinite(Number(p.remaining))?Number(p.remaining):0;return `<div class="flex justify-between items-center bg-slate-900 rounded-xl border border-slate-700 p-3"><div><b class="text-sm">${esc(p.name||'Member')}</b><div class="text-[10px] text-slate-500 mt-1">${esc(p.subject||'Other')} ${p.break?'• Break':'• Focus'}</div></div><div class="text-right"><span class="text-emerald-400 text-xs block">● LIVE</span><span class="text-[10px] text-slate-500">${fmtFocus(rem)}</span></div></div>`}).join(''):'<div class="text-center py-6 text-xs text-slate-500">Abhi koi active focus session nahi hai.</div>'}
-async function initFocusSystem(){if(!user||focusReady)return;focusReady=true;const saved=readFocusState();if(saved){focusState={...focusState,...saved};if(focusState.status==='running'&&focusRemaining()<=0){completeFocusTimer()}else if(focusState.status==='running')startFocusTicker()}else saveFocusState();const st=readFocusStats();if(!st.goalHours)st.goalHours=4;writeFocusStats(st);focusChannel=db.channel('rathod-hub-focus-live',{config:{presence:{key:user.id}}}).on('presence',{event:'sync'},renderLiveFocusUsers).on('presence',{event:'join'},renderLiveFocusUsers).on('presence',{event:'leave'},renderLiveFocusUsers).subscribe(async status=>{if(status==='SUBSCRIBED')broadcastFocus()});renderFocusDashboard();updateNotifyStatus()}
+async function initFocusSystem(){
+ if(!user||focusReady)return;
+ focusReady=true;
+ const saved=readFocusState();
+ if(saved){focusState={...focusState,...saved};if(focusState.status==='running'&&focusRemaining()<=0){persistFocusTime(true);completeFocusTimer()}else if(focusState.status==='running'){persistFocusTime(true);startFocusTicker()}}
+ else saveFocusState();
+ const st=readFocusStats();if(!st.goalHours)st.goalHours=4;writeFocusStats(st);
+ focusChannel=db.channel('rathod-hub-focus-live',{config:{presence:{key:user.id}}}).on('presence',{event:'sync'},renderLiveFocusUsers).on('presence',{event:'join'},renderLiveFocusUsers).on('presence',{event:'leave'},renderLiveFocusUsers).subscribe(async status=>{if(status==='SUBSCRIBED')broadcastFocus()});
+ renderFocusDashboard();updateNotifyStatus();
+}
 
+/* Save the active second before tab close/navigation. The state itself remains
+   persisted, so reopening the app continues the same timer. */
+window.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&focusState.status==='running')persistFocusTime(true)});
+window.addEventListener('pagehide',()=>{if(focusState.status==='running')persistFocusTime(true)});
 </script>
 </body>
 </html>
