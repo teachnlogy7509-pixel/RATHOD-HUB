@@ -1685,7 +1685,7 @@ async function sendPasswordResetEmail(e){
  btn.disabled=true;btn.textContent='Sending...';
  try{
   // Same URL is used after clicking the email link. Supabase will restore the recovery session.
-  const redirectTo=window.location.origin+window.location.pathname;
+  const redirectTo='https://teachnology7509-pixel.github.io/RATHOD-HUB/';
   const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo});
   if(error)throw error;
   toast('Password reset email sent. Check your inbox 📩');
