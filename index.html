@@ -299,7 +299,7 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Blur (px) <span id="bg-blur-val"></span></label><input id="bg-blur" type="range" min="0" max="20" step="1" class="w-full"></div>
 <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Opacity <span id="bg-opacity-val"></span></label><input id="bg-opacity" type="range" min="0.1" max="1" step="0.05" class="w-full"></div>
 <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Size</label><select id="bg-size" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-sm"><option value="cover">Cover</option><option value="contain">Contain</option></select></div>
-<div><label class="block text-[10px] uppercase text-slate-400 mb-1">Position</label><select id="bg-position" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-sm"><option value="center">Center</option><option value="top">Top</option><option value="bottom">Bottom</option><option value="left">Left</option><option value="right">Right</option></select></div>
+<div><label class="block text-[10px] uppercase text-slate-400 mb-1">Position</label><select id="bg-position" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-sm"><option value="center">Center</option><option value="top">Top</option><option value="bottom">Bottom</option></select></div>
 <div><label class="block text-[10px] uppercase text-slate-400 mb-1">Attachment</label><select id="bg-fixed" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-sm"><option value="true">Fixed</option><option value="false">Scroll</option></select></div>
 </div>
 <div class="flex gap-2 pt-2">
@@ -704,8 +704,8 @@ function switchTab(tab){
   });
   const target=document.getElementById('section-'+tab); if(target)target.classList.remove('hidden');
   const active=document.getElementById('btn-'+tab); if(active)active.classList.add('rh-active');
-  ['mob-home','mob-materials','mob-focus','mob-chat'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('rh-active')});
-  const mobMap={home:'mob-home',materials:'mob-materials',focus:'mob-focus',chatroom:'mob-chat'};if(mobMap[tab])document.getElementById(mobMap[tab]).classList.add('rh-active');
+  ['mob-home','mob-materials','mob-focus','mob-chat','mob-more'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('rh-active')});
+  const mobMap={home:'mob-home',materials:'mob-materials',focus:'mob-focus',chatroom:'mob-chat'};if(mobMap[tab])document.getElementById(mobMap[tab])?.classList.add('rh-active');
   if(tab==='home')renderHomeDashboard();
   if(tab==='focus')renderFocusDashboard();
   if(tab==='chatroom')scrollChatToBottom();
@@ -1372,7 +1372,7 @@ async function deleteVault(id){const v=vaultItems.find(x=>String(x.id)===String(
 
 /* Leaderboard */
 async function loadLeaderboard(){if(!user)return;const{data,error}=await db.from('profiles').select('id,name,pfp_url,role,xp,level').order('xp',{ascending:false}).limit(100);if(error){document.getElementById('leaderboard-list').innerHTML='<div class="text-xs text-slate-500 p-3">Leaderboard ke liye profiles table check karein.</div>';return}leaderboard=(data||[]).map(p=>({...p,xp:Number(p.xp||0),level:Number(p.level||levelFromXp(p.xp))}));renderLeaderboard();renderRHHomeRail()}
-function renderLeaderboard(){const me=leaderboard.find(p=>p.id===user.id)||{xp:Number(profile.xp||0),level:Number(profile.level||levelFromXp(profile.xp))};document.getElementById('my-xp').textContent=`${me.xp} XP`;document.getElementById('my-level').textContent=`Level ${me.level}`;document.getElementById('my-xp-bar').style.width=xpPercent(me.xp)+'%';const medals=['🥇','🥈','🥉'];document.getElementById('leaderboard-list').innerHTML=leaderboard.map((p,i)=>`<div class="bg-slate-900/80 border ${p.id===user.id?'border-amber-500/50':'border-slate-700'} rounded-xl p-3 flex items-center gap-3"><div class="w-9 text-center font-bold text-lg">${medals[i]||('#'+(i+1))}</div><div class="w-9 h-9 rounded-full overflow-hidden bg-slate-700">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}" class="w-full h-full object-cover">`:'👤'}</div><div class="min-w-0 flex-1"><b class="block truncate text-sm">${esc(p.name||'Member')}${p.id===user.id?' (You)':''}</b><span class="text-[10px] text-slate-500">Level ${p.level}</span></div><b class="text-sm text-amber-300">${p.xp} XP</b></div>`).join('')||'<div class="text-center py-8 text-slate-500">No members found.</div>';}
+function renderLeaderboard(){const me=leaderboard.find(p=>p.id===user.id)||{xp:Number(profile.xp||0),level:Number(profile.level||levelFromXp(profile.xp))};document.getElementById('my-xp').textContent=`${me.xp} XP`;document.getElementById('my-level').textContent=`Level ${me.level}`;document.getElementById('my-xp-bar').style.width=xpPercent(me.xp)+'%';const medals=['🥇','🥈','🥉'];document.getElementById('leaderboard-list').innerHTML=leaderboard.map((p,i)=>`<div class="bg-slate-900/80 border ${p.id===user.id?'border-amber-500/50':'border-slate-700'} rounded-xl p-3 flex items-center gap-3"><div class="w-9 text-center font-bold text-lg">${medals[i]||('#'+(i+1))}</div><div class="w-9 h-9 rounded-full overflow-hidden bg-slate-700">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}" class="w-full h-full object-cover">`:'👤'}</div><div class="min-w-0 flex-1"><b class="block truncate text-sm">${esc(p.name||'Member')}${p.id===user.id?' (You)':''}</b><span class="text-[10px] text-slate-500">Level ${p.level}</span></div><b class="text-sm text-amber-300">${p.xp} XP</b></div>`).join('')||'<div class="text-center py-8 text-slate-500">No members found.</div>'}
 
 function renderRHHomeRail(){
   const lb=document.getElementById('rh-home-leaderboard');
@@ -1402,14 +1402,14 @@ async function askAI(){
 
   try{
     const {data,error}=await db.functions.invoke('ai-chat',{
-      body:{question:q,mode:'chat'}
+      body:{question:q}
     });
 
     if(error)throw error;
 
     out.textContent=data?.answer||'No answer returned.';
   }catch(e){
-    out.textContent='AI request failed. Please try again.\\n\\n'+(e.message||'Request failed.');
+    out.textContent='AI request failed. Please try again.\n\n'+(e.message||'Request failed.');
   }
 }
 
@@ -1422,12 +1422,10 @@ async function generateQuiz(){
   box.textContent='Generating quiz...';
 
   try{
-    const {data,error}=await db.functions.invoke('ai-chat',{
+    const {data,error}=await db.functions.invoke('daily-bio-event',{
       body:{
-        mode:'quiz',
-        subject,
-        topic,
-        count
+        count,
+        topic: `${subject} - ${topic || 'General NEET Questions'}`
       }
     });
 
@@ -1436,7 +1434,7 @@ async function generateQuiz(){
     const qs=Array.isArray(data?.questions)?data.questions:[];
 
     box.innerHTML=qs.map((x,i)=>{
-      const answer=Number(x.answer);
+      const answer=Number(x.correct_index ?? 0);
       const options=Array.isArray(x.options)?x.options:[];
 
       return `<div class="bg-slate-900 p-4 rounded-xl">
@@ -1459,7 +1457,7 @@ async function generateQuiz(){
       </div>`;
     }).join('')||'No questions returned.';
   }catch(e){
-    box.textContent='Quiz request failed. Please try again.\\n\\n'+(e.message||'Request failed.');
+    box.textContent='Quiz request failed. Please try again.\n\n'+(e.message||'Request failed.');
   }
 }
 
@@ -1684,9 +1682,11 @@ db.auth.onAuthStateChange((event,s)=>{
  }
 });
 
-/* ==================== HUB EVENTS + DAILY 5 QUESTIONS XP ==================== */
+/* ==================== HUB EVENTS + DAILY AI BIOLOGY QUESTIONS ==================== */
 let hubEvents=[],hubActiveEvent=null,hubDailyAnswered={};
 let eventQuestionCount=0;
+let isAutoSeedingEvents=false;
+
 function addEventQuestion(){
  const box=document.getElementById('event-questions');if(!box)return;
  const i=eventQuestionCount++;
@@ -1708,9 +1708,56 @@ async function loadHubEvents(){
  markDailyBioStatus();
  const now=new Date();
  hubActiveEvent=hubEvents.find(e=>e.is_active&&new Date(e.start_at)<=now&&new Date(e.ends_at)>now)||null;
- const daily=hubEvents.find(isDailyBioEvent); if(daily&&daily.id&&localStorage.getItem('rh_daily_bio_notified')!==daily.id){ if('Notification' in window && Notification.permission==='granted') new Notification('🧬 Daily Biology Challenge',{body:'Aaj ke naye Hindi Biology questions ready hain.'}); localStorage.setItem('rh_daily_bio_notified',daily.id); }
+
+ // Automatic AI Generation if no active event found today
+ if(!hubActiveEvent && !isAutoSeedingEvents){
+   autoSeedDailyBioEvent();
+ }
+
+ const daily=hubEvents.find(isDailyBioEvent);
+ if(daily&&daily.id&&localStorage.getItem('rh_daily_bio_notified')!==daily.id){
+   if('Notification' in window && Notification.permission==='granted') new Notification('🧬 Daily Biology Challenge',{body:'Aaj ke naye Hindi Biology questions ready hain.'});
+   localStorage.setItem('rh_daily_bio_notified',daily.id);
+ }
  await renderHubActiveEvent();
  if(profile?.role==='admin')renderHubEventsAdminList();
+}
+
+async function autoSeedDailyBioEvent(){
+  isAutoSeedingEvents = true;
+  try {
+    const today = localDateValue();
+    const start_at = new Date(`${today}T00:00:00`).toISOString();
+    const ends_at = new Date(`${today}T23:59:59.999`).toISOString();
+
+    const { data: aiRes, error: aiErr } = await db.functions.invoke('daily-bio-event', {
+      body: { count: 5 }
+    });
+
+    if (aiErr) throw aiErr;
+
+    const questions = Array.isArray(aiRes?.questions) ? aiRes.questions : [];
+    if (!questions.length) throw new Error("No AI questions returned");
+
+    const { data: refreshed } = await db.from('hub_events').select('*').order('created_at', { ascending: false });
+    hubEvents = refreshed || [];
+    const now = new Date();
+    hubActiveEvent = hubEvents.find(e => e.is_active && new Date(e.start_at) <= now && new Date(e.ends_at) > now) || {
+      id: 'daily_bio_ai_' + today,
+      title: 'Daily Biology Challenge',
+      description: `NEET NCERT Hindi Biology (${aiRes.provider || 'AI'} Generated) — Daily +100 XP`,
+      start_at,
+      ends_at,
+      is_active: true,
+      questions
+    };
+
+    renderHubActiveEvent();
+  } catch(e) {
+    console.error("Auto AI seeding failed:", e);
+  } finally {
+    isAutoSeedingEvents = false;
+  }
 }
 
 function isDailyBioEvent(ev){
@@ -1722,10 +1769,10 @@ function markDailyBioStatus(){
   const el=document.getElementById('daily-bio-status');
   if(!el)return;
   const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata'}).format(new Date());
-  const ev=hubEvents.find(isDailyBioEvent);
+  const ev=hubEvents.find(isDailyBioEvent) || hubActiveEvent;
   if(ev){
-    const q=Array.isArray(ev.questions)?ev.questions.length:0;
-    el.innerHTML=`<i class="fa-solid fa-dna mr-2"></i><b>Daily Biology Challenge</b> • ${q} Hindi questions • ${today} • New set daily`;
+    const q=Array.isArray(ev.questions)?ev.questions.length:5;
+    el.innerHTML=`<i class="fa-solid fa-dna mr-2"></i><b>Daily Biology Challenge</b> • ${q} Hindi questions • ${today} • Active`;
   }
 }
 async function renderHubActiveEvent(){
@@ -1740,9 +1787,11 @@ async function renderHubActiveEvent(){
 async function loadHubDailyAnswers(){
  if(!user||!hubActiveEvent)return;
  const today=localDateValue();
- const {data,error}=await db.from('hub_daily_answers').select('question_index').eq('user_id',user.id).eq('event_id',hubActiveEvent.id).eq('answer_date',today);
- hubDailyAnswered={};
- if(error){console.error(error)}else{(data||[]).forEach(r=>hubDailyAnswered[r.question_index]=true)}
+ if(!String(hubActiveEvent.id).startsWith('daily_bio_ai_')){
+   const {data,error}=await db.from('hub_daily_answers').select('question_index').eq('user_id',user.id).eq('event_id',hubActiveEvent.id).eq('answer_date',today);
+   hubDailyAnswered={};
+   if(error){console.error(error)}else{(data||[]).forEach(r=>hubDailyAnswered[r.question_index]=true)}
+ }
  renderHubQuestions();
 }
 
@@ -1789,17 +1838,16 @@ async function answerHubQuestion(qIndex,optIndex,btnElem){
 
  const today=localDateValue();
  try{
-   const {error}=await db.from('hub_daily_answers').insert({
-     user_id:user.id,
-     event_id:hubActiveEvent.id,
-     answer_date:today,
-     question_index:qIndex,
-     is_correct:true,
-     xp_awarded:100
-   });
-
-   if(error&&error.code!=='23505'){
-     throw error;
+   if(!String(hubActiveEvent.id).startsWith('daily_bio_ai_')){
+     const {error}=await db.from('hub_daily_answers').insert({
+       user_id:user.id,
+       event_id:hubActiveEvent.id,
+       answer_date:today,
+       question_index:qIndex,
+       is_correct:true,
+       xp_awarded:100
+     });
+     if(error&&error.code!=='23505') throw error;
    }
 
    hubDailyAnswered[qIndex]=true;
@@ -1808,7 +1856,7 @@ async function answerHubQuestion(qIndex,optIndex,btnElem){
    renderHubQuestions();
  }catch(err){
    console.error('Answer save failed:',err);
-   toast(err.message||'Answer save nahi ho saka. Supabase permissions check karein.',false);
+   toast(err.message||'Answer save nahi ho saka.',false);
    buttons.forEach(b=>b.disabled=false);
  }
 }
