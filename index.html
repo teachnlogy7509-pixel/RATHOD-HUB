@@ -280,6 +280,35 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 </form>
 </div>
 
+<!-- ADMIN QUIZ BATTLE SCHEDULER -->
+<div id="admin-battle-panel" class="hidden bg-slate-800/95 border border-red-500/30 rounded-2xl p-5 shadow-xl">
+<div class="flex justify-between items-center mb-3">
+<h3 class="font-bold text-red-300"><i class="fa-solid fa-bolt mr-2"></i>Schedule Global Live Quiz Battle</h3>
+<span class="text-[10px] bg-red-500/10 text-red-300 px-2 py-1 rounded">ADMIN ONLY</span>
+</div>
+<form id="admin-battle-form" class="space-y-3">
+<div>
+  <label class="block text-[10px] uppercase text-slate-400 mb-1">Battle Topic (e.g. Genetics, Human Physiology, Plant Kingdom)</label>
+  <input id="admin-battle-topic" required placeholder="Genetics & Molecular Basis" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
+</div>
+<div class="grid md:grid-cols-2 gap-3">
+  <div>
+    <label class="block text-[10px] uppercase text-slate-400 mb-1">Battle Start Time (Default: Today 9:00 PM)</label>
+    <input id="admin-battle-time" type="datetime-local" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
+  </div>
+  <div>
+    <label class="block text-[10px] uppercase text-slate-400 mb-1">Questions Count</label>
+    <select id="admin-battle-count" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
+      <option value="10" selected>10 Questions</option>
+      <option value="15">15 Questions</option>
+      <option value="20">20 Questions</option>
+    </select>
+  </div>
+</div>
+<button id="admin-battle-btn" class="w-full bg-red-600 hover:bg-red-500 py-2.5 rounded-lg text-sm font-bold text-white shadow-lg">Schedule & Generate Questions With AI</button>
+</form>
+</div>
+
 <div id="admin-bg-panel" class="hidden bg-slate-800/95 border border-red-500/30 rounded-2xl p-5 shadow-xl">
 <div class="flex justify-between items-center mb-3">
 <h3 class="font-bold text-red-300"><i class="fa-solid fa-image mr-2"></i>Background Settings</h3>
@@ -320,7 +349,7 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
  <div class="rh-section-title">Batch Offerings</div>
  <div class="rh-feature-grid">
   <div class="rh-feature" onclick="switchTab('materials')"><div class="rh-feature-icon"><i class="fa-solid fa-folder-open"></i></div><b>All Study Material</b><p>Notes • PDFs • PYQs</p></div>
-  <div class="rh-feature" onclick="switchTab('quiz')"><div class="rh-feature-icon"><i class="fa-solid fa-file-circle-question"></i></div><b>AI Tests & Battle</b><p>Topic practice & 1v1 Battle</p></div>
+  <div class="rh-feature" onclick="switchTab('quiz')"><div class="rh-feature-icon"><i class="fa-solid fa-file-circle-question"></i></div><b>Live 9 PM Battle</b><p>Global Synchronized Quiz</p></div>
   <div class="rh-feature" onclick="switchTab('ai')"><div class="rh-feature-icon"><i class="fa-solid fa-circle-question"></i></div><b>My Doubts</b><p>Ask NEET doubts</p></div>
   <div class="rh-feature" onclick="switchTab('community')"><div class="rh-feature-icon"><i class="fa-solid fa-users"></i></div><b>Community</b><p>Connect with students</p></div>
   <div class="rh-feature" onclick="switchTab('studyrooms')"><div class="rh-feature-icon"><i class="fa-solid fa-door-open"></i></div><b>Study Rooms</b><p>Live study + voice</p></div>
@@ -418,20 +447,22 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 </div>
 </section>
 
-<section id="section-quiz" class="hidden space-y-6">
-<!-- 1. LIVE TELEGRAM-STYLE QUIZ BATTLE ARENA -->
+<section id="section-quiz" class="space-y-6">
+<!-- 1. LIVE SYNCHRONIZED TELEGRAM-STYLE QUIZ BATTLE ARENA -->
 <div id="battleArenaContainer" class="bg-gradient-to-b from-slate-900 via-slate-900 to-black border border-red-500/40 rounded-3xl p-6 text-white shadow-2xl relative overflow-hidden">
   <div class="absolute -top-10 -right-10 w-36 h-36 bg-red-600/10 rounded-full blur-3xl pointer-events-none"></div>
+  
   <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-4">
     <div class="flex items-center space-x-2">
       <span class="relative flex h-3.5 w-3.5">
         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
         <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500"></span>
       </span>
-      <h2 class="text-lg sm:text-xl font-black tracking-wider text-red-400 uppercase">⚡ Live Telegram Quiz Battle</h2>
+      <h2 class="text-base sm:text-lg font-black tracking-wider text-red-400 uppercase">⚡ Live Telegram Quiz Battle</h2>
     </div>
-    <div class="bg-red-950/80 border border-red-500/40 px-3 py-1 rounded-full text-xs font-bold text-red-300">
-      ⏱️ <span id="battleTimerText">30s</span>
+    <div class="bg-red-950/80 border border-red-500/40 px-3 py-1 rounded-full text-xs font-bold text-red-300 flex items-center gap-1.5">
+      <span id="battleStatusBadge">⏱️ SCHEDULED</span>
+      <span id="battleTimerText" class="font-mono">--:--</span>
     </div>
   </div>
 
@@ -439,23 +470,29 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
     <div id="battleTimerBar" class="bg-gradient-to-r from-red-500 to-yellow-400 h-full w-full transition-all duration-1000 ease-linear"></div>
   </div>
 
-  <!-- Battle Screen -->
-  <div id="battleQuestionBox" class="space-y-4">
+  <!-- Waiting / Scheduled Lobby -->
+  <div id="battleLobbyBox" class="text-center py-6 space-y-3">
+    <div class="text-3xl">🎯</div>
+    <h3 id="battleLobbyTopic" class="text-lg font-bold text-amber-300">Topic: NEET Biology Full Syllabus</h3>
+    <p class="text-xs text-slate-400">Sabhi active students ek sath live timer me attempt karenge.</p>
+    <div class="bg-slate-950 border border-slate-800 px-4 py-3 rounded-2xl inline-block">
+      <span class="text-[10px] text-slate-500 uppercase block font-bold">Battle Starts In</span>
+      <b id="battleGlobalCountdown" class="text-2xl font-black text-red-400 font-mono tracking-wider">00:00:00</b>
+    </div>
+    <p id="battleScheduleNotice" class="text-[11px] text-slate-500">Daily Default Time: 09:00 PM • Auto-Start Enabled</p>
+  </div>
+
+  <!-- Active Battle Screen -->
+  <div id="battleQuestionBox" class="hidden space-y-4">
     <div class="flex justify-between text-xs text-slate-400 font-bold">
-      <span id="battleQuestionNum">Question 1 of 5</span>
+      <span id="battleQuestionNum">Question 1 of 10</span>
       <span class="text-amber-400 font-bold flex items-center gap-1"><i class="fa-solid fa-coins"></i> +10 XP per correct</span>
     </div>
     <p id="battleQuestionTitle" class="text-base sm:text-lg font-semibold text-slate-100 min-h-[48px]">
-      Click "Start 30s Battle" niche diye gaye button se match shuru karein!
+      Loading question...
     </p>
 
     <div id="battleOptionsGrid" class="grid grid-cols-1 gap-2.5 pt-2"></div>
-    
-    <div id="battleControls" class="pt-2">
-      <button onclick="startNewBattle()" class="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-black rounded-xl shadow-lg transition tracking-wide text-sm flex items-center justify-center gap-2">
-        <i class="fa-solid fa-fire"></i> Start 30s Battle
-      </button>
-    </div>
   </div>
 
   <!-- Battle Finished Modal -->
@@ -468,9 +505,6 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
       <h4 class="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider flex items-center gap-1.5"><i class="fa-solid fa-ranking-star text-amber-400"></i> Battle Warriors Leaderboard</h4>
       <div id="battleLeaderboardList" class="space-y-2 text-xs"></div>
     </div>
-    <button onclick="startNewBattle()" class="w-full py-3 bg-red-600 hover:bg-red-500 font-bold rounded-xl shadow-lg transition text-sm">
-      Play Next Round ⚡
-    </button>
   </div>
 </div>
 
@@ -485,7 +519,9 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 placeholder="Any topic: कोशिका / पादप जगत / Cell Division"
 class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
 <select id="quiz-count" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
-<option>5</option><option>10</option><option>20</option>
+  <option value="10" selected>10 Questions</option>
+  <option value="15">15 Questions</option>
+  <option value="20">20 Questions</option>
 </select>
 <button onclick="generateQuiz()" class="bg-teal-600 hover:bg-teal-500 px-4 py-2 rounded-lg text-sm font-bold">Generate Quiz</button>
 </div>
@@ -651,7 +687,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
     </div>
     <div class="grid grid-cols-3 gap-2 text-center text-xs">
       <button onclick="switchTab('ai');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-circle-question text-red-400 text-lg"></i><span>AI Doubt</span></button>
-      <button onclick="switchTab('quiz');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-brain text-teal-400 text-lg"></i><span>AI Quiz & Battle</span></button>
+      <button onclick="switchTab('quiz');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-brain text-teal-400 text-lg"></i><span>AI Quiz</span></button>
       <button onclick="switchTab('materials');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-folder-open text-amber-400 text-lg"></i><span>Materials</span></button>
       <button onclick="switchTab('focus');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-stopwatch text-red-500 text-lg"></i><span>Focus</span></button>
       <button onclick="switchTab('studyrooms');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-door-open text-cyan-400 text-lg"></i><span>Study Rooms</span></button>
@@ -744,9 +780,13 @@ async function boot(){
  document.getElementById('user-badge').textContent=profile.role==='admin'?'ADMIN':'MEMBER';
  if(profile.pfp_url)document.getElementById('nav-pfp').innerHTML=`<img src="${safeUrl(profile.pfp_url)}" class="w-full h-full object-cover">`;
  document.getElementById('admin-panel').classList.toggle('hidden',profile.role!=='admin');
+ document.getElementById('admin-battle-panel').classList.toggle('hidden',profile.role!=='admin');
  document.getElementById('admin-bg-panel').classList.toggle('hidden',profile.role!=='admin');
  document.getElementById('hub-admin-composer').classList.toggle('hidden',profile.role!=='admin');
- setDefaultDiaryDate(); await Promise.all([loadMaterials(),loadPosts(),loadPeople(),loadChatMessages(),loadDiary(),loadStories(),loadVault(),loadLeaderboard(),loadHubEvents(),loadSpinStatus()]); await initGamePresence(); subscribeToChat(); renderStudyRooms();
+ setDefaultDiaryDate();
+ setDefaultBattleDateTime();
+ await Promise.all([loadMaterials(),loadPosts(),loadPeople(),loadChatMessages(),loadDiary(),loadStories(),loadVault(),loadLeaderboard(),loadHubEvents(),loadSpinStatus(),loadScheduledBattle()]); 
+ await initGamePresence(); subscribeToChat(); renderStudyRooms();
  if(profile.role==='admin')populateBackgroundForm();
  initFocusSystem(); applyRHSectionHeaders(); renderHomeDashboard(); switchTab('home');
 }
@@ -773,10 +813,11 @@ function switchTab(tab){
   if(tab==='hubevents')loadHubEvents();
   if(tab==='studyrooms')renderStudyRooms();
   if(tab==='community')loadPeople();
+  if(tab==='quiz')loadScheduledBattle();
 }
 const RH_SECTION_META={
  ai:['AI Doubt','Ask and solve your NEET doubts','fa-circle-question','indigo'],
- quiz:['AI Quiz & Battle','Live 30s Battle & Practice Quizzes','fa-brain','teal'],
+ quiz:['AI Quiz & Battle','Live 9 PM Battle & Practice Quizzes','fa-brain','teal'],
  materials:['Study Material','All notes, PDFs, PYQs and study files','fa-folder-open','amber'],
  community:['Community','Posts, students and discussions','fa-users','violet'],
  chatroom:['Live Chat','Live student discussion and doubts','fa-comments','sky'],
@@ -1423,7 +1464,7 @@ async function chessClick(r,c){
 async function loadVault(){if(!user)return;const{data,error}=await db.from('vault').select('*').eq('user_id',user.id).order('created_at',{ascending:false});if(error){document.getElementById('vault-list').innerHTML='<div class="text-xs text-slate-500 p-3">Vault table setup required.</div>';return}vaultItems=data||[];renderVault()}
 function fmtBytes(n){n=Number(n||0);if(n<1024)return n+' B';if(n<1048576)return(n/1024).toFixed(1)+' KB';if(n<1073741824)return(n/1048576).toFixed(1)+' MB';return(n/1073741824).toFixed(1)+' GB'}
 function renderVault(){document.getElementById('vault-count').textContent=`${vaultItems.length} files`;document.getElementById('vault-list').innerHTML=vaultItems.length?vaultItems.map(v=>`<div class="bg-slate-900 border border-slate-700 rounded-xl p-3 flex justify-between items-center gap-3"><div class="min-w-0"><b class="text-sm block truncate">${esc(v.title||v.file_name||'File')}</b><span class="text-[10px] text-slate-500">${esc(v.file_name||'')} • ${fmtBytes(v.file_size)}</span></div><div class="flex gap-2"><button onclick="openVaultFile('${v.id}')" class="bg-violet-600 px-3 py-2 rounded-lg text-xs font-bold">Open</button><button onclick="deleteVault('${v.id}')" class="bg-red-600 px-3 py-2 rounded-lg text-xs font-bold">Delete</button></div></div>`).join(''):'<div class="text-center py-8 text-slate-500 text-sm">Vault खाली है.</div>';}
-document.getElementById('vault-form').addEventListener('submit',async e=>{e.preventDefault();const f=document.getElementById('vault-file').files[0];if(!f)return;const b=e.target.querySelector('button');b.disabled=true;b.textContent='Saving...';try{const path=`vault/${user.id}/${crypto.randomUUID()}_${f.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;const{error:up}=await db.storage.from('vault').upload(path,f,{contentType:f.type});if(up)throw up;const{error}=await db.from('vault').insert({user_id:user.id,title:document.getElementById('vault-title').value.trim(),file_name:f.name,file_type:f.type,file_size:f.size,storage_path:path});if(error)throw error;e.target.reset();toast('Saved to private vault');loadVault()}catch(err){toast(err.message||'Vault save failed',false)}finally{b.disabled=false;b.textContent='Save to Vault'}})
+document.getElementById('vault-form').addEventListener('submit',async e=>{e.preventDefault();const f=document.getElementById('vault-file').files[0];if(!f)return;const b=e.target.querySelector('button');b.disabled=true;b.textContent='Saving...';try{const path=`vault/${user.id}/${crypto.randomUUID()}_${f.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;const{error:up}=await db.storage.from('materials').upload(path,f,{contentType:f.type});if(up)throw up;const{error}=await db.from('vault').insert({user_id:user.id,title:document.getElementById('vault-title').value.trim(),file_name:f.name,file_type:f.type,file_size:f.size,storage_path:path});if(error)throw error;e.target.reset();toast('Saved to private vault');loadVault()}catch(err){toast(err.message||'Vault save failed',false)}finally{b.disabled=false;b.textContent='Save to Vault'}})
 async function openVaultFile(id){const v=vaultItems.find(x=>String(x.id)===String(id));if(!v)return;const{data,error}=await db.storage.from('vault').createSignedUrl(v.storage_path,3600);if(error)return toast(error.message,false);window.open(data.signedUrl,'_blank','noopener')}
 async function deleteVault(id){const v=vaultItems.find(x=>String(x.id)===String(id));if(!v||!confirm('Delete this vault file?'))return;const{error}=await db.from('vault').delete().eq('id',id).eq('user_id',user.id);if(error)return toast(error.message,false);if(v.storage_path)await db.storage.from('vault').remove([v.storage_path]);toast('Vault file deleted');loadVault()}
 
@@ -1519,8 +1560,9 @@ async function generateQuiz(){
 }
 
 /* ============================================================
-   TELEGRAM-STYLE LIVE MULTIPLAYER QUIZ BATTLE ENGINE
+   TELEGRAM-STYLE LIVE MULTIPLAYER QUIZ BATTLE (ADMIN SCHEDULED & SYNCED)
 ============================================================ */
+let activeScheduledBattle = null;
 let battleQuestions = [];
 let currentBattleIdx = 0;
 let battleTimer = 30;
@@ -1529,35 +1571,97 @@ let currentCorrectIndex = -1;
 let userBattleSelected = false;
 let userBattleScore = 0;
 let totalBattleXP = 0;
+let isBattleLive = false;
 
-async function startNewBattle() {
+function setDefaultBattleDateTime(){
+  const input = document.getElementById('admin-battle-time');
+  if(!input) return;
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  input.value = `${year}-${month}-${day}T21:00`; // Default 9:00 PM
+}
+
+async function loadScheduledBattle() {
+  try {
+    const { data, error } = await db
+      .from('quiz_battle_schedule')
+      .select('*')
+      .eq('is_active', true)
+      .order('scheduled_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.warn("Battle schedule read error:", error);
+      return;
+    }
+
+    if (data) {
+      activeScheduledBattle = data;
+      document.getElementById('battleLobbyTopic').innerText = `Topic: ${data.topic}`;
+      const timeStr = new Date(data.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('battleScheduleNotice').innerText = `Scheduled Time: ${timeStr} • Auto-Start Synchronized`;
+    }
+  } catch (err) {
+    console.error("loadScheduledBattle failed", err);
+  }
+}
+
+// Global Synced Clock Tick
+setInterval(() => {
+  if (!activeScheduledBattle) return;
+
+  const now = Date.now();
+  const targetTime = new Date(activeScheduledBattle.scheduled_at).getTime();
+  const diff = targetTime - now;
+
+  const countdownEl = document.getElementById('battleGlobalCountdown');
+
+  if (diff > 0) {
+    // Upcoming Countdown
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    if (countdownEl) {
+      countdownEl.innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+    document.getElementById('battleStatusBadge').innerText = "⏱️ SCHEDULED";
+  } else if (!isBattleLive && diff > -1800000) { // Live within 30 min window
+    // Auto-Start Battle For Everyone
+    if (countdownEl) countdownEl.innerText = "00:00:00 - LIVE NOW!";
+    document.getElementById('battleStatusBadge').innerText = "🔴 LIVE NOW";
+    startSynchronizedBattle();
+  }
+}, 1000);
+
+async function startSynchronizedBattle() {
+  if (isBattleLive) return;
+  isBattleLive = true;
+
+  document.getElementById("battleLobbyBox").classList.add("hidden");
   document.getElementById("battleResultBox").classList.add("hidden");
   document.getElementById("battleQuestionBox").classList.remove("hidden");
-  document.getElementById("battleControls").classList.add("hidden");
 
   currentBattleIdx = 0;
   userBattleScore = 0;
   totalBattleXP = 0;
 
-  document.getElementById("battleQuestionTitle").innerText = "Loading fresh 30s Battle questions from AI...";
-  document.getElementById("battleOptionsGrid").innerHTML = "";
-
-  try {
-    const res = await db.functions.invoke('daily-bio-event', {
-      body: { count: 5, topic: "NEET Biology High-Yield MCQs" }
-    });
-
-    if (res.error) throw res.error;
-
-    if (res.data?.questions && res.data.questions.length > 0) {
-      battleQuestions = res.data.questions;
-      loadBattleQuestion(0);
-    } else {
-      throw new Error("No questions returned");
-    }
-  } catch (err) {
-    document.getElementById("battleQuestionTitle").innerText = "Battle question load hone me samasya hui. Reconnecting...";
-    setTimeout(startNewBattle, 2500);
+  if (activeScheduledBattle?.questions && activeScheduledBattle.questions.length > 0) {
+    battleQuestions = activeScheduledBattle.questions;
+    loadBattleQuestion(0);
+  } else {
+    document.getElementById("battleQuestionTitle").innerText = "Generating live questions from AI...";
+    try {
+      const res = await db.functions.invoke('daily-bio-event', {
+        body: { count: activeScheduledBattle?.question_count || 10, topic: activeScheduledBattle?.topic || "NEET Biology" }
+      });
+      if (res.data?.questions) {
+        battleQuestions = res.data.questions;
+        loadBattleQuestion(0);
+      }
+    } catch (_) {}
   }
 }
 
@@ -1653,6 +1757,7 @@ function revealCorrectAnswer() {
 
 async function finishBattle() {
   clearInterval(battleTimerInterval);
+  isBattleLive = false;
   document.getElementById("battleQuestionBox").classList.add("hidden");
   document.getElementById("battleResultBox").classList.remove("hidden");
 
@@ -1681,7 +1786,7 @@ async function loadBattleLeaderboard() {
       .select("user_name, score, xp_earned")
       .order("score", { ascending: false })
       .order("xp_earned", { ascending: false })
-      .limit(5);
+      .limit(10);
 
     if (error || !data || data.length === 0) {
       list.innerHTML = `<div class="text-slate-500 text-xs">Be the first to record a battle score!</div>`;
@@ -1704,6 +1809,49 @@ async function loadBattleLeaderboard() {
     list.innerHTML = `<div class="text-slate-500 text-xs">Leaderboard updated!</div>`;
   }
 }
+
+// Admin Battle Form Submission
+document.getElementById('admin-battle-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (profile?.role !== 'admin') return toast('Admin only action', false);
+
+  const topic = document.getElementById('admin-battle-topic').value.trim();
+  const timeVal = document.getElementById('admin-battle-time').value;
+  const count = Number(document.getElementById('admin-battle-count').value) || 10;
+  const btn = document.getElementById('admin-battle-btn');
+
+  btn.disabled = true;
+  btn.textContent = 'Generating AI Questions & Scheduling...';
+
+  try {
+    const scheduled_at = new Date(timeVal).toISOString();
+
+    const res = await db.functions.invoke('daily-bio-event', {
+      body: { count, topic: `NEET MCQs - ${topic}` }
+    });
+
+    const questions = res.data?.questions || [];
+    if (!questions.length) throw new Error("AI questions generation failed");
+
+    const { error } = await db.from('quiz_battle_schedule').insert([{
+      topic,
+      scheduled_at,
+      question_count: count,
+      questions,
+      is_active: true
+    }]);
+
+    if (error) throw error;
+
+    toast('Quiz Battle Scheduled Successfully 🎯');
+    await loadScheduledBattle();
+  } catch (err) {
+    toast(err.message || 'Battle schedule failed', false);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Schedule & Generate Questions With AI';
+  }
+});
 
 function openProfile(){document.getElementById('profile-name').value=profile.name||'';document.getElementById('profile-modal').classList.remove('hidden')}
 function closeProfile(){document.getElementById('profile-modal').classList.add('hidden')}
