@@ -163,6 +163,30 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 .qb-rank-me{border-color:rgba(239,43,43,.7)!important;background:rgba(239,43,43,.08)!important}
 @media(max-width:640px){.qb-shell{padding:12px;border-radius:18px}.qb-card{border-radius:15px}}
 
+
+/* ===== QUIZ FINISH UI: FINAL STATS + AUTO HIDE SIDEBAR ===== */
+.qb-live-leaderboard-panel{display:none!important}
+.qb-final-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:16px}
+.qb-final-stat{background:rgba(8,11,15,.88);border:1px solid rgba(255,255,255,.13);border-radius:14px;padding:13px;text-align:center}
+.qb-final-stat .qb-final-stat-value{display:block;font-size:24px;line-height:1;font-weight:900;margin-top:4px}
+.qb-final-stat .qb-final-stat-label{font-size:10px;color:#8f98a5;text-transform:uppercase;letter-spacing:.08em;font-weight:800}
+.qb-final-summary-box{background:linear-gradient(145deg,rgba(9,12,17,.96),rgba(18,8,10,.94));border:1px solid rgba(239,43,43,.28);border-radius:18px;padding:16px}
+body.qb-finished-layout .rh-sidebar{transform:translateX(-110%)!important;width:0!important;min-width:0!important;padding-left:0!important;padding-right:0!important;border-right:0!important;overflow:hidden!important;pointer-events:none!important}
+body.qb-finished-layout .rh-main{margin-left:0!important;width:100%!important}
+body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22px!important}
+.qb-finished-hint{font-size:10px;color:#7f8792;margin-top:10px}
+@media(max-width:900px){
+  body.qb-finished-layout .rh-sidebar{display:none!important}
+  body.qb-finished-layout .rh-main{margin-left:0!important;width:100%!important}
+  body.qb-finished-layout .rh-content{padding-left:12px!important;padding-right:12px!important}
+}
+@media(max-width:640px){
+  .qb-final-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+  .qb-final-stat{padding:10px 6px}
+  .qb-final-stat .qb-final-stat-value{font-size:19px}
+  .qb-final-stat .qb-final-stat-label{font-size:8px}
+}
+
 </style>
 </head>
 <body class="doctor-bg min-h-screen font-sans">
@@ -548,7 +572,7 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
             <div id="qb-answer-note" class="text-xs text-slate-500 mt-4 min-h-[18px]"></div>
           </div>
 
-          <aside class="qb-card p-4">
+          <aside class="qb-card p-4 qb-live-leaderboard-panel">
             <div class="flex justify-between items-center mb-3">
               <div>
                 <h3 class="font-black text-sm">🏆 Live Match Leaderboard</h3>
@@ -561,11 +585,26 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
         </div>
       </div>
 
-      <div id="qb-finished-panel" class="hidden qb-card p-5 text-center">
+      <div id="qb-finished-panel" class="hidden qb-card p-5 text-center qb-final-summary-box">
         <div class="text-4xl">🏆</div>
-        <h3 class="text-2xl font-black text-amber-400 mt-2">BATTLE FINISHED</h3>
-        <p id="qb-final-summary" class="text-sm text-slate-300 mt-2"></p>
-        <div id="qb-final-leaderboard" class="max-w-xl mx-auto text-left mt-5 space-y-2"></div>
+        <h3 class="text-2xl font-black text-amber-400 mt-2">QUIZ COMPLETE!</h3>
+        <p id="qb-final-summary" class="text-sm text-slate-300 mt-2">Aapka quiz submit ho gaya hai.</p>
+        <div id="qb-final-stats" class="qb-final-stats">
+          <div class="qb-final-stat"><span class="qb-final-stat-label">Correct</span><span id="qb-final-correct" class="qb-final-stat-value text-emerald-400">0</span></div>
+          <div class="qb-final-stat"><span class="qb-final-stat-label">Wrong</span><span id="qb-final-wrong" class="qb-final-stat-value text-red-400">0</span></div>
+          <div class="qb-final-stat"><span class="qb-final-stat-label">Skipped</span><span id="qb-final-skipped" class="qb-final-stat-value text-slate-300">0</span></div>
+        </div>
+        <div class="mt-5 bg-slate-950/90 p-4 rounded-2xl border border-slate-800 text-left">
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <div>
+              <h4 class="text-sm font-black text-white">🏆 Final Leaderboard</h4>
+              <p class="text-[10px] text-slate-500">Quiz complete hone ke baad final ranking</p>
+            </div>
+            <span id="qb-final-rank" class="text-[10px] font-black text-amber-400"></span>
+          </div>
+          <div id="qb-final-leaderboard" class="space-y-2"></div>
+        </div>
+        <div class="qb-finished-hint">Sidebar automatically hide ho gaya hai taaki final result aur leaderboard clearly dikhe.</div>
         <button onclick="qbBackToLobby()" class="mt-5 bg-red-600 hover:bg-red-500 px-5 py-2.5 rounded-xl text-xs font-black">New Match</button>
       </div>
     </div>
@@ -631,13 +670,18 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
   </div>
 
   <!-- Battle Finished Modal -->
-  <div id="battleResultBox" class="hidden text-center py-4 space-y-4">
+  <div id="battleResultBox" class="hidden text-center py-4 space-y-4 qb-final-summary-box">
     <div class="text-4xl animate-bounce">🏆</div>
-    <h3 class="text-2xl font-black text-amber-400">BATTLE FINISHED!</h3>
+    <h3 class="text-2xl font-black text-amber-400">QUIZ COMPLETE!</h3>
     <p class="text-slate-300 text-sm">Aapka Score: <span id="finalUserScore" class="text-emerald-400 font-black">0</span> | Earned: <span id="finalUserXP" class="text-amber-400 font-black">+0 XP</span></p>
-    
+    <div class="qb-final-stats">
+      <div class="qb-final-stat"><span class="qb-final-stat-label">Correct</span><span id="daily-final-correct" class="qb-final-stat-value text-emerald-400">0</span></div>
+      <div class="qb-final-stat"><span class="qb-final-stat-label">Wrong</span><span id="daily-final-wrong" class="qb-final-stat-value text-red-400">0</span></div>
+      <div class="qb-final-stat"><span class="qb-final-stat-label">Skipped</span><span id="daily-final-skipped" class="qb-final-stat-value text-slate-300">0</span></div>
+    </div>
     <div class="bg-slate-950/90 p-4 rounded-2xl border border-slate-800 text-left mt-4">
-      <h4 class="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider flex items-center gap-1.5"><i class="fa-solid fa-ranking-star text-amber-400"></i> Daily 9 PM Battle Leaderboard</h4>
+      <h4 class="text-sm font-black text-white mb-1 flex items-center gap-1.5"><i class="fa-solid fa-ranking-star text-amber-400"></i> Final Leaderboard</h4>
+      <p class="text-[10px] text-slate-500 mb-3">Daily 9 PM Battle ka final result</p>
       <div id="battleLeaderboardList" class="space-y-2 text-xs"></div>
     </div>
   </div>
@@ -961,7 +1005,7 @@ function switchTab(tab){
   if(tab==='studyrooms')renderStudyRooms();
   if(tab==='community')loadPeople();
   if(tab==='quiz')loadScheduledBattle();
-   if(tab==='battle'){qbLoadRooms();qbSyncCurrentRoom();}
+   if(tab==='battle'){qbShowLiveLayout();qbLoadRooms();qbSyncCurrentRoom();}
 }
 const RH_SECTION_META={
  ai:['AI Doubt','Ask and solve your NEET doubts','fa-circle-question','indigo'],
@@ -1729,6 +1773,50 @@ const QB_QUESTION_COUNT = 15;
 function qbEsc(v){ return esc(String(v ?? '')); }
 function qbCode(){ return Math.random().toString(36).slice(2,8).toUpperCase(); }
 
+function qbSetFinishedLayout(finished){
+  document.body.classList.toggle('qb-finished-layout',!!finished);
+}
+function qbShowLiveLayout(){
+  qbSetFinishedLayout(false);
+}
+async function qbLoadMyFinalStats(){
+  if(!qbRoom||!user)return;
+  try{
+    const {data,error}=await db.from('quiz_battle_answers')
+      .select('question_index,is_correct')
+      .eq('room_code',qbRoom.room_code)
+      .eq('user_id',user.id);
+    if(error)throw error;
+    const answers=Array.isArray(data)?data:[];
+    const unique=new Map();
+    answers.forEach(a=>unique.set(Number(a.question_index),!!a.is_correct));
+    const correct=[...unique.values()].filter(Boolean).length;
+    const answered=unique.size;
+    const wrong=Math.max(0,answered-correct);
+    const skipped=Math.max(0,QB_QUESTION_COUNT-answered);
+    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=String(v)};
+    set('qb-final-correct',correct);
+    set('qb-final-wrong',wrong);
+    set('qb-final-skipped',skipped);
+    const rows=document.querySelectorAll('#qb-final-leaderboard .qb-card');
+    const rank=[...rows].findIndex(el=>el.classList.contains('qb-rank-me'));
+    if(rank>=0)set('qb-final-rank',`Rank #${rank+1}`);
+    set('qb-final-summary',`Score ${correct}/${QB_QUESTION_COUNT} • ${Math.round((correct/QB_QUESTION_COUNT)*100)}% accuracy`);
+  }catch(e){
+    console.warn('qbLoadMyFinalStats',e);
+    const {data}=await db.from('quiz_battle_participants').select('score').eq('room_code',qbRoom.room_code).eq('user_id',user.id).maybeSingle();
+    const score=Number(data?.score||0);
+    const answered=qbSelected.size;
+    const wrong=Math.max(0,answered-score);
+    const skipped=Math.max(0,QB_QUESTION_COUNT-answered);
+    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=String(v)};
+    set('qb-final-correct',score);
+    set('qb-final-wrong',wrong);
+    set('qb-final-skipped',skipped);
+    set('qb-final-summary',`Score ${score}/${QB_QUESTION_COUNT}`);
+  }
+  qbSetFinishedLayout(true);
+}
 function qbPickSubject(subject, btn){
   qbSubject = subject;
   document.querySelectorAll('.qb-subject-btn').forEach(b=>{
@@ -1819,6 +1907,7 @@ async function qbJoinRoom(code,afterCreate=false){
     if(data.status==='finished')return toast('Ye match finish ho chuka hai.',false);
     if(qbRoom && qbRoom.room_code!==data.room_code)await qbLeaveMatch(true);
     qbRoom=data;
+    qbShowLiveLayout();
     const {error:pe}=await db.from('quiz_battle_participants').upsert({
       room_code:data.room_code,user_id:user.id,user_name:profile?.name||user.email||'Student',
       score:0,xp_earned:0,last_seen:new Date().toISOString()
@@ -1865,7 +1954,15 @@ async function qbRefreshPresenceCount(){
 async function qbReloadRoomAndSync(){
   if(!qbRoom)return;
   const {data}=await db.from('quiz_battle_rooms').select('*').eq('room_code',qbRoom.room_code).maybeSingle();
-  if(data){qbRoom=data;qbRenderRoom();qbSyncCurrentRoom();}
+  if(data){
+    qbRoom=data;
+    qbRenderRoom();
+    qbSyncCurrentRoom();
+    if(data.status==='finished'){
+      await qbRefreshParticipants();
+      await qbLoadMyFinalStats();
+    }
+  }
 }
 
 function qbRenderRoom(){
@@ -1881,6 +1978,7 @@ function qbRenderRoom(){
   document.getElementById('qb-question-panel')?.classList.toggle('hidden',qbRoom.status!=='live');
   document.getElementById('qb-finished-panel')?.classList.toggle('hidden',qbRoom.status!=='finished');
   set('qb-match-status',qbRoom.status==='live'?'LIVE':qbRoom.status==='finished'?'FINISHED':'WAITING');
+   if(qbRoom.status!=='finished') qbShowLiveLayout();
   const badge=document.getElementById('qb-global-status');
   if(badge){badge.textContent=qbRoom.status==='live'?'● LIVE MATCH':qbRoom.status==='finished'?'FINISHED':'WAITING';badge.className=`px-3 py-1.5 rounded-full border text-[10px] font-bold ${qbRoom.status==='live'?'bg-emerald-500/10 border-emerald-500/20 text-emerald-400':'bg-red-500/10 border-red-500/20 text-red-300'}`;}
 }
@@ -2011,7 +2109,13 @@ async function qbFinishRoom(){
   if(!qbRoom)return;
   const {data,error}=await db.from('quiz_battle_rooms').update({status:'finished',finished_at:new Date().toISOString()})
     .eq('room_code',qbRoom.room_code).eq('host_id',user.id).eq('status','live').select('*').single();
-  if(!error&&data){qbRoom=data;qbRenderRoom();await qbRefreshParticipants();try{await qbChannel?.send({type:'broadcast',event:'battle-event',payload:{type:'finished'}})}catch(e){}}
+  if(!error&&data){
+    qbRoom=data;
+    qbRenderRoom();
+    await qbRefreshParticipants();
+    await qbLoadMyFinalStats();
+    try{await qbChannel?.send({type:'broadcast',event:'battle-event',payload:{type:'finished'}})}catch(e){}
+  }
 }
 
 async function qbLeaveMatch(silent=false){
@@ -2021,6 +2125,7 @@ async function qbLeaveMatch(silent=false){
     try{await db.from('quiz_battle_participants').delete().eq('room_code',qbRoom.room_code).eq('user_id',user.id)}catch(e){}
   }
   qbRoom=null;qbSelected.clear();qbLastRenderedIndex=-1;
+   qbShowLiveLayout();
   document.getElementById('qb-match')?.classList.add('hidden');
   document.getElementById('qb-lobby')?.classList.remove('hidden');
   document.getElementById('qb-global-status').textContent='NO MATCH';
@@ -2052,6 +2157,10 @@ let totalBattleXP = 0;
 let isBattleLive = false;
 let dailyBattleFinished = false;
 let dailyBattleScoreSaved = false;
+let dailyBattleCorrect = 0;
+let dailyBattleWrong = 0;
+let dailyBattleSkipped = 0;
+let dailyBattleResultRecorded = new Set();
 
 const DAILY_BATTLE_QUESTIONS = 15;
 const DAILY_BATTLE_SECONDS = 30;
@@ -2177,8 +2286,13 @@ function startSynchronizedBattle() {
   dailyBattleScoreSaved = false;
   userBattleScore = 0;
   totalBattleXP = 0;
+   dailyBattleCorrect = 0;
+   dailyBattleWrong = 0;
+   dailyBattleSkipped = 0;
+   dailyBattleResultRecorded = new Set();
   userBattleSelected = false;
   currentBattleIdx = -1;
+   qbShowLiveLayout();
 
   document.getElementById("battleLobbyBox")?.classList.add("hidden");
   document.getElementById("battleResultBox")?.classList.add("hidden");
@@ -2200,10 +2314,14 @@ function syncLiveDailyQuestion(elapsed) {
   const secondsLeft = DAILY_BATTLE_SECONDS - Math.floor(withinQuestion / 1000);
 
   if(idx !== currentBattleIdx){
-    currentBattleIdx = idx;
-    userBattleSelected = false;
-    renderDailyBattleQuestion(idx);
-  }
+     if(currentBattleIdx >= 0 && !dailyBattleResultRecorded.has(currentBattleIdx) && !userBattleSelected){
+       dailyBattleSkipped++;
+       dailyBattleResultRecorded.add(currentBattleIdx);
+     }
+     currentBattleIdx = idx;
+     userBattleSelected = false;
+     renderDailyBattleQuestion(idx);
+   }
 
   battleTimer = Math.max(1, Math.min(DAILY_BATTLE_SECONDS, secondsLeft));
   updateBattleTimerUI();
@@ -2261,6 +2379,12 @@ function submitBattleAnswer(selectedIdx, clickedBtn) {
   userBattleSelected = true;
   const optionsButtons = document.getElementById("battleOptionsGrid")?.children || [];
   const isCorrect = selectedIdx === currentCorrectIndex;
+   if(!dailyBattleResultRecorded.has(currentBattleIdx)){
+     dailyBattleResultRecorded.add(currentBattleIdx);
+     if(isCorrect) dailyBattleCorrect++;
+     else dailyBattleWrong++;
+   }
+
 
   Array.from(optionsButtons).forEach(b => b.disabled = true);
 
@@ -2280,7 +2404,11 @@ function submitBattleAnswer(selectedIdx, clickedBtn) {
 }
 
 function revealCorrectAnswer() {
-  const optionsButtons = document.getElementById("battleOptionsGrid")?.children || [];
+   if(currentBattleIdx >= 0 && !dailyBattleResultRecorded.has(currentBattleIdx)){
+     dailyBattleSkipped++;
+     dailyBattleResultRecorded.add(currentBattleIdx);
+   }
+   const optionsButtons = document.getElementById("battleOptionsGrid")?.children || [];
   if (optionsButtons[currentCorrectIndex]) {
     optionsButtons[currentCorrectIndex].className = "w-full text-left p-3.5 bg-emerald-600/30 border border-emerald-500 rounded-xl font-bold text-emerald-300 flex justify-between items-center text-sm";
   }
@@ -2294,8 +2422,16 @@ async function finishBattle() {
   isBattleLive = false;
   if(battleSyncInterval) clearInterval(battleSyncInterval);
 
+  /* Final screen: question area closes, counts + leaderboard stay till the end. */
   document.getElementById("battleQuestionBox")?.classList.add("hidden");
   document.getElementById("battleResultBox")?.classList.remove("hidden");
+  const dailyCorrect = dailyBattleCorrect;
+  const dailyWrong = dailyBattleWrong;
+  const dailySkipped = Math.max(0,DAILY_BATTLE_QUESTIONS-dailyCorrect-dailyWrong);
+  document.getElementById("daily-final-correct").innerText = dailyCorrect;
+  document.getElementById("daily-final-wrong").innerText = dailyWrong;
+  document.getElementById("daily-final-skipped").innerText = dailySkipped;
+  qbSetFinishedLayout(true);
   document.getElementById("battleStatusBadge").innerText = "🏁 FINISHED";
   document.getElementById("battleGlobalCountdown").innerText = "00:00:00";
 
