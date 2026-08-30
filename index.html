@@ -620,7 +620,7 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
   <!-- Active Battle Screen -->
   <div id="battleQuestionBox" class="hidden space-y-4">
     <div class="flex justify-between text-xs text-slate-400 font-bold">
-      <span id="battleQuestionNum">Question 1 of 10</span>
+      <span id="battleQuestionNum">Question 1 of 15</span>
       <span class="text-amber-400 font-bold flex items-center gap-1"><i class="fa-solid fa-coins"></i> +10 XP per correct</span>
     </div>
     <p id="battleQuestionTitle" class="text-base sm:text-lg font-semibold text-slate-100 min-h-[48px]">
@@ -637,7 +637,7 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
     <p class="text-slate-300 text-sm">Aapka Score: <span id="finalUserScore" class="text-emerald-400 font-black">0</span> | Earned: <span id="finalUserXP" class="text-amber-400 font-black">+0 XP</span></p>
     
     <div class="bg-slate-950/90 p-4 rounded-2xl border border-slate-800 text-left mt-4">
-      <h4 class="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider flex items-center gap-1.5"><i class="fa-solid fa-ranking-star text-amber-400"></i> Battle Warriors Leaderboard</h4>
+      <h4 class="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider flex items-center gap-1.5"><i class="fa-solid fa-ranking-star text-amber-400"></i> Daily 9 PM Battle Leaderboard</h4>
       <div id="battleLeaderboardList" class="space-y-2 text-xs"></div>
     </div>
   </div>
@@ -934,6 +934,7 @@ async function logout(){await cleanupChatSubscription();await cleanupGamePresenc
 
 function openDailyBattle(){
   switchTab('quiz');
+  document.getElementById('btn-daily-battle')?.classList.add('rh-active');
   setTimeout(()=>{
     const el=document.getElementById('battleArenaContainer');
     if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
@@ -941,7 +942,7 @@ function openDailyBattle(){
 }
 
 function switchTab(tab){
-  ['home','ai','quiz','battle','materials','community','chatroom','diary','stories','games','vault','hubevents','studyrooms','leaderboard','focus'].forEach(x=>{
+  ['home','ai','quiz','battle','daily-battle','materials','community','chatroom','diary','stories','games','vault','hubevents','studyrooms','leaderboard','focus'].forEach(x=>{
     const sec=document.getElementById('section-'+x); if(sec)sec.classList.add('hidden');
     const btn=document.getElementById('btn-'+x); if(btn)btn.classList.remove('rh-active');
   });
@@ -964,7 +965,7 @@ function switchTab(tab){
 }
 const RH_SECTION_META={
  ai:['AI Doubt','Ask and solve your NEET doubts','fa-circle-question','indigo'],
- quiz:['AI Quiz & Battle','Live 9 PM Battle & Practice Quizzes','fa-brain','teal'],
+ quiz:['AI Quiz & Battle','Self Practice • Live Quiz • Daily 9 PM Battle','fa-brain','teal'],
  materials:['Study Material','All notes, PDFs, PYQs and study files','fa-folder-open','amber'],
  community:['Community','Posts, students and discussions','fa-users','violet'],
  chatroom:['Live Chat','Live student discussion and doubts','fa-comments','sky'],
@@ -2041,14 +2042,20 @@ document.getElementById('qb-host-form')?.addEventListener('submit',e=>{e.prevent
 ============================================================ */
 let activeScheduledBattle = null;
 let battleQuestions = [];
-let currentBattleIdx = 0;
+let currentBattleIdx = -1;
 let battleTimer = 30;
-let battleTimerInterval = null;
+let battleSyncInterval = null;
 let currentCorrectIndex = -1;
 let userBattleSelected = false;
 let userBattleScore = 0;
 let totalBattleXP = 0;
 let isBattleLive = false;
+let dailyBattleFinished = false;
+let dailyBattleScoreSaved = false;
+
+const DAILY_BATTLE_QUESTIONS = 15;
+const DAILY_BATTLE_SECONDS = 30;
+const DAILY_BATTLE_TOTAL_MS = DAILY_BATTLE_QUESTIONS * DAILY_BATTLE_SECONDS * 1000;
 
 function setDefaultBattleDateTime(){
   const input = document.getElementById('admin-battle-time');
@@ -2057,15 +2064,26 @@ function setDefaultBattleDateTime(){
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
-  input.value = `${year}-${month}-${day}T21:00`; // Default 9:00 PM
+  input.value = `${year}-${month}-${day}T21:00`;
+}
+
+function dailyBattleDayRange(){
+  const d = new Date();
+  const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const end = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1);
+  return {start:start.toISOString(), end:end.toISOString()};
 }
 
 async function loadScheduledBattle() {
   try {
+    const nowIso = new Date().toISOString();
+    const graceIso = new Date(Date.now() - DAILY_BATTLE_TOTAL_MS).toISOString();
+
     const { data, error } = await db
       .from('quiz_battle_schedule')
       .select('*')
       .eq('is_active', true)
+      .gte('scheduled_at', graceIso)
       .order('scheduled_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -2075,257 +2093,342 @@ async function loadScheduledBattle() {
       return;
     }
 
-    if (data) {
-      activeScheduledBattle = data;
-      document.getElementById('battleLobbyTopic').innerText = `Topic: ${data.topic}`;
-      const timeStr = new Date(data.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      document.getElementById('battleScheduleNotice').innerText = `Scheduled Time: ${timeStr} • Auto-Start Synchronized`;
+    activeScheduledBattle = data || null;
+
+    const topicEl = document.getElementById('battleLobbyTopic');
+    const noticeEl = document.getElementById('battleScheduleNotice');
+    const badgeEl = document.getElementById('battleStatusBadge');
+    const countdownEl = document.getElementById('battleGlobalCountdown');
+
+    if (!data) {
+      if(topicEl) topicEl.innerText = 'Topic: Daily 9 PM Battle';
+      if(noticeEl) noticeEl.innerText = 'Admin ne abhi next Daily Battle schedule nahi kiya.';
+      if(badgeEl) badgeEl.innerText = '⏱️ NOT SCHEDULED';
+      if(countdownEl) countdownEl.innerText = '--:--:--';
+      return;
     }
+
+    const timeStr = new Date(data.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if(topicEl) topicEl.innerText = `Topic: ${data.topic}`;
+    if(noticeEl) noticeEl.innerText = `Daily Time: ${timeStr} • 15 Questions • 30 sec each • Auto-Sync`;
+    if(badgeEl) badgeEl.innerText = '⏱️ SCHEDULED';
+
+    // Always enforce the Daily Battle contract on the client.
+    if(Number(data.question_count) !== DAILY_BATTLE_QUESTIONS || !Array.isArray(data.questions) || data.questions.length < DAILY_BATTLE_QUESTIONS){
+      console.warn('Daily Battle schedule does not contain exactly 15 prepared questions.');
+    }
+
+    syncDailyBattleClock();
   } catch (err) {
     console.error("loadScheduledBattle failed", err);
   }
 }
 
-// Global Synced Clock Tick
-setInterval(() => {
-  if (!activeScheduledBattle) return;
+function syncDailyBattleClock() {
+  if(!activeScheduledBattle) return;
 
-  const now = Date.now();
-  const targetTime = new Date(activeScheduledBattle.scheduled_at).getTime();
-  const diff = targetTime - now;
-
+  const target = new Date(activeScheduledBattle.scheduled_at).getTime();
+  const elapsed = Date.now() - target;
   const countdownEl = document.getElementById('battleGlobalCountdown');
+  const badgeEl = document.getElementById('battleStatusBadge');
 
-  if (diff > 0) {
-    // Upcoming Countdown
+  if(elapsed < 0){
+    const diff = -elapsed;
     const h = Math.floor(diff / 3600000);
     const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    if (countdownEl) {
-      countdownEl.innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    const sec = Math.floor((diff % 60000) / 1000);
+    if(countdownEl) countdownEl.innerText =
+      `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+    if(badgeEl) badgeEl.innerText = '⏱️ SCHEDULED';
+    return;
+  }
+
+  if(elapsed >= DAILY_BATTLE_TOTAL_MS){
+    if(!dailyBattleFinished){
+      dailyBattleFinished = true;
+      if(badgeEl) badgeEl.innerText = '🏁 FINISHED';
+      if(countdownEl) countdownEl.innerText = '00:00:00';
+      finishBattle();
     }
-    document.getElementById('battleStatusBadge').innerText = "⏱️ SCHEDULED";
-  } else if (!isBattleLive && diff > -1800000) { // Live within 30 min window
-    // Auto-Start Battle For Everyone
-    if (countdownEl) countdownEl.innerText = "00:00:00 - LIVE NOW!";
-    document.getElementById('battleStatusBadge').innerText = "🔴 LIVE NOW";
-    startSynchronizedBattle();
+    return;
   }
-}, 1000);
 
-async function startSynchronizedBattle() {
-  if (isBattleLive) return;
-  isBattleLive = true;
-
-  document.getElementById("battleLobbyBox").classList.add("hidden");
-  document.getElementById("battleResultBox").classList.add("hidden");
-  document.getElementById("battleQuestionBox").classList.remove("hidden");
-
-  currentBattleIdx = 0;
-  userBattleScore = 0;
-  totalBattleXP = 0;
-
-  if (activeScheduledBattle?.questions && activeScheduledBattle.questions.length > 0) {
-    battleQuestions = activeScheduledBattle.questions;
-    loadBattleQuestion(0);
-  } else {
-    document.getElementById("battleQuestionTitle").innerText = "Generating live questions from AI...";
-    try {
-      const res = await db.functions.invoke('daily-bio-event', {
-        body: { count: 15, topic: activeScheduledBattle?.topic || "NEET Biology" }
-      });
-      if (res.data?.questions) {
-        battleQuestions = res.data.questions;
-        loadBattleQuestion(0);
-      }
-    } catch (_) {}
-  }
+  if(!isBattleLive) startSynchronizedBattle();
+  if(badgeEl) badgeEl.innerText = '🔴 LIVE NOW';
+  if(countdownEl) countdownEl.innerText = '00:00:00 • LIVE';
+  syncLiveDailyQuestion(elapsed);
 }
 
-function loadBattleQuestion(idx) {
-  if (idx >= battleQuestions.length) {
+function startSynchronizedBattle() {
+  if(isBattleLive || !activeScheduledBattle) return;
+
+  const qs = Array.isArray(activeScheduledBattle.questions)
+    ? activeScheduledBattle.questions.slice(0, DAILY_BATTLE_QUESTIONS)
+    : [];
+
+  if(qs.length !== DAILY_BATTLE_QUESTIONS){
+    toast('Daily Battle ke exactly 15 questions ready nahi hain.', false);
+    return;
+  }
+
+  battleQuestions = qs;
+  isBattleLive = true;
+  dailyBattleFinished = false;
+  dailyBattleScoreSaved = false;
+  userBattleScore = 0;
+  totalBattleXP = 0;
+  userBattleSelected = false;
+  currentBattleIdx = -1;
+
+  document.getElementById("battleLobbyBox")?.classList.add("hidden");
+  document.getElementById("battleResultBox")?.classList.add("hidden");
+  document.getElementById("battleQuestionBox")?.classList.remove("hidden");
+
+  syncLiveDailyQuestion(Date.now() - new Date(activeScheduledBattle.scheduled_at).getTime());
+}
+
+function syncLiveDailyQuestion(elapsed) {
+  if(!isBattleLive || !battleQuestions.length) return;
+
+  const idx = Math.floor(elapsed / (DAILY_BATTLE_SECONDS * 1000));
+  if(idx >= DAILY_BATTLE_QUESTIONS){
     finishBattle();
     return;
   }
 
-  currentBattleIdx = idx;
-  userBattleSelected = false;
-  const q = battleQuestions[idx];
-  currentCorrectIndex = Number(q.correct_index ?? q.answer ?? 0);
+  const withinQuestion = elapsed % (DAILY_BATTLE_SECONDS * 1000);
+  const secondsLeft = DAILY_BATTLE_SECONDS - Math.floor(withinQuestion / 1000);
 
-  document.getElementById("battleQuestionNum").innerText = `Question ${idx + 1} of ${battleQuestions.length}`;
+  if(idx !== currentBattleIdx){
+    currentBattleIdx = idx;
+    userBattleSelected = false;
+    renderDailyBattleQuestion(idx);
+  }
+
+  battleTimer = Math.max(1, Math.min(DAILY_BATTLE_SECONDS, secondsLeft));
+  updateBattleTimerUI();
+
+  if(battleTimer <= 1 && !userBattleSelected){
+    revealCorrectAnswer();
+  }
+}
+
+function renderDailyBattleQuestion(idx) {
+  const q = battleQuestions[idx];
+  if(!q) return;
+
+  currentCorrectIndex = Number(q.correct_index ?? q.answer ?? 0);
+  document.getElementById("battleQuestionNum").innerText =
+    `Question ${idx + 1} of ${DAILY_BATTLE_QUESTIONS}`;
   document.getElementById("battleQuestionTitle").innerText = q.question;
 
   const optionsGrid = document.getElementById("battleOptionsGrid");
+  if(!optionsGrid) return;
   optionsGrid.innerHTML = "";
 
-  (q.options || []).forEach((opt, optIdx) => {
+  (q.options || []).slice(0,4).forEach((opt, optIdx) => {
     const btn = document.createElement("button");
     btn.className = "w-full text-left p-3.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl font-medium text-slate-200 transition-all flex justify-between items-center text-sm";
     btn.innerHTML = `<span><strong class="text-red-400 mr-2">${String.fromCharCode(65 + optIdx)}.</strong> ${esc(opt)}</span>`;
     btn.onclick = () => submitBattleAnswer(optIdx, btn);
     optionsGrid.appendChild(btn);
   });
-
-  runCountdownTimer();
-}
-
-function runCountdownTimer() {
-  clearInterval(battleTimerInterval);
-  battleTimer = 30;
-  updateBattleTimerUI();
-
-  battleTimerInterval = setInterval(() => {
-    battleTimer--;
-    updateBattleTimerUI();
-
-    if (battleTimer <= 0) {
-      clearInterval(battleTimerInterval);
-      revealCorrectAnswer();
-      setTimeout(() => loadBattleQuestion(currentBattleIdx + 1), 2000);
-    }
-  }, 1000);
 }
 
 function updateBattleTimerUI() {
-  document.getElementById("battleTimerText").innerText = `${battleTimer}s`;
-  const percentage = (battleTimer / 30) * 100;
+  const timerText = document.getElementById("battleTimerText");
   const timerBar = document.getElementById("battleTimerBar");
-  timerBar.style.width = `${percentage}%`;
-
-  if (battleTimer <= 5) {
-    timerBar.className = "bg-red-600 h-full transition-all duration-1000 ease-linear animate-pulse";
-  } else {
-    timerBar.className = "bg-gradient-to-r from-red-500 to-yellow-400 h-full transition-all duration-1000 ease-linear";
+  if(timerText) timerText.innerText = `${battleTimer}s`;
+  if(timerBar){
+    timerBar.style.width = `${(battleTimer / DAILY_BATTLE_SECONDS) * 100}%`;
+    timerBar.className = battleTimer <= 5
+      ? "bg-red-600 h-full transition-all duration-300 ease-linear animate-pulse"
+      : "bg-gradient-to-r from-red-500 to-yellow-400 h-full transition-all duration-300 ease-linear";
   }
 }
 
 function submitBattleAnswer(selectedIdx, clickedBtn) {
-  if (userBattleSelected) return;
+  if (!isBattleLive || userBattleSelected) return;
+
+  // The official question boundary is derived from the scheduled timestamp,
+  // so every user sees the same 30-second window.
+  const elapsed = Date.now() - new Date(activeScheduledBattle.scheduled_at).getTime();
+  const officialIdx = Math.floor(elapsed / (DAILY_BATTLE_SECONDS * 1000));
+  if(officialIdx !== currentBattleIdx || officialIdx >= DAILY_BATTLE_QUESTIONS){
+    return toast('Time over — next question live ho chuka hai.', false);
+  }
+
   userBattleSelected = true;
-  clearInterval(battleTimerInterval);
+  const optionsButtons = document.getElementById("battleOptionsGrid")?.children || [];
+  const isCorrect = selectedIdx === currentCorrectIndex;
 
-  const optionsButtons = document.getElementById("battleOptionsGrid").children;
+  Array.from(optionsButtons).forEach(b => b.disabled = true);
 
-  if (selectedIdx === currentCorrectIndex) {
+  if (isCorrect) {
     clickedBtn.className = "w-full text-left p-3.5 bg-emerald-600/30 border border-emerald-500 rounded-xl font-bold text-emerald-300 flex justify-between items-center text-sm";
     clickedBtn.innerHTML += `<span class="text-xs bg-emerald-500 text-black px-2 py-0.5 rounded font-black">+10 XP</span>`;
     userBattleScore++;
     totalBattleXP += 10;
     grantXP(10);
+    toast('+10 XP 🎉');
   } else {
     clickedBtn.className = "w-full text-left p-3.5 bg-red-600/30 border border-red-500 rounded-xl font-bold text-red-300 flex justify-between items-center text-sm";
     if (optionsButtons[currentCorrectIndex]) {
       optionsButtons[currentCorrectIndex].className = "w-full text-left p-3.5 bg-emerald-600/30 border border-emerald-500 rounded-xl font-bold text-emerald-300 flex justify-between items-center text-sm";
     }
   }
-
-  setTimeout(() => {
-    loadBattleQuestion(currentBattleIdx + 1);
-  }, 2000);
 }
 
 function revealCorrectAnswer() {
-  const optionsButtons = document.getElementById("battleOptionsGrid").children;
+  const optionsButtons = document.getElementById("battleOptionsGrid")?.children || [];
   if (optionsButtons[currentCorrectIndex]) {
     optionsButtons[currentCorrectIndex].className = "w-full text-left p-3.5 bg-emerald-600/30 border border-emerald-500 rounded-xl font-bold text-emerald-300 flex justify-between items-center text-sm";
   }
+  Array.from(optionsButtons).forEach(b => b.disabled = true);
 }
 
 async function finishBattle() {
-  clearInterval(battleTimerInterval);
-  isBattleLive = false;
-  document.getElementById("battleQuestionBox").classList.add("hidden");
-  document.getElementById("battleResultBox").classList.remove("hidden");
+  if(!activeScheduledBattle || dailyBattleScoreSaved) return;
 
-  document.getElementById("finalUserScore").innerText = `${userBattleScore}/${battleQuestions.length}`;
+  dailyBattleFinished = true;
+  isBattleLive = false;
+  if(battleSyncInterval) clearInterval(battleSyncInterval);
+
+  document.getElementById("battleQuestionBox")?.classList.add("hidden");
+  document.getElementById("battleResultBox")?.classList.remove("hidden");
+  document.getElementById("battleStatusBadge").innerText = "🏁 FINISHED";
+  document.getElementById("battleGlobalCountdown").innerText = "00:00:00";
+
+  document.getElementById("finalUserScore").innerText =
+    `${userBattleScore}/${DAILY_BATTLE_QUESTIONS}`;
   document.getElementById("finalUserXP").innerText = `+${totalBattleXP} XP`;
 
-  try {
-    await db.from("quiz_battle_scores").insert([{
-      user_id: user?.id || "guest",
-      user_name: profile?.name || user?.email || "NEET Aspirant",
-      score: userBattleScore,
-      xp_earned: totalBattleXP
-    }]);
-  } catch (_) {}
+  if(user){
+    try {
+      const { error } = await db.from("quiz_battle_scores").insert([{
+        user_id: user.id,
+        user_name: profile?.name || user.email || "NEET Aspirant",
+        score: userBattleScore,
+        xp_earned: totalBattleXP
+      }]);
+      if(error) throw error;
+      dailyBattleScoreSaved = true;
+    } catch (e) {
+      console.warn("Daily Battle score save failed:", e);
+    }
+  }
 
-  loadBattleLeaderboard();
+  await loadBattleLeaderboard();
 }
 
 async function loadBattleLeaderboard() {
   const list = document.getElementById("battleLeaderboardList");
-  list.innerHTML = `<div class="text-slate-500 text-xs">Loading Live Ranks...</div>`;
+  if(!list) return;
+  list.innerHTML = `<div class="text-slate-500 text-xs">Loading Daily 9 PM Ranks...</div>`;
 
   try {
+    // This leaderboard is intentionally restricted to today's Daily 9 PM
+    // battle results, so it never mixes with Community Live Quiz scores.
+    const {start, end} = dailyBattleDayRange();
+
     const { data, error } = await db
       .from("quiz_battle_scores")
-      .select("user_name, score, xp_earned")
+      .select("user_name, score, xp_earned, created_at")
+      .gte("created_at", start)
+      .lt("created_at", end)
       .order("score", { ascending: false })
       .order("xp_earned", { ascending: false })
-      .limit(10);
+      .limit(50);
 
     if (error || !data || data.length === 0) {
-      list.innerHTML = `<div class="text-slate-500 text-xs">Be the first to record a battle score!</div>`;
+      list.innerHTML = `<div class="text-slate-500 text-xs">Aaj ke Daily 9 PM Battle ka leaderboard abhi empty hai.</div>`;
       return;
     }
 
     list.innerHTML = data.map((entry, idx) => `
       <div class="flex justify-between items-center py-1.5 border-b border-slate-900 ${entry.user_name === profile?.name ? 'text-amber-400 font-bold' : 'text-slate-300'}">
         <div class="flex items-center space-x-2">
-          <span class="w-5 text-xs font-black ${idx === 0 ? 'text-yellow-400' : idx === 1 ? 'text-slate-300' : idx === 2 ? 'text-amber-600' : 'text-slate-500'}">#${idx + 1}</span>
+          <span class="w-5 text-xs font-black">${idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '#'+(idx+1)}</span>
           <span>${esc(entry.user_name)}</span>
         </div>
         <div class="flex items-center space-x-3 text-xs">
-          <span>${entry.score} pts</span>
+          <span>${entry.score} / ${DAILY_BATTLE_QUESTIONS}</span>
           <span class="text-emerald-400 font-bold">+${entry.xp_earned} XP</span>
         </div>
       </div>
     `).join("");
-  } catch (_) {
-    list.innerHTML = `<div class="text-slate-500 text-xs">Leaderboard updated!</div>`;
+  } catch (e) {
+    list.innerHTML = `<div class="text-slate-500 text-xs">Leaderboard update failed.</div>`;
+    console.warn("Daily leaderboard failed:", e);
   }
 }
 
-// Admin Battle Form Submission
+// Keep the clock running from the official scheduled timestamp.
+// No local 30-second countdown is used for question changes, preventing drift
+// between users/devices.
+battleSyncInterval = setInterval(() => {
+  syncDailyBattleClock();
+}, 250);
+
+
+/* ==================== DAILY 9 PM ADMIN SCHEDULER ==================== */
 document.getElementById('admin-battle-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (profile?.role !== 'admin') return toast('Admin only action', false);
 
-  const topic = document.getElementById('admin-battle-topic').value.trim();
-  const count = 15;
+  const topic = document.getElementById('admin-battle-topic')?.value.trim();
+  if(!topic) return toast('Battle topic enter karein.', false);
+
+  const count = DAILY_BATTLE_QUESTIONS;
   const now = new Date();
   const next9 = new Date(now);
   next9.setHours(21,0,0,0);
   if (next9.getTime() <= now.getTime()) next9.setDate(next9.getDate()+1);
-  const btn = document.getElementById('admin-battle-btn');
 
+  const btn = document.getElementById('admin-battle-btn');
   btn.disabled = true;
-  btn.textContent = 'Generating AI Questions & Scheduling...';
+  btn.textContent = 'Generating 15 Questions & Scheduling...';
 
   try {
     const scheduled_at = next9.toISOString();
-
     const res = await db.functions.invoke('daily-bio-event', {
       body: { count, topic: `NEET MCQs - ${topic}` }
     });
 
-    const questions = res.data?.questions || [];
-    if (!questions.length) throw new Error("AI questions generation failed");
+    const rawQuestions = Array.isArray(res.data?.questions) ? res.data.questions : [];
+    const questions = rawQuestions.slice(0, DAILY_BATTLE_QUESTIONS).map(q => ({
+      question: String(q.question || ''),
+      options: Array.isArray(q.options) ? q.options.slice(0,4) : [],
+      correct_index: Number(q.correct_index ?? q.answer ?? 0)
+    })).filter(q => q.question && q.options.length === 4 && q.correct_index >= 0 && q.correct_index < 4);
+
+    if (questions.length !== DAILY_BATTLE_QUESTIONS) {
+      throw new Error('Daily 9 PM Battle ke liye exactly 15 valid questions chahiye.');
+    }
+
+    // Keep only one active Daily Battle scheduled for the same upcoming slot.
+    await db.from('quiz_battle_schedule')
+      .update({is_active:false})
+      .eq('is_active',true)
+      .gte('scheduled_at', new Date(next9.getTime()-60000).toISOString())
+      .lte('scheduled_at', new Date(next9.getTime()+60000).toISOString());
 
     const { error } = await db.from('quiz_battle_schedule').insert([{
       topic,
       scheduled_at,
-      question_count: count,
+      question_count: DAILY_BATTLE_QUESTIONS,
       questions,
       is_active: true
     }]);
 
     if (error) throw error;
 
-    toast('Quiz Battle Scheduled Successfully 🎯');
+    toast('Daily 9 PM Quiz Scheduled Successfully 🎯');
+    dailyBattleFinished = false;
+    dailyBattleScoreSaved = false;
     await loadScheduledBattle();
   } catch (err) {
+    console.error('Daily battle scheduling failed', err);
     toast(err.message || 'Battle schedule failed', false);
   } finally {
     btn.disabled = false;
