@@ -162,6 +162,11 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 .qb-live-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.12)}
 .qb-rank-me{border-color:rgba(239,43,43,.7)!important;background:rgba(239,43,43,.08)!important}
 @media(max-width:640px){.qb-shell{padding:12px;border-radius:18px}.qb-card{border-radius:15px}}
+.qb-mode-card{background:rgba(8,11,15,.82);border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:14px;text-align:left;cursor:pointer;transition:.16s}
+.qb-mode-card:hover{border-color:rgba(239,43,43,.55);transform:translateY(-1px)}
+.qb-mode-card.active{border-color:rgba(239,43,43,.8);background:rgba(239,43,43,.10);box-shadow:0 0 0 1px rgba(239,43,43,.18)}
+.qb-mode-card .qb-mode-icon{width:38px;height:38px;border-radius:12px;background:rgba(239,43,43,.10);display:flex;align-items:center;justify-content:center;color:#ef2b2b;font-size:17px}
+
 
 
 /* ===== QUIZ FINISH UI: FINAL STATS + AUTO HIDE SIDEBAR ===== */
@@ -280,7 +285,8 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
  <button onclick="switchTab('home')" id="btn-home" class="rh-nav-btn rh-active"><i class="fa-solid fa-house"></i><span>Home</span></button>
  <button onclick="switchTab('ai')" id="btn-ai" class="rh-nav-btn"><i class="fa-solid fa-circle-question"></i><span>AI Doubt</span></button>
  <button onclick="switchTab('quiz')" id="btn-quiz" class="rh-nav-btn"><i class="fa-solid fa-brain"></i><span>AI Quiz</span></button>
- <button onclick="switchTab('battle')" id="btn-battle" class="rh-nav-btn"><i class="fa-solid fa-bolt"></i><span>Live Quiz</span></button>
+ <button onclick="switchTab('battle')" id="btn-battle" class="rh-nav-btn"><i class="fa-solid fa-trophy"></i><span>Live Quiz</span></button>
+ <button onclick="switchTab('neet720')" id="btn-neet720" class="rh-nav-btn"><i class="fa-solid fa-notes-medical"></i><span>NEET 720</span></button>
  <button onclick="openDailyBattle()" id="btn-daily-battle" class="rh-nav-btn"><i class="fa-solid fa-clock text-red-500"></i><span>Daily 9 PM</span></button>
  <div class="rh-side-sep"></div>
  <div class="rh-side-title">Study</div>
@@ -483,130 +489,148 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
   <div class="qb-shell">
     <div class="flex items-start justify-between gap-3 flex-wrap border-b border-white/10 pb-4 mb-4">
       <div>
-        <div class="text-red-400 text-[10px] uppercase tracking-[.18em] font-black">Realtime Multiplayer</div>
-        <h2 class="text-2xl font-black mt-1"><i class="fa-solid fa-bolt text-red-500 mr-2"></i>Quiz Battle</h2>
-        <p class="text-xs text-slate-400 mt-1">Topic डालो → AI से exactly 15 MCQs → हर सवाल 30 seconds → late join भी current question पर sync.</p>
+        <div class="text-red-400 text-[10px] uppercase tracking-[.18em] font-black">Realtime Community Quiz</div>
+        <h2 class="text-2xl font-black mt-1"><i class="fa-solid fa-trophy text-red-500 mr-2"></i>Live Quiz</h2>
+        <p class="text-xs text-slate-400 mt-1">Koi bhi member quiz start kare, koi bhi eligible member join kare. Har correct answer = +10 XP.</p>
       </div>
-      <div class="flex items-center gap-2">
-        <span id="qb-global-status" class="px-3 py-1.5 rounded-full bg-slate-900 border border-white/10 text-[10px] font-bold text-slate-400">NO MATCH</span>
-      </div>
+      <span id="qb-global-status" class="px-3 py-1.5 rounded-full bg-slate-900 border border-white/10 text-[10px] font-bold text-slate-400">NO QUIZ</span>
     </div>
 
-    <div id="qb-lobby" class="grid lg:grid-cols-[1fr_.95fr] gap-4">
-      <div class="qb-card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <div>
-            <h3 class="font-black text-white">🎯 Host a Match</h3>
-            <p class="text-[11px] text-slate-500">Aap host bano, AI questions generate karega.</p>
-          </div>
-          <span class="text-[10px] bg-red-500/10 text-red-300 border border-red-500/20 px-2 py-1 rounded-lg font-bold">15 Q</span>
-        </div>
-        <form id="qb-host-form" class="space-y-3">
-          <div class="grid grid-cols-3 gap-2">
-            <button type="button" onclick="qbPickSubject('Biology',this)" class="qb-subject-btn bg-red-600 rounded-xl py-2.5 text-xs font-bold">Biology</button>
-            <button type="button" onclick="qbPickSubject('Chemistry',this)" class="qb-subject-btn bg-slate-800 rounded-xl py-2.5 text-xs font-bold">Chemistry</button>
-            <button type="button" onclick="qbPickSubject('Physics',this)" class="qb-subject-btn bg-slate-800 rounded-xl py-2.5 text-xs font-bold">Physics</button>
-          </div>
-          <input id="qb-host-topic" required maxlength="160" placeholder="Chapter / Topic e.g. Human Physiology" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm">
-          <button id="qb-host-btn" class="w-full bg-red-600 hover:bg-red-500 py-3 rounded-xl font-black text-sm"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Generate 15 Questions & Host</button>
-        </form>
-        <p class="text-[10px] text-slate-500 mt-3">Match create hote hi koi bhi student Live / Waiting Matches se directly join kar sakta hai.</p>
+    <div id="qb-lobby" class="space-y-4">
+      <div class="grid md:grid-cols-3 gap-3">
+        <button type="button" id="qb-mode-public" onclick="qbSelectMode('public')" class="qb-mode-card active">
+          <div class="qb-mode-icon"><i class="fa-solid fa-globe"></i></div>
+          <b class="block mt-3 text-sm">Public Quiz</b>
+          <span class="text-[10px] text-slate-500">Live list mein dikhega • Anyone can join</span>
+        </button>
+        <button type="button" id="qb-mode-private" onclick="qbSelectMode('private')" class="qb-mode-card">
+          <div class="qb-mode-icon"><i class="fa-solid fa-lock"></i></div>
+          <b class="block mt-3 text-sm">Private Quiz</b>
+          <span class="text-[10px] text-slate-500">Invite link se join • Public list mein hidden</span>
+        </button>
+        <button type="button" id="qb-mode-duel" onclick="qbSelectMode('duel')" class="qb-mode-card">
+          <div class="qb-mode-icon"><i class="fa-solid fa-user-group"></i></div>
+          <b class="block mt-3 text-sm">1 vs 1 Battle Quiz</b>
+          <span class="text-[10px] text-slate-500">Exactly 2 players • Fast head-to-head</span>
+        </button>
       </div>
 
-      <div class="qb-card p-5">
-        <div class="flex justify-between items-center mb-3">
-          <div>
-            <h3 class="font-black text-white">🔴 Live / Waiting Matches</h3>
-            <p class="text-[11px] text-slate-500">Open match select karke join karo.</p>
+      <div class="grid lg:grid-cols-[1fr_.95fr] gap-4">
+        <div class="qb-card p-5">
+          <div class="flex items-center justify-between mb-3">
+            <div><h3 id="qb-create-title" class="font-black text-white">🌐 Start Public Quiz</h3><p id="qb-create-sub" class="text-[11px] text-slate-500">Quiz live list mein turant show hoga.</p></div>
+            <span class="text-[10px] bg-red-500/10 text-red-300 border border-red-500/20 px-2 py-1 rounded-lg font-bold">15 Q</span>
           </div>
-          <button onclick="qbLoadRooms()" class="text-xs text-red-400 font-bold"><i class="fa-solid fa-rotate"></i></button>
-        </div>
-        <div id="qb-room-list" class="space-y-2 max-h-[300px] overflow-y-auto">
-          <div class="text-xs text-slate-500 text-center py-8">Matches load ho rahe hain...</div>
+          <form id="qb-host-form" class="space-y-3">
+            <div class="grid grid-cols-3 gap-2">
+              <button type="button" onclick="qbPickSubject('Biology',this)" class="qb-subject-btn bg-red-600 rounded-xl py-2.5 text-xs font-bold">Biology</button>
+              <button type="button" onclick="qbPickSubject('Chemistry',this)" class="qb-subject-btn bg-slate-800 rounded-xl py-2.5 text-xs font-bold">Chemistry</button>
+              <button type="button" onclick="qbPickSubject('Physics',this)" class="qb-subject-btn bg-slate-800 rounded-xl py-2.5 text-xs font-bold">Physics</button>
+            </div>
+            <input id="qb-host-topic" required maxlength="160" placeholder="Chapter / Topic e.g. Human Physiology" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm">
+            <button id="qb-host-btn" class="w-full bg-red-600 hover:bg-red-500 py-3 rounded-xl font-black text-sm"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Generate 15 Questions & Start</button>
+          </form>
+          <div id="qb-private-invite" class="hidden mt-4 bg-slate-950 border border-red-500/20 rounded-xl p-3">
+            <div class="text-[10px] uppercase text-slate-500 font-bold">Private Invite</div>
+            <div class="flex items-center gap-2 mt-2"><span class="text-sm text-slate-300 flex-1">Private quiz ka invite link share karein.</span><button type="button" onclick="qbCopyPrivateLink()" class="bg-slate-800 px-3 py-2 rounded-lg text-xs font-bold">Copy Link</button></div>
+          </div>
         </div>
 
+        <div class="qb-card p-5">
+          <div class="flex justify-between items-center mb-3">
+            <div><h3 class="font-black text-white">🔴 Live Quizzes</h3><p class="text-[11px] text-slate-500">Public aur 1v1 waiting quizzes yahan dikhenge.</p></div>
+            <button onclick="qbLoadRooms()" class="text-xs text-red-400 font-bold"><i class="fa-solid fa-rotate"></i></button>
+          </div>
+          <div id="qb-room-list" class="space-y-2 max-h-[300px] overflow-y-auto"><div class="text-xs text-slate-500 text-center py-8">Live quizzes load ho rahe hain...</div></div>
+
+        </div>
       </div>
     </div>
 
     <div id="qb-match" class="hidden space-y-4">
       <div class="qb-card p-4">
         <div class="flex items-center justify-between gap-3 flex-wrap">
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="qb-live-dot"></span>
-              <span id="qb-match-status" class="text-xs font-black text-emerald-400 uppercase">WAITING</span>
-              <span class="text-slate-600">•</span>
-              <span id="qb-match-topic" class="text-sm font-bold">Topic</span>
-            </div>
-            <div class="text-[10px] text-slate-500 mt-1">Host: <span id="qb-match-host">—</span></div>
-          </div>
-          <div class="flex gap-2">
-            <button id="qb-start-btn" onclick="qbStartMatch()" class="bg-red-600 hover:bg-red-500 px-4 py-2.5 rounded-xl text-xs font-black hidden">▶ Start Battle</button>
-            <button onclick="qbLeaveMatch()" class="bg-slate-800 hover:bg-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold">Leave</button>
-          </div>
+          <div><div class="flex items-center gap-2"><span class="qb-live-dot"></span><span id="qb-match-status" class="text-xs font-black text-emerald-400 uppercase">WAITING</span><span class="text-slate-600">•</span><span id="qb-match-topic" class="text-sm font-bold">Topic</span></div><div class="text-[10px] text-slate-500 mt-1">Host: <span id="qb-match-host">—</span></div></div>
+          <div class="flex gap-2"><button id="qb-start-btn" onclick="qbStartMatch()" class="bg-red-600 hover:bg-red-500 px-4 py-2.5 rounded-xl text-xs font-black hidden">▶ Start Quiz</button><button onclick="qbLeaveMatch()" class="bg-slate-800 hover:bg-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold">Leave</button></div>
         </div>
-        <div id="qb-waiting-panel" class="mt-4 bg-slate-950/80 border border-slate-800 rounded-2xl p-5 text-center">
-          <div class="text-3xl">⚔️</div>
-          <div class="font-black text-lg mt-2">Waiting for players...</div>
-          <div class="text-xs text-slate-500 mt-1">Koi bhi student directly join kar sakta hai. Battle start hote hi sabka timer same hoga.</div>
-          <div class="mt-4 flex justify-center items-center gap-3">
-            <span class="text-xs text-slate-400">Players</span>
-            <b id="qb-waiting-count" class="text-red-400">1</b>
-          </div>
-        </div>
+        <div id="qb-waiting-panel" class="mt-4 bg-slate-950/80 border border-slate-800 rounded-2xl p-5 text-center"><div class="text-3xl">⏳</div><div id="qb-waiting-title" class="font-black text-lg mt-2">Waiting for players...</div><div id="qb-waiting-note" class="text-xs text-slate-500 mt-1">Host quiz start karega to sabka timer same hoga.</div><div class="mt-4 flex justify-center items-center gap-3"><span class="text-xs text-slate-400">Players</span><b id="qb-waiting-count" class="text-red-400">1</b></div><div id="qb-match-invite-code" class="hidden mt-3 text-xs text-red-300"></div></div>
       </div>
 
       <div id="qb-question-panel" class="hidden">
         <div class="grid lg:grid-cols-[1fr_320px] gap-4">
-          <div class="qb-card p-5">
-            <div class="flex justify-between items-center gap-3">
-              <span id="qb-question-num" class="text-xs font-black text-slate-400">Question 1 / 15</span>
-              <div class="text-right">
-                <div id="qb-timer" class="qb-timer-ring text-3xl font-black text-red-400">30s</div>
-                <div class="text-[9px] text-slate-500 uppercase">exact 30 sec</div>
-              </div>
-            </div>
-            <div class="mt-3 h-2 bg-slate-900 rounded-full overflow-hidden"><div id="qb-timer-bar" class="h-full bg-red-500" style="width:100%"></div></div>
-            <div id="qb-question-text" class="text-base sm:text-xl font-bold leading-7 mt-5 min-h-[84px]">Loading...</div>
-            <div id="qb-options" class="grid gap-2.5 mt-5"></div>
-            <div id="qb-answer-note" class="text-xs text-slate-500 mt-4 min-h-[18px]"></div>
-          </div>
-
-          <aside class="qb-card p-4 qb-live-leaderboard-panel">
-            <div class="flex justify-between items-center mb-3">
-              <div>
-                <h3 class="font-black text-sm">🏆 Live Match Leaderboard</h3>
-                <p class="text-[10px] text-slate-500">Score + XP realtime</p>
-              </div>
-              <span id="qb-live-count" class="text-[10px] text-emerald-400 font-bold">0 online</span>
-            </div>
-            <div id="qb-leaderboard" class="space-y-2"></div>
-          </aside>
+          <div class="qb-card p-5"><div class="flex justify-between items-center gap-3"><span id="qb-question-num" class="text-xs font-black text-slate-400">Question 1 / 15</span><div class="text-right"><div id="qb-timer" class="qb-timer-ring text-3xl font-black text-red-400">30s</div><div class="text-[9px] text-slate-500 uppercase">30 sec</div></div></div><div class="mt-3 h-2 bg-slate-900 rounded-full overflow-hidden"><div id="qb-timer-bar" class="h-full bg-red-500" style="width:100%"></div></div><div id="qb-question-text" class="text-base sm:text-xl font-bold leading-7 mt-5 min-h-[84px]">Loading...</div><div id="qb-options" class="grid gap-2.5 mt-5"></div><div id="qb-answer-note" class="text-xs text-slate-500 mt-4 min-h-[18px]"></div></div>
+          <aside class="qb-card p-4"><div class="flex justify-between items-center mb-3"><div><h3 class="font-black text-sm">🏆 Live Leaderboard</h3><p class="text-[10px] text-slate-500">Score + XP realtime</p></div><span id="qb-live-count" class="text-[10px] text-emerald-400 font-bold">0 online</span></div><div id="qb-leaderboard" class="space-y-2"></div></aside>
         </div>
       </div>
 
-      <div id="qb-finished-panel" class="hidden qb-card p-5 text-center qb-final-summary-box">
-        <div class="text-4xl">🏆</div>
-        <h3 class="text-2xl font-black text-amber-400 mt-2">QUIZ COMPLETE!</h3>
-        <p id="qb-final-summary" class="text-sm text-slate-300 mt-2">Aapka quiz submit ho gaya hai.</p>
-        <div id="qb-final-stats" class="qb-final-stats">
-          <div class="qb-final-stat"><span class="qb-final-stat-label">Correct</span><span id="qb-final-correct" class="qb-final-stat-value text-emerald-400">0</span></div>
-          <div class="qb-final-stat"><span class="qb-final-stat-label">Wrong</span><span id="qb-final-wrong" class="qb-final-stat-value text-red-400">0</span></div>
-          <div class="qb-final-stat"><span class="qb-final-stat-label">Skipped</span><span id="qb-final-skipped" class="qb-final-stat-value text-slate-300">0</span></div>
-        </div>
-        <div class="mt-5 bg-slate-950/90 p-4 rounded-2xl border border-slate-800 text-left">
-          <div class="flex items-center justify-between gap-2 mb-3">
-            <div>
-              <h4 class="text-sm font-black text-white">🏆 Final Leaderboard</h4>
-              <p class="text-[10px] text-slate-500">Quiz complete hone ke baad final ranking</p>
-            </div>
-            <span id="qb-final-rank" class="text-[10px] font-black text-amber-400"></span>
-          </div>
-          <div id="qb-final-leaderboard" class="space-y-2"></div>
-        </div>
-        <div class="qb-finished-hint">Sidebar automatically hide ho gaya hai taaki final result aur leaderboard clearly dikhe.</div>
-        <button onclick="qbBackToLobby()" class="mt-5 bg-red-600 hover:bg-red-500 px-5 py-2.5 rounded-xl text-xs font-black">New Match</button>
+      <div id="qb-finished-panel" class="hidden qb-card p-5 text-center qb-final-summary-box"><div class="text-4xl">🏆</div><h3 class="text-2xl font-black text-amber-400 mt-2">QUIZ COMPLETE!</h3><p id="qb-final-summary" class="text-sm text-slate-300 mt-2">Aapka quiz submit ho gaya hai.</p><div id="qb-final-stats" class="qb-final-stats"><div class="qb-final-stat"><span class="qb-final-stat-label">Correct</span><span id="qb-final-correct" class="qb-final-stat-value text-emerald-400">0</span></div><div class="qb-final-stat"><span class="qb-final-stat-label">Wrong</span><span id="qb-final-wrong" class="qb-final-stat-value text-red-400">0</span></div><div class="qb-final-stat"><span class="qb-final-stat-label">Skipped</span><span id="qb-final-skipped" class="qb-final-stat-value text-slate-300">0</span></div></div><div class="mt-5 bg-slate-950/90 p-4 rounded-2xl border border-slate-800 text-left"><div class="flex items-center justify-between gap-2 mb-3"><div><h4 class="text-sm font-black text-white">🏆 Final Leaderboard</h4><p class="text-[10px] text-slate-500">Sabhi participants ki final ranking</p></div><span id="qb-final-rank" class="text-[10px] font-black text-amber-400"></span></div><div id="qb-final-leaderboard" class="space-y-2"></div></div><button onclick="qbBackToLobby()" class="mt-5 bg-red-600 hover:bg-red-500 px-5 py-2.5 rounded-xl text-xs font-black">New Live Quiz</button></div>
+    </div>
+  </div>
+</section>
+
+<section id="section-neet720" class="hidden space-y-5">
+  <div class="qb-shell">
+    <div class="flex items-start justify-between gap-3 flex-wrap border-b border-white/10 pb-4 mb-4">
+      <div>
+        <div class="text-emerald-400 text-[10px] uppercase tracking-[.18em] font-black">NEET 720 • LIVE PRACTICE</div>
+        <h2 class="text-2xl font-black mt-1"><i class="fa-solid fa-notes-medical text-emerald-400 mr-2"></i>NEET 720</h2>
+        <p class="text-xs text-slate-400 mt-1">NEET-level MCQ / PYQ • Biology, Chemistry, Physics • 5 / 15 / 25 Questions • +50 XP per correct answer.</p>
       </div>
+      <span id="n720-global-status" class="px-3 py-1.5 rounded-full bg-slate-900 border border-white/10 text-[10px] font-bold text-slate-400">NO QUIZ</span>
+    </div>
+
+    <div id="n720-lobby" class="space-y-4">
+      <div class="grid md:grid-cols-2 gap-3">
+        <div class="qb-card p-5">
+          <h3 class="font-black text-white">🚀 Start NEET 720 Quiz</h3>
+          <p class="text-[11px] text-slate-500 mt-1">Koi bhi member quiz start kar sakta hai. Start hone ke baad sabko Live list mein dikhega.</p>
+          <form id="n720-host-form" class="space-y-3 mt-4">
+            <div class="grid grid-cols-3 gap-2">
+              <button type="button" onclick="n720PickSubject('Biology',this)" class="n720-subject-btn bg-red-600 rounded-xl py-2.5 text-xs font-bold">Biology</button>
+              <button type="button" onclick="n720PickSubject('Chemistry',this)" class="n720-subject-btn bg-slate-800 rounded-xl py-2.5 text-xs font-bold">Chemistry</button>
+              <button type="button" onclick="n720PickSubject('Physics',this)" class="n720-subject-btn bg-slate-800 rounded-xl py-2.5 text-xs font-bold">Physics</button>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" onclick="n720PickType('MCQ',this)" class="n720-type-btn bg-red-600 rounded-xl py-2.5 text-xs font-bold">NEET MCQ</button>
+              <button type="button" onclick="n720PickType('PYQ',this)" class="n720-type-btn bg-slate-800 rounded-xl py-2.5 text-xs font-bold">PYQ</button>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <button type="button" onclick="n720PickCount(5,this)" class="n720-count-btn bg-red-600 rounded-xl py-2.5 text-xs font-bold">5 Q</button>
+              <button type="button" onclick="n720PickCount(15,this)" class="n720-count-btn bg-slate-800 rounded-xl py-2.5 text-xs font-bold">15 Q</button>
+              <button type="button" onclick="n720PickCount(25,this)" class="n720-count-btn bg-slate-800 rounded-xl py-2.5 text-xs font-bold">25 Q</button>
+            </div>
+            <input id="n720-topic" maxlength="160" placeholder="Chapter / Topic (optional) — e.g. Genetics" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm">
+            <button id="n720-host-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-black text-sm"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Generate & Start NEET 720</button>
+          </form>
+        </div>
+
+        <div class="qb-card p-5">
+          <div class="flex justify-between items-center mb-3">
+            <div><h3 class="font-black text-white">🔴 Live NEET 720 Quizzes</h3><p class="text-[11px] text-slate-500">Koi bhi member waiting/live quiz join kar sakta hai.</p></div>
+            <button onclick="n720LoadRooms()" class="text-xs text-emerald-400 font-bold"><i class="fa-solid fa-rotate"></i></button>
+          </div>
+          <div id="n720-room-list" class="space-y-2 max-h-[340px] overflow-y-auto"><div class="text-xs text-slate-500 text-center py-8">Live NEET 720 quizzes load ho rahe hain...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="n720-match" class="hidden space-y-4">
+      <div class="qb-card p-4">
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <div><div class="flex items-center gap-2"><span class="qb-live-dot"></span><span id="n720-match-status" class="text-xs font-black text-emerald-400 uppercase">WAITING</span><span class="text-slate-600">•</span><span id="n720-match-topic" class="text-sm font-bold">NEET 720</span></div><div class="text-[10px] text-slate-500 mt-1">Host: <span id="n720-match-host">—</span> • <span id="n720-match-meta">15 Q • +50 XP/correct</span></div></div>
+          <div class="flex gap-2"><button id="n720-start-btn" onclick="n720StartMatch()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 rounded-xl text-xs font-black hidden">▶ Start Quiz</button><button onclick="n720LeaveMatch()" class="bg-slate-800 hover:bg-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold">Leave</button></div>
+        </div>
+        <div id="n720-waiting-panel" class="mt-4 bg-slate-950/80 border border-slate-800 rounded-2xl p-5 text-center"><div class="text-3xl">⏳</div><div class="font-black text-lg mt-2">Waiting for host...</div><div class="text-xs text-slate-500 mt-1">Host quiz start karega to sabka timer same hoga.</div><div class="mt-4 flex justify-center items-center gap-3"><span class="text-xs text-slate-400">Players</span><b id="n720-waiting-count" class="text-emerald-400">1</b></div></div>
+      </div>
+
+      <div id="n720-question-panel" class="hidden">
+        <div class="grid lg:grid-cols-[1fr_320px] gap-4">
+          <div class="qb-card p-5"><div class="flex justify-between items-center gap-3"><span id="n720-question-num" class="text-xs font-black text-slate-400">Question 1 / 15</span><div class="text-right"><div id="n720-timer" class="qb-timer-ring text-3xl font-black text-emerald-400">30s</div><div class="text-[9px] text-slate-500 uppercase">30 sec</div></div></div><div class="mt-3 h-2 bg-slate-900 rounded-full overflow-hidden"><div id="n720-timer-bar" class="h-full bg-emerald-500" style="width:100%"></div></div><div id="n720-question-text" class="text-base sm:text-xl font-bold leading-7 mt-5 min-h-[84px]">Loading...</div><div id="n720-options" class="grid gap-2.5 mt-5"></div><div id="n720-answer-note" class="text-xs text-slate-500 mt-4 min-h-[18px]"></div></div>
+          <aside class="qb-card p-4"><div class="flex justify-between items-center mb-3"><div><h3 class="font-black text-sm">🏆 Live Leaderboard</h3><p class="text-[10px] text-slate-500">Correct • +50 XP</p></div><span id="n720-live-count" class="text-[10px] text-emerald-400 font-bold">0 online</span></div><div id="n720-leaderboard" class="space-y-2"></div></aside>
+        </div>
+      </div>
+
+      <div id="n720-finished-panel" class="hidden qb-card p-5 text-center qb-final-summary-box"><div class="text-4xl">🏆</div><h3 class="text-2xl font-black text-amber-400 mt-2">NEET 720 COMPLETE!</h3><p id="n720-final-summary" class="text-sm text-slate-300 mt-2">Quiz complete.</p><div id="n720-final-stats" class="qb-final-stats"><div class="qb-final-stat"><span class="qb-final-stat-label">Correct</span><span id="n720-final-correct" class="qb-final-stat-value text-emerald-400">0</span></div><div class="qb-final-stat"><span class="qb-final-stat-label">Wrong</span><span id="n720-final-wrong" class="qb-final-stat-value text-red-400">0</span></div><div class="qb-final-stat"><span class="qb-final-stat-label">Skipped</span><span id="n720-final-skipped" class="qb-final-stat-value text-slate-300">0</span></div></div><div class="mt-5 bg-slate-950/90 p-4 rounded-2xl border border-slate-800 text-left"><div class="flex items-center justify-between gap-2 mb-3"><div><h4 class="text-sm font-black text-white">🏆 Final Leaderboard</h4><p class="text-[10px] text-slate-500">Sabhi participants ki final ranking</p></div><span id="n720-final-rank" class="text-[10px] font-black text-amber-400"></span></div><div id="n720-final-leaderboard" class="space-y-2"></div></div><button onclick="n720BackToLobby()" class="mt-5 bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 rounded-xl text-xs font-black">New NEET 720 Quiz</button></div>
     </div>
   </div>
 </section>
@@ -867,7 +891,8 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
     <div class="grid grid-cols-3 gap-2 text-center text-xs">
       <button onclick="switchTab('ai');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-circle-question text-red-400 text-lg"></i><span>AI Doubt</span></button>
       <button onclick="switchTab('quiz');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-brain text-teal-400 text-lg"></i><span>AI Quiz</span></button>
-      <button onclick="switchTab('battle');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-bolt text-red-400 text-lg"></i><span>Live Quiz</span></button>
+      <button onclick="switchTab('battle');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-trophy text-red-400 text-lg"></i><span>Live Quiz</span></button>
+      <button onclick="switchTab('neet720');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2 border border-emerald-500/20"><i class="fa-solid fa-notes-medical text-emerald-400 text-lg"></i><span>NEET 720</span></button>
       <button onclick="openDailyBattle();closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2 border border-red-500/30"><i class="fa-solid fa-clock text-red-400 text-lg"></i><span>Daily 9 PM</span></button>
       <button onclick="switchTab('materials');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-folder-open text-amber-400 text-lg"></i><span>Materials</span></button>
       <button onclick="switchTab('focus');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-stopwatch text-red-500 text-lg"></i><span>Focus</span></button>
@@ -968,7 +993,7 @@ async function boot(){
  setDefaultBattleDateTime();
  await Promise.all([loadMaterials(),loadPosts(),loadPeople(),loadChatMessages(),loadDiary(),loadStories(),loadVault(),loadLeaderboard(),loadHubEvents(),loadSpinStatus(),loadScheduledBattle()]); 
  await initGamePresence(); subscribeToChat(); renderStudyRooms();
-  qbInit();
+  qbInit();qbAutoJoinFromLink();
  if(profile.role==='admin')populateBackgroundForm();
  initFocusSystem(); applyRHSectionHeaders(); renderHomeDashboard(); switchTab('home');
 }
@@ -986,7 +1011,7 @@ function openDailyBattle(){
 }
 
 function switchTab(tab){
-  ['home','ai','quiz','battle','daily-battle','materials','community','chatroom','diary','stories','games','vault','hubevents','studyrooms','leaderboard','focus'].forEach(x=>{
+  ['home','ai','quiz','battle','neet720','daily-battle','materials','community','chatroom','diary','stories','games','vault','hubevents','studyrooms','leaderboard','focus'].forEach(x=>{
     const sec=document.getElementById('section-'+x); if(sec)sec.classList.add('hidden');
     const btn=document.getElementById('btn-'+x); if(btn)btn.classList.remove('rh-active');
   });
@@ -1006,10 +1031,12 @@ function switchTab(tab){
   if(tab==='community')loadPeople();
   if(tab==='quiz')loadScheduledBattle();
    if(tab==='battle'){qbShowLiveLayout();qbLoadRooms();qbSyncCurrentRoom();}
+  if(tab==='neet720'){n720ShowLobby();n720LoadRooms();n720SyncCurrentRoom();}
 }
 const RH_SECTION_META={
  ai:['AI Doubt','Ask and solve your NEET doubts','fa-circle-question','indigo'],
  quiz:['AI Quiz & Battle','Self Practice • Live Quiz • Daily 9 PM Battle','fa-brain','teal'],
+ neet720:['NEET 720','NEET-level MCQ & PYQ practice • 5/15/25 questions • +50 XP/correct','fa-notes-medical','emerald'],
  materials:['Study Material','All notes, PDFs, PYQs and study files','fa-folder-open','amber'],
  community:['Community','Posts, students and discussions','fa-users','violet'],
  chatroom:['Live Chat','Live student discussion and doubts','fa-comments','sky'],
@@ -1772,375 +1799,140 @@ const QB_QUESTION_COUNT = 15;
 
 function qbEsc(v){ return esc(String(v ?? '')); }
 function qbCode(){ return Math.random().toString(36).slice(2,8).toUpperCase(); }
+let qbMode='public';
+let qbLobbyPoll=null;
 
-function qbSetFinishedLayout(finished){
-  document.body.classList.toggle('qb-finished-layout',!!finished);
+function qbSetFinishedLayout(finished){document.body.classList.toggle('qb-finished-layout',!!finished);}
+function qbShowLiveLayout(){qbSetFinishedLayout(false);}
+function qbSelectMode(mode){
+  qbMode=mode;
+  ['public','private','duel'].forEach(m=>document.getElementById(`qb-mode-${m}`)?.classList.toggle('active',m===mode));
+  const title=document.getElementById('qb-create-title'),sub=document.getElementById('qb-create-sub'),btn=document.getElementById('qb-host-btn');
+  if(mode==='public'){title.textContent='🌐 Start Public Quiz';sub.textContent='Quiz live list mein turant show hoga.';btn.innerHTML='<i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Generate 15 Questions & Start';}
+  if(mode==='private'){title.textContent='🔒 Start Private Quiz';sub.textContent='Public list se hidden rahega; invite link se join hoga.';btn.innerHTML='<i class="fa-solid fa-lock mr-2"></i>Generate 15 Questions & Create Private Quiz';}
+  if(mode==='duel'){title.textContent='⚔️ Start 1 vs 1 Battle';sub.textContent='Exactly 2 players allowed.';btn.innerHTML='<i class="fa-solid fa-user-group mr-2"></i>Generate 15 Questions & Create Battle';}
 }
-function qbShowLiveLayout(){
-  qbSetFinishedLayout(false);
-}
+async function qbCopyPrivateLink(){if(!qbRoom)return;const link=`${location.origin}${location.pathname}?livequiz=${encodeURIComponent(qbRoom.room_code)}`;try{await navigator.clipboard.writeText(link);toast('Private invite link copied ✓')}catch(e){prompt('Private invite link',link)}}
 async function qbLoadMyFinalStats(){
   if(!qbRoom||!user)return;
   try{
-    const {data,error}=await db.from('quiz_battle_answers')
-      .select('question_index,is_correct')
-      .eq('room_code',qbRoom.room_code)
-      .eq('user_id',user.id);
+    const {data,error}=await db.from('quiz_battle_answers').select('question_index,is_correct').eq('room_code',qbRoom.room_code).eq('user_id',user.id);
     if(error)throw error;
-    const answers=Array.isArray(data)?data:[];
-    const unique=new Map();
-    answers.forEach(a=>unique.set(Number(a.question_index),!!a.is_correct));
-    const correct=[...unique.values()].filter(Boolean).length;
-    const answered=unique.size;
-    const wrong=Math.max(0,answered-correct);
-    const skipped=Math.max(0,QB_QUESTION_COUNT-answered);
+    const unique=new Map();(data||[]).forEach(a=>unique.set(Number(a.question_index),!!a.is_correct));
+    const correct=[...unique.values()].filter(Boolean).length,answered=unique.size,wrong=Math.max(0,answered-correct),skipped=Math.max(0,QB_QUESTION_COUNT-answered);
     const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=String(v)};
-    set('qb-final-correct',correct);
-    set('qb-final-wrong',wrong);
-    set('qb-final-skipped',skipped);
-    const rows=document.querySelectorAll('#qb-final-leaderboard .qb-card');
-    const rank=[...rows].findIndex(el=>el.classList.contains('qb-rank-me'));
-    if(rank>=0)set('qb-final-rank',`Rank #${rank+1}`);
-    set('qb-final-summary',`Score ${correct}/${QB_QUESTION_COUNT} • ${Math.round((correct/QB_QUESTION_COUNT)*100)}% accuracy`);
-  }catch(e){
-    console.warn('qbLoadMyFinalStats',e);
-    const {data}=await db.from('quiz_battle_participants').select('score').eq('room_code',qbRoom.room_code).eq('user_id',user.id).maybeSingle();
-    const score=Number(data?.score||0);
-    const answered=qbSelected.size;
-    const wrong=Math.max(0,answered-score);
-    const skipped=Math.max(0,QB_QUESTION_COUNT-answered);
-    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=String(v)};
-    set('qb-final-correct',score);
-    set('qb-final-wrong',wrong);
-    set('qb-final-skipped',skipped);
-    set('qb-final-summary',`Score ${score}/${QB_QUESTION_COUNT}`);
-  }
+    set('qb-final-correct',correct);set('qb-final-wrong',wrong);set('qb-final-skipped',skipped);set('qb-final-summary',`Score ${correct}/${QB_QUESTION_COUNT} • ${Math.round((correct/QB_QUESTION_COUNT)*100)}% accuracy`);
+    const rows=document.querySelectorAll('#qb-final-leaderboard .qb-card'),rank=[...rows].findIndex(el=>el.classList.contains('qb-rank-me'));if(rank>=0)set('qb-final-rank',`Rank #${rank+1}`);
+  }catch(e){console.warn('qbLoadMyFinalStats',e);}
   qbSetFinishedLayout(true);
 }
-function qbPickSubject(subject, btn){
-  qbSubject = subject;
-  document.querySelectorAll('.qb-subject-btn').forEach(b=>{
-    b.classList.remove('bg-red-600'); b.classList.add('bg-slate-800');
-  });
-  if(btn){btn.classList.remove('bg-slate-800');btn.classList.add('bg-red-600');}
-}
-
-async function qbInit(){
-  if(!user)return;
-  await qbLoadRooms();
-  qbSyncCurrentRoom();
-}
-
-async function qbLoadRooms(){
-  const box=document.getElementById('qb-room-list');
-  if(!box||!user)return;
-  box.innerHTML='<div class="text-xs text-slate-500 text-center py-6">Loading matches...</div>';
+function qbPickSubject(subject,btn){qbSubject=subject;document.querySelectorAll('.qb-subject-btn').forEach(b=>{b.classList.remove('bg-red-600');b.classList.add('bg-slate-800')});if(btn){btn.classList.remove('bg-slate-800');btn.classList.add('bg-red-600')}}
+async function qbInit(){if(!user)return;qbSelectMode('public');await qbLoadRooms();qbStartLobbyPoll();qbSyncCurrentRoom();}
+function qbAutoJoinFromLink(){const code=new URLSearchParams(location.search).get('livequiz');if(code&&user)setTimeout(()=>qbJoinRoom(code,false,true),500)}
+function qbStartLobbyPoll(){clearInterval(qbLobbyPoll);qbLobbyPoll=setInterval(()=>{if(user&&!qbRoom&&document.getElementById('section-battle')&&!document.getElementById('section-battle').classList.contains('hidden'))qbLoadRooms(true)},1500)}
+async function qbLoadRooms(silent=false){
+  const box=document.getElementById('qb-room-list');if(!box||!user)return;if(!silent)box.innerHTML='<div class="text-xs text-slate-500 text-center py-6">Loading live quizzes...</div>';
   try{
-    const {data,error}=await db.from('quiz_battle_rooms')
-      .select('room_code,topic,host_name,status,started_at,created_at')
-      .in('status',['waiting','live'])
-      .order('created_at',{ascending:false}).limit(20);
+    const {data,error}=await db.from('quiz_battle_rooms').select('room_code,topic,host_name,status,started_at,created_at,mode,max_players').in('status',['waiting','live']).in('mode',['public','duel']).order('created_at',{ascending:false}).limit(30);
     if(error)throw error;
-    if(!data?.length){
-      box.innerHTML='<div class="text-xs text-slate-500 text-center py-8">Abhi koi open match nahi hai. Aap pehla host bano ⚡</div>';
-      return;
-    }
-    box.innerHTML=data.map(r=>{
-      const live=r.status==='live';
-      return `<button onclick="qbJoinRoom('${qbEsc(r.room_code)}')" class="qb-room-row w-full rounded-xl p-3 text-left">
-        <div class="flex items-center justify-between gap-2">
-          <b class="text-sm text-white truncate">${qbEsc(r.topic)}</b>
-          <span class="text-[9px] font-black ${live?'text-emerald-400':'text-amber-400'}">${live?'● LIVE':'WAITING'}</span>
-        </div>
-        <div class="text-[10px] text-slate-500 mt-1">Host: ${qbEsc(r.host_name||'Student')}</div>
-      </button>`;
-    }).join('');
-  }catch(e){
-    box.innerHTML='<div class="text-xs text-slate-500 text-center py-6">Quiz Battle SQL setup required.</div>';
-    console.warn('qbLoadRooms',e);
-  }
+    if(!data?.length){box.innerHTML='<div class="text-xs text-slate-500 text-center py-8">Abhi koi Public/1v1 Live Quiz nahi hai. Aap pehla start karo ⚡</div>';return;}
+    box.innerHTML=data.map(r=>{const live=r.status==='live',duel=r.mode==='duel';return `<button onclick="qbJoinRoom('${qbEsc(r.room_code)}')" class="qb-room-row w-full rounded-xl p-3 text-left"><div class="flex items-center justify-between gap-2"><b class="text-sm text-white truncate">${qbEsc(r.topic)}</b><span class="text-[9px] font-black ${live?'text-emerald-400':'text-amber-400'}">${live?'● LIVE':'WAITING'}</span></div><div class="text-[10px] text-slate-500 mt-1">${duel?'⚔️ 1 vs 1':'🌐 Public'} • Host: ${qbEsc(r.host_name||'Student')}</div></button>`}).join('');
+  }catch(e){box.innerHTML='<div class="text-xs text-slate-500 text-center py-6">Live Quiz SQL setup required.</div>';console.warn('qbLoadRooms',e)}
 }
-
 async function qbHostMatch(){
-  if(!user||!profile)return toast('Pehle login karein.',false);
-  const topic=document.getElementById('qb-host-topic')?.value.trim();
-  if(!topic)return toast('Topic/Chapter enter karein.',false);
-  const btn=document.getElementById('qb-host-btn');
-  btn.disabled=true; btn.innerHTML='⏳ AI 15 Questions bana raha hai...';
+  if(!user||!profile)return toast('Pehle login karein.',false);const topic=document.getElementById('qb-host-topic')?.value.trim();if(!topic)return toast('Topic/Chapter enter karein.',false);const btn=document.getElementById('qb-host-btn');btn.disabled=true;btn.innerHTML='⏳ AI 15 Questions bana raha hai...';
   try{
-    const res=await db.functions.invoke('daily-bio-event',{
-      body:{count:QB_QUESTION_COUNT,topic:`NEET Quiz Battle - ${qbSubject} - ${topic}`}
-    });
-    if(res.error)throw res.error;
-    const questions=Array.isArray(res.data?.questions)?res.data.questions:[];
-    if(questions.length<15)throw new Error(`AI ne ${questions.length} questions diye. Exactly 15 questions required.`);
-    const clean=questions.slice(0,15).map(q=>({
-      question:String(q.question||''),
-      options:Array.isArray(q.options)?q.options.slice(0,4):[],
-      correct_index:Number(q.correct_index ?? q.answer ?? 0)
-    })).filter(q=>q.question&&q.options.length===4&&q.correct_index>=0&&q.correct_index<4);
-    if(clean.length!==15)throw new Error('AI response format invalid. Please try again.');
-    const room_code=qbCode();
-    const {data,error}=await db.from('quiz_battle_rooms').insert({
-      room_code,topic:`${qbSubject} • ${topic}`,host_id:user.id,
-      host_name:profile.name||user.email||'Student',questions:clean,
-      question_count:15,status:'waiting'
-    }).select('*').single();
-    if(error)throw error;
-    qbRoom=data;
-    await qbJoinRoom(room_code,true);
-    toast('Match created! Students can join directly from Live / Waiting Matches.');
-  }catch(e){
-    console.error('qbHostMatch',e);
-    toast(e.message||'Match create failed',false);
-  }finally{
-    btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Generate 15 Questions & Host';
-  }
+    const res=await db.functions.invoke('daily-bio-event',{body:{count:QB_QUESTION_COUNT,topic:`NEET Live Quiz - ${qbSubject} - ${topic}`}});if(res.error)throw res.error;const questions=Array.isArray(res.data?.questions)?res.data.questions:[];if(questions.length<15)throw new Error(`AI ne ${questions.length} questions diye. Exactly 15 questions required.`);
+    const clean=questions.slice(0,15).map(q=>({question:String(q.question||''),options:Array.isArray(q.options)?q.options.slice(0,4):[],correct_index:Number(q.correct_index??q.answer??0)})).filter(q=>q.question&&q.options.length===4&&q.correct_index>=0&&q.correct_index<4);if(clean.length!==15)throw new Error('AI response format invalid. Please try again.');
+    const room_code=qbCode();const mode=qbMode,max_players=mode==='duel'?2:null;
+    const payload={room_code,topic:`${qbSubject} • ${topic}`,host_id:user.id,host_name:profile.name||user.email||'Student',questions:clean,question_count:15,status:'waiting',mode,max_players};
+    const {data,error}=await db.from('quiz_battle_rooms').insert(payload).select('*').single();if(error)throw error;qbRoom=data;await qbJoinRoom(room_code,true,false);document.getElementById('qb-private-invite')?.classList.toggle('hidden',mode!=='private');
+    toast(mode==='public'?'Public Live Quiz started!':'Quiz created.');
+  }catch(e){console.error('qbHostMatch',e);toast(e.message||'Quiz create failed',false)}finally{btn.disabled=false;qbSelectMode(qbMode)}
 }
-
-async function qbJoinRoom(code,afterCreate=false){
+async function qbJoinRoom(code,afterCreate=false,privateOnly=false){
   if(!user)return toast('Pehle login karein.',false);
   try{
-    const {data,error}=await db.from('quiz_battle_rooms').select('*').eq('room_code',String(code).toUpperCase()).maybeSingle();
-    if(error)throw error;
-    if(!data)return toast('Match nahi mila.',false);
-    if(data.status==='finished')return toast('Ye match finish ho chuka hai.',false);
-    if(qbRoom && qbRoom.room_code!==data.room_code)await qbLeaveMatch(true);
-    qbRoom=data;
-    qbShowLiveLayout();
-    const {error:pe}=await db.from('quiz_battle_participants').upsert({
-      room_code:data.room_code,user_id:user.id,user_name:profile?.name||user.email||'Student',
-      score:0,xp_earned:0,last_seen:new Date().toISOString()
-    },{onConflict:'room_code,user_id'});
-    if(pe)throw pe;
-    await qbSubscribe(data.room_code);
-    qbRenderRoom();
-    await qbRefreshParticipants();
-    qbSyncCurrentRoom();
-    if(!afterCreate)toast(data.status==='live'?'Live battle join ho gaya ⚡':'Match join ho gaya. Host ke start karne ka wait karein.');
-  }catch(e){
-    console.error('qbJoinRoom',e);
-    toast(e.message||'Join failed. SQL setup/RLS check karein.',false);
-  }
+    const {data,error}=await db.from('quiz_battle_rooms').select('*').eq('room_code',String(code).toUpperCase()).maybeSingle();if(error)throw error;if(!data)return toast('Quiz nahi mila.',false);if(data.status==='finished')return toast('Ye quiz finish ho chuka hai.',false);
+    if(privateOnly&&data.mode!=='private')return toast('Ye private quiz code nahi hai.',false);
+    if(data.mode==='duel'){const {count,error:ce}=await db.from('quiz_battle_participants').select('user_id',{count:'exact',head:true}).eq('room_code',data.room_code);if(ce)throw ce;if((count||0)>=2 && data.host_id!==user.id)return toast('1 vs 1 battle full hai.',false);}
+    if(qbRoom&&qbRoom.room_code!==data.room_code)await qbLeaveMatch(true);qbRoom=data;qbShowLiveLayout();
+    const {error:pe}=await db.from('quiz_battle_participants').upsert({room_code:data.room_code,user_id:user.id,user_name:profile?.name||user.email||'Student',score:0,xp_earned:0,last_seen:new Date().toISOString()},{onConflict:'room_code,user_id'});if(pe)throw pe;
+    await qbSubscribe(data.room_code);qbRenderRoom();await qbRefreshParticipants();qbSyncCurrentRoom();if(!afterCreate)toast(data.status==='live'?'Live quiz join ho gaya ⚡':'Quiz join ho gaya. Host ke start karne ka wait karein.');
+  }catch(e){console.error('qbJoinRoom',e);toast(e.message||'Join failed. SQL setup/RLS check karein.',false)}
 }
-
-async function qbSubscribe(code){
-  if(qbChannel)try{await db.removeChannel(qbChannel)}catch(e){}
-  qbChannel=db.channel(`quiz-battle-${code}`,{config:{broadcast:{self:true},presence:{key:user.id}}});
-  qbChannel.on('broadcast',{event:'battle-event'},payload=>{
-    const ev=payload.payload||{};
-    if(ev.type==='refresh'){qbRefreshParticipants();}
-    if(ev.type==='started'||ev.type==='finished'){qbReloadRoomAndSync();}
-  });
-  qbChannel.on('presence',{event:'sync'},()=>qbRefreshPresenceCount());
-  qbChannel.on('presence',{event:'join'},()=>qbRefreshPresenceCount());
-  qbChannel.on('presence',{event:'leave'},()=>qbRefreshPresenceCount());
-  await qbChannel.subscribe(async status=>{
-    if(status==='SUBSCRIBED'){
-      try{await qbChannel.track({user_id:user.id,name:profile?.name||user.email||'Student'})}catch(e){}
-    }
-  });
-}
-
-async function qbRefreshPresenceCount(){
-  if(!qbChannel)return;
-  try{
-    const state=qbChannel.presenceState();
-    const count=Object.keys(state||{}).length;
-    const el=document.getElementById('qb-live-count'); if(el)el.textContent=`${count} online`;
-  }catch(e){}
-}
-
-async function qbReloadRoomAndSync(){
-  if(!qbRoom)return;
-  const {data}=await db.from('quiz_battle_rooms').select('*').eq('room_code',qbRoom.room_code).maybeSingle();
-  if(data){
-    qbRoom=data;
-    qbRenderRoom();
-    qbSyncCurrentRoom();
-    if(data.status==='finished'){
-      await qbRefreshParticipants();
-      await qbLoadMyFinalStats();
-    }
-  }
-}
-
+async function qbSubscribe(code){if(qbChannel)try{await db.removeChannel(qbChannel)}catch(e){}qbChannel=db.channel(`quiz-battle-${code}`,{config:{broadcast:{self:true},presence:{key:user.id}}});qbChannel.on('broadcast',{event:'battle-event'},payload=>{const ev=payload.payload||{};if(ev.type==='refresh'){qbRefreshParticipants()}if(ev.type==='started'||ev.type==='finished'){qbReloadRoomAndSync()}});qbChannel.on('presence',{event:'sync'},()=>qbRefreshPresenceCount());qbChannel.on('presence',{event:'join'},()=>qbRefreshPresenceCount());qbChannel.on('presence',{event:'leave'},()=>qbRefreshPresenceCount());await qbChannel.subscribe(async status=>{if(status==='SUBSCRIBED'){try{await qbChannel.track({user_id:user.id,name:profile?.name||user.email||'Student'})}catch(e){}}})}
+async function qbRefreshPresenceCount(){if(!qbChannel)return;try{const state=qbChannel.presenceState();const count=Object.keys(state||{}).length;const el=document.getElementById('qb-live-count');if(el)el.textContent=`${count} online`}catch(e){}}
+async function qbReloadRoomAndSync(){if(!qbRoom)return;const {data}=await db.from('quiz_battle_rooms').select('*').eq('room_code',qbRoom.room_code).maybeSingle();if(data){qbRoom=data;qbRenderRoom();qbSyncCurrentRoom();if(data.status==='finished'){await qbRefreshParticipants();await qbLoadMyFinalStats()}}}
 function qbRenderRoom(){
-  document.getElementById('qb-lobby')?.classList.add('hidden');
-  document.getElementById('qb-match')?.classList.remove('hidden');
-  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
-  set('qb-match-topic',qbRoom.topic||'Quiz Battle');
-  set('qb-match-code',qbRoom.room_code||'');
-  set('qb-match-host',qbRoom.host_name||'Student');
-  const isHost=qbRoom.host_id===user.id;
-  document.getElementById('qb-start-btn')?.classList.toggle('hidden',!isHost||qbRoom.status!=='waiting');
-  document.getElementById('qb-waiting-panel')?.classList.toggle('hidden',qbRoom.status!=='waiting');
-  document.getElementById('qb-question-panel')?.classList.toggle('hidden',qbRoom.status!=='live');
-  document.getElementById('qb-finished-panel')?.classList.toggle('hidden',qbRoom.status!=='finished');
-  set('qb-match-status',qbRoom.status==='live'?'LIVE':qbRoom.status==='finished'?'FINISHED':'WAITING');
-   if(qbRoom.status!=='finished') qbShowLiveLayout();
-  const badge=document.getElementById('qb-global-status');
-  if(badge){badge.textContent=qbRoom.status==='live'?'● LIVE MATCH':qbRoom.status==='finished'?'FINISHED':'WAITING';badge.className=`px-3 py-1.5 rounded-full border text-[10px] font-bold ${qbRoom.status==='live'?'bg-emerald-500/10 border-emerald-500/20 text-emerald-400':'bg-red-500/10 border-red-500/20 text-red-300'}`;}
+  document.getElementById('qb-lobby')?.classList.add('hidden');document.getElementById('qb-match')?.classList.remove('hidden');const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};set('qb-match-topic',qbRoom.topic||'Live Quiz');set('qb-match-host',qbRoom.host_name||'Student');const isHost=qbRoom.host_id===user.id;document.getElementById('qb-start-btn')?.classList.toggle('hidden',!isHost||qbRoom.status!=='waiting');document.getElementById('qb-waiting-panel')?.classList.toggle('hidden',qbRoom.status!=='waiting');document.getElementById('qb-question-panel')?.classList.toggle('hidden',qbRoom.status!=='live');document.getElementById('qb-finished-panel')?.classList.toggle('hidden',qbRoom.status!=='finished');set('qb-match-status',qbRoom.status==='live'?'LIVE':qbRoom.status==='finished'?'FINISHED':'WAITING');set('qb-global-status',qbRoom.status==='live'?'● LIVE QUIZ':qbRoom.status==='finished'?'FINISHED':'WAITING');set('qb-waiting-title',qbRoom.mode==='duel'?'Waiting for opponent...':'Waiting for players...');set('qb-waiting-note',qbRoom.mode==='duel'?'1 vs 1 ke liye 2 players required.':'Host quiz start karega to sabka timer same hoga.');const invite=document.getElementById('qb-match-invite-code');if(invite){invite.classList.toggle('hidden',qbRoom.mode!=='private');invite.textContent=qbRoom.mode==='private'?`Invite code: ${qbRoom.room_code}`:''}if(qbRoom.status!=='finished')qbShowLiveLayout();}
+async function qbStartMatch(){if(!qbRoom||qbRoom.host_id!==user.id||qbRoom.status!=='waiting')return;if(qbRoom.mode==='duel'){const {count,error}=await db.from('quiz_battle_participants').select('user_id',{count:'exact',head:true}).eq('room_code',qbRoom.room_code);if(error)return toast(error.message,false);if((count||0)<2)return toast('1 vs 1 start karne ke liye opponent join kare.',false)}const started_at=new Date().toISOString();const {data,error}=await db.from('quiz_battle_rooms').update({status:'live',started_at}).eq('room_code',qbRoom.room_code).eq('host_id',user.id).eq('status','waiting').select('*').single();if(error)return toast(error.message||'Quiz start failed',false);qbRoom=data;qbRenderRoom();qbSyncCurrentRoom();try{await qbChannel?.send({type:'broadcast',event:'battle-event',payload:{type:'started'}})}catch(e){}}
+function qbCurrentIndex(){if(!qbRoom?.started_at)return -1;const elapsed=Date.now()-new Date(qbRoom.started_at).getTime();if(elapsed<0)return -1;return Math.floor(elapsed/(QB_QUESTION_SECONDS*1000))}
+function qbSecondsLeft(){if(!qbRoom?.started_at)return 30;const elapsed=Math.max(0,Date.now()-new Date(qbRoom.started_at).getTime());const used=Math.floor((elapsed%(QB_QUESTION_SECONDS*1000))/1000);return QB_QUESTION_SECONDS-used}
+function qbSyncCurrentRoom(){if(!qbRoom)return;clearInterval(qbTimer);qbTimer=setInterval(qbTick,200);qbTick();clearInterval(qbPoll);qbPoll=setInterval(qbRefreshParticipants,1500);clearInterval(qbHeartbeat);qbHeartbeat=setInterval(qbHeartbeatFn,5000)}
+async function qbHeartbeatFn(){if(!qbRoom||!user)return;try{await db.from('quiz_battle_participants').update({last_seen:new Date().toISOString()}).eq('room_code',qbRoom.room_code).eq('user_id',user.id)}catch(e){}}
+async function qbTick(){if(!qbRoom)return;if(qbRoom.status==='waiting'){const {data}=await db.from('quiz_battle_participants').select('user_id').eq('room_code',qbRoom.room_code);const c=data?.length||0;document.getElementById('qb-waiting-count')?.replaceChildren(document.createTextNode(String(c)));return}if(qbRoom.status==='finished')return;const idx=qbCurrentIndex();if(idx>=QB_QUESTION_COUNT){if(qbRoom.host_id===user.id)await qbFinishRoom();else{qbRoom.status='finished';qbRenderRoom()}return}const sec=qbSecondsLeft();document.getElementById('qb-timer')?.replaceChildren(document.createTextNode(`${sec}s`));const bar=document.getElementById('qb-timer-bar');if(bar)bar.style.width=`${(sec/30)*100}%`;if(idx!==qbLastRenderedIndex){qbLastRenderedIndex=idx;qbRenderQuestion(idx)}}
+function qbRenderQuestion(idx){const qs=Array.isArray(qbRoom?.questions)?qbRoom.questions:[],q=qs[idx];if(!q)return;document.getElementById('qb-question-num').textContent=`Question ${idx+1} / 15`;document.getElementById('qb-question-text').textContent=q.question;document.getElementById('qb-answer-note').textContent=qbSelected.has(idx)?'Answer submitted. Next question auto-sync hoga.':'';const box=document.getElementById('qb-options');box.innerHTML='';(q.options||[]).forEach((opt,j)=>{const b=document.createElement('button');b.className='qb-option w-full text-left p-3.5 rounded-xl text-sm font-semibold flex items-center gap-3';b.innerHTML=`<span class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-red-400 font-black">${String.fromCharCode(65+j)}</span><span>${qbEsc(opt)}</span>`;b.disabled=qbSelected.has(idx);b.onclick=()=>qbAnswer(idx,j,b);box.appendChild(b)})}
+async function qbAnswer(idx,selected,clicked){if(!qbRoom||qbRoom.status!=='live'||qbSelected.has(idx))return;if(qbCurrentIndex()!==idx)return toast('Time over — next question live ho chuka hai.',false);qbSelected.add(idx);const q=qbRoom.questions[idx],correct=Number(q.correct_index??q.answer??0),isCorrect=selected===correct;document.querySelectorAll('#qb-options button').forEach(b=>b.disabled=true);if(isCorrect)clicked.classList.add('qb-correct');else clicked.classList.add('qb-wrong');const buttons=document.querySelectorAll('#qb-options button');if(buttons[correct])buttons[correct].classList.add('qb-correct');const xp=isCorrect?10:0;try{const {error}=await db.from('quiz_battle_answers').insert({room_code:qbRoom.room_code,user_id:user.id,question_index:idx,selected_index:selected,is_correct:isCorrect,xp_awarded:xp});if(error&&error.code!=='23505')throw error;if(isCorrect){const {data:p}=await db.from('quiz_battle_participants').select('score,xp_earned').eq('room_code',qbRoom.room_code).eq('user_id',user.id).maybeSingle();const score=Number(p?.score||0)+1,earned=Number(p?.xp_earned||0)+10;const {error:ue}=await db.from('quiz_battle_participants').update({score,xp_earned:earned,last_seen:new Date().toISOString()}).eq('room_code',qbRoom.room_code).eq('user_id',user.id);if(ue)throw ue;await grantXP(10);toast('+10 XP 🎉')}await qbRefreshParticipants();try{await qbChannel?.send({type:'broadcast',event:'battle-event',payload:{type:'refresh'}})}catch(e){}}catch(e){console.warn('qbAnswer',e);toast(e.message||'Answer save nahi hua.',false)}}
+async function qbRefreshParticipants(){if(!qbRoom)return;try{const {data,error}=await db.from('quiz_battle_participants').select('user_id,user_name,score,xp_earned,last_seen').eq('room_code',qbRoom.room_code).order('score',{ascending:false}).order('xp_earned',{ascending:false});if(error)throw error;const now=Date.now(),online=(data||[]).filter(p=>now-new Date(p.last_seen||0).getTime()<12000),set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};set('qb-waiting-count',data?.length||0);set('qb-live-count',`${online.length} online`);const html=(data||[]).map((p,i)=>`<div class="qb-card ${p.user_id===user.id?'qb-rank-me':''} border rounded-xl p-2.5 flex items-center gap-2"><span class="w-6 text-center font-black text-xs">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</span><div class="min-w-0 flex-1"><b class="block truncate text-xs">${qbEsc(p.user_name||'Student')}${p.user_id===user.id?' (You)':''}</b><span class="text-[9px] text-slate-500">${Number(p.score||0)} correct • +${Number(p.xp_earned||0)} XP</span></div><span class="w-2 h-2 rounded-full ${now-new Date(p.last_seen||0).getTime()<12000?'bg-emerald-400':'bg-slate-700'}"></span></div>`).join('')||'<div class="text-xs text-slate-500 text-center py-5">Waiting for players...</div>';document.getElementById('qb-leaderboard')?.replaceChildren();const lb=document.getElementById('qb-leaderboard');if(lb)lb.innerHTML=html;const fl=document.getElementById('qb-final-leaderboard');if(fl)fl.innerHTML=html}catch(e){console.warn('qbRefreshParticipants',e)}}
+async function qbFinishRoom(){if(!qbRoom)return;const {data,error}=await db.from('quiz_battle_rooms').update({status:'finished',finished_at:new Date().toISOString()}).eq('room_code',qbRoom.room_code).eq('host_id',user.id).eq('status','live').select('*').single();if(!error&&data){qbRoom=data;qbRenderRoom();await qbRefreshParticipants();await qbLoadMyFinalStats();try{await qbChannel?.send({type:'broadcast',event:'battle-event',payload:{type:'finished'}})}catch(e){}}}
+async function qbLeaveMatch(silent=false){clearInterval(qbTimer);clearInterval(qbPoll);clearInterval(qbHeartbeat);if(qbChannel){try{await db.removeChannel(qbChannel)}catch(e){}qbChannel=null;}if(qbRoom&&user&&qbRoom.status!=='finished'){try{await db.from('quiz_battle_participants').delete().eq('room_code',qbRoom.room_code).eq('user_id',user.id)}catch(e){}}qbRoom=null;qbSelected.clear();qbLastRenderedIndex=-1;qbShowLiveLayout();document.getElementById('qb-match')?.classList.add('hidden');document.getElementById('qb-lobby')?.classList.remove('hidden');document.getElementById('qb-global-status').textContent='NO QUIZ';document.getElementById('qb-private-invite')?.classList.add('hidden');if(!silent)await qbLoadRooms()}
+function qbBackToLobby(){qbLeaveMatch()}
+async function qbSyncOnOpen(){if(qbRoom)await qbReloadRoomAndSync()}
+document.getElementById('qb-host-form')?.addEventListener('submit',e=>{e.preventDefault();qbHostMatch()});
+
+/* ==================== NEET 720 LIVE QUIZ ==================== */
+let n720Room=null,n720Channel=null,n720Timer=null,n720Poll=null,n720Heartbeat=null,n720LobbyPoll=null;
+let n720Selected=new Set(),n720Subject='Biology',n720Type='MCQ',n720Count=15,n720LastIndex=-1;
+const N720_SECONDS=30,N720_XP=50;
+function n720Esc(v){return esc(String(v??''));}
+function n720PickSubject(v,btn){n720Subject=v;document.querySelectorAll('.n720-subject-btn').forEach(b=>{b.classList.remove('bg-red-600');b.classList.add('bg-slate-800')});btn?.classList.remove('bg-slate-800');btn?.classList.add('bg-red-600');}
+function n720PickType(v,btn){n720Type=v;document.querySelectorAll('.n720-type-btn').forEach(b=>{b.classList.remove('bg-red-600');b.classList.add('bg-slate-800')});btn?.classList.remove('bg-slate-800');btn?.classList.add('bg-red-600');}
+function n720PickCount(v,btn){n720Count=Number(v);document.querySelectorAll('.n720-count-btn').forEach(b=>{b.classList.remove('bg-red-600');b.classList.add('bg-slate-800')});btn?.classList.remove('bg-slate-800');btn?.classList.add('bg-red-600');}
+function n720ShowLobby(){document.getElementById('n720-lobby')?.classList.remove('hidden');document.getElementById('n720-match')?.classList.add('hidden');}
+function n720ShowMatch(){document.getElementById('n720-lobby')?.classList.add('hidden');document.getElementById('n720-match')?.classList.remove('hidden');}
+function n720CurrentIndex(){if(!n720Room?.started_at)return -1;const e=Date.now()-new Date(n720Room.started_at).getTime();return e<0?-1:Math.floor(e/(N720_SECONDS*1000));}
+function n720SecondsLeft(){if(!n720Room?.started_at)return N720_SECONDS;const e=Math.max(0,Date.now()-new Date(n720Room.started_at).getTime());return N720_SECONDS-Math.floor((e%(N720_SECONDS*1000))/1000);}
+async function n720LoadRooms(silent=false){
+ const box=document.getElementById('n720-room-list');if(!box||!user)return;if(!silent)box.innerHTML='<div class="text-xs text-slate-500 text-center py-6">Loading...</div>';
+ try{const {data,error}=await db.from('quiz_battle_rooms').select('room_code,topic,host_name,status,created_at,question_count,mode').in('status',['waiting','live']).eq('mode','neet720').order('created_at',{ascending:false}).limit(30);if(error)throw error;
+  if(!data?.length){box.innerHTML='<div class="text-xs text-slate-500 text-center py-8">Abhi koi NEET 720 live quiz nahi hai. Aap pehla start karo ⚡</div>';return;}
+  box.innerHTML=data.map(r=>`<button onclick="n720JoinRoom('${n720Esc(r.room_code)}')" class="qb-room-row w-full rounded-xl p-3 text-left"><div class="flex items-center justify-between gap-2"><b class="text-sm text-white truncate">${n720Esc(r.topic)}</b><span class="text-[9px] font-black ${r.status==='live'?'text-emerald-400':'text-amber-400'}">${r.status==='live'?'● LIVE':'WAITING'}</span></div><div class="text-[10px] text-slate-500 mt-1">${Number(r.question_count||15)} Questions • +50 XP/correct • Host: ${n720Esc(r.host_name||'Student')}</div></button>`).join('');
+ }catch(e){box.innerHTML='<div class="text-xs text-slate-500 text-center py-6">NEET 720 SQL setup required.</div>';console.warn('n720LoadRooms',e)}
 }
-
-async function qbStartMatch(){
-  if(!qbRoom||qbRoom.host_id!==user.id||qbRoom.status!=='waiting')return;
-  const started_at=new Date().toISOString();
-  const {data,error}=await db.from('quiz_battle_rooms').update({status:'live',started_at}).eq('room_code',qbRoom.room_code).eq('host_id',user.id).eq('status','waiting').select('*').single();
-  if(error) return toast(error.message||'Battle start failed',false);
-  qbRoom=data;qbRenderRoom();qbSyncCurrentRoom();
-  try{await qbChannel?.send({type:'broadcast',event:'battle-event',payload:{type:'started'}})}catch(e){}
+function n720StartLobbyPoll(){clearInterval(n720LobbyPoll);n720LobbyPoll=setInterval(()=>{if(user&&!n720Room&&document.getElementById('section-neet720')&&!document.getElementById('section-neet720').classList.contains('hidden'))n720LoadRooms(true)},1500)}
+async function n720HostQuiz(){
+ if(!user||!profile)return toast('Pehle login karein.',false);const btn=document.getElementById('n720-host-btn');btn.disabled=true;btn.innerHTML='⏳ Questions ban rahe hain...';
+ try{const topic=document.getElementById('n720-topic')?.value.trim();const base=topic||`${n720Subject} ${n720Type==='PYQ'?'NEET PYQ':'NEET Level MCQ'}`;const prompt=`NEET 720 ${n720Type}: ${n720Subject}. ${base}. Generate ${n720Count} high-quality NEET-level questions in Hindi. Four options A-D. Return correct_index 0-3. For PYQ mode, use NEET previous-year-question style and clearly identify the exam/year only if known; do not invent year/question claims.`;
+  const res=await db.functions.invoke('daily-bio-event',{body:{count:n720Count,topic:prompt}});if(res.error)throw res.error;const qs=Array.isArray(res.data?.questions)?res.data.questions:[];if(qs.length<n720Count)throw new Error(`AI ne ${qs.length} questions diye. ${n720Count} required.`);
+  const clean=qs.slice(0,n720Count).map(q=>({question:String(q.question||''),options:Array.isArray(q.options)?q.options.slice(0,4):[],correct_index:Number(q.correct_index??q.answer??0)})).filter(q=>q.question&&q.options.length===4&&q.correct_index>=0&&q.correct_index<4);if(clean.length!==n720Count)throw new Error('Question format invalid. Please try again.');
+  const room_code=(typeof qbCode==='function'?qbCode():Math.random().toString(36).slice(2,8).toUpperCase());const payload={room_code,topic:`${n720Subject} • ${n720Type} • ${n720Count} Q`,host_id:user.id,host_name:profile.name||user.email||'Student',questions:clean,question_count:n720Count,status:'waiting',mode:'neet720',max_players:null};
+  const {data,error}=await db.from('quiz_battle_rooms').insert(payload).select('*').single();if(error)throw error;n720Room=data;await n720JoinRoom(room_code,true);toast('NEET 720 quiz created! Students can join from the Live list.');
+ }catch(e){console.error('n720HostQuiz',e);toast(e.message||'NEET 720 create failed',false)}finally{btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Generate & Start NEET 720'}
 }
-
-function qbCurrentIndex(){
-  if(!qbRoom?.started_at)return -1;
-  const elapsed=Date.now()-new Date(qbRoom.started_at).getTime();
-  if(elapsed<0)return -1;
-  return Math.floor(elapsed/(QB_QUESTION_SECONDS*1000));
+async function n720JoinRoom(code,afterCreate=false){
+ if(!user)return toast('Pehle login karein.',false);try{const {data,error}=await db.from('quiz_battle_rooms').select('*').eq('room_code',String(code).toUpperCase()).eq('mode','neet720').maybeSingle();if(error)throw error;if(!data)return toast('NEET 720 quiz nahi mila.',false);if(data.status==='finished')return toast('Ye quiz finish ho chuka hai.',false);
+  if(n720Room&&n720Room.room_code!==data.room_code)await n720LeaveMatch(true);n720Room=data;n720ShowMatch();
+  const {error:pe}=await db.from('quiz_battle_participants').upsert({room_code:data.room_code,user_id:user.id,user_name:profile?.name||user.email||'Student',score:0,xp_earned:0,last_seen:new Date().toISOString()},{onConflict:'room_code,user_id'});if(pe)throw pe;
+  await n720Subscribe(data.room_code);n720RenderRoom();await n720RefreshParticipants();n720SyncCurrentRoom();if(!afterCreate)toast(data.status==='live'?'NEET 720 join ho gaya ⚡':'NEET 720 join ho gaya. Host ke start karne ka wait karein.');
+ }catch(e){console.error('n720JoinRoom',e);toast(e.message||'Join failed. SQL/RLS check karein.',false)}
 }
-function qbSecondsLeft(){
-  if(!qbRoom?.started_at)return 30;
-  const elapsed=Math.max(0,Date.now()-new Date(qbRoom.started_at).getTime());
-  const used=Math.floor((elapsed%(QB_QUESTION_SECONDS*1000))/1000);
-  return QB_QUESTION_SECONDS-used;
-}
-
-function qbSyncCurrentRoom(){
-  if(!qbRoom)return;
-  clearInterval(qbTimer);
-  qbTimer=setInterval(qbTick,200);
-  qbTick();
-  clearInterval(qbPoll);
-  qbPoll=setInterval(qbRefreshParticipants,1500);
-  clearInterval(qbHeartbeat);
-  qbHeartbeat=setInterval(qbHeartbeatFn,5000);
-}
-
-async function qbHeartbeatFn(){
-  if(!qbRoom||!user)return;
-  try{await db.from('quiz_battle_participants').update({last_seen:new Date().toISOString()}).eq('room_code',qbRoom.room_code).eq('user_id',user.id)}catch(e){}
-}
-
-async function qbTick(){
-  if(!qbRoom)return;
-  if(qbRoom.status==='waiting'){
-    const {data}=await db.from('quiz_battle_participants').select('user_id').eq('room_code',qbRoom.room_code);
-    const c=data?.length||0; const el=document.getElementById('qb-waiting-count');if(el)el.textContent=c;
-    return;
-  }
-  if(qbRoom.status==='finished')return;
-  const idx=qbCurrentIndex();
-  if(idx>=QB_QUESTION_COUNT){
-    if(qbRoom.host_id===user.id)await qbFinishRoom();
-    else {qbRoom.status='finished';qbRenderRoom();}
-    return;
-  }
-  const sec=qbSecondsLeft();
-  const timer=document.getElementById('qb-timer'); if(timer)timer.textContent=`${sec}s`;
-  const bar=document.getElementById('qb-timer-bar');if(bar)bar.style.width=`${(sec/30)*100}%`;
-  if(idx!==qbLastRenderedIndex){qbLastRenderedIndex=idx;qbRenderQuestion(idx);}
-}
-
-function qbRenderQuestion(idx){
-  const qs=Array.isArray(qbRoom?.questions)?qbRoom.questions:[];
-  const q=qs[idx];if(!q)return;
-  document.getElementById('qb-question-num').textContent=`Question ${idx+1} / 15`;
-  document.getElementById('qb-question-text').textContent=q.question;
-  document.getElementById('qb-answer-note').textContent=qbSelected.has(idx)?'Answer submitted. Next question auto-sync hoga.':'';
-  const box=document.getElementById('qb-options');box.innerHTML='';
-  (q.options||[]).forEach((opt,j)=>{
-    const b=document.createElement('button');b.className='qb-option w-full text-left p-3.5 rounded-xl text-sm font-semibold flex items-center gap-3';
-    b.innerHTML=`<span class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-red-400 font-black">${String.fromCharCode(65+j)}</span><span>${qbEsc(opt)}</span>`;
-    b.disabled=qbSelected.has(idx);
-    b.onclick=()=>qbAnswer(idx,j,b);
-    box.appendChild(b);
-  });
-}
-
-async function qbAnswer(idx,selected,clicked){
-  if(!qbRoom||qbRoom.status!=='live'||qbSelected.has(idx))return;
-  if(qbCurrentIndex()!==idx)return toast('Time over — next question live ho chuka hai.',false);
-  qbSelected.add(idx);
-  const q=qbRoom.questions[idx], correct=Number(q.correct_index??q.answer??0);
-  const isCorrect=selected===correct;
-  document.querySelectorAll('#qb-options button').forEach(b=>b.disabled=true);
-  if(isCorrect)clicked.classList.add('qb-correct'); else clicked.classList.add('qb-wrong');
-  const buttons=document.querySelectorAll('#qb-options button'); if(buttons[correct])buttons[correct].classList.add('qb-correct');
-  const xp=isCorrect?10:0;
-  if(isCorrect)toast('+10 XP 🎉');
-  try{
-    const {error}=await db.from('quiz_battle_answers').insert({
-      room_code:qbRoom.room_code,user_id:user.id,question_index:idx,
-      selected_index:selected,is_correct:isCorrect,xp_awarded:xp
-    });
-    if(error && error.code!=='23505')throw error;
-    if(isCorrect){
-      const {data:p}=await db.from('quiz_battle_participants').select('score,xp_earned').eq('room_code',qbRoom.room_code).eq('user_id',user.id).maybeSingle();
-      const score=Number(p?.score||0)+1, earned=Number(p?.xp_earned||0)+10;
-      await db.from('quiz_battle_participants').update({score,xp_earned:earned,last_seen:new Date().toISOString()}).eq('room_code',qbRoom.room_code).eq('user_id',user.id);
-      await grantXP(10);
-    }
-    await qbRefreshParticipants();
-    try{await qbChannel?.send({type:'broadcast',event:'battle-event',payload:{type:'refresh'}})}catch(e){}
-  }catch(e){console.warn('qbAnswer',e);}
-}
-
-async function qbRefreshParticipants(){
-  if(!qbRoom)return;
-  try{
-    const {data,error}=await db.from('quiz_battle_participants').select('user_id,user_name,score,xp_earned,last_seen')
-      .eq('room_code',qbRoom.room_code).order('score',{ascending:false}).order('xp_earned',{ascending:false});
-    if(error)throw error;
-    const now=Date.now();
-    const online=(data||[]).filter(p=>now-new Date(p.last_seen||0).getTime()<12000);
-    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
-    set('qb-waiting-count',online.length||data?.length||0);set('qb-live-count',`${online.length||0} online`);
-    const html=(data||[]).map((p,i)=>`<div class="qb-card ${p.user_id===user.id?'qb-rank-me':''} border rounded-xl p-2.5 flex items-center gap-2">
-      <span class="w-6 text-center font-black text-xs">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</span>
-      <div class="min-w-0 flex-1"><b class="block truncate text-xs">${qbEsc(p.user_name||'Student')}${p.user_id===user.id?' (You)':''}</b><span class="text-[9px] text-slate-500">${Number(p.score||0)} correct • +${Number(p.xp_earned||0)} XP</span></div>
-      <span class="w-2 h-2 rounded-full ${now-new Date(p.last_seen||0).getTime()<12000?'bg-emerald-400':'bg-slate-700'}"></span>
-    </div>`).join('')||'<div class="text-xs text-slate-500 text-center py-5">Waiting for players...</div>';
-    const lb=document.getElementById('qb-leaderboard');if(lb)lb.innerHTML=html;
-    const fl=document.getElementById('qb-final-leaderboard');if(fl)fl.innerHTML=html;
-  }catch(e){console.warn('qbRefreshParticipants',e);}
-}
-
-async function qbFinishRoom(){
-  if(!qbRoom)return;
-  const {data,error}=await db.from('quiz_battle_rooms').update({status:'finished',finished_at:new Date().toISOString()})
-    .eq('room_code',qbRoom.room_code).eq('host_id',user.id).eq('status','live').select('*').single();
-  if(!error&&data){
-    qbRoom=data;
-    qbRenderRoom();
-    await qbRefreshParticipants();
-    await qbLoadMyFinalStats();
-    try{await qbChannel?.send({type:'broadcast',event:'battle-event',payload:{type:'finished'}})}catch(e){}
-  }
-}
-
-async function qbLeaveMatch(silent=false){
-  clearInterval(qbTimer);clearInterval(qbPoll);clearInterval(qbHeartbeat);
-  if(qbChannel){try{await db.removeChannel(qbChannel)}catch(e){}qbChannel=null;}
-  if(qbRoom&&user){
-    try{await db.from('quiz_battle_participants').delete().eq('room_code',qbRoom.room_code).eq('user_id',user.id)}catch(e){}
-  }
-  qbRoom=null;qbSelected.clear();qbLastRenderedIndex=-1;
-   qbShowLiveLayout();
-  document.getElementById('qb-match')?.classList.add('hidden');
-  document.getElementById('qb-lobby')?.classList.remove('hidden');
-  document.getElementById('qb-global-status').textContent='NO MATCH';
-  if(!silent)await qbLoadRooms();
-}
-
-function qbBackToLobby(){qbLeaveMatch();}
-
-async function qbSyncOnOpen(){
-  if(qbRoom)await qbReloadRoomAndSync();
-}
-
-
-
-document.getElementById('qb-host-form')?.addEventListener('submit',e=>{e.preventDefault();qbHostMatch();});
+async function n720Subscribe(code){if(n720Channel)try{await db.removeChannel(n720Channel)}catch(e){}n720Channel=db.channel(`neet720-${code}`,{config:{broadcast:{self:true},presence:{key:user.id}}});n720Channel.on('broadcast',{event:'n720-event'},p=>{const ev=p.payload||{};if(ev.type==='refresh')n720RefreshParticipants();if(ev.type==='started'||ev.type==='finished')n720ReloadRoomAndSync()});n720Channel.on('presence',{event:'sync'},n720RefreshPresence);n720Channel.on('presence',{event:'join'},n720RefreshPresence);n720Channel.on('presence',{event:'leave'},n720RefreshPresence);await n720Channel.subscribe(async st=>{if(st==='SUBSCRIBED'){try{await n720Channel.track({user_id:user.id,name:profile?.name||user.email||'Student'})}catch(e){}}});}
+function n720RefreshPresence(){if(!n720Channel)return;try{const count=Object.keys(n720Channel.presenceState()||{}).length;const el=document.getElementById('n720-live-count');if(el)el.textContent=`${count} online`}catch(e){}}
+async function n720ReloadRoomAndSync(){if(!n720Room)return;const {data}=await db.from('quiz_battle_rooms').select('*').eq('room_code',n720Room.room_code).maybeSingle();if(data){n720Room=data;n720RenderRoom();n720SyncCurrentRoom();if(data.status==='finished'){await n720RefreshParticipants();await n720LoadFinalStats()}}}
+function n720RenderRoom(){if(!n720Room)return;n720ShowMatch();const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};set('n720-match-topic',n720Room.topic||'NEET 720');set('n720-match-host',n720Room.host_name||'Student');set('n720-match-meta',`${Number(n720Room.question_count||15)} Q • +50 XP/correct`);const host=n720Room.host_id===user.id;document.getElementById('n720-start-btn')?.classList.toggle('hidden',!host||n720Room.status!=='waiting');document.getElementById('n720-waiting-panel')?.classList.toggle('hidden',n720Room.status!=='waiting');document.getElementById('n720-question-panel')?.classList.toggle('hidden',n720Room.status!=='live');document.getElementById('n720-finished-panel')?.classList.toggle('hidden',n720Room.status!=='finished');set('n720-match-status',n720Room.status==='live'?'LIVE':n720Room.status==='finished'?'FINISHED':'WAITING');const badge=document.getElementById('n720-global-status');if(badge){badge.textContent=n720Room.status==='live'?'● LIVE':n720Room.status==='finished'?'FINISHED':'IN QUIZ';}}
+async function n720StartMatch(){if(!n720Room||n720Room.host_id!==user.id||n720Room.status!=='waiting')return;const started_at=new Date().toISOString();const {data,error}=await db.from('quiz_battle_rooms').update({status:'live',started_at}).eq('room_code',n720Room.room_code).eq('host_id',user.id).eq('status','waiting').select('*').single();if(error)return toast(error.message||'Quiz start failed',false);n720Room=data;n720RenderRoom();n720SyncCurrentRoom();try{await n720Channel?.send({type:'broadcast',event:'n720-event',payload:{type:'started'}})}catch(e){}}
+function n720SyncCurrentRoom(){if(!n720Room)return;clearInterval(n720Timer);n720Timer=setInterval(n720Tick,200);n720Tick();clearInterval(n720Poll);n720Poll=setInterval(n720RefreshParticipants,1500);clearInterval(n720Heartbeat);n720Heartbeat=setInterval(n720HeartbeatFn,5000)}
+async function n720HeartbeatFn(){if(!n720Room||!user)return;try{await db.from('quiz_battle_participants').update({last_seen:new Date().toISOString()}).eq('room_code',n720Room.room_code).eq('user_id',user.id)}catch(e){}}
+async function n720Tick(){if(!n720Room)return;if(n720Room.status==='waiting'){const {data}=await db.from('quiz_battle_participants').select('user_id').eq('room_code',n720Room.room_code);const e=document.getElementById('n720-waiting-count');if(e)e.textContent=data?.length||0;return}if(n720Room.status==='finished')return;const idx=n720CurrentIndex();const total=Number(n720Room.question_count||n720Count||15);if(idx>=total){if(n720Room.host_id===user.id)await n720FinishRoom();else{n720Room.status='finished';n720RenderRoom();await n720LoadFinalStats()}return}const sec=n720SecondsLeft();const t=document.getElementById('n720-timer');if(t)t.textContent=`${sec}s`;const bar=document.getElementById('n720-timer-bar');if(bar)bar.style.width=`${(sec/N720_SECONDS)*100}%`;if(idx!==n720LastIndex){n720LastIndex=idx;n720RenderQuestion(idx)}}
+function n720RenderQuestion(idx){const qs=Array.isArray(n720Room?.questions)?n720Room.questions:[],q=qs[idx];if(!q)return;const total=Number(n720Room.question_count||qs.length);document.getElementById('n720-question-num').textContent=`Question ${idx+1} / ${total}`;document.getElementById('n720-question-text').textContent=q.question;document.getElementById('n720-answer-note').textContent=n720Selected.has(idx)?'Answer submitted. Next question auto-sync hoga.':'';const box=document.getElementById('n720-options');box.innerHTML='';(q.options||[]).forEach((opt,j)=>{const b=document.createElement('button');b.className='qb-option w-full text-left p-3.5 rounded-xl text-sm font-semibold flex items-center gap-3';b.innerHTML=`<span class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-emerald-400 font-black">${String.fromCharCode(65+j)}</span><span>${n720Esc(opt)}</span>`;b.disabled=n720Selected.has(idx);b.onclick=()=>n720Answer(idx,j,b);box.appendChild(b)})}
+async function n720Answer(idx,selected,clicked){if(!n720Room||n720Room.status!=='live'||n720Selected.has(idx))return;if(n720CurrentIndex()!==idx)return toast('Time over — next question live ho chuka hai.',false);n720Selected.add(idx);const q=n720Room.questions[idx],correct=Number(q.correct_index??q.answer??0),isCorrect=selected===correct;document.querySelectorAll('#n720-options button').forEach(b=>b.disabled=true);if(isCorrect)clicked.classList.add('qb-correct');else clicked.classList.add('qb-wrong');const buttons=document.querySelectorAll('#n720-options button');if(buttons[correct])buttons[correct].classList.add('qb-correct');const xp=isCorrect?N720_XP:0;try{const {error}=await db.from('quiz_battle_answers').insert({room_code:n720Room.room_code,user_id:user.id,question_index:idx,selected_index:selected,is_correct:isCorrect,xp_awarded:xp});if(error&&error.code!=='23505')throw error;if(isCorrect){const {data:p}=await db.from('quiz_battle_participants').select('score,xp_earned').eq('room_code',n720Room.room_code).eq('user_id',user.id).maybeSingle();const score=Number(p?.score||0)+1,earned=Number(p?.xp_earned||0)+N720_XP;await db.from('quiz_battle_participants').update({score,xp_earned:earned,last_seen:new Date().toISOString()}).eq('room_code',n720Room.room_code).eq('user_id',user.id);await grantXP(N720_XP);toast(`+${N720_XP} XP 🎉`)}await n720RefreshParticipants();try{await n720Channel?.send({type:'broadcast',event:'n720-event',payload:{type:'refresh'}})}catch(e){}}catch(e){console.warn('n720Answer',e)}}
+async function n720RefreshParticipants(){if(!n720Room)return;try{const {data,error}=await db.from('quiz_battle_participants').select('user_id,user_name,score,xp_earned,last_seen').eq('room_code',n720Room.room_code).order('score',{ascending:false}).order('xp_earned',{ascending:false});if(error)throw error;const now=Date.now(),rows=data||[];const online=rows.filter(p=>now-new Date(p.last_seen||0).getTime()<12000);const html=rows.map((p,i)=>`<div class="qb-card ${p.user_id===user.id?'qb-rank-me':''} border rounded-xl p-2.5 flex items-center gap-2"><span class="w-6 text-center font-black text-xs">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</span><div class="min-w-0 flex-1"><b class="block truncate text-xs">${n720Esc(p.user_name||'Student')}${p.user_id===user.id?' (You)':''}</b><span class="text-[9px] text-slate-500">${Number(p.score||0)} correct • +${Number(p.xp_earned||0)} XP</span></div><span class="w-2 h-2 rounded-full ${now-new Date(p.last_seen||0).getTime()<12000?'bg-emerald-400':'bg-slate-700'}"></span></div>`).join('')||'<div class="text-xs text-slate-500 text-center py-5">Waiting for players...</div>';document.getElementById('n720-leaderboard')&&(document.getElementById('n720-leaderboard').innerHTML=html);document.getElementById('n720-final-leaderboard')&&(document.getElementById('n720-final-leaderboard').innerHTML=html);const wc=document.getElementById('n720-waiting-count');if(wc)wc.textContent=rows.length;const lc=document.getElementById('n720-live-count');if(lc)lc.textContent=`${online.length} online`}catch(e){console.warn('n720RefreshParticipants',e)}}
+async function n720FinishRoom(){if(!n720Room)return;const {data,error}=await db.from('quiz_battle_rooms').update({status:'finished',finished_at:new Date().toISOString()}).eq('room_code',n720Room.room_code).eq('host_id',user.id).eq('status','live').select('*').single();if(!error&&data){n720Room=data;n720RenderRoom();await n720RefreshParticipants();await n720LoadFinalStats();try{await n720Channel?.send({type:'broadcast',event:'n720-event',payload:{type:'finished'}})}catch(e){}}}
+async function n720LoadFinalStats(){if(!n720Room||!user)return;try{const {data,error}=await db.from('quiz_battle_answers').select('question_index,is_correct').eq('room_code',n720Room.room_code).eq('user_id',user.id);if(error)throw error;const unique=new Map();(data||[]).forEach(a=>unique.set(Number(a.question_index),!!a.is_correct));const correct=[...unique.values()].filter(Boolean).length,answered=unique.size,total=Number(n720Room.question_count||15),wrong=Math.max(0,answered-correct),skipped=Math.max(0,total-answered),set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=String(v)};set('n720-final-correct',correct);set('n720-final-wrong',wrong);set('n720-final-skipped',skipped);set('n720-final-summary',`Score ${correct}/${total} • ${Math.round(correct/total*100)}% accuracy • +${correct*N720_XP} XP`);const rows=document.querySelectorAll('#n720-final-leaderboard .qb-card'),rank=[...rows].findIndex(el=>el.classList.contains('qb-rank-me'));if(rank>=0)set('n720-final-rank',`Rank #${rank+1}`)}catch(e){console.warn('n720LoadFinalStats',e)}document.getElementById('n720-finished-panel')?.classList.remove('hidden')}
+async function n720LeaveMatch(silent=false){clearInterval(n720Timer);clearInterval(n720Poll);clearInterval(n720Heartbeat);if(n720Channel){try{await db.removeChannel(n720Channel)}catch(e){}n720Channel=null}if(n720Room&&user&&n720Room.status!=='finished'){try{await db.from('quiz_battle_participants').delete().eq('room_code',n720Room.room_code).eq('user_id',user.id)}catch(e){}}n720Room=null;n720Selected.clear();n720LastIndex=-1;n720ShowLobby();document.getElementById('n720-global-status')&&(document.getElementById('n720-global-status').textContent='NO QUIZ');if(!silent)await n720LoadRooms()}
+function n720BackToLobby(){n720LeaveMatch()}
+document.getElementById('n720-host-form')?.addEventListener('submit',e=>{e.preventDefault();n720HostQuiz()});
 
 /* ============================================================
    TELEGRAM-STYLE LIVE MULTIPLAYER QUIZ BATTLE (ADMIN SCHEDULED & SYNCED)
@@ -2180,8 +1972,9 @@ function dailyBattleDayRange(){
   const d = new Date();
   const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const end = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1);
-  return {start:start.toISOString(), end:end.toISOString()};
+  return {start:start.toISOString(), end:end.toISOString(), localDate:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 }
+function dailyBattleKey(){return activeScheduledBattle?.id?String(activeScheduledBattle.id):String(activeScheduledBattle?.scheduled_at||'').replace(/[:.]/g,'-');}
 
 async function loadScheduledBattle() {
   try {
@@ -2466,15 +2259,20 @@ async function loadBattleLeaderboard() {
     // This leaderboard is intentionally restricted to today's Daily 9 PM
     // battle results, so it never mixes with Community Live Quiz scores.
     const {start, end} = dailyBattleDayRange();
-
-    const { data, error } = await db
-      .from("quiz_battle_scores")
-      .select("user_name, score, xp_earned, created_at")
-      .gte("created_at", start)
-      .lt("created_at", end)
+    const key = dailyBattleKey();
+    let query = db.from("quiz_battle_scores")
+      .select("user_id, user_name, score, xp_earned, created_at, battle_key")
       .order("score", { ascending: false })
       .order("xp_earned", { ascending: false })
       .limit(50);
+    // New rows use battle_key so each scheduled 9 PM battle is isolated.
+    // Fallback to today's local date keeps old score rows visible after migration.
+    const { data: keyed, error: keyedError } = key ? await query.eq("battle_key", key) : {data:null,error:null};
+    let data=keyed, error=keyedError;
+    if((error || !data || data.length===0) && !keyedError){
+      const fallback=await db.from("quiz_battle_scores").select("user_id, user_name, score, xp_earned, created_at, battle_key").gte("created_at",start).lt("created_at",end).order("score",{ascending:false}).order("xp_earned",{ascending:false}).limit(50);
+      data=fallback.data; error=fallback.error;
+    }
 
     if (error || !data || data.length === 0) {
       list.innerHTML = `<div class="text-slate-500 text-xs">Aaj ke Daily 9 PM Battle ka leaderboard abhi empty hai.</div>`;
