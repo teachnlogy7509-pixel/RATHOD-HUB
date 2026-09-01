@@ -937,13 +937,13 @@ const db=createClient(SUPABASE_URL,SUPABASE_KEY);
    IMPORTANT: B2 secrets NEVER belong in this HTML. This URL points to a Supabase
    Edge Function that keeps the B2 credentials server-side.
 */
-const B2_FUNCTION_URL='https://fezyljxjbgefaqroxorl.supabase.co/functions/v1/b2-storage';
+const B2_FUNCTION_URL='https://fezyljxjbgefaqroxorl.supabase.co/functions/v1/rathod-hub-materials';
 const B2_ENABLED=true;
 const B2_CACHE_SECONDS=31536000;
+const B2_MAX_UPLOAD_BYTES=500*1024*1024;
 
 async function b2Request(action,payload={}){
-  if(!B2_ENABLED || !B2_FUNCTION_URL || B2_FUNCTION_URL.includes('YOUR_'))
-    throw new Error('B2 storage bridge is not configured yet.');
+  if(!B2_ENABLED || !B2_FUNCTION_URL) throw new Error('B2 storage bridge is not configured.');
   const {data:{session:s}}=await db.auth.getSession();
   if(!s?.access_token) throw new Error('Please login first.');
   const res=await fetch(B2_FUNCTION_URL,{
@@ -955,15 +955,38 @@ async function b2Request(action,payload={}){
   if(!res.ok || out?.error) throw new Error(out?.error||`B2 request failed (${res.status})`);
   return out;
 }
+
+/* Direct browser -> B2 upload using a short-lived presigned URL.
+   The B2 secret key NEVER enters this HTML or GitHub. */
 async function uploadToB2(path,file){
-  const result=await b2Request('upload',{path,contentType:file.type||'application/octet-stream',cacheControl:`public,max-age=${B2_CACHE_SECONDS},immutable`,file});
-  return result;
+  if(!file) throw new Error('File missing.');
+  if(file.size>B2_MAX_UPLOAD_BYTES) throw new Error('File is too large. Maximum 500 MB.');
+  const contentType=file.type||'application/octet-stream';
+  const result=await b2Request('upload-url',{fileName:path,contentType});
+  if(!result?.uploadUrl) throw new Error('B2 upload URL was not returned.');
+
+  const put=await fetch(result.uploadUrl,{
+    method:'PUT',
+    headers:{
+      'Content-Type':contentType,
+      'Cache-Control':`public, max-age=${B2_CACHE_SECONDS}, immutable`
+    },
+    body:file
+  });
+  if(!put.ok){
+    let msg='B2 upload failed';
+    try{msg=await put.text()||msg}catch(_){ }
+    throw new Error(msg);
+  }
+  return {success:true,path:result.path||path};
 }
+
 async function getB2Url(path,opts={}){
-  const result=await b2Request('signed-url',{path,expiresIn:opts.expiresIn||3600,download:!!opts.download});
-  return result.url;
+  const result=await b2Request('download-url',{fileName:path});
+  return result.downloadUrl||result.url;
 }
-async function deleteFromB2(path){return b2Request('delete',{path})}
+
+async function deleteFromB2(path){return b2Request('delete',{fileName:path})}
 
 
 let session=null,user=null,profile=null,materials=[],posts=[],chatMessages=[],diaryEntries=[];
