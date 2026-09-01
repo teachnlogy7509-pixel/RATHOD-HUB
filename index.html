@@ -947,8 +947,9 @@ async function b2Request(action,payload={}){
   const {data:{session:s}}=await db.auth.getSession();
   if(!s?.access_token) throw new Error('Please login first.');
   const res=await fetch(B2_FUNCTION_URL,{
+    mode:'cors',
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':`Bearer ${s.access_token}`},
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${s.access_token}`,'apikey':SUPABASE_KEY},
     body:JSON.stringify({action,...payload})
   });
   let out=null; try{out=await res.json()}catch(_){out=null}
