@@ -965,7 +965,7 @@ async function googleDriveRequest(body){
 
 async function uploadToGoogleDrive(folderName,file){
   if(!file) throw new Error('File missing.');
-  if(file.size>50*1024*1024) throw new Error('File is too large. Maximum 50 MB allowed.');
+  if(file.size>10*1024*1024) throw new Error('File is too large. Maximum 10 MB allowed for Google Drive upload.');
   const fileData=await blobToBase64(file);
   const result=await googleDriveRequest({
     action:'upload',
