@@ -1,3 +1,399 @@
+Pasted text(1).txt
+Document
+cheak my html file kya issue hai wo fix kare
+
+ye kyu aa rha mere kyuki mere supabase secrate me itne sare api hai and quiz hone ke baad 3sre ss me hai wo ht jaaye
+
+Pasted code.ts
+TypeScript
+isme google drive wala bhi laga hai to uski limit 10 se 200 kar do and index.ts konsa du ye lo ggole drive ka and ye lo ai chat function ka import { serve } from "https://deno.land/std/http/server.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+};
+
+const jsonHeaders = {
+  ...corsHeaders,
+  "Content-Type": "application/json",
+};
+
+function getAnswerLanguage(text: string): "hindi" | "english" | "hinglish" {
+  const devanagariCount = (text.match(/[\u0900-\u097F]/g) || []).length;
+  const latinCount = (text.match(/[A-Za-z]/g) || []).length;
+  if (devanagariCount > 0 && (latinCount === 0 || devanagariCount >= latinCount)) return "hindi";
+  const hasRomanHindi = /\b(kya|kyu|kyon|kaise|kaisa|kaisi|hai|hain|hota|hoti|hote|wala|wali|wale|mujhe|aap|apko|mera|meri|mere|ye|yah|woh|vo|iska|uska|samjhao|batao|bataiye|kyun|nahi|nahin|aur|se|ko|me|mein|ka|ki|ke)\b/i.test(text);
+  if (devanagariCount > 0 || hasRomanHindi) return "hinglish";
+  return "english";
+}
+
+function getKeys(prefix: string, count: number, fallbackName?: string): string[] {
+  const keys: string[] = [];
+  for (let i = 1; i <= count; i++) {
+    const k = Deno.env.get(${prefix}_${i});
+    if (k && k.trim()) keys.push(k.trim());
+  }
+  if (fallbackName) {
+    const defaultKey = Deno.env.get(fallbackName);
+    if (defaultKey && !keys.includes(defaultKey.trim())) keys.unshift(defaultKey.trim());
+  }
+  return keys;
+}
+
+/* 1. GROQ ROTATOR */
+async function tryGroq(prompt: string): Promise<string | null> {
+  const keys = getKeys("GROQ_API_KEY", 4, "GROQ_API_KEY");
+  const models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "llama3-70b-8192", "llama3-8b-8192"];
+
+  for (const key of keys) {
+    for (const model of models) {
+      try {
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: Bearer ${key},
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: "system", content: "You are an expert NEET AI Tutor. Explain strictly according to NCERT concepts clearly and concisely." },
+              { role: "user", content: prompt },
+            ],
+            temperature: 0.4,
+          }),
+        });
+
+        const data = await res.json();
+        if (res.ok && data?.choices?.[0]?.message?.content) {
+          return data.choices[0].message.content.trim();
+        }
+      } catch (_) {}
+    }
+  }
+  return null;
+}
+
+/* 2. OPENROUTER ROTATOR */
+async function tryOpenRouter(prompt: string): Promise<string | null> {
+  const keys = getKeys("OPENROUTER_API_KEY", 2, "OPENROUTER_API_KEY");
+  const models = [
+    "deepseek/deepseek-r1:free",
+    "deepseek/deepseek-chat:free",
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "qwen/qwen-2.5-72b-instruct:free",
+    "mistralai/mistral-7b-instruct:free"
+  ];
+
+  for (const key of keys) {
+    for (const model of models) {
+      try {
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: Bearer ${key},
+            "HTTP-Referer": "https://rathodhub.app",
+            "X-Title": "Rathod Hub NEET",
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: "system", content: "You are an expert NEET AI Tutor. Explain strictly according to NCERT concepts." },
+              { role: "user", content: prompt }
+            ],
+            temperature: 0.4,
+          }),
+        });
+
+        const data = await res.json();
+        if (res.ok && data?.choices?.[0]?.message?.content) {
+          return data.choices[0].message.content.trim();
+        }
+      } catch (_) {}
+    }
+  }
+  return null;
+}
+
+/* 3. GEMINI ROTATOR */
+async function tryGemini(prompt: string): Promise<string | null> {
+  const keys = getKeys("GEMINI_API_KEY", 6, "GEMINI_API_KEY");
+  const models = ["gemini-3.6-flash", "gemini-2.5-flash", "gemini-1.5-flash-latest"];
+
+  for (const key of keys) {
+    for (const model of models) {
+      try {
+        const res = await fetch(
+          https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)},
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+          }
+        );
+
+        const data = await res.json();
+        if (res.ok && data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+          return data.candidates[0].content.parts[0].text.trim();
+        }
+      } catch (_) {}
+    }
+  }
+  return null;
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders, status: 200 });
+  }
+
+  try {
+    const body = await req.json().catch(() => ({}));
+    const question = typeof body?.question === "string" ? body.question.trim() : "";
+
+    if (!question) {
+      return new Response(JSON.stringify({ success: false, answer: "Kripya apna doubt likhein." }), {
+        status: 200,
+        headers: jsonHeaders,
+      });
+    }
+
+    const lang = getAnswerLanguage(question);
+    const langInstruction =
+      lang === "hindi"
+        ? "Reply in pure Hindi using Devanagari script."
+        : lang === "english"
+        ? "Reply in English."
+        : "Reply in natural Hinglish.";
+
+    const prompt = You are RATHOD HUB NEET AI Tutor.
+${langInstruction}
+Rules:
+- Explain strictly according to NCERT concepts for NEET.
+- Keep the answer concise, accurate, and structured with bullet points.
+
+Question: ${question};
+
+    let answer = null;
+    let provider = "";
+
+    // 1. Try Groq
+    answer = await tryGroq(prompt);
+    if (answer) provider = "Groq High-Speed";
+
+    // 2. Try OpenRouter
+    if (!answer) {
+      answer = await tryOpenRouter(prompt);
+      if (answer) provider = "OpenRouter Multi-Key";
+    }
+
+    // 3. Try Gemini
+    if (!answer) {
+      answer = await tryGemini(prompt);
+      if (answer) provider = "Gemini Multi-Key";
+    }
+
+    if (!answer) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          answer: "Sabhi AI services busy hain. Kripya 5 seconds baad try karein.",
+        }),
+        { status: 200, headers: jsonHeaders }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({ success: true, answer, provider }),
+      { status: 200, headers: jsonHeaders }
+    );
+  } catch (err: any) {
+    return new Response(
+      JSON.stringify({ success: false, answer: Request Error: ${err.message} }),
+      { status: 200, headers: jsonHeaders }
+    );
+  }
+});
+
+plzz 100% sahi btana
+
+हाँ 👍 अब बिल्कुल clear है। यह AI Chat का log है, Daily Bio का नहीं। और इस log से problem काफी साफ पता चल रही है।
+तुम्हारे AI Chat में 3 अलग problems हैं
+
+1. Groq — 404
+
+The model `llama-3.3-70b-versatile` does not exist
+
+तुम्हारे AI Chat code में पुराना Groq model लगा हुआ है। इसे बदलना पड़ेगा।
+
+2. OpenRouter — 400
+
+'models' array must have 3 items or fewer
+
+यह बहुत important है। तुम्हारे OpenRouter request में एक साथ 3 से ज्यादा models भेजे जा रहे हैं। OpenRouter उस request को reject कर रहा है।
+
+मतलब यह API-key की problem नहीं है—request format/model fallback की problem है।
+
+3. Gemini — 404
+
+gemini-2.5-flash is no longer available to new users
+
+तुम्हारे AI Chat में gemini-2.5-flash fallback लगा हुआ है, लेकिन तुम्हारे Gemini setup में वह model available नहीं है। इसलिए इसे fallback list से हटाना चाहिए।
+इसलिए पूरा flow ऐसा हो रहा है
+
+AI Doubt
+   ↓
+Groq ❌ 404
+   ↓
+OpenRouter ❌ 400
+   ↓
+Gemini ❌ 404
+   ↓
+AI Chat → जवाब नहीं
+
+अच्छी बात: तुम्हारी API keys जरूरी नहीं कि खराब हों। Log मुख्यतः पुराने models + गलत OpenRouter fallback configuration दिखा रहा है।
+
+अगर तुम चाहो तो मैं
+तुम्हारे AI Chat वाले index.ts को ही ठीक करके पूरा ready-to-paste code बना दूँगा—तुम्हारे existing:
+
+    multiple Gemini keys
+
+    multiple Groq keys
+
+    multiple OpenRouter keys
+
+    Hindi/English/Hinglish detection
+
+    NEET NCERT prompt
+
+    existing {success, answer, provider} response
+
+इनमें से कुछ भी बेवजह नहीं बदलूँगा।
+
+Fix my AI Chat वाले index.ts and provide the complete ready-to-paste code
+
+हाँ 👍 मैंने तुम्हारे AI Chat वाले index.ts का पूरा fixed version तैयार कर दिया है।
+इसमें ये 3 errors fix किए हैं
+
+    ❌ llama-3.3-70b-versatile → हटाकर current Groq models किए हैं।
+
+    ❌ OpenRouter का models array → अब भेजा ही नहीं जाता, इसलिए models array must have 3 items or fewer वाला error नहीं आएगा। OpenRouter का openrouter/free router खुद available free model चुनता है।
+
+    ❌ gemini-2.5-flash और gemini-1.5-flash-latest → हटाकर current Gemini 3.x Flash models किए हैं।
+
+    ✅ तुम्हारी multiple API keys automatically detect होंगी—_1, _2, _3... जितनी भी configured हैं।
+
+    ✅ एक key fail होने पर अगली key try होगी।
+
+    ✅ 429 quota/rate-limit पर unnecessarily उसी model को बार-बार नहीं मारेगा।
+
+    ✅ Provider timeout भी रखा है।
+
+    ✅ तुम्हारा existing response format { success, answer, provider } रखा है।
+
+Ready-to-paste file:
+
+Supabase में क्या करना है
+
+    इस file का पूरा code copy करो।
+
+    Supabase → Edge Functions → AI Chat function → index.ts खोलो।
+
+    पूरा पुराना code हटाओ।
+
+    इस नए code को पूरा paste करो।
+
+    Deploy करो।
+
+    फिर Rathod Hub में एक AI doubt पूछकर test करो।
+
+एक important बात: मैंने OpenRouter को पहले रखा है क्योंकि openrouter/free वास्तव में free router है; Groq के current production models paid हैं।
+
+अगर deployment के बाद भी log में error आता है, वह नया log/screenshot भेज देना—उससे अगला exact issue पकड़ लेंगे।
+
+neet 720 wohi que repeat kar rha koi bhi topic dalo wohi repeart and quiz live sahi kaam nhi kar rha 
+
+हाँ, मैंने तुम्हारे actual NEET 720 code को देखकर problem पकड़ ली है।
+असली दिक्कत 2 जगह थी
+
+1. Same questions repeat होना
+
+NEET 720 सीधे daily-bio-event को call कर रहा था।
+इसका मतलब जब Daily Bio AI generation fail होकर backup questions देता था, NEET 720 भी वही fixed questions उठा सकता था।
+
+अब मैंने NEET 720 के लिए अलग neet720-ai Edge Function बनाया है:
+
+    Biology/Chemistry/Physics अलग-अलग
+
+    Topic को properly भेजेगा
+
+    हर generation का unique request ID
+
+    पिछली NEET 720 quizzes के questions को exclude करेगा
+
+    एक ही quiz के अंदर duplicate questions भी हटाएगा
+
+    AI को topic से बाहर के questions बनाने से रोकता है
+
+    5/15/25 questions support
+
+2. Live Quiz sync
+
+तुम्हारे पुराने code में start होने का मुख्य भरोसा Realtime broadcast पर था। अगर किसी user का broadcast miss हो जाए तो वह WAITING में अटका रह सकता था।
+
+अब मैंने:
+
+    Realtime broadcast +
+
+    हर 1.5 सेकंड DB room-status sync
+
+    waiting → live → finished automatic detection
+
+    same started_at से सभी users का timer
+
+    reconnect/missed broadcast होने पर भी room state पकड़ने का system
+
+    participant दोबारा join करे तो उसका score reset नहीं होगा
+
+लगाया है।
+ये 2 files चाहिए
+
+पहले Edge Function deploy करना है:
+
+फिर पूरा updated HTML:
+
+बहुत जरूरी — order यही रखना
+
+Step 1: Supabase → Edge Functions → नया function बनाओ:
+
+neet720-ai
+
+Step 2: उसके index.ts में ऊपर वाली neet720-ai-index.ts का पूरा code paste करके Deploy करो।
+
+Step 3: उसके बाद नया:
+
+RATHOD_HUB_NEET720_FIXED.html
+
+use करो।
+
+Step 4: NEET 720 में test करो:
+
+    Biology → Genetics
+
+    फिर Chemistry → Chemical Bonding
+
+    फिर Physics → Current Electricity
+
+इन तीनों में questions अलग आने चाहिए।
+
+और एक important बात: मैंने Daily Bio function को नहीं छेड़ा, क्योंकि NEET 720 को उससे अलग कर दिया है। इससे Daily Bio की existing functionality पर अनावश्यक असर नहीं पड़ेगा।
+
+Current Gemini 3.7/3.6/3.5 models official docs में supported हैं; इसी वजह से नए NEET 720 generator में पुराने Gemini models नहीं रखे हैं।
+
+मैंने updated HTML की JavaScript syntax भी check की है — syntax error नहीं है।
+
 <!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -599,8 +995,8 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
               <button type="button" onclick="n720PickCount(15,this)" class="n720-count-btn bg-slate-800 rounded-xl py-2.5 text-xs font-bold">15 Q</button>
               <button type="button" onclick="n720PickCount(25,this)" class="n720-count-btn bg-slate-800 rounded-xl py-2.5 text-xs font-bold">25 Q</button>
             </div>
-            <input id="n720-topic" maxlength="160" placeholder="Chapter / Topic (optional) — e.g. Genetics" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm">
-            <button id="n720-host-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-black text-sm"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Generate & Start NEET 720</button>
+            <input id="n720-topic" maxlength="160" placeholder="Chapter / Topic — e.g. Genetics" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm">
+            <button id="n720-host-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-black text-sm"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Generate Fresh NEET 720</button>
           </form>
         </div>
 
@@ -2005,8 +2401,8 @@ async function qbSyncOnOpen(){if(qbRoom)await qbReloadRoomAndSync()}
 document.getElementById('qb-host-form')?.addEventListener('submit',e=>{e.preventDefault();qbHostMatch()});
 
 /* ==================== NEET 720 LIVE QUIZ ==================== */
-let n720Room=null,n720Channel=null,n720Timer=null,n720Poll=null,n720Heartbeat=null,n720LobbyPoll=null;
-let n720Selected=new Set(),n720Subject='Biology',n720Type='MCQ',n720Count=5,n720LastIndex=-1;
+let n720Room=null,n720Channel=null,n720Timer=null,n720Poll=null,n720Heartbeat=null,n720LobbyPoll=null,n720RoomStatePoll=null;
+let n720Selected=new Set(),n720Subject='Biology',n720Type='MCQ',n720Count=5,n720LastIndex=-1,n720RoomStateKey='';
 const N720_SECONDS=30,N720_XP=50;
 function n720Esc(v){return esc(String(v??''));}
 function n720PickSubject(v,btn){n720Subject=v;document.querySelectorAll('.n720-subject-btn').forEach(b=>{b.classList.remove('bg-red-600');b.classList.add('bg-slate-800')});btn?.classList.remove('bg-slate-800');btn?.classList.add('bg-red-600');}
@@ -2024,63 +2420,153 @@ function n720ShowLobby(){
 function n720ShowMatch(){document.getElementById('n720-lobby')?.classList.add('hidden');document.getElementById('n720-match')?.classList.remove('hidden');}
 function n720CurrentIndex(){if(!n720Room?.started_at)return -1;const e=Date.now()-new Date(n720Room.started_at).getTime();return e<0?-1:Math.floor(e/(N720_SECONDS*1000));}
 function n720SecondsLeft(){if(!n720Room?.started_at)return N720_SECONDS;const e=Math.max(0,Date.now()-new Date(n720Room.started_at).getTime());return N720_SECONDS-Math.floor((e%(N720_SECONDS*1000))/1000);}
+function n720RoomEndAt(room){
+  if(!room?.started_at)return 0;
+  const start=new Date(room.started_at).getTime();
+  const total=Number(room.question_count||15);
+  return Number.isFinite(start)?start+(total*N720_SECONDS*1000):0;
+}
 async function n720LoadRooms(silent=false){
  const box=document.getElementById('n720-room-list');if(!box||!user)return;if(!silent)box.innerHTML='<div class="text-xs text-slate-500 text-center py-6">Loading...</div>';
  try{
   const {data,error}=await db.from('quiz_battle_rooms').select('room_code,topic,host_name,status,created_at,started_at,question_count,mode').in('status',['waiting','live']).eq('mode','neet720').order('created_at',{ascending:false}).limit(30);
   if(error)throw error;
-
-  // Hide expired LIVE quizzes from the lobby even if the host went offline
-  // and the database row is still marked as "live".
   const now=Date.now();
   const active=(data||[]).filter(r=>{
     if(r.status!=='live')return true;
-    if(!r.started_at)return true;
-    const total=Number(r.question_count||15);
-    const endAt=new Date(r.started_at).getTime()+(total*N720_SECONDS*1000);
-    return !Number.isFinite(endAt)||now<endAt;
+    const endAt=n720RoomEndAt(r);
+    return !endAt||now<endAt;
   });
-
   if(!active.length){box.innerHTML='<div class="text-xs text-slate-500 text-center py-8">Abhi koi NEET 720 live quiz nahi hai. Aap pehla start karo ⚡</div>';return;}
   box.innerHTML=active.map(r=>`<button onclick="n720JoinRoom('${n720Esc(r.room_code)}')" class="qb-room-row w-full rounded-xl p-3 text-left"><div class="flex items-center justify-between gap-2"><b class="text-sm text-white truncate">${n720Esc(r.topic)}</b><span class="text-[9px] font-black ${r.status==='live'?'text-emerald-400':'text-amber-400'}">${r.status==='live'?'● LIVE':'WAITING'}</span></div><div class="text-[10px] text-slate-500 mt-1">${Number(r.question_count||15)} Questions • +50 XP/correct • Host: ${n720Esc(r.host_name||'Student')}</div></button>`).join('');
  }catch(e){box.innerHTML='<div class="text-xs text-slate-500 text-center py-6">NEET 720 SQL setup required.</div>';console.warn('n720LoadRooms',e)}
 }
 function n720StartLobbyPoll(){clearInterval(n720LobbyPoll);n720LobbyPoll=setInterval(()=>{if(user&&!n720Room&&document.visibilityState==='visible'&&document.getElementById('section-neet720')&&!document.getElementById('section-neet720').classList.contains('hidden'))n720LoadRooms(true)},8000)}
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){if(typeof qbStartLobbyPoll==='function')qbStartLobbyPoll();if(typeof n720StartLobbyPoll==='function')n720StartLobbyPoll();}});
-async function n720HostQuiz(){
- if(!user||!profile)return toast('Pehle login karein.',false);const btn=document.getElementById('n720-host-btn');btn.disabled=true;btn.innerHTML='⏳ Questions ban rahe hain...';
- try{const topic=document.getElementById('n720-topic')?.value.trim();const base=topic||`${n720Subject} ${n720Type==='PYQ'?'NEET PYQ':'NEET Level MCQ'}`;const prompt=`NEET 720 ${n720Type}: ${n720Subject}. ${base}. Generate ${n720Count} high-quality NEET-level questions in Hindi. Four options A-D. Return correct_index 0-3. For PYQ mode, use NEET previous-year-question style and clearly identify the exam/year only if known; do not invent year/question claims.`;
-  const res=await db.functions.invoke('daily-bio-event',{body:{count:n720Count,topic:prompt}});if(res.error)throw res.error;const qs=Array.isArray(res.data?.questions)?res.data.questions:[];if(qs.length<n720Count)throw new Error(`AI ne ${qs.length} questions diye. ${n720Count} required.`);
-  const clean=qs.slice(0,n720Count).map(q=>({question:String(q.question||''),options:Array.isArray(q.options)?q.options.slice(0,4):[],correct_index:Number(q.correct_index??q.answer??0)})).filter(q=>q.question&&q.options.length===4&&q.correct_index>=0&&q.correct_index<4);if(clean.length!==n720Count)throw new Error('Question format invalid. Please try again.');
-  const room_code=(typeof qbCode==='function'?qbCode():Math.random().toString(36).slice(2,8).toUpperCase());const payload={room_code,topic:`${n720Subject} • ${n720Type} • ${n720Count} Q`,host_id:user.id,host_name:profile.name||user.email||'Student',questions:clean,question_count:n720Count,status:'waiting',mode:'neet720'};
-  const {data,error}=await db.from('quiz_battle_rooms').insert(payload).select('*').single();if(error)throw error;n720Room=data;await n720JoinRoom(room_code,true);toast('NEET 720 quiz created! Students can join from the Live list.');
- }catch(e){console.error('n720HostQuiz',e);toast(e.message||'NEET 720 create failed',false)}finally{btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Generate & Start NEET 720'}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){if(typeof qbStartLobbyPoll==='function')qbStartLobbyPoll();if(typeof n720StartLobbyPoll==='function')n720StartLobbyPoll();if(n720Room)n720StartRoomStatePoll();}});
+
+async function n720GetRecentQuestions(){
+  try{
+    const {data,error}=await db.from('quiz_battle_rooms').select('questions').eq('mode','neet720').order('created_at',{ascending:false}).limit(12);
+    if(error)throw error;
+    const seen=new Set();const out=[];
+    for(const room of data||[]){
+      for(const q of (Array.isArray(room?.questions)?room.questions:[])){
+        const text=String(q?.question||'').trim();
+        const key=text.toLowerCase().replace(/\s+/g,' ');
+        if(text&&key&&!seen.has(key)){seen.add(key);out.push(text);}
+        if(out.length>=60)return out;
+      }
+    }
+    return out;
+  }catch(e){console.warn('n720GetRecentQuestions',e);return [];}
 }
+
+async function n720HostQuiz(){
+ if(!user||!profile)return toast('Pehle login karein.',false);const btn=document.getElementById('n720-host-btn');btn.disabled=true;btn.innerHTML='⏳ Fresh Questions ban rahe hain...';
+ try{
+  const topic=document.getElementById('n720-topic')?.value.trim()||'';
+  const recent=await n720GetRecentQuestions();
+  const requestId=`${Date.now()}-${Math.random().toString(36).slice(2,10)}`;
+  const res=await db.functions.invoke('neet720-ai',{body:{count:n720Count,subject:n720Subject,type:n720Type,topic,exclude_questions:recent,request_id:requestId}});
+  if(res.error)throw res.error;
+  const qs=Array.isArray(res.data?.questions)?res.data.questions:[];
+  if(!res.data?.success||qs.length<n720Count){
+    const detail=Array.isArray(res.data?.diagnostics)?res.data.diagnostics.slice(-3).join(' | '):'';
+    throw new Error(res.data?.error||`AI ne ${qs.length} fresh questions diye. ${n720Count} required.${detail?' '+detail:''}`);
+  }
+  const clean=[];const seen=new Set();
+  for(const q of qs){
+    const question=String(q?.question||'').trim();
+    const options=Array.isArray(q?.options)?q.options.slice(0,4).map(x=>String(x||'').trim()):[];
+    const correct=Number(q?.correct_index??q?.answer??-1);
+    const key=question.toLowerCase().replace(/\s+/g,' ');
+    if(question&&options.length===4&&options.every(Boolean)&&new Set(options.map(x=>x.toLowerCase())).size===4&&Number.isInteger(correct)&&correct>=0&&correct<4&&!seen.has(key)){seen.add(key);clean.push({question,options,correct_index:correct});}
+  }
+  if(clean.length!==n720Count)throw new Error(`AI ne valid ${clean.length}/${n720Count} fresh questions diye. Please try again.`);
+  const room_code=(typeof qbCode==='function'?qbCode():Math.random().toString(36).slice(2,8).toUpperCase());
+  const payload={room_code,topic:`${n720Subject} • ${n720Type}${topic?' • '+topic:''} • ${n720Count} Q`,host_id:user.id,host_name:profile.name||user.email||'Student',questions:clean,question_count:n720Count,status:'waiting',mode:'neet720'};
+  const {data,error}=await db.from('quiz_battle_rooms').insert(payload).select('*').single();if(error)throw error;n720Room=data;await n720JoinRoom(room_code,true);toast('NEET 720 quiz created! Ab Start Quiz dabao — sab participants same timer par chalenge.');
+ }catch(e){console.error('n720HostQuiz',e);toast(e.message||'NEET 720 create failed',false)}finally{btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Generate Fresh NEET 720'}
+}
+
 async function n720JoinRoom(code,afterCreate=false){
- if(!user)return toast('Pehle login karein.',false);try{const {data,error}=await db.from('quiz_battle_rooms').select('*').eq('room_code',String(code).toUpperCase()).eq('mode','neet720').maybeSingle();if(error)throw error;if(!data)return toast('NEET 720 quiz nahi mila.',false);if(data.status==='finished')return toast('Ye quiz finish ho chuka hai.',false);
-  if(n720Room&&n720Room.room_code!==data.room_code)await n720LeaveMatch(true);n720Room=data;n720ShowMatch();
-  const {error:pe}=await db.from('quiz_battle_participants').upsert({room_code:data.room_code,user_id:user.id,user_name:profile?.name||user.email||'Student',score:0,xp_earned:0,last_seen:new Date().toISOString()},{onConflict:'room_code,user_id'});if(pe)throw pe;
-  await n720Subscribe(data.room_code);n720RenderRoom();await n720RefreshParticipants();n720SyncCurrentRoom();if(!afterCreate)toast(data.status==='live'?'NEET 720 join ho gaya ⚡':'NEET 720 join ho gaya. Host ke start karne ka wait karein.');
+ if(!user)return toast('Pehle login karein.',false);
+ try{
+  const {data,error}=await db.from('quiz_battle_rooms').select('*').eq('room_code',String(code).toUpperCase()).eq('mode','neet720').maybeSingle();
+  if(error)throw error;if(!data)return toast('NEET 720 quiz nahi mila.',false);
+  if(data.status==='finished')return toast('Ye quiz finish ho chuka hai.',false);
+  const oldCode=n720Room?.room_code;
+  if(n720Room&&oldCode!==data.room_code)await n720LeaveMatch(true);
+  n720Room=data;n720RoomStateKey=`${data.status}|${data.started_at||''}|${data.finished_at||''}`;n720ShowMatch();
+
+  const {data:existingParticipant,error:participantReadError}=await db.from('quiz_battle_participants').select('user_id').eq('room_code',data.room_code).eq('user_id',user.id).maybeSingle();
+  if(participantReadError)throw participantReadError;
+  if(!existingParticipant){
+    const {error:pe}=await db.from('quiz_battle_participants').insert({room_code:data.room_code,user_id:user.id,user_name:profile?.name||user.email||'Student',score:0,xp_earned:0,last_seen:new Date().toISOString()});
+    if(pe)throw pe;
+  }else{
+    await db.from('quiz_battle_participants').update({user_name:profile?.name||user.email||'Student',last_seen:new Date().toISOString()}).eq('room_code',data.room_code).eq('user_id',user.id);
+  }
+  await n720Subscribe(data.room_code);n720RenderRoom();await n720RefreshParticipants();n720SyncCurrentRoom();n720StartRoomStatePoll();
+  if(!afterCreate)toast(data.status==='live'?'NEET 720 join ho gaya ⚡':'NEET 720 join ho gaya. Host ke start karne ka wait karein.');
  }catch(e){console.error('n720JoinRoom',e);toast(e.message||'Join failed. SQL/RLS check karein.',false)}
 }
-async function n720Subscribe(code){if(n720Channel)try{await db.removeChannel(n720Channel)}catch(e){}n720Channel=db.channel(`neet720-${code}`,{config:{broadcast:{self:true},presence:{key:user.id}}});n720Channel.on('broadcast',{event:'n720-event'},p=>{const ev=p.payload||{};if(ev.type==='refresh')n720RefreshParticipants();if(ev.type==='started'||ev.type==='finished')n720ReloadRoomAndSync()});n720Channel.on('presence',{event:'sync'},n720RefreshPresence);n720Channel.on('presence',{event:'join'},n720RefreshPresence);n720Channel.on('presence',{event:'leave'},n720RefreshPresence);await n720Channel.subscribe(async st=>{if(st==='SUBSCRIBED'){try{await n720Channel.track({user_id:user.id,name:profile?.name||user.email||'Student'})}catch(e){}}});}
+
+async function n720Subscribe(code){
+ if(n720Channel)try{await db.removeChannel(n720Channel)}catch(e){}
+ n720Channel=db.channel(`neet720-${code}`,{config:{broadcast:{self:true},presence:{key:user.id}}});
+ n720Channel.on('broadcast',{event:'n720-event'},p=>{const ev=p.payload||{};if(ev.type==='refresh')n720RefreshParticipants();if(ev.type==='started'||ev.type==='finished')n720ReloadRoomAndSync()});
+ n720Channel.on('presence',{event:'sync'},n720RefreshPresence);n720Channel.on('presence',{event:'join'},n720RefreshPresence);n720Channel.on('presence',{event:'leave'},n720RefreshPresence);
+ await n720Channel.subscribe(async st=>{if(st==='SUBSCRIBED'){try{await n720Channel.track({user_id:user.id,name:profile?.name||user.email||'Student'})}catch(e){}}});
+}
 function n720RefreshPresence(){if(!n720Channel)return;try{const count=Object.keys(n720Channel.presenceState()||{}).length;const el=document.getElementById('n720-live-count');if(el)el.textContent=`${count} online`}catch(e){}}
-async function n720ReloadRoomAndSync(){if(!n720Room)return;const {data}=await db.from('quiz_battle_rooms').select('*').eq('room_code',n720Room.room_code).maybeSingle();if(data){n720Room=data;n720RenderRoom();n720SyncCurrentRoom();if(data.status==='finished'){await n720RefreshParticipants();await n720LoadFinalStats()}}}
+
+async function n720ReloadRoomAndSync(){
+ if(!n720Room)return;
+ try{
+  const {data,error}=await db.from('quiz_battle_rooms').select('*').eq('room_code',n720Room.room_code).maybeSingle();
+  if(error)throw error;if(!data)return;
+  const nextKey=`${data.status}|${data.started_at||''}|${data.finished_at||''}`;
+  const changed=nextKey!==n720RoomStateKey;
+  n720Room=data;n720RoomStateKey=nextKey;
+  if(changed){
+    n720LastIndex=-1;
+    n720RenderRoom();
+    n720SyncCurrentRoom();
+    if(data.status==='finished'){await n720RefreshParticipants();await n720LoadFinalStats();}
+  }
+ }catch(e){console.warn('n720ReloadRoomAndSync',e)}
+}
+
+function n720StartRoomStatePoll(){
+ clearInterval(n720RoomStatePoll);
+ if(!n720Room)return;
+ n720RoomStatePoll=setInterval(async()=>{
+   if(!n720Room||document.visibilityState!=='visible')return;
+   await n720ReloadRoomAndSync();
+ },1500);
+}
+
 function n720RenderRoom(){if(!n720Room)return;n720ShowMatch();const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};set('n720-match-topic',n720Room.topic||'NEET 720');set('n720-match-host',n720Room.host_name||'Student');set('n720-match-meta',`${Number(n720Room.question_count||15)} Q • +50 XP/correct`);const host=n720Room.host_id===user.id;document.getElementById('n720-start-btn')?.classList.toggle('hidden',!host||n720Room.status!=='waiting');document.getElementById('n720-waiting-panel')?.classList.toggle('hidden',n720Room.status!=='waiting');document.getElementById('n720-question-panel')?.classList.toggle('hidden',n720Room.status!=='live');document.getElementById('n720-finished-panel')?.classList.toggle('hidden',n720Room.status!=='finished');set('n720-match-status',n720Room.status==='live'?'LIVE':n720Room.status==='finished'?'FINISHED':'WAITING');const badge=document.getElementById('n720-global-status');if(badge){badge.textContent=n720Room.status==='live'?'● LIVE':n720Room.status==='finished'?'FINISHED':'IN QUIZ';}}
-async function n720StartMatch(){if(!n720Room||n720Room.host_id!==user.id||n720Room.status!=='waiting')return;const started_at=new Date().toISOString();const {data,error}=await db.from('quiz_battle_rooms').update({status:'live',started_at}).eq('room_code',n720Room.room_code).eq('host_id',user.id).eq('status','waiting').select('*').single();if(error)return toast(error.message||'Quiz start failed',false);n720Room=data;n720RenderRoom();n720SyncCurrentRoom();try{await n720Channel?.send({type:'broadcast',event:'n720-event',payload:{type:'started'}})}catch(e){}}
-function n720SyncCurrentRoom(){if(!n720Room)return;clearInterval(n720Timer);n720Timer=setInterval(n720Tick,200);n720Tick();clearInterval(n720Poll);n720Poll=setInterval(n720RefreshParticipants,1500);clearInterval(n720Heartbeat);n720Heartbeat=setInterval(n720HeartbeatFn,5000)}
+
+async function n720StartMatch(){
+ if(!n720Room||n720Room.host_id!==user.id||n720Room.status!=='waiting')return;
+ const started_at=new Date().toISOString();
+ const {data,error}=await db.from('quiz_battle_rooms').update({status:'live',started_at}).eq('room_code',n720Room.room_code).eq('host_id',user.id).eq('status','waiting').select('*').single();
+ if(error)return toast(error.message||'Quiz start failed',false);
+ n720Room=data;n720RoomStateKey=`live|${data.started_at||''}|${data.finished_at||''}`;n720LastIndex=-1;n720RenderRoom();n720SyncCurrentRoom();n720StartRoomStatePoll();
+ try{await n720Channel?.send({type:'broadcast',event:'n720-event',payload:{type:'started'}})}catch(e){}
+}
+
+function n720SyncCurrentRoom(){if(!n720Room)return;clearInterval(n720Timer);n720Timer=setInterval(n720Tick,200);n720Tick();clearInterval(n720Poll);n720Poll=setInterval(n720RefreshParticipants,1500);clearInterval(n720Heartbeat);n720Heartbeat=setInterval(n720HeartbeatFn,5000);n720StartRoomStatePoll()}
 async function n720HeartbeatFn(){if(!n720Room||!user)return;try{await db.from('quiz_battle_participants').update({last_seen:new Date().toISOString()}).eq('room_code',n720Room.room_code).eq('user_id',user.id)}catch(e){}}
 async function n720Tick(){if(!n720Room)return;if(n720Room.status==='waiting'){const {data}=await db.from('quiz_battle_participants').select('user_id').eq('room_code',n720Room.room_code);const e=document.getElementById('n720-waiting-count');if(e)e.textContent=data?.length||0;return}if(n720Room.status==='finished')return;const idx=n720CurrentIndex();const total=Number(n720Room.question_count||n720Count||15);if(idx>=total){if(n720Room.host_id===user.id)await n720FinishRoom();else{n720Room.status='finished';n720RenderRoom();await n720LoadFinalStats()}return}const sec=n720SecondsLeft();const t=document.getElementById('n720-timer');if(t)t.textContent=`${sec}s`;const bar=document.getElementById('n720-timer-bar');if(bar)bar.style.width=`${(sec/N720_SECONDS)*100}%`;if(idx!==n720LastIndex){n720LastIndex=idx;n720RenderQuestion(idx)}}
 function n720RenderQuestion(idx){const qs=Array.isArray(n720Room?.questions)?n720Room.questions:[],q=qs[idx];if(!q)return;const total=Number(n720Room.question_count||qs.length);document.getElementById('n720-question-num').textContent=`Question ${idx+1} / ${total}`;document.getElementById('n720-question-text').textContent=q.question;document.getElementById('n720-answer-note').textContent=n720Selected.has(idx)?'Answer submitted. Next question auto-sync hoga.':'';const box=document.getElementById('n720-options');box.innerHTML='';(q.options||[]).forEach((opt,j)=>{const b=document.createElement('button');b.className='qb-option w-full text-left p-3.5 rounded-xl text-sm font-semibold flex items-center gap-3';b.innerHTML=`<span class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-emerald-400 font-black">${String.fromCharCode(65+j)}</span><span>${n720Esc(opt)}</span>`;b.disabled=n720Selected.has(idx);b.onclick=()=>n720Answer(idx,j,b);box.appendChild(b)})}
 async function n720Answer(idx,selected,clicked){if(!n720Room||n720Room.status!=='live'||n720Selected.has(idx))return;if(n720CurrentIndex()!==idx)return toast('Time over — next question live ho chuka hai.',false);n720Selected.add(idx);const q=n720Room.questions[idx],correct=Number(q.correct_index??q.answer??0),isCorrect=selected===correct;document.querySelectorAll('#n720-options button').forEach(b=>b.disabled=true);if(isCorrect)clicked.classList.add('qb-correct');else clicked.classList.add('qb-wrong');const buttons=document.querySelectorAll('#n720-options button');if(buttons[correct])buttons[correct].classList.add('qb-correct');const xp=isCorrect?N720_XP:0;try{const {error}=await db.from('quiz_battle_answers').insert({room_code:n720Room.room_code,user_id:user.id,question_index:idx,selected_index:selected,is_correct:isCorrect,xp_awarded:xp});if(error&&error.code!=='23505')throw error;if(isCorrect){const {data:p}=await db.from('quiz_battle_participants').select('score,xp_earned').eq('room_code',n720Room.room_code).eq('user_id',user.id).maybeSingle();const score=Number(p?.score||0)+1,earned=Number(p?.xp_earned||0)+N720_XP;await db.from('quiz_battle_participants').update({score,xp_earned:earned,last_seen:new Date().toISOString()}).eq('room_code',n720Room.room_code).eq('user_id',user.id);await grantXP(N720_XP);toast(`+${N720_XP} XP 🎉`)}await n720RefreshParticipants();try{await n720Channel?.send({type:'broadcast',event:'n720-event',payload:{type:'refresh'}})}catch(e){}}catch(e){console.warn('n720Answer',e)}}
 async function n720RefreshParticipants(){if(!n720Room)return;try{const {data,error}=await db.from('quiz_battle_participants').select('user_id,user_name,score,xp_earned,last_seen').eq('room_code',n720Room.room_code).order('score',{ascending:false}).order('xp_earned',{ascending:false});if(error)throw error;const now=Date.now(),rows=data||[];const online=rows.filter(p=>now-new Date(p.last_seen||0).getTime()<12000);const html=rows.map((p,i)=>`<div class="qb-card ${p.user_id===user.id?'qb-rank-me':''} border rounded-xl p-2.5 flex items-center gap-2"><span class="w-6 text-center font-black text-xs">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</span><div class="min-w-0 flex-1"><b class="block truncate text-xs">${n720Esc(p.user_name||'Student')}${p.user_id===user.id?' (You)':''}</b><span class="text-[9px] text-slate-500">${Number(p.score||0)} correct • +${Number(p.xp_earned||0)} XP</span></div><span class="w-2 h-2 rounded-full ${now-new Date(p.last_seen||0).getTime()<12000?'bg-emerald-400':'bg-slate-700'}"></span></div>`).join('')||'<div class="text-xs text-slate-500 text-center py-5">Waiting for players...</div>';document.getElementById('n720-leaderboard')&&(document.getElementById('n720-leaderboard').innerHTML=html);document.getElementById('n720-final-leaderboard')&&(document.getElementById('n720-final-leaderboard').innerHTML=html);const wc=document.getElementById('n720-waiting-count');if(wc)wc.textContent=rows.length;const lc=document.getElementById('n720-live-count');if(lc)lc.textContent=`${online.length} online`}catch(e){console.warn('n720RefreshParticipants',e)}}
-async function n720FinishRoom(){if(!n720Room)return;const {data,error}=await db.from('quiz_battle_rooms').update({status:'finished',finished_at:new Date().toISOString()}).eq('room_code',n720Room.room_code).eq('host_id',user.id).eq('status','live').select('*').single();if(!error&&data){n720Room=data;n720RenderRoom();await n720RefreshParticipants();await n720LoadFinalStats();try{await n720Channel?.send({type:'broadcast',event:'n720-event',payload:{type:'finished'}})}catch(e){}}}
-async function n720LoadFinalStats(){
-  if(!n720Room||!user)return;
-  try{
-    await n720RefreshParticipants();
-    const {data,error}=await db.from('quiz_battle_answers').select('question_index,is_correct').eq('room_code',n720Room.room_code).eq('user_id',user.id);if(error)throw error;const unique=new Map();(data||[]).forEach(a=>unique.set(Number(a.question_index),!!a.is_correct));const correct=[...unique.values()].filter(Boolean).length,answered=unique.size,total=Number(n720Room.question_count||15),wrong=Math.max(0,answered-correct),skipped=Math.max(0,total-answered),set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=String(v)};set('n720-final-correct',correct);set('n720-final-wrong',wrong);set('n720-final-skipped',skipped);set('n720-final-summary',`Score ${correct}/${total} • ${Math.round(correct/Math.max(1,total)*100)}% accuracy • +${correct*N720_XP} XP`);const rows=document.querySelectorAll('#n720-final-leaderboard .qb-card'),rank=[...rows].findIndex(el=>el.classList.contains('qb-rank-me'));if(rank>=0)set('n720-final-rank',`Rank #${rank+1}`)}catch(e){console.warn('n720LoadFinalStats',e)}document.getElementById('n720-finished-panel')?.classList.remove('hidden')}
-async function n720LeaveMatch(silent=false){clearInterval(n720Timer);clearInterval(n720Poll);clearInterval(n720Heartbeat);if(n720Channel){try{await db.removeChannel(n720Channel)}catch(e){}n720Channel=null}if(n720Room&&user&&n720Room.status!=='finished'){try{await db.from('quiz_battle_participants').delete().eq('room_code',n720Room.room_code).eq('user_id',user.id)}catch(e){}}n720Room=null;n720Selected.clear();n720LastIndex=-1;n720ShowLobby();document.getElementById('n720-global-status')&&(document.getElementById('n720-global-status').textContent='NO QUIZ');if(!silent)await n720LoadRooms()}
+async function n720FinishRoom(){if(!n720Room)return;const {data,error}=await db.from('quiz_battle_rooms').update({status:'finished',finished_at:new Date().toISOString()}).eq('room_code',n720Room.room_code).eq('host_id',user.id).eq('status','live').select('*').single();if(!error&&data){n720Room=data;n720RoomStateKey=`finished|${data.started_at||''}|${data.finished_at||''}`;n720RenderRoom();await n720RefreshParticipants();await n720LoadFinalStats();try{await n720Channel?.send({type:'broadcast',event:'n720-event',payload:{type:'finished'}})}catch(e){}}}
+async function n720LoadFinalStats(){if(!n720Room||!user)return;try{await n720RefreshParticipants();const {data,error}=await db.from('quiz_battle_answers').select('question_index,is_correct').eq('room_code',n720Room.room_code).eq('user_id',user.id);if(error)throw error;const unique=new Map();(data||[]).forEach(a=>unique.set(Number(a.question_index),!!a.is_correct));const correct=[...unique.values()].filter(Boolean).length,answered=unique.size,total=Number(n720Room.question_count||15),wrong=Math.max(0,answered-correct),skipped=Math.max(0,total-answered),set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=String(v)};set('n720-final-correct',correct);set('n720-final-wrong',wrong);set('n720-final-skipped',skipped);set('n720-final-summary',`Score ${correct}/${total} • ${Math.round(correct/Math.max(1,total)*100)}% accuracy • +${correct*N720_XP} XP`);const rows=document.querySelectorAll('#n720-final-leaderboard .qb-card'),rank=[...rows].findIndex(el=>el.classList.contains('qb-rank-me'));if(rank>=0)set('n720-final-rank',`Rank #${rank+1}`)}catch(e){console.warn('n720LoadFinalStats',e)}document.getElementById('n720-finished-panel')?.classList.remove('hidden')}
+async function n720LeaveMatch(silent=false){clearInterval(n720Timer);clearInterval(n720Poll);clearInterval(n720Heartbeat);clearInterval(n720RoomStatePoll);if(n720Channel){try{await db.removeChannel(n720Channel)}catch(e){}n720Channel=null}if(n720Room&&user&&n720Room.status!=='finished'){try{await db.from('quiz_battle_participants').delete().eq('room_code',n720Room.room_code).eq('user_id',user.id)}catch(e){}}n720Room=null;n720RoomStateKey='';n720Selected.clear();n720LastIndex=-1;n720ShowLobby();document.getElementById('n720-global-status')&&(document.getElementById('n720-global-status').textContent='NO QUIZ');if(!silent)await n720LoadRooms()}
 function n720BackToLobby(){n720LeaveMatch()}
 document.getElementById('n720-host-form')?.addEventListener('submit',e=>{e.preventDefault();n720HostQuiz()});
 
@@ -3433,3 +3919,6 @@ async function initFocusSystem(){
 </script>
 </body>
 </html>
+
+
+0
