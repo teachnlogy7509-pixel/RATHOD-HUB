@@ -937,6 +937,8 @@ const db=createClient(SUPABASE_URL,SUPABASE_KEY);
    Edge Function name: google-drive
    The Google OAuth secret/key stays ONLY in the Edge Function environment.
 */
+// GOOGLE DRIVE FILE STORAGE: all user-uploaded app files stay outside Supabase Storage.
+// GOOGLE DRIVE FILE STORAGE
 const GOOGLE_DRIVE_FUNCTION = 'google-drive';
 
 function blobToBase64(blob){
@@ -1886,7 +1888,7 @@ async function qbLoadMyFinalStats(){
 function qbPickSubject(subject,btn){qbSubject=subject;document.querySelectorAll('.qb-subject-btn').forEach(b=>{b.classList.remove('bg-red-600');b.classList.add('bg-slate-800')});if(btn){btn.classList.remove('bg-slate-800');btn.classList.add('bg-red-600')}}
 async function qbInit(){if(!user)return;qbSelectMode('public');await qbLoadRooms();qbStartLobbyPoll();qbSyncCurrentRoom();}
 function qbAutoJoinFromLink(){const code=new URLSearchParams(location.search).get('livequiz');if(code&&user)setTimeout(()=>qbJoinRoom(code,false,true),500)}
-function qbStartLobbyPoll(){clearInterval(qbLobbyPoll);qbLobbyPoll=setInterval(()=>{if(user&&!qbRoom&&document.getElementById('section-battle')&&!document.getElementById('section-battle').classList.contains('hidden'))qbLoadRooms(true)},1500)}
+function qbStartLobbyPoll(){clearInterval(qbLobbyPoll);qbLobbyPoll=setInterval(()=>{if(user&&!qbRoom&&document.visibilityState==='visible'&&document.getElementById('section-battle')&&!document.getElementById('section-battle').classList.contains('hidden'))qbLoadRooms(true)},8000)}
 async function qbLoadRooms(silent=false){
   const box=document.getElementById('qb-room-list');if(!box||!user)return;if(!silent)box.innerHTML='<div class="text-xs text-slate-500 text-center py-6">Loading live quizzes...</div>';
   try{
@@ -1965,7 +1967,8 @@ async function n720LoadRooms(silent=false){
   box.innerHTML=data.map(r=>`<button onclick="n720JoinRoom('${n720Esc(r.room_code)}')" class="qb-room-row w-full rounded-xl p-3 text-left"><div class="flex items-center justify-between gap-2"><b class="text-sm text-white truncate">${n720Esc(r.topic)}</b><span class="text-[9px] font-black ${r.status==='live'?'text-emerald-400':'text-amber-400'}">${r.status==='live'?'● LIVE':'WAITING'}</span></div><div class="text-[10px] text-slate-500 mt-1">${Number(r.question_count||15)} Questions • +50 XP/correct • Host: ${n720Esc(r.host_name||'Student')}</div></button>`).join('');
  }catch(e){box.innerHTML='<div class="text-xs text-slate-500 text-center py-6">NEET 720 SQL setup required.</div>';console.warn('n720LoadRooms',e)}
 }
-function n720StartLobbyPoll(){clearInterval(n720LobbyPoll);n720LobbyPoll=setInterval(()=>{if(user&&!n720Room&&document.getElementById('section-neet720')&&!document.getElementById('section-neet720').classList.contains('hidden'))n720LoadRooms(true)},1500)}
+function n720StartLobbyPoll(){clearInterval(n720LobbyPoll);n720LobbyPoll=setInterval(()=>{if(user&&!n720Room&&document.visibilityState==='visible'&&document.getElementById('section-neet720')&&!document.getElementById('section-neet720').classList.contains('hidden'))n720LoadRooms(true)},8000)}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){if(typeof qbStartLobbyPoll==='function')qbStartLobbyPoll();if(typeof n720StartLobbyPoll==='function')n720StartLobbyPoll();}});
 async function n720HostQuiz(){
  if(!user||!profile)return toast('Pehle login karein.',false);const btn=document.getElementById('n720-host-btn');btn.disabled=true;btn.innerHTML='⏳ Questions ban rahe hain...';
  try{const topic=document.getElementById('n720-topic')?.value.trim();const base=topic||`${n720Subject} ${n720Type==='PYQ'?'NEET PYQ':'NEET Level MCQ'}`;const prompt=`NEET 720 ${n720Type}: ${n720Subject}. ${base}. Generate ${n720Count} high-quality NEET-level questions in Hindi. Four options A-D. Return correct_index 0-3. For PYQ mode, use NEET previous-year-question style and clearly identify the exam/year only if known; do not invent year/question claims.`;
@@ -2845,7 +2848,7 @@ function tickHubCountdown(){
  el.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
 setInterval(tickHubCountdown,1000);
-setInterval(()=>{if(user)loadHubEvents()},30000);
+setInterval(()=>{if(user&&document.visibilityState==='visible')loadHubEvents()},60000);
 setInterval(()=>{if(user)renderHomeDashboard()},5000);
 
 function renderHubEventsAdminList(){
