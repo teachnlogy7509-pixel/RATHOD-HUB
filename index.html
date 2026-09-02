@@ -941,6 +941,9 @@ const db=createClient(SUPABASE_URL,SUPABASE_KEY);
 // GOOGLE DRIVE FILE STORAGE
 const GOOGLE_DRIVE_FUNCTION = 'google-drive';
 
+const GOOGLE_DRIVE_MAX_FILE_SIZE = 200 * 1024 * 1024;
+const GOOGLE_DRIVE_BASE64_LIMIT = 10 * 1024 * 1024;
+
 function blobToBase64(blob){
   return new Promise((resolve,reject)=>{
     const reader=new FileReader();
@@ -955,6 +958,15 @@ function blobToBase64(blob){
   });
 }
 
+async function getGoogleDriveAccessToken(){
+  if(!user) throw new Error('Please login first.');
+  const {data,error}=await db.auth.getSession();
+  if(error) throw error;
+  const token=data?.session?.access_token;
+  if(!token) throw new Error('Login session expired. Please login again.');
+  return token;
+}
+
 async function googleDriveRequest(body){
   if(!user) throw new Error('Please login first.');
   const {data,error}=await db.functions.invoke(GOOGLE_DRIVE_FUNCTION,{body});
@@ -963,18 +975,47 @@ async function googleDriveRequest(body){
   return data;
 }
 
+/* 10 MB तक old JSON/base64 method, 10–200 MB के लिए direct streaming. */
 async function uploadToGoogleDrive(folderName,file){
   if(!file) throw new Error('File missing.');
-  if(file.size>10*1024*1024) throw new Error('File is too large. Maximum 10 MB allowed for Google Drive upload.');
-  const fileData=await blobToBase64(file);
-  const result=await googleDriveRequest({
-    action:'upload',
-    folderName,
-    fileName:file.name,
-    fileData,
-    mimeType:file.type||'application/octet-stream'
+  if(file.size>GOOGLE_DRIVE_MAX_FILE_SIZE){
+    throw new Error('File is too large. Maximum 200 MB allowed for Google Drive upload.');
+  }
+
+  if(file.size<=GOOGLE_DRIVE_BASE64_LIMIT){
+    const fileData=await blobToBase64(file);
+    const result=await googleDriveRequest({
+      action:'upload',
+      folderName,
+      fileName:file.name,
+      fileData,
+      mimeType:file.type||'application/octet-stream'
+    });
+    if(!result?.id) throw new Error('Google Drive upload failed: file ID missing.');
+    return result;
+  }
+
+  const token=await getGoogleDriveAccessToken();
+  const response=await fetch(`${SUPABASE_URL}/functions/v1/${GOOGLE_DRIVE_FUNCTION}`,{
+    method:'POST',
+    headers:{
+      apikey:SUPABASE_KEY,
+      Authorization:`Bearer ${token}`,
+      'x-drive-action':'upload_stream',
+      'x-folder-name':folderName,
+      'x-file-name':file.name,
+      'x-mime-type':file.type||'application/octet-stream',
+      'x-file-size':String(file.size)
+    },
+    body:file
   });
-  if(!result?.id) throw new Error('Google Drive upload failed: file ID missing.');
+
+  const text=await response.text();
+  let result=null;
+  try{result=JSON.parse(text)}catch{}
+  if(!response.ok||!result?.id){
+    throw new Error(result?.error||`Google Drive upload failed (${response.status}).`);
+  }
   return result;
 }
 
@@ -1743,7 +1784,30 @@ async function loadVault(){if(!user)return;const{data,error}=await db.from('vaul
 function fmtBytes(n){n=Number(n||0);if(n<1024)return n+' B';if(n<1048576)return(n/1024).toFixed(1)+' KB';if(n<1073741824)return(n/1048576).toFixed(1)+' MB';return(n/1073741824).toFixed(1)+' GB'}
 function renderVault(){document.getElementById('vault-count').textContent=`${vaultItems.length} files`;document.getElementById('vault-list').innerHTML=vaultItems.length?vaultItems.map(v=>`<div class="bg-slate-900 border border-slate-700 rounded-xl p-3 flex justify-between items-center gap-3"><div class="min-w-0"><b class="text-sm block truncate">${esc(v.title||v.file_name||'File')}</b><span class="text-[10px] text-slate-500">${esc(v.file_name||'')} • ${fmtBytes(v.file_size)}</span></div><div class="flex gap-2"><button onclick="openVaultFile('${v.id}')" class="bg-violet-600 px-3 py-2 rounded-lg text-xs font-bold">Open</button><button onclick="deleteVault('${v.id}')" class="bg-red-600 px-3 py-2 rounded-lg text-xs font-bold">Delete</button></div></div>`).join(''):'<div class="text-center py-8 text-slate-500 text-sm">Vault खाली है.</div>';}
 document.getElementById('vault-form').addEventListener('submit',async e=>{e.preventDefault();const f=document.getElementById('vault-file').files[0];if(!f)return;const b=e.target.querySelector('button');b.disabled=true;b.textContent='Saving...';try{const drive=await uploadToGoogleDrive('Vault',f);const{error}=await db.from('vault').insert({user_id:user.id,title:document.getElementById('vault-title').value.trim(),file_name:f.name,file_type:f.type,file_size:f.size,storage_path:drive.id});if(error)throw error;e.target.reset();toast('Saved to private vault');loadVault()}catch(err){toast(err.message||'Vault save failed',false)}finally{b.disabled=false;b.textContent='Save to Vault'}})
-async function openVaultFile(id){const v=vaultItems.find(x=>String(x.id)===String(id));if(!v)return;try{toast('Private file opening...');const result=await googleDriveRequest({action:'download',fileId:v.storage_path});if(!result?.data)throw new Error('Private file download failed.');const binary=atob(result.data),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);const blob=new Blob([bytes],{type:result.mimeType||v.file_type||'application/octet-stream'});const url=URL.createObjectURL(blob);window.open(url,'_blank','noopener');setTimeout(()=>URL.revokeObjectURL(url),60000)}catch(e){toast(e.message||'Could not open private file.',false)}}
+async function openVaultFile(id){
+ const v=vaultItems.find(x=>String(x.id)===String(id));if(!v)return;
+ try{
+  toast('Private file opening...');
+  const token=await getGoogleDriveAccessToken();
+  const response=await fetch(`${SUPABASE_URL}/functions/v1/${GOOGLE_DRIVE_FUNCTION}`,{
+   method:'POST',
+   headers:{
+    apikey:SUPABASE_KEY,
+    Authorization:`Bearer ${token}`,
+    'x-drive-action':'download_stream',
+    'x-file-id':String(v.storage_path)
+   }
+  });
+  if(!response.ok){
+   const text=await response.text();let data=null;try{data=JSON.parse(text)}catch{}
+   throw new Error(data?.error||`Private file download failed (${response.status}).`);
+  }
+  const blob=await response.blob();
+  const url=URL.createObjectURL(blob);
+  window.open(url,'_blank','noopener');
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+ }catch(e){toast(e.message||'Could not open private file.',false)}
+}
 async function deleteVault(id){const v=vaultItems.find(x=>String(x.id)===String(id));if(!v||!confirm('Delete this vault file?'))return;const{error}=await db.from('vault').delete().eq('id',id).eq('user_id',user.id);if(error)return toast(error.message,false);if(v.storage_path){try{await deleteFromGoogleDrive(v.storage_path)}catch(e){console.warn('Storage delete failed',e)}}toast('Vault file deleted');loadVault()}
 
 /* Leaderboard */
@@ -1962,9 +2026,23 @@ function n720CurrentIndex(){if(!n720Room?.started_at)return -1;const e=Date.now(
 function n720SecondsLeft(){if(!n720Room?.started_at)return N720_SECONDS;const e=Math.max(0,Date.now()-new Date(n720Room.started_at).getTime());return N720_SECONDS-Math.floor((e%(N720_SECONDS*1000))/1000);}
 async function n720LoadRooms(silent=false){
  const box=document.getElementById('n720-room-list');if(!box||!user)return;if(!silent)box.innerHTML='<div class="text-xs text-slate-500 text-center py-6">Loading...</div>';
- try{const {data,error}=await db.from('quiz_battle_rooms').select('room_code,topic,host_name,status,created_at,question_count,mode').in('status',['waiting','live']).eq('mode','neet720').order('created_at',{ascending:false}).limit(30);if(error)throw error;
-  if(!data?.length){box.innerHTML='<div class="text-xs text-slate-500 text-center py-8">Abhi koi NEET 720 live quiz nahi hai. Aap pehla start karo ⚡</div>';return;}
-  box.innerHTML=data.map(r=>`<button onclick="n720JoinRoom('${n720Esc(r.room_code)}')" class="qb-room-row w-full rounded-xl p-3 text-left"><div class="flex items-center justify-between gap-2"><b class="text-sm text-white truncate">${n720Esc(r.topic)}</b><span class="text-[9px] font-black ${r.status==='live'?'text-emerald-400':'text-amber-400'}">${r.status==='live'?'● LIVE':'WAITING'}</span></div><div class="text-[10px] text-slate-500 mt-1">${Number(r.question_count||15)} Questions • +50 XP/correct • Host: ${n720Esc(r.host_name||'Student')}</div></button>`).join('');
+ try{
+  const {data,error}=await db.from('quiz_battle_rooms').select('room_code,topic,host_name,status,created_at,started_at,question_count,mode').in('status',['waiting','live']).eq('mode','neet720').order('created_at',{ascending:false}).limit(30);
+  if(error)throw error;
+
+  // Hide expired LIVE quizzes from the lobby even if the host went offline
+  // and the database row is still marked as "live".
+  const now=Date.now();
+  const active=(data||[]).filter(r=>{
+    if(r.status!=='live')return true;
+    if(!r.started_at)return true;
+    const total=Number(r.question_count||15);
+    const endAt=new Date(r.started_at).getTime()+(total*N720_SECONDS*1000);
+    return !Number.isFinite(endAt)||now<endAt;
+  });
+
+  if(!active.length){box.innerHTML='<div class="text-xs text-slate-500 text-center py-8">Abhi koi NEET 720 live quiz nahi hai. Aap pehla start karo ⚡</div>';return;}
+  box.innerHTML=active.map(r=>`<button onclick="n720JoinRoom('${n720Esc(r.room_code)}')" class="qb-room-row w-full rounded-xl p-3 text-left"><div class="flex items-center justify-between gap-2"><b class="text-sm text-white truncate">${n720Esc(r.topic)}</b><span class="text-[9px] font-black ${r.status==='live'?'text-emerald-400':'text-amber-400'}">${r.status==='live'?'● LIVE':'WAITING'}</span></div><div class="text-[10px] text-slate-500 mt-1">${Number(r.question_count||15)} Questions • +50 XP/correct • Host: ${n720Esc(r.host_name||'Student')}</div></button>`).join('');
  }catch(e){box.innerHTML='<div class="text-xs text-slate-500 text-center py-6">NEET 720 SQL setup required.</div>';console.warn('n720LoadRooms',e)}
 }
 function n720StartLobbyPoll(){clearInterval(n720LobbyPoll);n720LobbyPoll=setInterval(()=>{if(user&&!n720Room&&document.visibilityState==='visible'&&document.getElementById('section-neet720')&&!document.getElementById('section-neet720').classList.contains('hidden'))n720LoadRooms(true)},8000)}
