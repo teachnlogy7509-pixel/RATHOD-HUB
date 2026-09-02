@@ -931,88 +931,48 @@ const SUPABASE_KEY='sb_publishable_UQ0y1axzT6jsesDmz1JHPA_j2budIh3';
 const {createClient}=supabase;
 const db=createClient(SUPABASE_URL,SUPABASE_KEY);
 
-/* ===== RATHOD HUB STORAGE ROUTER =====
-   Supabase = auth/database/realtime.
-   Backblaze B2 = materials, community media, vault, stories, profile pictures.
-   IMPORTANT: B2 secrets NEVER belong in this HTML. This URL points to a Supabase
-   Edge Function that keeps the B2 credentials server-side.
+/* ===== SUPABASE STORAGE =====
+   Supabase = auth + database + realtime + all file storage.
+   Bucket: materials
+   Keep the bucket private; signed URLs are generated for file access.
 */
-const B2_FUNCTION_URL='https://fezyljxjbgefaqroxorl.supabase.co/functions/v1/rathod-hub-materials';
-const B2_ENABLED=true;
-const B2_CACHE_SECONDS=31536000;
+const SUPABASE_STORAGE_BUCKET = 'materials';
 
-async function b2Request(action,payload={}){
-  if(!B2_ENABLED || !B2_FUNCTION_URL) throw new Error('B2 storage bridge is not configured.');
-  const {data:{session:s}}=await db.auth.getSession();
-  if(!s?.access_token) throw new Error('Please login first.');
-  let res;
-  try{
-    res=await fetch(B2_FUNCTION_URL,{
-      method:'POST',
-      mode:'cors',
-      headers:{
-        'Content-Type':'application/json',
-        'Authorization':`Bearer ${s.access_token}`,
-        'apikey':SUPABASE_KEY
-      },
-      body:JSON.stringify({action,...payload})
+async function uploadToSupabaseStorage(path, file){
+  if(!file) throw new Error('File missing.');
+  const { data: sessionData } = await db.auth.getSession();
+  if(!sessionData?.session?.access_token) throw new Error('Please login first.');
+
+  const { data, error } = await db.storage
+    .from(SUPABASE_STORAGE_BUCKET)
+    .upload(path, file, {
+      contentType: file.type || 'application/octet-stream',
+      cacheControl: '31536000',
+      upsert: true
     });
-  }catch(e){
-    console.error('B2 Edge Function network error:',e);
-    throw new Error('B2 connection failed. Please refresh the page and try again.');
-  }
-  let out=null;
-  try{out=await res.json()}catch(_){out=null}
-  if(!res.ok || out?.error) throw new Error(out?.error||`B2 request failed (${res.status})`);
-  return out;
+
+  if(error) throw error;
+  return { success:true, path:data.path || path };
 }
 
-async function uploadToB2(path,file){
-  const contentType=file.type||'application/octet-stream';
-  const result=await b2Request('upload-url',{
-    fileName:path,
-    contentType
-  });
-  if(!result?.uploadUrl) throw new Error('B2 did not return an upload URL.');
+async function getSupabaseStorageUrl(path, opts={}){
+  const expiresIn = Math.max(60, Math.min(Number(opts.expiresIn || 3600), 604800));
+  const { data, error } = await db.storage
+    .from(SUPABASE_STORAGE_BUCKET)
+    .createSignedUrl(path, expiresIn);
 
-  const putHeaders={
-    'Content-Type':contentType,
-    'Cache-Control':`public, max-age=${B2_CACHE_SECONDS}, immutable`
-  };
-
-  let putRes;
-  try{
-    putRes=await fetch(result.uploadUrl,{
-      method:'PUT',
-      mode:'cors',
-      headers:putHeaders,
-      body:file
-    });
-  }catch(e){
-    console.error('B2 direct upload network error:',e);
-    throw new Error('B2 upload connection failed. Check B2 CORS settings.');
-  }
-
-  if(!putRes.ok){
-    let detail='';
-    try{detail=await putRes.text()}catch(_){ }
-    throw new Error(`B2 upload failed (${putRes.status})${detail?': '+detail:''}`);
-  }
-
-  return {success:true,path:result.path||path};
+  if(error) throw error;
+  if(!data?.signedUrl) throw new Error('Could not create file access URL.');
+  return data.signedUrl;
 }
 
-async function getB2Url(path,opts={}){
-  const result=await b2Request('download-url',{
-    fileName:path
-  });
-  return result.downloadUrl;
+async function deleteFromSupabaseStorage(path){
+  const { error } = await db.storage
+    .from(SUPABASE_STORAGE_BUCKET)
+    .remove([path]);
+  if(error) throw error;
+  return {success:true,path};
 }
-
-async function deleteFromB2(path){
-  return b2Request('delete',{fileName:path});
-}
-
 
 let session=null,user=null,profile=null,materials=[],posts=[],chatMessages=[],diaryEntries=[];
 let mediaRecorder=null,audioChunks=[],recordedAudioBlob=null,isRecording=false;
@@ -1055,7 +1015,7 @@ document.getElementById('auth-form').addEventListener('submit',async e=>{
 
 async function uploadProfilePic(uid,file){
  const ext=(file.name.split('.').pop()||'jpg').replace(/[^a-z0-9]/gi,'');const path=`profiles/${uid}.${ext}`;
- const result=await uploadToB2(path,file); const url=result?.url||await getB2Url(path,{expiresIn:604800});
+ const result=await uploadToSupabaseStorage(path,file); const url=result?.url||await getSupabaseStorageUrl(path,{expiresIn:604800});
  await db.from('profiles').update({pfp_url:url}).eq('id',uid); return url;
 }
 async function boot(){
@@ -1242,62 +1202,29 @@ document.getElementById('material-form').addEventListener('submit',async e=>{
  const btn=document.getElementById('mat-btn');btn.disabled=true;btn.textContent='Uploading...';
  try{
   const path=`materials/${crypto.randomUUID()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
-  await uploadToB2(path,file);
-  const {error}=await db.from('posts').insert({
-    author_id:user.id,
-    author:profile.name,
-    title:document.getElementById('mat-title').value.trim(),
-    desc:document.getElementById('mat-desc').value.trim(),
-    file_name:file.name,
-    file_url:null,
-    storage_path:path,
-    file_type:file.type,
-    file_size:file.size,
-    category:document.getElementById('mat-category').value,
-    is_material:true
-  });
-  if(error){try{await deleteFromB2(path)}catch(_){};throw error}
-  document.getElementById('material-form').reset();
-  toast('Material uploaded to B2');
-  await loadMaterials();switchTab('materials');
+  await uploadToSupabaseStorage(path,file);
+  const url={publicUrl:await getSupabaseStorageUrl(path,{expiresIn:604800})};
+  const {error}=await db.from('posts').insert({author_id:user.id,author:profile.name,title:document.getElementById('mat-title').value.trim(),desc:document.getElementById('mat-desc').value.trim(),file_name:file.name,file_url:url.publicUrl,storage_path:path,file_type:file.type,file_size:file.size,category:document.getElementById('mat-category').value,is_material:true});
+  if(error)throw error;document.getElementById('material-form').reset();toast('Material uploaded');await loadMaterials();switchTab('materials');
  }catch(err){toast(err.message||'Upload failed',false)}finally{btn.disabled=false;btn.textContent='Upload Material'}
 });
 
 async function loadMaterials(){
  const {data,error}=await db.from('posts').select('*').eq('is_material',true).order('created_at',{ascending:false});if(error){console.error(error);return}materials=data||[];renderMaterials();
 }
-async function openMaterialFile(id){
- const m=materials.find(x=>String(x.id)===String(id));if(!m)return;
- try{
-  const path=m.storage_path;
-  if(!path) throw new Error('Material storage path is missing.');
-  const url=await getB2Url(path,{expiresIn:3600});
-  window.open(url,'_blank','noopener');
- }catch(err){toast(err.message||'Could not open material',false)}
-}
-
 function renderMaterials(){
  const q=document.getElementById('material-search').value.toLowerCase(),cat=document.getElementById('material-filter').value;
  const arr=materials.filter(m=>(!q||`${m.title} ${m.desc} ${m.category}`.toLowerCase().includes(q))&&(!cat||m.category===cat));
- document.getElementById('materials-box').innerHTML=arr.length?arr.map(m=>`<div class="bg-slate-900/80 border border-amber-500/20 p-4 rounded-xl flex justify-between gap-3 items-center"><div class="min-w-0"><span class="text-[10px] bg-amber-500/10 text-amber-300 px-2 py-1 rounded">${esc(m.category||'Study')}</span><h4 class="font-bold text-sm mt-2">${esc(m.title)}</h4><p class="text-xs text-slate-400">${esc(m.desc||'')}</p><p class="text-[10px] text-slate-500 mt-1">${esc(m.file_name||'File')}</p></div><div class="flex gap-2 shrink-0"><button onclick="openMaterialFile('${m.id}')" class="bg-amber-500 text-slate-950 px-3 py-2 rounded-lg text-xs font-bold">Open</button>${profile?.role==='admin'?`<button onclick="deleteMaterial('${m.id}')" class="bg-red-600 px-3 py-2 rounded-lg text-xs font-bold">Delete</button>`:''}</div></div>`).join(''):'<div class="text-center py-10 text-slate-500">No material found.</div>';
+ document.getElementById('materials-box').innerHTML=arr.length?arr.map(m=>`<div class="bg-slate-900/80 border border-amber-500/20 p-4 rounded-xl flex justify-between gap-3 items-center"><div class="min-w-0"><span class="text-[10px] bg-amber-500/10 text-amber-300 px-2 py-1 rounded">${esc(m.category||'Study')}</span><h4 class="font-bold text-sm mt-2">${esc(m.title)}</h4><p class="text-xs text-slate-400">${esc(m.desc||'')}</p><p class="text-[10px] text-slate-500 mt-1">${esc(m.file_name||'File')}</p></div><div class="flex gap-2 shrink-0"><a target="_blank" href="${safeUrl(m.file_url)}" class="bg-amber-500 text-slate-950 px-3 py-2 rounded-lg text-xs font-bold">Open</a>${profile?.role==='admin'?`<button onclick="deleteMaterial('${m.id}')" class="bg-red-600 px-3 py-2 rounded-lg text-xs font-bold">Delete</button>`:''}</div></div>`).join(''):'<div class="text-center py-10 text-slate-500">No material found.</div>';
 }
-
-async function deleteMaterial(id){
- if(profile?.role!=='admin')return;
- if(!confirm('Delete this material?'))return;
- const m=materials.find(x=>String(x.id)===String(id));
- const {error}=await db.from('posts').delete().eq('id',id);
- if(error){toast(error.message,false);return}
- if(m?.storage_path){try{await deleteFromB2(m.storage_path)}catch(e){console.warn('B2 material delete failed',e)}}
- toast('Deleted');await loadMaterials();
-}
+async function deleteMaterial(id){if(profile?.role!=='admin')return; if(!confirm('Delete this material?'))return;const {error}=await db.from('posts').delete().eq('id',id);if(error)toast(error.message,false);else{toast('Deleted');await loadMaterials()}}
 
 document.getElementById('post-form').addEventListener('submit',async e=>{
  e.preventDefault();const btn=document.getElementById('post-btn');btn.disabled=true;btn.textContent='Posting...';
  try{
   const file=document.getElementById('post-file').files[0];let url=null,type=null,name=null;
-  if(file){const path=`community/${crypto.randomUUID()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;await uploadToB2(path,file);url=await getB2Url(path,{expiresIn:604800});type=file.type;name=file.name}
-  let voiceUrl=null;if(recordedAudioBlob){const path=`community/voice_${crypto.randomUUID()}.webm`;await uploadToB2(path,recordedAudioBlob);voiceUrl=await getB2Url(path,{expiresIn:604800})}
+  if(file){const path=`community/${crypto.randomUUID()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;await uploadToSupabaseStorage(path,file);url=await getSupabaseStorageUrl(path,{expiresIn:604800});type=file.type;name=file.name}
+  let voiceUrl=null;if(recordedAudioBlob){const path=`community/voice_${crypto.randomUUID()}.webm`;await uploadToSupabaseStorage(path,recordedAudioBlob);voiceUrl=await getSupabaseStorageUrl(path,{expiresIn:604800})}
   const {error}=await db.from('posts').insert({author_id:user.id,author:profile.name,pfp_url:profile.pfp_url,title:document.getElementById('post-title').value.trim(),desc:document.getElementById('post-desc').value.trim(),file_name:name,file_url:url,file_type:type,voice_url:voiceUrl,is_material:false});
   if(error)throw error;document.getElementById('post-form').reset();recordedAudioBlob=null;toast('Post published');await loadPosts();
  }catch(err){toast(err.message||'Post failed',false)}finally{btn.disabled=false;btn.textContent='Post'}
@@ -1358,8 +1285,8 @@ async function addComment(id){
  try{
   if(file){
    const path = `community/replies/${crypto.randomUUID()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
-   await uploadToB2(path,file);
-   image_url = await getB2Url(path,{expiresIn:604800});
+   await uploadToSupabaseStorage(path,file);
+   image_url = await getSupabaseStorageUrl(path,{expiresIn:604800});
   }
   comments.push({ author: profile.name, text, image_url, user_id: user.id, date: new Date().toISOString() });
   const { error } = await db.from('posts').update({ comments }).eq('id', p.id);
@@ -1386,7 +1313,7 @@ function xpPercent(x){return Math.min(100,(Number(x||0)%XP_LEVEL_SIZE)/XP_LEVEL_
 /* Stories */
 async function loadStories(){if(!user)return;const{data,error}=await db.from('stories').select('*').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false});if(error){document.getElementById('stories-row').innerHTML='<div class="text-xs text-slate-500 p-3">Stories table setup required.</div>';return}stories=data||[];renderStories()}
 function renderStories(){const box=document.getElementById('stories-row');box.innerHTML=stories.length?stories.map(s=>`<button onclick="openStory('${s.id}')" class="shrink-0 w-20 text-center"><div class="w-16 h-16 mx-auto rounded-full p-[2px] bg-gradient-to-br from-pink-500 via-purple-500 to-amber-400"><div class="w-full h-full rounded-full overflow-hidden bg-slate-900 border-2 border-slate-900">${s.media_type?.startsWith('video/')?`<video src="${safeUrl(s.media_url)}" class="w-full h-full object-cover"></video>`:`<img src="${safeUrl(s.media_url)}" class="w-full h-full object-cover">`}</div></div><span class="block truncate text-[10px] mt-1">${esc(s.name||'Member')}${s.user_id===user.id?' • You':''}</span></button>`).join(''):'<div class="text-xs text-slate-500 p-3">अभी कोई active story नहीं है.</div>'}
-document.getElementById('story-form').addEventListener('submit',async e=>{e.preventDefault();const file=document.getElementById('story-file').files[0];if(!file)return;const b=e.target.querySelector('button');b.disabled=true;b.textContent='Uploading...';try{if(!/^image\/|^video\//.test(file.type))throw new Error('केवल image/video story allowed.');const path=`stories/${user.id}/${crypto.randomUUID()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;await uploadToB2(path,file);const media_url=await getB2Url(path,{expiresIn:604800});const{error}=await db.from('stories').insert({user_id:user.id,name:profile.name||user.email,media_url,media_type:file.type,caption:document.getElementById('story-text').value.trim(),expires_at:new Date(Date.now()+86400000).toISOString()});if(error)throw error;e.target.reset();toast('Story added for 24 hours');loadStories()}catch(err){toast(err.message||'Story failed',false)}finally{b.disabled=false;b.textContent='Add Story'}})
+document.getElementById('story-form').addEventListener('submit',async e=>{e.preventDefault();const file=document.getElementById('story-file').files[0];if(!file)return;const b=e.target.querySelector('button');b.disabled=true;b.textContent='Uploading...';try{if(!/^image\/|^video\//.test(file.type))throw new Error('केवल image/video story allowed.');const path=`stories/${user.id}/${crypto.randomUUID()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;await uploadToSupabaseStorage(path,file);const media_url=await getSupabaseStorageUrl(path,{expiresIn:604800});const{error}=await db.from('stories').insert({user_id:user.id,name:profile.name||user.email,media_url,media_type:file.type,caption:document.getElementById('story-text').value.trim(),expires_at:new Date(Date.now()+86400000).toISOString()});if(error)throw error;e.target.reset();toast('Story added for 24 hours');loadStories()}catch(err){toast(err.message||'Story failed',false)}finally{b.disabled=false;b.textContent='Add Story'}})
 function openStory(id){const s=stories.find(x=>String(x.id)===String(id));if(!s)return;document.getElementById('story-viewer-content').innerHTML=`<div class="text-left mb-2"><b>${esc(s.name||'Member')}</b><div class="text-xs text-slate-400">Expires ${new Date(s.expires_at).toLocaleString()}</div></div>${s.media_type?.startsWith('video/')?`<video controls autoplay class="max-h-[75vh] w-full rounded-2xl bg-black" src="${safeUrl(s.media_url)}"></video>`:`<img class="max-h-[75vh] w-full rounded-2xl object-contain bg-black" src="${safeUrl(s.media_url)}">`}${s.caption?`<p class="mt-3 text-sm">${esc(s.caption)}</p>`:''}`;document.getElementById('story-viewer').classList.remove('hidden')}
 function closeStoryViewer(){document.getElementById('story-viewer').classList.add('hidden');document.getElementById('story-viewer-content').innerHTML=''}
 
@@ -1798,9 +1725,9 @@ async function chessClick(r,c){
 async function loadVault(){if(!user)return;const{data,error}=await db.from('vault').select('*').eq('user_id',user.id).order('created_at',{ascending:false});if(error){document.getElementById('vault-list').innerHTML='<div class="text-xs text-slate-500 p-3">Vault table setup required.</div>';return}vaultItems=data||[];renderVault()}
 function fmtBytes(n){n=Number(n||0);if(n<1024)return n+' B';if(n<1048576)return(n/1024).toFixed(1)+' KB';if(n<1073741824)return(n/1048576).toFixed(1)+' MB';return(n/1073741824).toFixed(1)+' GB'}
 function renderVault(){document.getElementById('vault-count').textContent=`${vaultItems.length} files`;document.getElementById('vault-list').innerHTML=vaultItems.length?vaultItems.map(v=>`<div class="bg-slate-900 border border-slate-700 rounded-xl p-3 flex justify-between items-center gap-3"><div class="min-w-0"><b class="text-sm block truncate">${esc(v.title||v.file_name||'File')}</b><span class="text-[10px] text-slate-500">${esc(v.file_name||'')} • ${fmtBytes(v.file_size)}</span></div><div class="flex gap-2"><button onclick="openVaultFile('${v.id}')" class="bg-violet-600 px-3 py-2 rounded-lg text-xs font-bold">Open</button><button onclick="deleteVault('${v.id}')" class="bg-red-600 px-3 py-2 rounded-lg text-xs font-bold">Delete</button></div></div>`).join(''):'<div class="text-center py-8 text-slate-500 text-sm">Vault खाली है.</div>';}
-document.getElementById('vault-form').addEventListener('submit',async e=>{e.preventDefault();const f=document.getElementById('vault-file').files[0];if(!f)return;const b=e.target.querySelector('button');b.disabled=true;b.textContent='Saving...';try{const path=`vault/${user.id}/${crypto.randomUUID()}_${f.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;await uploadToB2(path,f);const{error}=await db.from('vault').insert({user_id:user.id,title:document.getElementById('vault-title').value.trim(),file_name:f.name,file_type:f.type,file_size:f.size,storage_path:path});if(error)throw error;e.target.reset();toast('Saved to private vault');loadVault()}catch(err){toast(err.message||'Vault save failed',false)}finally{b.disabled=false;b.textContent='Save to Vault'}})
-async function openVaultFile(id){const v=vaultItems.find(x=>String(x.id)===String(id));if(!v)return;try{const url=await getB2Url(v.storage_path,{expiresIn:3600,download:true});window.open(url,'_blank','noopener')}catch(e){toast(e.message,false)}}
-async function deleteVault(id){const v=vaultItems.find(x=>String(x.id)===String(id));if(!v||!confirm('Delete this vault file?'))return;const{error}=await db.from('vault').delete().eq('id',id).eq('user_id',user.id);if(error)return toast(error.message,false);if(v.storage_path){try{await deleteFromB2(v.storage_path)}catch(e){console.warn('B2 delete failed',e)}}toast('Vault file deleted');loadVault()}
+document.getElementById('vault-form').addEventListener('submit',async e=>{e.preventDefault();const f=document.getElementById('vault-file').files[0];if(!f)return;const b=e.target.querySelector('button');b.disabled=true;b.textContent='Saving...';try{const path=`vault/${user.id}/${crypto.randomUUID()}_${f.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;await uploadToSupabaseStorage(path,f);const{error}=await db.from('vault').insert({user_id:user.id,title:document.getElementById('vault-title').value.trim(),file_name:f.name,file_type:f.type,file_size:f.size,storage_path:path});if(error)throw error;e.target.reset();toast('Saved to private vault');loadVault()}catch(err){toast(err.message||'Vault save failed',false)}finally{b.disabled=false;b.textContent='Save to Vault'}})
+async function openVaultFile(id){const v=vaultItems.find(x=>String(x.id)===String(id));if(!v)return;try{const url=await getSupabaseStorageUrl(v.storage_path,{expiresIn:3600,download:true});window.open(url,'_blank','noopener')}catch(e){toast(e.message,false)}}
+async function deleteVault(id){const v=vaultItems.find(x=>String(x.id)===String(id));if(!v||!confirm('Delete this vault file?'))return;const{error}=await db.from('vault').delete().eq('id',id).eq('user_id',user.id);if(error)return toast(error.message,false);if(v.storage_path){try{await deleteFromSupabaseStorage(v.storage_path)}catch(e){console.warn('Storage delete failed',e)}}toast('Vault file deleted');loadVault()}
 
 /* Leaderboard */
 async function loadLeaderboard(){if(!user)return;const{data,error}=await db.from('profiles').select('id,name,pfp_url,role,xp,level').order('xp',{ascending:false}).limit(100);if(error){document.getElementById('leaderboard-list').innerHTML='<div class="text-xs text-slate-500 p-3">Leaderboard ke liye profiles table check karein.</div>';return}leaderboard=(data||[]).map(p=>({...p,xp:Number(p.xp||0),level:Number(p.level||levelFromXp(p.xp))}));renderLeaderboard();renderRHHomeRail()}
@@ -2569,8 +2496,8 @@ async function applyBackgroundSettings(){
   const file=document.getElementById('bg-upload').files[0];
   if(file){
    const path=`backgrounds/${crypto.randomUUID()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
-   await uploadToB2(path,file);
-   url=await getB2Url(path,{expiresIn:604800});
+   await uploadToSupabaseStorage(path,file);
+   url=await getSupabaseStorageUrl(path,{expiresIn:604800});
   }
   const values=readBgFormValues(url);
   const {error}=await db.from('site_settings').update({...values,updated_by:user.id,updated_at:new Date().toISOString()}).eq('id',1);
