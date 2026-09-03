@@ -1133,7 +1133,7 @@ function switchTab(tab){
   if(tab==='studyrooms')renderStudyRooms();
   if(tab==='community')loadPeople();
   if(tab==='quiz')loadScheduledBattle();
-   if(tab==='battle'){qbShowLiveLayout();qbLoadRooms();qbSyncCurrentRoom();}
+   if(tab==='battle'){qbShowLiveLayout();qbLoadRooms();if(qbRoom)qbSyncCurrentRoom();}
   if(tab==='neet720'){n720ShowLobby();n720LoadRooms();n720SyncCurrentRoom();}
 }
 const RH_SECTION_META={
@@ -1966,7 +1966,12 @@ async function qbHostMatch(){
   if(!user||!profile)return toast('Pehle login karein.',false);const topic=document.getElementById('qb-host-topic')?.value.trim();if(!topic)return toast('Topic/Chapter enter karein.',false);const btn=document.getElementById('qb-host-btn');btn.disabled=true;btn.innerHTML='⏳ AI 15 Questions bana raha hai...';
   try{
     const res=await db.functions.invoke('daily-bio-event',{body:{count:QB_QUESTION_COUNT,topic:`NEET Live Quiz - ${qbSubject} - ${topic}`}});if(res.error)throw res.error;const questions=Array.isArray(res.data?.questions)?res.data.questions:[];if(questions.length<15)throw new Error(`AI ne ${questions.length} questions diye. Exactly 15 questions required.`);
-    const clean=questions.slice(0,15).map(q=>({question:String(q.question||''),options:Array.isArray(q.options)?q.options.slice(0,4):[],correct_index:Number(q.correct_index??q.answer??0)})).filter(q=>q.question&&q.options.length===4&&q.correct_index>=0&&q.correct_index<4);if(clean.length!==15)throw new Error('AI response format invalid. Please try again.');
+    const seen=new Set();
+    const clean=questions.map(q=>({question:String(q.question||'').trim(),options:Array.isArray(q.options)?q.options.slice(0,4).map(x=>String(x).trim()):[],correct_index:Number(q.correct_index??q.answer??0)}))
+      .filter(q=>q.question&&q.options.length===4&&q.options.every(Boolean)&&q.correct_index>=0&&q.correct_index<4)
+      .filter(q=>{const key=q.question.normalize('NFKC').replace(/[\\u200B-\\u200D\\uFEFF]/g,'').replace(/\\s+/g,' ').trim().toLowerCase();if(!key||seen.has(key))return false;seen.add(key);return true;})
+      .slice(0,15);
+    if(clean.length!==15)throw new Error(`AI ne 15 unique questions nahi diye (${clean.length}/15). Please try again.`);
     const room_code=qbCode();const mode=qbMode;
     const payload={room_code,topic:`${qbSubject} • ${topic}`,host_id:user.id,host_name:profile.name||user.email||'Student',questions:clean,question_count:15,status:'waiting',mode};
     const {data,error}=await db.from('quiz_battle_rooms').insert(payload).select('*').single();if(error)throw error;qbRoom=data;await qbJoinRoom(room_code,true,false);document.getElementById('qb-private-invite')?.classList.toggle('hidden',mode!=='private');
@@ -1979,7 +1984,9 @@ async function qbJoinRoom(code,afterCreate=false,privateOnly=false){
     const {data,error}=await db.from('quiz_battle_rooms').select('*').eq('room_code',String(code).toUpperCase()).maybeSingle();if(error)throw error;if(!data)return toast('Quiz nahi mila.',false);if(data.status==='finished')return toast('Ye quiz finish ho chuka hai.',false);
     if(privateOnly&&data.mode!=='private')return toast('Ye private quiz code nahi hai.',false);
     if(data.mode==='duel'){const {count,error:ce}=await db.from('quiz_battle_participants').select('user_id',{count:'exact',head:true}).eq('room_code',data.room_code);if(ce)throw ce;if((count||0)>=2 && data.host_id!==user.id)return toast('1 vs 1 battle full hai.',false);}
-    if(qbRoom&&qbRoom.room_code!==data.room_code)await qbLeaveMatch(true);qbRoom=data;qbShowLiveLayout();
+    if(qbRoom&&qbRoom.room_code!==data.room_code)await qbLeaveMatch(true);
+    if(!qbRoom||qbRoom.room_code!==data.room_code){qbSelected.clear();qbLastRenderedIndex=-1;}
+    qbRoom=data;qbShowLiveLayout();
     const {error:pe}=await db.from('quiz_battle_participants').upsert({room_code:data.room_code,user_id:user.id,user_name:profile?.name||user.email||'Student',score:0,xp_earned:0,last_seen:new Date().toISOString()},{onConflict:'room_code,user_id'});if(pe)throw pe;
     await qbSubscribe(data.room_code);qbRenderRoom();await qbRefreshParticipants();qbSyncCurrentRoom();if(!afterCreate)toast(data.status==='live'?'Live quiz join ho gaya ⚡':'Quiz join ho gaya. Host ke start karne ka wait karein.');
   }catch(e){console.error('qbJoinRoom',e);toast(e.message||'Join failed. SQL setup/RLS check karein.',false)}
@@ -1992,7 +1999,14 @@ function qbRenderRoom(){
 async function qbStartMatch(){if(!qbRoom||qbRoom.host_id!==user.id||qbRoom.status!=='waiting')return;if(qbRoom.mode==='duel'){const {count,error}=await db.from('quiz_battle_participants').select('user_id',{count:'exact',head:true}).eq('room_code',qbRoom.room_code);if(error)return toast(error.message,false);if((count||0)<2)return toast('1 vs 1 start karne ke liye opponent join kare.',false)}const started_at=new Date().toISOString();const {data,error}=await db.from('quiz_battle_rooms').update({status:'live',started_at}).eq('room_code',qbRoom.room_code).eq('host_id',user.id).eq('status','waiting').select('*').single();if(error)return toast(error.message||'Quiz start failed',false);qbRoom=data;qbRenderRoom();qbSyncCurrentRoom();try{await qbChannel?.send({type:'broadcast',event:'battle-event',payload:{type:'started'}})}catch(e){}}
 function qbCurrentIndex(){if(!qbRoom?.started_at)return -1;const elapsed=Date.now()-new Date(qbRoom.started_at).getTime();if(elapsed<0)return -1;return Math.floor(elapsed/(QB_QUESTION_SECONDS*1000))}
 function qbSecondsLeft(){if(!qbRoom?.started_at)return 30;const elapsed=Math.max(0,Date.now()-new Date(qbRoom.started_at).getTime());const used=Math.floor((elapsed%(QB_QUESTION_SECONDS*1000))/1000);return QB_QUESTION_SECONDS-used}
-function qbSyncCurrentRoom(){if(!qbRoom)return;clearInterval(qbTimer);qbTimer=setInterval(qbTick,200);qbTick();clearInterval(qbPoll);qbPoll=setInterval(qbRefreshParticipants,1500);clearInterval(qbHeartbeat);qbHeartbeat=setInterval(qbHeartbeatFn,5000)}
+function qbSyncCurrentRoom(){
+  if(!qbRoom)return;
+  clearInterval(qbTimer);clearInterval(qbPoll);clearInterval(qbHeartbeat);
+  qbTimer=setInterval(qbTick,200);
+  qbTick();
+  qbPoll=setInterval(()=>{if(qbRoom)qbRefreshParticipants()},1500);
+  qbHeartbeat=setInterval(()=>{if(qbRoom)qbHeartbeatFn()},5000);
+}
 async function qbHeartbeatFn(){if(!qbRoom||!user)return;try{await db.from('quiz_battle_participants').update({last_seen:new Date().toISOString()}).eq('room_code',qbRoom.room_code).eq('user_id',user.id)}catch(e){}}
 async function qbTick(){if(!qbRoom)return;if(qbRoom.status==='waiting'){const {data}=await db.from('quiz_battle_participants').select('user_id').eq('room_code',qbRoom.room_code);const c=data?.length||0;document.getElementById('qb-waiting-count')?.replaceChildren(document.createTextNode(String(c)));return}if(qbRoom.status==='finished')return;const idx=qbCurrentIndex();if(idx>=QB_QUESTION_COUNT){if(qbRoom.host_id===user.id)await qbFinishRoom();else{qbRoom.status='finished';qbRenderRoom()}return}const sec=qbSecondsLeft();document.getElementById('qb-timer')?.replaceChildren(document.createTextNode(`${sec}s`));const bar=document.getElementById('qb-timer-bar');if(bar)bar.style.width=`${(sec/30)*100}%`;if(idx!==qbLastRenderedIndex){qbLastRenderedIndex=idx;qbRenderQuestion(idx)}}
 function qbRenderQuestion(idx){const qs=Array.isArray(qbRoom?.questions)?qbRoom.questions:[],q=qs[idx];if(!q)return;document.getElementById('qb-question-num').textContent=`Question ${idx+1} / 15`;document.getElementById('qb-question-text').textContent=q.question;document.getElementById('qb-answer-note').textContent=qbSelected.has(idx)?'Answer submitted. Next question auto-sync hoga.':'';const box=document.getElementById('qb-options');box.innerHTML='';(q.options||[]).forEach((opt,j)=>{const b=document.createElement('button');b.className='qb-option w-full text-left p-3.5 rounded-xl text-sm font-semibold flex items-center gap-3';b.innerHTML=`<span class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-red-400 font-black">${String.fromCharCode(65+j)}</span><span>${qbEsc(opt)}</span>`;b.disabled=qbSelected.has(idx);b.onclick=()=>qbAnswer(idx,j,b);box.appendChild(b)})}
