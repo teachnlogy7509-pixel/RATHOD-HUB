@@ -1063,30 +1063,45 @@ async function uploadLargeFileToGoogleDrive(folderName,file){
   const total=file.size;
   let offset=0;
 
+  // IMPORTANT: do NOT PUT chunks directly to Google's upload URL from the
+  // browser. Some browsers/hosts report a generic NetworkError because the
+  // Google resumable endpoint's CORS/preflight can fail. Instead, send each
+  // small chunk to our Supabase Edge Function; the Edge Function proxies the
+  // chunk to Google. This keeps large files away from the old base64/JSON path.
+  const sessionToken=(await db.auth.getSession()).data?.session?.access_token;
+  if(!sessionToken) throw new Error('Login session expired. Please login again.');
+  const functionUrl=`${SUPABASE_URL}/functions/v1/${GOOGLE_DRIVE_FUNCTION}`;
+
   while(offset<total){
     const end=Math.min(offset+GOOGLE_DRIVE_CHUNK_SIZE,total);
     const chunk=file.slice(offset,end);
-    const response=await fetch(uploadUrl,{
-      method:'PUT',
+    const response=await fetch(functionUrl,{
+      method:'POST',
       headers:{
-        'Content-Length':String(chunk.size),
-        'Content-Type':file.type||'application/octet-stream',
-        'Content-Range':`bytes ${offset}-${end-1}/${total}`
+        apikey:SUPABASE_KEY,
+        Authorization:`Bearer ${sessionToken}`,
+        'Content-Type':'application/octet-stream',
+        'x-drive-action':'upload_chunk',
+        'x-upload-url':uploadUrl,
+        'x-upload-offset':String(offset),
+        'x-upload-total':String(total),
+        'x-upload-mime-type':file.type||'application/octet-stream'
       },
       body:chunk
     });
 
+    const text=await response.text();
+    let result=null;
+    try{result=JSON.parse(text)}catch{}
+
     if(response.status===308){
-      const range=response.headers.get('Range')||response.headers.get('range')||'';
-      const m=range.match(/(\d+)\s*$/);
+      const range=result?.range||response.headers.get('Range')||response.headers.get('range')||'';
+      const m=String(range).match(/(\d+)\s*$/);
       const confirmed=m?Number(m[1])+1:end;
       offset=Math.max(end,confirmed);
       continue;
     }
 
-    const text=await response.text();
-    let result=null;
-    try{result=JSON.parse(text)}catch{}
     if(!response.ok){
       throw new Error(result?.error?.message||result?.error||text.slice(0,700)||`Google Drive chunk upload failed (${response.status}).`);
     }
