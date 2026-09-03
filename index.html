@@ -1874,17 +1874,21 @@ function rhRememberQuizQuestions(qs){
   }catch{}
 }
 async function rhGenerateFreshQuiz({count,subject='Biology',type='MCQ',topic='',storage=true}){
-  const exclude_questions=rhGetRecentQuizQuestions();
-  const request_id=(crypto?.randomUUID?crypto.randomUUID():`${Date.now()}_${Math.random()}`);
-  const {data,error}=await db.functions.invoke('daily-bio-event',{body:{count,subject,type,topic,exclude_questions,request_id}});
-  if(error)throw error;
-  if(!data?.success)throw new Error(data?.error||'Fresh questions generate nahi ho paye. Please try again.');
-  const qs=Array.isArray(data.questions)?data.questions:[];
-  if(qs.length!==Number(count))throw new Error(`AI ne ${qs.length} questions diye. Exactly ${count} required.`);
-  const seen=new Set();
-  for(const q of qs){const k=rhQuizNorm(q?.question);if(!k||seen.has(k)||exclude_questions.some(x=>rhQuizNorm(x)===k))throw new Error('Duplicate question mila. Please generate again.');seen.add(k)}
-  if(storage)rhRememberQuizQuestions(qs);
-  return {data,questions:qs};
+  const exclude_questions = rhGetRecentQuizQuestions();
+  const request_id = (crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random()}`);
+
+  const { data, error } = await db.functions.invoke('daily-bio-event', {
+    body: { count, subject, type, topic, exclude_questions, request_id }
+  });
+
+  if (error) throw error;
+  if (!data?.success) throw new Error(data?.error || 'Fresh questions generate nahi ho paye. Please try again.');
+
+  const qs = Array.isArray(data.questions) ? data.questions : [];
+  if (qs.length !== Number(count)) throw new Error(`AI ne ${qs.length} questions diye. Exactly ${count} required.`);
+
+  if (storage) rhRememberQuizQuestions(qs);
+  return { data, questions: qs };
 }
 
 async function generateQuiz(){
