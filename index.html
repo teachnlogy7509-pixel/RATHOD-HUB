@@ -1853,6 +1853,40 @@ async function askAI(){
   }
 }
 
+function rhQuizHistoryKey(){
+  return `rh_quiz_recent_${user?.id||'guest'}`;
+}
+function rhQuizNorm(q){return String(q||'').normalize('NFKC').replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/\s+/g,' ').trim().toLowerCase();}
+function rhGetRecentQuizQuestions(){
+  try{
+    const a=JSON.parse(localStorage.getItem(rhQuizHistoryKey())||'[]');
+    return Array.isArray(a)?a.filter(Boolean).slice(-60):[];
+  }catch{return []}
+}
+function rhRememberQuizQuestions(qs){
+  try{
+    const old=rhGetRecentQuizQuestions();
+    const merged=[...old,...(qs||[]).map(q=>String(q?.question||'').trim()).filter(Boolean)];
+    const seen=new Set();
+    const out=[];
+    for(const q of merged){const k=rhQuizNorm(q);if(!k||seen.has(k))continue;seen.add(k);out.push(q)}
+    localStorage.setItem(rhQuizHistoryKey(),JSON.stringify(out.slice(-60)));
+  }catch{}
+}
+async function rhGenerateFreshQuiz({count,subject='Biology',type='MCQ',topic='',storage=true}){
+  const exclude_questions=rhGetRecentQuizQuestions();
+  const request_id=(crypto?.randomUUID?crypto.randomUUID():`${Date.now()}_${Math.random()}`);
+  const {data,error}=await db.functions.invoke('daily-bio-event',{body:{count,subject,type,topic,exclude_questions,request_id}});
+  if(error)throw error;
+  if(!data?.success)throw new Error(data?.error||'Fresh questions generate nahi ho paye. Please try again.');
+  const qs=Array.isArray(data.questions)?data.questions:[];
+  if(qs.length!==Number(count))throw new Error(`AI ne ${qs.length} questions diye. Exactly ${count} required.`);
+  const seen=new Set();
+  for(const q of qs){const k=rhQuizNorm(q?.question);if(!k||seen.has(k)||exclude_questions.some(x=>rhQuizNorm(x)===k))throw new Error('Duplicate question mila. Please generate again.');seen.add(k)}
+  if(storage)rhRememberQuizQuestions(qs);
+  return {data,questions:qs};
+}
+
 async function generateQuiz(){
   const subject=document.getElementById('quiz-subject').value;
   const topic=document.getElementById('quiz-topic').value.trim();
@@ -1862,16 +1896,12 @@ async function generateQuiz(){
   box.textContent='Generating quiz...';
 
   try{
-    const {data,error}=await db.functions.invoke('daily-bio-event',{
-      body:{
-        count,
-        topic: `${subject} - ${topic || 'General NEET Questions'}`
-      }
+    const {questions:qs}=await rhGenerateFreshQuiz({
+      count,
+      subject,
+      type:'MCQ',
+      topic:topic || 'General NEET Questions'
     });
-
-    if(error)throw error;
-
-    const qs=Array.isArray(data?.questions)?data.questions:[];
 
     box.innerHTML=qs.map((x,i)=>{
       const answer=Number(x.correct_index ?? 0);
@@ -1965,7 +1995,7 @@ async function qbLoadRooms(silent=false){
 async function qbHostMatch(){
   if(!user||!profile)return toast('Pehle login karein.',false);const topic=document.getElementById('qb-host-topic')?.value.trim();if(!topic)return toast('Topic/Chapter enter karein.',false);const btn=document.getElementById('qb-host-btn');btn.disabled=true;btn.innerHTML='⏳ AI 15 Questions bana raha hai...';
   try{
-    const res=await db.functions.invoke('daily-bio-event',{body:{count:QB_QUESTION_COUNT,topic:`NEET Live Quiz - ${qbSubject} - ${topic}`}});if(res.error)throw res.error;const questions=Array.isArray(res.data?.questions)?res.data.questions:[];if(questions.length<15)throw new Error(`AI ne ${questions.length} questions diye. Exactly 15 questions required.`);
+    const generated=await rhGenerateFreshQuiz({count:QB_QUESTION_COUNT,subject:qbSubject,type:'MCQ',topic:`${topic||'General'} (NEET Live Quiz)`,storage:true});const questions=generated.questions;
     const seen=new Set();
     const clean=questions.map(q=>({question:String(q.question||'').trim(),options:Array.isArray(q.options)?q.options.slice(0,4).map(x=>String(x).trim()):[],correct_index:Number(q.correct_index??q.answer??0)}))
       .filter(q=>q.question&&q.options.length===4&&q.options.every(Boolean)&&q.correct_index>=0&&q.correct_index<4)
@@ -2064,7 +2094,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 async function n720HostQuiz(){
  if(!user||!profile)return toast('Pehle login karein.',false);const btn=document.getElementById('n720-host-btn');btn.disabled=true;btn.innerHTML='⏳ Questions ban rahe hain...';
  try{const topic=document.getElementById('n720-topic')?.value.trim();const base=topic||`${n720Subject} ${n720Type==='PYQ'?'NEET PYQ':'NEET Level MCQ'}`;const prompt=`NEET 720 ${n720Type}: ${n720Subject}. ${base}. Generate ${n720Count} high-quality NEET-level questions in Hindi. Four options A-D. Return correct_index 0-3. For PYQ mode, use NEET previous-year-question style and clearly identify the exam/year only if known; do not invent year/question claims.`;
-  const res=await db.functions.invoke('daily-bio-event',{body:{count:n720Count,topic:prompt}});if(res.error)throw res.error;const qs=Array.isArray(res.data?.questions)?res.data.questions:[];if(qs.length<n720Count)throw new Error(`AI ne ${qs.length} questions diye. ${n720Count} required.`);
+  const generated=await rhGenerateFreshQuiz({count:n720Count,subject:n720Subject,type:n720Type,topic:base,storage:true});const qs=generated.questions;
   const clean=qs.slice(0,n720Count).map(q=>({question:String(q.question||''),options:Array.isArray(q.options)?q.options.slice(0,4):[],correct_index:Number(q.correct_index??q.answer??0)})).filter(q=>q.question&&q.options.length===4&&q.correct_index>=0&&q.correct_index<4);if(clean.length!==n720Count)throw new Error('Question format invalid. Please try again.');
   const room_code=(typeof qbCode==='function'?qbCode():Math.random().toString(36).slice(2,8).toUpperCase());const payload={room_code,topic:`${n720Subject} • ${n720Type} • ${n720Count} Q`,host_id:user.id,host_name:profile.name||user.email||'Student',questions:clean,question_count:n720Count,status:'waiting',mode:'neet720'};
   const {data,error}=await db.from('quiz_battle_rooms').insert(payload).select('*').single();if(error)throw error;n720Room=data;await n720JoinRoom(room_code,true);toast('NEET 720 quiz created! Students can join from the Live list.');
@@ -2489,11 +2519,14 @@ document.getElementById('admin-battle-form')?.addEventListener('submit', async (
 
   try {
     const scheduled_at = next9.toISOString();
-    const res = await db.functions.invoke('daily-bio-event', {
-      body: { count, topic: `NEET MCQs - ${topic}` }
+    const generated = await rhGenerateFreshQuiz({
+      count,
+      subject:'Biology',
+      type:'MCQ',
+      topic:`${topic} (NEET Daily 9 PM Battle)`,
+      storage:true
     });
-
-    const rawQuestions = Array.isArray(res.data?.questions) ? res.data.questions : [];
+    const rawQuestions = generated.questions;
     const questions = rawQuestions.slice(0, DAILY_BATTLE_QUESTIONS).map(q => ({
       question: String(q.question || ''),
       options: Array.isArray(q.options) ? q.options.slice(0,4) : [],
@@ -2800,13 +2833,15 @@ async function autoSeedDailyBioEvent(){
     const start_at = new Date(`${today}T00:00:00`).toISOString();
     const ends_at = new Date(`${today}T23:59:59.999`).toISOString();
 
-    const { data: aiRes, error: aiErr } = await db.functions.invoke('daily-bio-event', {
-      body: { count: 5 }
+    const generated = await rhGenerateFreshQuiz({
+      count:5,
+      subject:'Biology',
+      type:'MCQ',
+      topic:'NCERT Biology Daily Challenge',
+      storage:true
     });
-
-    if (aiErr) throw aiErr;
-
-    const questions = Array.isArray(aiRes?.questions) ? aiRes.questions : [];
+    const aiRes=generated.data;
+    const questions=generated.questions;
     if (!questions.length) throw new Error("No AI questions returned");
 
     const { data: refreshed } = await db.from('hub_events').select('*').order('created_at', { ascending: false });
