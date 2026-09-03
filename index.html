@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#0f172a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
 <title>RATHOD HUB - NEET Library & Community</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
@@ -205,7 +210,7 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
 <section id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
 <div class="bg-slate-800/95 border border-slate-700 p-7 rounded-2xl shadow-2xl w-full max-w-md backdrop-blur-md">
 <div class="text-center mb-6">
-<div class="inline-block bg-teal-500/20 p-4 rounded-full text-teal-400 mb-3 text-3xl"><i class="fa-solid fa-book-medical"></i></div>
+<div class="inline-block bg-teal-500/20 rounded-full text-teal-400 mb-3 overflow-hidden" style="width:88px;height:88px"><img id="auth-logo-img" src="icon-192.png" alt="RATHOD HUB" class="w-full h-full object-cover"></div>
 <h1 class="text-2xl font-bold text-teal-400">RATHOD HUB</h1>
 <p class="text-xs tracking-wider uppercase text-slate-400 mt-1">NEET Library & Community</p>
 </div>
@@ -268,8 +273,9 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
 <!-- APP -->
 <div id="app" class="hidden min-h-screen flex flex-col">
 <header class="rh-topbar">
- <div class="rh-brand"><div class="rh-brand-mark"><i class="fa-solid fa-graduation-cap"></i></div><div><div>RATHOD HUB</div><div style="font-size:9px;color:#8b93a0;font-weight:600;letter-spacing:.08em">NEET LEARNING PLATFORM</div></div></div>
+ <div class="rh-brand"><div id="hub-logo-mark" class="rh-brand-mark overflow-hidden"><img id="hub-logo-img" src="icon-192.png" alt="RATHOD HUB" class="w-full h-full object-cover"></div><div><div>RATHOD HUB</div><div style="font-size:9px;color:#8b93a0;font-weight:600;letter-spacing:.08em">NEET LEARNING PLATFORM</div></div></div>
  <div class="rh-top-actions">
+  <button id="install-app-btn" class="rh-icon-btn" style="display:none" onclick="installRathodHub()" title="Download / Install App"><i class="fa-solid fa-download"></i></button>
   <button class="rh-icon-btn sm:hidden" onclick="openMobileMenu()" title="All Features"><i class="fa-solid fa-bars"></i></button>
   <button class="rh-icon-btn" onclick="switchTab('focus')" title="Focus Timer"><i class="fa-solid fa-stopwatch"></i></button>
   <button class="rh-icon-btn" onclick="requestFocusNotifications();toast('Notifications permission requested 🔔')" title="Notifications"><i class="fa-regular fa-bell"></i></button>
@@ -385,6 +391,35 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
 </div>
 <p class="text-[10px] text-slate-500">Ye background sabhi users ko globally dikhega. Normal users ise change nahi kar sakte.</p>
 </div>
+</div>
+
+<!-- ADMIN APP LOGO SETTINGS -->
+<div id="admin-logo-panel" class="hidden bg-slate-800/95 border border-red-500/30 rounded-2xl p-5 shadow-xl">
+ <div class="flex justify-between items-center mb-3">
+  <h3 class="font-bold text-red-300"><i class="fa-solid fa-image mr-2"></i>App Logo Settings</h3>
+  <span class="text-[10px] bg-red-500/10 text-red-300 px-2 py-1 rounded">ADMIN ONLY</span>
+ </div>
+ <div class="flex items-center gap-4 mb-4">
+  <div class="w-20 h-20 rounded-2xl overflow-hidden border border-slate-600 bg-slate-900 shrink-0">
+   <img id="admin-logo-preview" src="icon-192.png" alt="Logo preview" class="w-full h-full object-cover">
+  </div>
+  <div class="text-xs text-slate-400">Ye logo app ke header aur login screen par sabhi users ko dikhega.</div>
+ </div>
+ <div class="space-y-3">
+  <div>
+   <label class="block text-xs uppercase text-slate-400 mb-1">Upload New Logo</label>
+   <input id="logo-upload" type="file" accept="image/*" class="w-full text-xs text-slate-400">
+  </div>
+  <div>
+   <label class="block text-xs uppercase text-slate-400 mb-1">Or Image URL</label>
+   <input id="logo-url" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+  </div>
+  <div class="flex gap-2 pt-2">
+   <button type="button" onclick="previewAppLogo()" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-sm font-bold">Preview</button>
+   <button type="button" onclick="applyAppLogoSettings()" class="flex-1 bg-red-600 hover:bg-red-500 py-2.5 rounded-lg text-sm font-bold">Apply Logo</button>
+   <button type="button" onclick="resetAppLogoSettings()" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-sm font-bold">Reset</button>
+  </div>
+ </div>
 </div>
 
 <!-- HOME DASHBOARD -->
@@ -1090,7 +1125,7 @@ async function boot(){
  if(profile.pfp_url)document.getElementById('nav-pfp').innerHTML=`<img src="${safeUrl(profile.pfp_url)}" class="w-full h-full object-cover">`;
  document.getElementById('admin-panel').classList.toggle('hidden',profile.role!=='admin');
  document.getElementById('admin-battle-panel').classList.toggle('hidden',profile.role!=='admin');
- document.getElementById('admin-bg-panel').classList.toggle('hidden',profile.role!=='admin');
+ document.getElementById('admin-bg-panel').classList.toggle('hidden',profile.role!=='admin');document.getElementById('admin-logo-panel').classList.toggle('hidden',profile.role!=='admin');
  document.getElementById('hub-admin-composer').classList.toggle('hidden',profile.role!=='admin');
  setDefaultDiaryDate();
  setDefaultBattleDateTime();
@@ -1274,7 +1309,7 @@ async function loadMaterials(){
 function renderMaterials(){
  const q=document.getElementById('material-search').value.toLowerCase(),cat=document.getElementById('material-filter').value;
  const arr=materials.filter(m=>(!q||`${m.title} ${m.desc} ${m.category}`.toLowerCase().includes(q))&&(!cat||m.category===cat));
- document.getElementById('materials-box').innerHTML=arr.length?arr.map(m=>`<div class="bg-slate-900/80 border border-amber-500/20 p-4 rounded-xl flex justify-between gap-3 items-center"><div class="min-w-0"><span class="text-[10px] bg-amber-500/10 text-amber-300 px-2 py-1 rounded">${esc(m.category||'Study')}</span><h4 class="font-bold text-sm mt-2">${esc(m.title)}</h4><p class="text-xs text-slate-400">${esc(m.desc||'')}</p><p class="text-[10px] text-slate-500 mt-1">${esc(m.file_name||'File')}</p></div><div class="flex gap-2 shrink-0"><a target="_blank" href="${safeUrl(m.file_url)}" class="bg-amber-500 text-slate-950 px-3 py-2 rounded-lg text-xs font-bold">Open</a>${profile?.role==='admin'?`<button onclick="deleteMaterial('${m.id}')" class="bg-red-600 px-3 py-2 rounded-lg text-xs font-bold">Delete</button>`:''}</div></div>`).join(''):'<div class="text-center py-10 text-slate-500">No material found.</div>';
+ document.getElementById('materials-box').innerHTML=arr.length?arr.map(m=>`<div class="bg-slate-900/80 border border-amber-500/20 p-4 rounded-xl flex justify-between gap-3 items-center"><div class="min-w-0"><span class="text-[10px] bg-amber-500/10 text-amber-300 px-2 py-1 rounded">${esc(m.category||'Study')}</span><h4 class="font-bold text-sm mt-2">${esc(m.title)}</h4><p class="text-xs text-slate-400">${esc(m.desc||'')}</p><p class="text-[10px] text-slate-500 mt-1">${esc(m.file_name||'File')}</p></div><div class="flex gap-2 shrink-0"><a target="_blank" href="${safeUrl(m.file_url)}" class="bg-amber-500 text-slate-950 px-3 py-2 rounded-lg text-xs font-bold">Open</a>${m.storage_path?`<a target="_blank" rel="noopener" href="${safeUrl(driveDownloadUrl(m.storage_path))}" download class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-download mr-1"></i>Download</a>`:''}${profile?.role==='admin'?`<button onclick="deleteMaterial('${m.id}')" class="bg-red-600 px-3 py-2 rounded-lg text-xs font-bold">Delete</button>`:''}</div></div>`).join(''):'<div class="text-center py-10 text-slate-500">No material found.</div>';
 }
 async function deleteMaterial(id){if(profile?.role!=='admin')return;if(!confirm('Delete this material?'))return;const item=materials.find(x=>String(x.id)===String(id));const{error}=await db.from('posts').delete().eq('id',id);if(error)return toast(error.message,false);if(item?.storage_path){try{await deleteFromGoogleDrive(item.storage_path)}catch(e){console.warn('Drive delete failed',e)}}toast('Deleted');await loadMaterials()}
 
@@ -2578,6 +2613,59 @@ document.getElementById('profile-form').addEventListener('submit',async e=>{e.pr
 showAuth('login');
 boot();
 
+/* ==================== GLOBAL APP LOGO (ADMIN CONTROLLED) ==================== */
+function applyAppLogoToPage(s){
+ const url=safeUrl(s?.logo_url||'icon-192.png');
+ ['hub-logo-img','auth-logo-img','admin-logo-preview'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el&&url!=='#')el.src=url;
+ });
+}
+function previewAppLogo(){
+ if(profile?.role!=='admin')return toast('Admin only',false);
+ const file=document.getElementById('logo-upload').files[0];
+ const url=file?URL.createObjectURL(file):(document.getElementById('logo-url').value.trim()||'icon-192.png');
+ applyAppLogoToPage({logo_url:url});
+ toast('Logo preview applied (not saved yet)');
+}
+async function applyAppLogoSettings(){
+ if(profile?.role!=='admin')return toast('Admin only',false);
+ try{
+  let url=document.getElementById('logo-url').value.trim()||null;
+  let driveId=siteSettings?.logo_drive_id||null;
+  const file=document.getElementById('logo-upload').files[0];
+  if(file){
+   if(!file.type.startsWith('image/'))throw new Error('Please select an image file.');
+   const drive=await uploadToGoogleDrive('App Branding',file);
+   driveId=drive.id;
+   url=driveImageUrl(drive.id);
+  }
+  const values={logo_url:url,logo_drive_id:driveId};
+  const {error}=await db.from('site_settings').update({...values,updated_by:user.id,updated_at:new Date().toISOString()}).eq('id',1);
+  if(error)throw error;
+  siteSettings={...(siteSettings||{}),...values,id:1};
+  document.getElementById('logo-upload').value='';
+  document.getElementById('logo-url').value=url||'';
+  applyAppLogoToPage(siteSettings);
+  toast('App logo applied for all users');
+ }catch(err){toast(err.message||'Logo update failed',false)}
+}
+async function resetAppLogoSettings(){
+ if(profile?.role!=='admin')return toast('Admin only',false);
+ try{
+  const oldDriveId=siteSettings?.logo_drive_id||null;
+  const defaults={logo_url:null,logo_drive_id:null};
+  const {error}=await db.from('site_settings').update({...defaults,updated_by:user.id,updated_at:new Date().toISOString()}).eq('id',1);
+  if(error)throw error;
+  if(oldDriveId){try{await deleteFromGoogleDrive(oldDriveId)}catch(e){console.warn('Old logo delete failed',e)}}
+  siteSettings={...(siteSettings||{}),...defaults,id:1};
+  document.getElementById('logo-upload').value='';
+  document.getElementById('logo-url').value='';
+  applyAppLogoToPage(siteSettings);
+  toast('App logo reset to default');
+ }catch(err){toast(err.message||'Logo reset failed',false)}
+}
+
 /* ==================== GLOBAL BACKGROUND (ADMIN CONTROLLED) ==================== */
 let siteSettings=null;
 async function loadSiteSettings(){
@@ -2585,6 +2673,7 @@ async function loadSiteSettings(){
  if(error){console.warn('site_settings load failed',error);return}
  siteSettings=data||null;
  applyBackgroundToPage(siteSettings);
+ applyAppLogoToPage(siteSettings);
 }
 function applyBackgroundToPage(s){
  const layer=document.getElementById('hub-bg-layer'),overlay=document.getElementById('hub-bg-overlay');
@@ -2629,6 +2718,8 @@ function populateBackgroundForm(){
  document.getElementById('bg-size').value=s.background_size||'cover';
  document.getElementById('bg-position').value=s.background_position||'center';
  document.getElementById('bg-fixed').value=String(s.background_fixed==null?true:s.background_fixed);
+ document.getElementById('logo-url').value=s.logo_url||'';
+ applyAppLogoToPage(s);
  updateBgRangeLabels();
 }
 function previewBackground(){
@@ -3484,5 +3575,39 @@ async function initFocusSystem(){
   updateNotifyStatus();
 }
 </script>
+
+<script>
+// RATHOD HUB PWA install support — does not alter existing app features.
+let rhDeferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault();
+  rhDeferredInstallPrompt = event;
+  const btn = document.getElementById('install-app-btn');
+  if (btn) btn.style.display = '';
+});
+window.addEventListener('appinstalled', () => {
+  rhDeferredInstallPrompt = null;
+  const btn = document.getElementById('install-app-btn');
+  if (btn) btn.style.display = 'none';
+  if (typeof toast === 'function') toast('RATHOD HUB app install ho gaya ✅');
+});
+async function installRathodHub() {
+  if (!rhDeferredInstallPrompt) {
+    if (typeof toast === 'function') toast('Browser menu se “Add to Home screen” / “Install app” choose karein.');
+    return;
+  }
+  rhDeferredInstallPrompt.prompt();
+  await rhDeferredInstallPrompt.userChoice;
+  rhDeferredInstallPrompt = null;
+  const btn = document.getElementById('install-app-btn');
+  if (btn) btn.style.display = 'none';
+}
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+
 </body>
 </html>
