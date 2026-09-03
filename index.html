@@ -311,6 +311,7 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
  <button onclick="switchTab('games')" id="btn-games" class="rh-nav-btn"><i class="fa-solid fa-gamepad"></i><span>Games</span></button>
  <button onclick="switchTab('hubevents')" id="btn-hubevents" class="rh-nav-btn"><i class="fa-solid fa-bolt"></i><span>Live Events</span></button>
  <button onclick="switchTab('leaderboard')" id="btn-leaderboard" class="rh-nav-btn"><i class="fa-solid fa-trophy"></i><span>Leaderboard</span></button>
+ <button onclick="switchTab('adminpanel')" id="btn-adminpanel" class="rh-nav-btn hidden" style="color:#f87171"><i class="fa-solid fa-shield-halved"></i><span>Admin Panel</span></button>
  <div class="rh-side-sep"></div>
  <button onclick="openProfile()" class="rh-nav-btn"><i class="fa-solid fa-user"></i><span>My Profile</span></button>
  <button onclick="logout()" class="rh-nav-btn" style="color:#dc4b4b"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></button>
@@ -421,6 +422,38 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
   </div>
  </div>
 </div>
+
+<!-- ADMIN PANEL
+     Dedicated admin-only control center. Existing admin controls are moved here at runtime; no feature/code is removed. -->
+<section id="section-adminpanel" class="hidden space-y-5">
+ <div class="bg-gradient-to-r from-red-950/80 to-slate-800/95 border border-red-500/30 rounded-2xl p-5 shadow-xl">
+  <div class="flex items-center justify-between gap-3 flex-wrap">
+   <div>
+    <div class="flex items-center gap-2"><div class="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center"><i class="fa-solid fa-shield-halved text-red-400 text-lg"></i></div><div><h2 class="text-red-300 font-black text-xl">Admin Panel</h2><p class="text-xs text-slate-400 mt-1">RATHOD HUB ke saare admin controls ek hi jagah.</p></div></div>
+   </div>
+   <span class="text-[10px] bg-red-500/10 text-red-300 px-3 py-1.5 rounded-full font-bold border border-red-500/20">ADMIN ONLY</span>
+  </div>
+  <div class="grid sm:grid-cols-3 gap-2 mt-5">
+   <button onclick="document.getElementById('admin-panel')?.scrollIntoView({behavior:'smooth',block:'start'})" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-folder-open text-amber-400"></i><b class="block text-sm mt-2">Study Material</b><span class="text-[10px] text-slate-500">Upload / manage material</span></button>
+   <button onclick="document.getElementById('admin-battle-panel')?.scrollIntoView({behavior:'smooth',block:'start'})" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-bolt text-red-400"></i><b class="block text-sm mt-2">Live Quiz Battle</b><span class="text-[10px] text-slate-500">Schedule daily battle</span></button>
+   <button onclick="document.getElementById('admin-bg-panel')?.scrollIntoView({behavior:'smooth',block:'start'})" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-image text-indigo-400"></i><b class="block text-sm mt-2">Background</b><span class="text-[10px] text-slate-500">Global background settings</span></button>
+   <button onclick="document.getElementById('admin-logo-panel')?.scrollIntoView({behavior:'smooth',block:'start'})" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-image text-pink-400"></i><b class="block text-sm mt-2">App Logo</b><span class="text-[10px] text-slate-500">Change app logo</span></button>
+   <button onclick="document.getElementById('hub-admin-composer')?.scrollIntoView({behavior:'smooth',block:'start'})" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-calendar-plus text-amber-300"></i><b class="block text-sm mt-2">HUB Events</b><span class="text-[10px] text-slate-500">Create / manage events</span></button>
+   <button onclick="switchTab('community')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-users text-violet-400"></i><b class="block text-sm mt-2">Community Moderation</b><span class="text-[10px] text-slate-500">Open posts & delete controls</span></button>
+  </div>
+ </div>
+ <div id="admin-controls-host" class="space-y-5"></div>
+ <div class="bg-slate-800/95 border border-slate-700 rounded-2xl p-4">
+  <div class="flex items-center justify-between gap-3">
+   <div><b class="text-sm">Other admin controls</b><p class="text-[10px] text-slate-500 mt-1">Materials, Community aur Live Events ke existing admin actions wahi available hain.</p></div>
+   <div class="flex gap-2 flex-wrap justify-end">
+    <button onclick="switchTab('materials')" class="bg-amber-600 hover:bg-amber-500 px-3 py-2 rounded-lg text-xs font-bold">Materials</button>
+    <button onclick="switchTab('community')" class="bg-violet-600 hover:bg-violet-500 px-3 py-2 rounded-lg text-xs font-bold">Community</button>
+    <button onclick="switchTab('hubevents')" class="bg-red-600 hover:bg-red-500 px-3 py-2 rounded-lg text-xs font-bold">Live Events</button>
+   </div>
+  </div>
+ </div>
+</section>
 
 <!-- HOME DASHBOARD -->
 <section id="section-home" class="rh-old-section space-y-5">
@@ -940,6 +973,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
       <button onclick="switchTab('games');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-gamepad text-fuchsia-400 text-lg"></i><span>1v1 Games</span></button>
       <button onclick="switchTab('hubevents');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-bolt text-amber-300 text-lg"></i><span>Live Events</span></button>
       <button onclick="switchTab('leaderboard');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-trophy text-yellow-400 text-lg"></i><span>Leaderboard</span></button>
+      <button onclick="switchTab('adminpanel');closeMobileMenu()" id="mob-adminpanel" class="hidden bg-red-950/60 border border-red-500/30 p-3 rounded-xl flex flex-col items-center gap-2 text-red-400"><i class="fa-solid fa-shield-halved text-lg"></i><span>Admin Panel</span></button>
       <button onclick="openProfile();closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-user-pen text-slate-300 text-lg"></i><span>Profile</span></button>
       <button onclick="logout()" class="bg-red-950/60 border border-red-500/30 p-3 rounded-xl flex flex-col items-center gap-2 text-red-400"><i class="fa-solid fa-right-from-bracket text-lg"></i><span>Logout</span></button>
     </div>
@@ -1123,10 +1157,17 @@ async function boot(){
  document.getElementById('nav-name').textContent=profile.name||user.email;
  document.getElementById('user-badge').textContent=profile.role==='admin'?'ADMIN':'MEMBER';
  if(profile.pfp_url)document.getElementById('nav-pfp').innerHTML=`<img src="${safeUrl(profile.pfp_url)}" class="w-full h-full object-cover">`;
- document.getElementById('admin-panel').classList.toggle('hidden',profile.role!=='admin');
- document.getElementById('admin-battle-panel').classList.toggle('hidden',profile.role!=='admin');
+ const isAdmin=profile.role==='admin';
+ document.getElementById('admin-panel').classList.toggle('hidden',!isAdmin);
+ document.getElementById('admin-battle-panel').classList.toggle('hidden',!isAdmin);
  document.getElementById('admin-bg-panel').classList.toggle('hidden',profile.role!=='admin');document.getElementById('admin-logo-panel').classList.toggle('hidden',profile.role!=='admin');
- document.getElementById('hub-admin-composer').classList.toggle('hidden',profile.role!=='admin');
+ document.getElementById('hub-admin-composer').classList.toggle('hidden',!isAdmin);
+ const adminNav=document.getElementById('btn-adminpanel');if(adminNav)adminNav.classList.toggle('hidden',!isAdmin);
+ const adminMob=document.getElementById('mob-adminpanel');if(adminMob)adminMob.classList.toggle('hidden',!isAdmin);
+ if(isAdmin){
+   const host=document.getElementById('admin-controls-host');
+   ['admin-panel','admin-battle-panel','admin-bg-panel','admin-logo-panel','hub-admin-composer'].forEach(id=>{const el=document.getElementById(id);if(el&&host&&!host.contains(el))host.appendChild(el);});
+ }
  setDefaultDiaryDate();
  setDefaultBattleDateTime();
  await Promise.all([loadMaterials(),loadPosts(),loadPeople(),loadChatMessages(),loadDiary(),loadStories(),loadVault(),loadLeaderboard(),loadHubEvents(),loadSpinStatus(),loadScheduledBattle()]); 
@@ -1149,7 +1190,7 @@ function openDailyBattle(){
 }
 
 function switchTab(tab){
-  ['home','ai','quiz','battle','neet720','daily-battle','materials','community','chatroom','diary','stories','games','vault','hubevents','studyrooms','leaderboard','focus'].forEach(x=>{
+  ['home','ai','quiz','battle','neet720','daily-battle','materials','community','chatroom','diary','stories','games','vault','hubevents','studyrooms','leaderboard','focus','adminpanel'].forEach(x=>{
     const sec=document.getElementById('section-'+x); if(sec)sec.classList.add('hidden');
     const btn=document.getElementById('btn-'+x); if(btn)btn.classList.remove('rh-active');
   });
