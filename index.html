@@ -18,6 +18,17 @@ body{background:#0f172a}
 .doctor-bg{background:linear-gradient(rgba(15,23,42,.90),rgba(15,23,42,.96)),url('https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=1920&q=80');background-size:cover;background-position:center;background-attachment:fixed}
 ::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:#334155;border-radius:20px}
 
+/* ===== MOBILE/TABLET MORE MENU FIX ===== */
+.rh-more-trigger{display:none!important}
+.rh-mobile-drawer{display:none!important}
+.rh-mobile-drawer.rh-open{display:flex!important}
+@media (max-width:900px){
+  .rh-more-trigger{display:flex!important}
+}
+@media (min-width:901px){
+  .rh-mobile-drawer{display:none!important}
+}
+
 /* ===== RATHOD HUB responsive app shell ===== */
 html{font-size:16px;-webkit-text-size-adjust:100%}
 body{overflow-x:hidden}
@@ -276,7 +287,7 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
  <div class="rh-brand"><div id="hub-logo-mark" class="rh-brand-mark overflow-hidden"><img id="hub-logo-img" src="icon-192.png" alt="RATHOD HUB" class="w-full h-full object-cover"></div><div><div>RATHOD HUB</div><div style="font-size:9px;color:#8b93a0;font-weight:600;letter-spacing:.08em">NEET LEARNING PLATFORM</div></div></div>
  <div class="rh-top-actions">
   <button id="install-app-btn" class="rh-icon-btn" style="display:none" onclick="installRathodHub()" title="Download / Install App"><i class="fa-solid fa-download"></i></button>
-  <button class="rh-icon-btn sm:hidden" onclick="openMobileMenu()" title="All Features"><i class="fa-solid fa-bars"></i></button>
+  <button class="rh-icon-btn rh-more-trigger" onclick="openMobileMenu()" title="All Features" aria-label="More options"><i class="fa-solid fa-bars"></i></button>
   <button class="rh-icon-btn" onclick="switchTab('focus')" title="Focus Timer"><i class="fa-solid fa-stopwatch"></i></button>
   <button class="rh-icon-btn" onclick="requestFocusNotifications();toast('Notifications permission requested 🔔')" title="Notifications"><i class="fa-regular fa-bell"></i></button>
   <button class="rh-icon-btn" onclick="switchTab('leaderboard')" title="Leaderboard"><i class="fa-solid fa-trophy"></i></button>
@@ -950,7 +961,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 </nav>
 
 <!-- MOBILE ALL FEATURES DRAWER -->
-<div id="mobile-menu-drawer" class="hidden fixed inset-0 z-[600] bg-black/80 p-4 flex flex-col justify-end backdrop-blur-sm sm:hidden">
+<div id="mobile-menu-drawer" class="rh-mobile-drawer hidden fixed inset-0 z-[600] bg-black/80 p-4 flex flex-col justify-end backdrop-blur-sm" onclick="if(event.target===this)closeMobileMenu()">
   <div class="bg-slate-900 border border-slate-700 rounded-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto">
     <div class="flex justify-between items-center border-b border-slate-800 pb-3">
       <b class="text-white text-base">All Features & Modules</b>
@@ -1171,8 +1182,23 @@ function toast(msg,ok=true){const t=document.getElementById('toast');t.textConte
 function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function safeUrl(u){try{const x=new URL(u);return ['https:','http:'].includes(x.protocol)?x.href:'#'}catch{return '#'}}
 
-function openMobileMenu(){document.getElementById('mobile-menu-drawer')?.classList.remove('hidden')}
-function closeMobileMenu(){document.getElementById('mobile-menu-drawer')?.classList.add('hidden')}
+function openMobileMenu(){
+  const d=document.getElementById('mobile-menu-drawer');
+  if(!d)return;
+  d.classList.remove('hidden');
+  d.classList.add('rh-open');
+  document.body.classList.add('rh-menu-open');
+}
+function closeMobileMenu(){
+  const d=document.getElementById('mobile-menu-drawer');
+  if(!d)return;
+  d.classList.remove('rh-open');
+  d.classList.add('hidden');
+  document.body.classList.remove('rh-menu-open');
+}
+
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMobileMenu()});
 
 function showAuth(mode){
  authMode=mode;
@@ -1402,14 +1428,45 @@ document.getElementById('material-form').addEventListener('submit',async e=>{
  const btn=document.getElementById('mat-btn');btn.disabled=true;btn.textContent='Uploading...';
  try{
   const drive=await uploadToGoogleDrive('Materials',file);
-   const url={publicUrl:driveViewUrl(drive.id),driveId:drive.id};
-  const {error}=await db.from('posts').insert({author_id:user.id,author:profile.name,title:document.getElementById('mat-title').value.trim(),desc:document.getElementById('mat-desc').value.trim(),file_name:file.name,file_url:url.publicUrl,storage_path:url.driveId,file_type:file.type,file_size:file.size,category:document.getElementById('mat-category').value,is_material:true});
-  if(error)throw error;document.getElementById('material-form').reset();toast('Material uploaded');await loadMaterials();switchTab('materials');
- }catch(err){toast(err.message||'Upload failed',false)}finally{btn.disabled=false;btn.textContent='Upload Material'}
+  if(!drive?.id)throw new Error('Google Drive upload completed, but no file ID was returned.');
+  const title=document.getElementById('mat-title').value.trim();
+  const desc=document.getElementById('mat-desc').value.trim();
+  const category=document.getElementById('mat-category').value;
+  const materialRow={author_id:user.id,author:profile.name,title,desc,file_name:file.name,file_url:drive.viewUrl||driveViewUrl(drive.id),storage_path:drive.id,file_type:file.type||'application/octet-stream',file_size:file.size,category,is_material:true};
+
+  // Save the Drive file reference in posts. If an older posts schema does not
+  // have file_size, retry once without that optional field instead of losing
+  // the material entry after a successful Drive upload.
+  let result=await db.from('posts').insert(materialRow);
+  if(result.error && ['42703','22003'].includes(String(result.error.code||''))){
+    const fallback={...materialRow};delete fallback.file_size;
+    result=await db.from('posts').insert(fallback);
+  }
+  if(result.error){
+    console.error('Material DB insert failed:',result.error);
+    throw new Error(`Drive upload ho gaya, lekin Material database me save nahi hua: ${result.error.message||result.error.details||result.error.hint||'Unknown database error'}`);
+  }
+
+  document.getElementById('material-form').reset();
+  toast('Material uploaded successfully');
+  await loadMaterials();
+  switchTab('materials');
+ }catch(err){
+  console.error('Material upload failed:',err);
+  toast(err.message||'Upload failed',false);
+ }finally{btn.disabled=false;btn.textContent='Upload Material'}
 });
 
 async function loadMaterials(){
- const {data,error}=await db.from('posts').select('*').eq('is_material',true).order('created_at',{ascending:false});if(error){console.error(error);return}materials=data||[];renderMaterials();
+ const {data,error}=await db.from('posts').select('*').eq('is_material',true).order('created_at',{ascending:false});
+ if(error){
+  console.error('loadMaterials failed:',error);
+  const box=document.getElementById('materials-box');
+  if(box)box.innerHTML=`<div class=\"text-center py-10 text-red-300\">Materials load failed: ${esc(error.message||'Database error')}</div>`;
+  return;
+ }
+ materials=data||[];
+ renderMaterials();
 }
 function renderMaterials(){
  const q=document.getElementById('material-search').value.toLowerCase(),cat=document.getElementById('material-filter').value;
