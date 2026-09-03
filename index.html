@@ -1010,8 +1010,12 @@ const db=createClient(SUPABASE_URL,SUPABASE_KEY);
 // GOOGLE DRIVE FILE STORAGE
 const GOOGLE_DRIVE_FUNCTION = 'google-drive';
 
-const GOOGLE_DRIVE_MAX_FILE_SIZE = 200 * 1024 * 1024;
-const GOOGLE_DRIVE_BASE64_LIMIT = 10 * 1024 * 1024;
+// Google Drive supports large files. Small files use the existing JSON/base64
+// path; larger files use a browser -> Google Drive resumable upload so the
+// Supabase Edge Function never has to buffer the whole file.
+const GOOGLE_DRIVE_MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2 GB
+const GOOGLE_DRIVE_BASE64_LIMIT = 10 * 1024 * 1024; // 10 MB
+const GOOGLE_DRIVE_CHUNK_SIZE = 8 * 1024 * 1024; // 8 MB
 
 function blobToBase64(blob){
   return new Promise((resolve,reject)=>{
@@ -1044,11 +1048,72 @@ async function googleDriveRequest(body){
   return data;
 }
 
-/* 10 MB तक old JSON/base64 method, 10–200 MB के लिए direct streaming. */
+async function uploadLargeFileToGoogleDrive(folderName,file){
+  const token=await getGoogleDriveAccessToken();
+  const create=await googleDriveRequest({
+    action:'create_resumable',
+    folderName,
+    fileName:file.name,
+    mimeType:file.type||'application/octet-stream',
+    fileSize:file.size
+  });
+  if(!create?.uploadUrl) throw new Error('Google Drive upload session URL missing.');
+
+  const uploadUrl=String(create.uploadUrl);
+  const total=file.size;
+  let offset=0;
+
+  while(offset<total){
+    const end=Math.min(offset+GOOGLE_DRIVE_CHUNK_SIZE,total);
+    const chunk=file.slice(offset,end);
+    const response=await fetch(uploadUrl,{
+      method:'PUT',
+      headers:{
+        'Content-Length':String(chunk.size),
+        'Content-Type':file.type||'application/octet-stream',
+        'Content-Range':`bytes ${offset}-${end-1}/${total}`
+      },
+      body:chunk
+    });
+
+    if(response.status===308){
+      const range=response.headers.get('Range')||response.headers.get('range')||'';
+      const m=range.match(/(\d+)\s*$/);
+      const confirmed=m?Number(m[1])+1:end;
+      offset=Math.max(end,confirmed);
+      continue;
+    }
+
+    const text=await response.text();
+    let result=null;
+    try{result=JSON.parse(text)}catch{}
+    if(!response.ok){
+      throw new Error(result?.error?.message||result?.error||text.slice(0,700)||`Google Drive chunk upload failed (${response.status}).`);
+    }
+    if(result?.id){
+      create.fileId=result.id;
+      offset=total;
+      break;
+    }
+    offset=end;
+  }
+
+  if(!create.fileId) throw new Error('Google Drive upload completed without a file ID.');
+
+  const final=await googleDriveRequest({
+    action:'finalize_upload',
+    folderName,
+    fileId:create.fileId
+  });
+  if(!final?.id) throw new Error('Google Drive finalization failed: file ID missing.');
+  return final;
+}
+
+/* 10 MB तक old JSON/base64 method, बड़ी files के लिए direct browser -> Drive resumable upload. */
 async function uploadToGoogleDrive(folderName,file){
   if(!file) throw new Error('File missing.');
   if(file.size>GOOGLE_DRIVE_MAX_FILE_SIZE){
-    throw new Error('File is too large. Maximum 200 MB allowed for Google Drive upload.');
+    throw new Error('File is too large. Maximum 2 GB allowed for Google Drive upload.');
   }
 
   if(file.size<=GOOGLE_DRIVE_BASE64_LIMIT){
@@ -1064,35 +1129,14 @@ async function uploadToGoogleDrive(folderName,file){
     return result;
   }
 
-  const token=await getGoogleDriveAccessToken();
-  const response=await fetch(`${SUPABASE_URL}/functions/v1/${GOOGLE_DRIVE_FUNCTION}`,{
-    method:'POST',
-    headers:{
-      apikey:SUPABASE_KEY,
-      Authorization:`Bearer ${token}`,
-      'x-drive-action':'upload_stream',
-      'x-folder-name':folderName,
-      'x-file-name':file.name,
-      'x-mime-type':file.type||'application/octet-stream',
-      'x-file-size':String(file.size)
-    },
-    body:file
-  });
-
-  const text=await response.text();
-  let result=null;
-  try{result=JSON.parse(text)}catch{}
-  if(!response.ok||!result?.id){
-    throw new Error(result?.error||`Google Drive upload failed (${response.status}).`);
-  }
-  return result;
+  return await uploadLargeFileToGoogleDrive(folderName,file);
 }
 
 function driveViewUrl(fileId){
   return `https://drive.google.com/file/d/${encodeURIComponent(fileId)}/view?usp=sharing`;
 }
 function driveImageUrl(fileId){
-  return `https://drive.google.com/uc?export=view&id=${encodeURIComponent(fileId)}`;
+  return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w1200`;
 }
 function driveDownloadUrl(fileId){
   return `https://drive.google.com/uc?export=download&id=${encodeURIComponent(fileId)}`;
@@ -1143,9 +1187,14 @@ document.getElementById('auth-form').addEventListener('submit',async e=>{
 });
 
 async function uploadProfilePic(uid,file){
- const ext=(file.name.split('.').pop()||'jpg').replace(/[^a-z0-9]/gi,'');const path=`profiles/${uid}.${ext}`;
- const result=await uploadToGoogleDrive('Profile Pictures',file); const url=driveImageUrl(result.id);
- await db.from('profiles').update({pfp_url:url}).eq('id',uid); return url;
+  if(!uid||!file) throw new Error('Profile picture missing.');
+  if(!file.type.startsWith('image/')) throw new Error('Please select an image file.');
+  const result=await uploadToGoogleDrive('Profile Pictures',file);
+  const url=String(result.imageUrl||driveImageUrl(result.id));
+  if(!result?.id||!url) throw new Error('Profile picture upload failed.');
+  const {error}=await db.from('profiles').update({pfp_url:url}).eq('id',uid);
+  if(error) throw error;
+  return url;
 }
 async function boot(){
  const r=await db.auth.getSession();session=r.data.session;if(!session)return;
@@ -2118,10 +2167,33 @@ function qbSyncCurrentRoom(){
   qbHeartbeat=setInterval(()=>{if(qbRoom)qbHeartbeatFn()},5000);
 }
 async function qbHeartbeatFn(){if(!qbRoom||!user)return;try{await db.from('quiz_battle_participants').update({last_seen:new Date().toISOString()}).eq('room_code',qbRoom.room_code).eq('user_id',user.id)}catch(e){}}
-async function qbTick(){if(!qbRoom)return;if(qbRoom.status==='waiting'){const {data}=await db.from('quiz_battle_participants').select('user_id').eq('room_code',qbRoom.room_code);const c=data?.length||0;document.getElementById('qb-waiting-count')?.replaceChildren(document.createTextNode(String(c)));return}if(qbRoom.status==='finished')return;const idx=qbCurrentIndex();if(idx>=QB_QUESTION_COUNT){if(qbRoom.host_id===user.id)await qbFinishRoom();else{qbRoom.status='finished';qbRenderRoom()}return}const sec=qbSecondsLeft();document.getElementById('qb-timer')?.replaceChildren(document.createTextNode(`${sec}s`));const bar=document.getElementById('qb-timer-bar');if(bar)bar.style.width=`${(sec/30)*100}%`;if(idx!==qbLastRenderedIndex){qbLastRenderedIndex=idx;qbRenderQuestion(idx)}}
+async function qbTick(){if(!qbRoom)return;if(qbRoom.status==='waiting'){const {data}=await db.from('quiz_battle_participants').select('user_id').eq('room_code',qbRoom.room_code);const c=data?.length||0;document.getElementById('qb-waiting-count')?.replaceChildren(document.createTextNode(String(c)));return}if(qbRoom.status==='finished')return;const idx=qbCurrentIndex();if(idx>=QB_QUESTION_COUNT){if(qbRoom.host_id===user.id)await qbFinishRoom();else{qbRoom.status='finished';qbRenderRoom();await qbRefreshParticipants();await qbLoadMyFinalStats()}return}const sec=qbSecondsLeft();document.getElementById('qb-timer')?.replaceChildren(document.createTextNode(`${sec}s`));const bar=document.getElementById('qb-timer-bar');if(bar)bar.style.width=`${(sec/30)*100}%`;if(idx!==qbLastRenderedIndex){qbLastRenderedIndex=idx;qbRenderQuestion(idx)}}
 function qbRenderQuestion(idx){const qs=Array.isArray(qbRoom?.questions)?qbRoom.questions:[],q=qs[idx];if(!q)return;document.getElementById('qb-question-num').textContent=`Question ${idx+1} / 15`;document.getElementById('qb-question-text').textContent=q.question;document.getElementById('qb-answer-note').textContent=qbSelected.has(idx)?'Answer submitted. Next question auto-sync hoga.':'';const box=document.getElementById('qb-options');box.innerHTML='';(q.options||[]).forEach((opt,j)=>{const b=document.createElement('button');b.className='qb-option w-full text-left p-3.5 rounded-xl text-sm font-semibold flex items-center gap-3';b.innerHTML=`<span class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-red-400 font-black">${String.fromCharCode(65+j)}</span><span>${qbEsc(opt)}</span>`;b.disabled=qbSelected.has(idx);b.onclick=()=>qbAnswer(idx,j,b);box.appendChild(b)})}
 async function qbAnswer(idx,selected,clicked){if(!qbRoom||qbRoom.status!=='live'||qbSelected.has(idx))return;if(qbCurrentIndex()!==idx)return toast('Time over — next question live ho chuka hai.',false);qbSelected.add(idx);const q=qbRoom.questions[idx],correct=Number(q.correct_index??q.answer??0),isCorrect=selected===correct;document.querySelectorAll('#qb-options button').forEach(b=>b.disabled=true);if(isCorrect)clicked.classList.add('qb-correct');else clicked.classList.add('qb-wrong');const buttons=document.querySelectorAll('#qb-options button');if(buttons[correct])buttons[correct].classList.add('qb-correct');const xp=isCorrect?10:0;try{const {error}=await db.from('quiz_battle_answers').insert({room_code:qbRoom.room_code,user_id:user.id,question_index:idx,selected_index:selected,is_correct:isCorrect,xp_awarded:xp});if(error&&error.code!=='23505')throw error;if(isCorrect){const {data:p}=await db.from('quiz_battle_participants').select('score,xp_earned').eq('room_code',qbRoom.room_code).eq('user_id',user.id).maybeSingle();const score=Number(p?.score||0)+1,earned=Number(p?.xp_earned||0)+10;const {error:ue}=await db.from('quiz_battle_participants').update({score,xp_earned:earned,last_seen:new Date().toISOString()}).eq('room_code',qbRoom.room_code).eq('user_id',user.id);if(ue)throw ue;await grantXP(10);toast('+10 XP 🎉')}await qbRefreshParticipants();try{await qbChannel?.send({type:'broadcast',event:'battle-event',payload:{type:'refresh'}})}catch(e){}}catch(e){console.warn('qbAnswer',e);toast(e.message||'Answer save nahi hua.',false)}}
-async function qbRefreshParticipants(){if(!qbRoom)return;try{const {data,error}=await db.from('quiz_battle_participants').select('user_id,user_name,score,xp_earned,last_seen').eq('room_code',qbRoom.room_code).order('score',{ascending:false}).order('xp_earned',{ascending:false});if(error)throw error;const now=Date.now(),online=(data||[]).filter(p=>now-new Date(p.last_seen||0).getTime()<12000),set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};set('qb-waiting-count',data?.length||0);set('qb-live-count',`${online.length} online`);const html=(data||[]).map((p,i)=>`<div class="qb-card ${p.user_id===user.id?'qb-rank-me':''} border rounded-xl p-2.5 flex items-center gap-2"><span class="w-6 text-center font-black text-xs">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</span><div class="min-w-0 flex-1"><b class="block truncate text-xs">${qbEsc(p.user_name||'Student')}${p.user_id===user.id?' (You)':''}</b><span class="text-[9px] text-slate-500">${Number(p.score||0)} correct • +${Number(p.xp_earned||0)} XP</span></div><span class="w-2 h-2 rounded-full ${now-new Date(p.last_seen||0).getTime()<12000?'bg-emerald-400':'bg-slate-700'}"></span></div>`).join('')||'<div class="text-xs text-slate-500 text-center py-5">Waiting for players...</div>';document.getElementById('qb-leaderboard')?.replaceChildren();const lb=document.getElementById('qb-leaderboard');if(lb)lb.innerHTML=html;const fl=document.getElementById('qb-final-leaderboard');if(fl)fl.innerHTML=html}catch(e){console.warn('qbRefreshParticipants',e)}}
+async function qbRefreshParticipants(){
+  if(!qbRoom)return;
+  try{
+    const {data,error}=await db.from('quiz_battle_participants')
+      .select('user_id,user_name,score,xp_earned,last_seen')
+      .eq('room_code',qbRoom.room_code)
+      .order('score',{ascending:false})
+      .order('xp_earned',{ascending:false});
+    if(error)throw error;
+    const rows=data||[],now=Date.now();
+    const online=rows.filter(p=>now-new Date(p.last_seen||0).getTime()<12000);
+    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
+    set('qb-waiting-count',rows.length);
+    set('qb-live-count',`${online.length} online`);
+    const html=rows.map((p,i)=>`<div class="qb-card ${p.user_id===user.id?'qb-rank-me':''} border rounded-xl p-2.5 flex items-center gap-2"><span class="w-6 text-center font-black text-xs">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</span><div class="min-w-0 flex-1"><b class="block truncate text-xs">${qbEsc(p.user_name||'Student')}${p.user_id===user.id?' (You)':''}</b><span class="text-[9px] text-slate-500">${Number(p.score||0)} correct • +${Number(p.xp_earned||0)} XP</span></div><span class="w-2 h-2 rounded-full ${now-new Date(p.last_seen||0).getTime()<12000?'bg-emerald-400':'bg-slate-700'}"></span></div>`).join('')||'<div class="text-xs text-slate-500 text-center py-5">Waiting for players...</div>';
+    const lb=document.getElementById('qb-leaderboard');if(lb)lb.innerHTML=html;
+    const fl=document.getElementById('qb-final-leaderboard');if(fl)fl.innerHTML=html;
+  }catch(e){
+    console.warn('qbRefreshParticipants',e);
+    const msg=`Leaderboard load failed: ${esc(e?.message||'Database/RLS error')}`;
+    const lb=document.getElementById('qb-leaderboard');if(lb)lb.innerHTML=`<div class="text-red-400 text-xs text-center py-4">${msg}</div>`;
+    const fl=document.getElementById('qb-final-leaderboard');if(fl)fl.innerHTML=`<div class="text-red-400 text-xs text-center py-4">${msg}</div>`;
+  }
+}
 async function qbFinishRoom(){if(!qbRoom)return;const {data,error}=await db.from('quiz_battle_rooms').update({status:'finished',finished_at:new Date().toISOString()}).eq('room_code',qbRoom.room_code).eq('host_id',user.id).eq('status','live').select('*').single();if(!error&&data){qbRoom=data;qbRenderRoom();await qbRefreshParticipants();await qbLoadMyFinalStats();try{await qbChannel?.send({type:'broadcast',event:'battle-event',payload:{type:'finished'}})}catch(e){}}}
 async function qbLeaveMatch(silent=false){clearInterval(qbTimer);clearInterval(qbPoll);clearInterval(qbHeartbeat);if(qbChannel){try{await db.removeChannel(qbChannel)}catch(e){}qbChannel=null;}if(qbRoom&&user&&qbRoom.status!=='finished'){try{await db.from('quiz_battle_participants').delete().eq('room_code',qbRoom.room_code).eq('user_id',user.id)}catch(e){}}qbRoom=null;qbSelected.clear();qbLastRenderedIndex=-1;qbShowLiveLayout();document.getElementById('qb-match')?.classList.add('hidden');document.getElementById('qb-lobby')?.classList.remove('hidden');document.getElementById('qb-global-status').textContent='NO QUIZ';document.getElementById('qb-private-invite')?.classList.add('hidden');if(!silent)await qbLoadRooms()}
 function qbBackToLobby(){qbLeaveMatch()}
@@ -2194,10 +2266,32 @@ function n720RenderRoom(){if(!n720Room)return;n720ShowMatch();const set=(id,v)=>
 async function n720StartMatch(){if(!n720Room||n720Room.host_id!==user.id||n720Room.status!=='waiting')return;const started_at=new Date().toISOString();const {data,error}=await db.from('quiz_battle_rooms').update({status:'live',started_at}).eq('room_code',n720Room.room_code).eq('host_id',user.id).eq('status','waiting').select('*').single();if(error)return toast(error.message||'Quiz start failed',false);n720Room=data;n720RenderRoom();n720SyncCurrentRoom();try{await n720Channel?.send({type:'broadcast',event:'n720-event',payload:{type:'started'}})}catch(e){}}
 function n720SyncCurrentRoom(){if(!n720Room)return;clearInterval(n720Timer);n720Timer=setInterval(n720Tick,200);n720Tick();clearInterval(n720Poll);n720Poll=setInterval(n720RefreshParticipants,1500);clearInterval(n720Heartbeat);n720Heartbeat=setInterval(n720HeartbeatFn,5000)}
 async function n720HeartbeatFn(){if(!n720Room||!user)return;try{await db.from('quiz_battle_participants').update({last_seen:new Date().toISOString()}).eq('room_code',n720Room.room_code).eq('user_id',user.id)}catch(e){}}
-async function n720Tick(){if(!n720Room)return;if(n720Room.status==='waiting'){const {data}=await db.from('quiz_battle_participants').select('user_id').eq('room_code',n720Room.room_code);const e=document.getElementById('n720-waiting-count');if(e)e.textContent=data?.length||0;return}if(n720Room.status==='finished')return;const idx=n720CurrentIndex();const total=Number(n720Room.question_count||n720Count||15);if(idx>=total){if(n720Room.host_id===user.id)await n720FinishRoom();else{n720Room.status='finished';n720RenderRoom();await n720LoadFinalStats()}return}const sec=n720SecondsLeft();const t=document.getElementById('n720-timer');if(t)t.textContent=`${sec}s`;const bar=document.getElementById('n720-timer-bar');if(bar)bar.style.width=`${(sec/N720_SECONDS)*100}%`;if(idx!==n720LastIndex){n720LastIndex=idx;n720RenderQuestion(idx)}}
+async function n720Tick(){if(!n720Room)return;if(n720Room.status==='waiting'){const {data}=await db.from('quiz_battle_participants').select('user_id').eq('room_code',n720Room.room_code);const e=document.getElementById('n720-waiting-count');if(e)e.textContent=data?.length||0;return}if(n720Room.status==='finished')return;const idx=n720CurrentIndex();const total=Number(n720Room.question_count||n720Count||15);if(idx>=total){if(n720Room.host_id===user.id)await n720FinishRoom();else{n720Room.status='finished';n720RenderRoom();await n720RefreshParticipants();await n720LoadFinalStats()}return}const sec=n720SecondsLeft();const t=document.getElementById('n720-timer');if(t)t.textContent=`${sec}s`;const bar=document.getElementById('n720-timer-bar');if(bar)bar.style.width=`${(sec/N720_SECONDS)*100}%`;if(idx!==n720LastIndex){n720LastIndex=idx;n720RenderQuestion(idx)}}
 function n720RenderQuestion(idx){const qs=Array.isArray(n720Room?.questions)?n720Room.questions:[],q=qs[idx];if(!q)return;const total=Number(n720Room.question_count||qs.length);document.getElementById('n720-question-num').textContent=`Question ${idx+1} / ${total}`;document.getElementById('n720-question-text').textContent=q.question;document.getElementById('n720-answer-note').textContent=n720Selected.has(idx)?'Answer submitted. Next question auto-sync hoga.':'';const box=document.getElementById('n720-options');box.innerHTML='';(q.options||[]).forEach((opt,j)=>{const b=document.createElement('button');b.className='qb-option w-full text-left p-3.5 rounded-xl text-sm font-semibold flex items-center gap-3';b.innerHTML=`<span class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-emerald-400 font-black">${String.fromCharCode(65+j)}</span><span>${n720Esc(opt)}</span>`;b.disabled=n720Selected.has(idx);b.onclick=()=>n720Answer(idx,j,b);box.appendChild(b)})}
 async function n720Answer(idx,selected,clicked){if(!n720Room||n720Room.status!=='live'||n720Selected.has(idx))return;if(n720CurrentIndex()!==idx)return toast('Time over — next question live ho chuka hai.',false);n720Selected.add(idx);const q=n720Room.questions[idx],correct=Number(q.correct_index??q.answer??0),isCorrect=selected===correct;document.querySelectorAll('#n720-options button').forEach(b=>b.disabled=true);if(isCorrect)clicked.classList.add('qb-correct');else clicked.classList.add('qb-wrong');const buttons=document.querySelectorAll('#n720-options button');if(buttons[correct])buttons[correct].classList.add('qb-correct');const xp=isCorrect?N720_XP:0;try{const {error}=await db.from('quiz_battle_answers').insert({room_code:n720Room.room_code,user_id:user.id,question_index:idx,selected_index:selected,is_correct:isCorrect,xp_awarded:xp});if(error&&error.code!=='23505')throw error;if(isCorrect){const {data:p}=await db.from('quiz_battle_participants').select('score,xp_earned').eq('room_code',n720Room.room_code).eq('user_id',user.id).maybeSingle();const score=Number(p?.score||0)+1,earned=Number(p?.xp_earned||0)+N720_XP;await db.from('quiz_battle_participants').update({score,xp_earned:earned,last_seen:new Date().toISOString()}).eq('room_code',n720Room.room_code).eq('user_id',user.id);await grantXP(N720_XP);toast(`+${N720_XP} XP 🎉`)}await n720RefreshParticipants();try{await n720Channel?.send({type:'broadcast',event:'n720-event',payload:{type:'refresh'}})}catch(e){}}catch(e){console.warn('n720Answer',e)}}
-async function n720RefreshParticipants(){if(!n720Room)return;try{const {data,error}=await db.from('quiz_battle_participants').select('user_id,user_name,score,xp_earned,last_seen').eq('room_code',n720Room.room_code).order('score',{ascending:false}).order('xp_earned',{ascending:false});if(error)throw error;const now=Date.now(),rows=data||[];const online=rows.filter(p=>now-new Date(p.last_seen||0).getTime()<12000);const html=rows.map((p,i)=>`<div class="qb-card ${p.user_id===user.id?'qb-rank-me':''} border rounded-xl p-2.5 flex items-center gap-2"><span class="w-6 text-center font-black text-xs">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</span><div class="min-w-0 flex-1"><b class="block truncate text-xs">${n720Esc(p.user_name||'Student')}${p.user_id===user.id?' (You)':''}</b><span class="text-[9px] text-slate-500">${Number(p.score||0)} correct • +${Number(p.xp_earned||0)} XP</span></div><span class="w-2 h-2 rounded-full ${now-new Date(p.last_seen||0).getTime()<12000?'bg-emerald-400':'bg-slate-700'}"></span></div>`).join('')||'<div class="text-xs text-slate-500 text-center py-5">Waiting for players...</div>';document.getElementById('n720-leaderboard')&&(document.getElementById('n720-leaderboard').innerHTML=html);document.getElementById('n720-final-leaderboard')&&(document.getElementById('n720-final-leaderboard').innerHTML=html);const wc=document.getElementById('n720-waiting-count');if(wc)wc.textContent=rows.length;const lc=document.getElementById('n720-live-count');if(lc)lc.textContent=`${online.length} online`}catch(e){console.warn('n720RefreshParticipants',e)}}
+async function n720RefreshParticipants(){
+  if(!n720Room)return;
+  try{
+    const {data,error}=await db.from('quiz_battle_participants')
+      .select('user_id,user_name,score,xp_earned,last_seen')
+      .eq('room_code',n720Room.room_code)
+      .order('score',{ascending:false})
+      .order('xp_earned',{ascending:false});
+    if(error)throw error;
+    const rows=data||[],now=Date.now();
+    const online=rows.filter(p=>now-new Date(p.last_seen||0).getTime()<12000);
+    const html=rows.map((p,i)=>`<div class="qb-card ${p.user_id===user.id?'qb-rank-me':''} border rounded-xl p-2.5 flex items-center gap-2"><span class="w-6 text-center font-black text-xs">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</span><div class="min-w-0 flex-1"><b class="block truncate text-xs">${n720Esc(p.user_name||'Student')}${p.user_id===user.id?' (You)':''}</b><span class="text-[9px] text-slate-500">${Number(p.score||0)} correct • +${Number(p.xp_earned||0)} XP</span></div><span class="w-2 h-2 rounded-full ${now-new Date(p.last_seen||0).getTime()<12000?'bg-emerald-400':'bg-slate-700'}"></span></div>`).join('')||'<div class="text-xs text-slate-500 text-center py-5">Waiting for players...</div>';
+    const lb=document.getElementById('n720-leaderboard');if(lb)lb.innerHTML=html;
+    const fl=document.getElementById('n720-final-leaderboard');if(fl)fl.innerHTML=html;
+    const wc=document.getElementById('n720-waiting-count');if(wc)wc.textContent=rows.length;
+    const lc=document.getElementById('n720-live-count');if(lc)lc.textContent=`${online.length} online`;
+  }catch(e){
+    console.warn('n720RefreshParticipants',e);
+    const msg=`Leaderboard load failed: ${esc(e?.message||'Database/RLS error')}`;
+    const lb=document.getElementById('n720-leaderboard');if(lb)lb.innerHTML=`<div class="text-red-400 text-xs text-center py-4">${msg}</div>`;
+    const fl=document.getElementById('n720-final-leaderboard');if(fl)fl.innerHTML=`<div class="text-red-400 text-xs text-center py-4">${msg}</div>`;
+  }
+}
 async function n720FinishRoom(){if(!n720Room)return;const {data,error}=await db.from('quiz_battle_rooms').update({status:'finished',finished_at:new Date().toISOString()}).eq('room_code',n720Room.room_code).eq('host_id',user.id).eq('status','live').select('*').single();if(!error&&data){n720Room=data;n720RenderRoom();await n720RefreshParticipants();await n720LoadFinalStats();try{await n720Channel?.send({type:'broadcast',event:'n720-event',payload:{type:'finished'}})}catch(e){}}}
 async function n720LoadFinalStats(){
   if(!n720Room||!user)return;
@@ -2508,16 +2602,30 @@ async function finishBattle() {
 
   if(user){
     try {
-      const { error } = await db.from("quiz_battle_scores").insert([{
-        user_id: user.id,
-        user_name: profile?.name || user.email || "NEET Aspirant",
-        score: userBattleScore,
-        xp_earned: totalBattleXP
-      }]);
-      if(error) throw error;
+      const payload={
+        user_id:user.id,
+        user_name:profile?.name||user.email||"NEET Aspirant",
+        score:Number(userBattleScore||0),
+        xp_earned:Number(totalBattleXP||0),
+        created_at:new Date().toISOString()
+      };
+      // battle_key is used when the database has the column; if an older
+      // database does not, retry without it so the final result still saves.
+      const key=dailyBattleKey();
+      let result;
+      if(key){
+        result=await db.from("quiz_battle_scores").insert([{...payload,battle_key:key}]);
+        if(result.error && /battle_key|column/i.test(result.error.message||'')){
+          result=await db.from("quiz_battle_scores").insert([payload]);
+        }
+      }else{
+        result=await db.from("quiz_battle_scores").insert([payload]);
+      }
+      if(result.error) throw result.error;
       dailyBattleScoreSaved = true;
     } catch (e) {
       console.warn("Daily Battle score save failed:", e);
+      toast(e?.message||"Daily Battle result save nahi hua.",false);
     }
   }
 
@@ -2530,54 +2638,69 @@ async function loadBattleLeaderboard() {
   list.innerHTML = `<div class="text-slate-500 text-xs">Loading Daily 9 PM Ranks...</div>`;
 
   try {
-    // This leaderboard is intentionally restricted to today's Daily 9 PM
-    // battle results, so it never mixes with Community Live Quiz scores.
     const {start, end} = dailyBattleDayRange();
     const key = dailyBattleKey();
-    let query = db.from("quiz_battle_scores")
-      .select("user_id, user_name, score, xp_earned, created_at, battle_key")
-      .order("score", { ascending: false })
-      .order("xp_earned", { ascending: false })
-      .limit(50);
-    // New rows use battle_key so each scheduled 9 PM battle is isolated.
-    // Fallback to today's local date keeps old score rows visible after migration.
-    const { data: keyed, error: keyedError } = key ? await query.eq("battle_key", key) : {data:null,error:null};
-    let data=keyed, error=keyedError;
-    if((error || !data || data.length===0) && !keyedError){
-      const fallback=await db.from("quiz_battle_scores").select("user_id, user_name, score, xp_earned, created_at, battle_key").gte("created_at",start).lt("created_at",end).order("score",{ascending:false}).order("xp_earned",{ascending:false}).limit(50);
-      data=fallback.data; error=fallback.error;
+
+    // Do not select/filter by battle_key here. Older installations may not
+    // have that column, and today's timestamp is the reliable compatibility
+    // filter for the 9 PM battle.
+    let rows=null, error=null;
+
+    if(key){
+      const keyed=await db.from("quiz_battle_scores")
+        .select("user_id,user_name,score,xp_earned,created_at")
+        .eq("battle_key",key)
+        .order("score",{ascending:false})
+        .order("xp_earned",{ascending:false})
+        .limit(50);
+
+      if(!keyed.error && keyed.data?.length){
+        rows=keyed.data;
+      }else if(keyed.error && !/battle_key|column/i.test(keyed.error.message||'')){
+        console.warn("Battle key query failed; using date fallback:",keyed.error);
+      }
     }
 
-    if (error || !data || data.length === 0) {
-      list.innerHTML = `<div class="text-slate-500 text-xs">Aaj ke Daily 9 PM Battle ka leaderboard abhi empty hai.</div>`;
+    // Compatibility fallback: works whether battle_key exists or not.
+    if(!rows){
+      const fallback=await db.from("quiz_battle_scores")
+        .select("user_id,user_name,score,xp_earned,created_at")
+        .gte("created_at",start)
+        .lt("created_at",end)
+        .order("score",{ascending:false})
+        .order("xp_earned",{ascending:false})
+        .limit(50);
+      rows=fallback.data||null;
+      error=fallback.error||null;
+    }
+
+    if(error){
+      console.warn("Daily leaderboard query error:",error);
+      list.innerHTML=`<div class="text-red-400 text-xs">Leaderboard load failed: ${esc(error.message||"Database error")}</div>`;
+      return;
+    }
+    if(!rows || rows.length===0){
+      list.innerHTML=`<div class="text-slate-500 text-xs">Aaj ke Daily 9 PM Battle ka leaderboard abhi empty hai.</div>`;
       return;
     }
 
-    list.innerHTML = data.map((entry, idx) => `
-      <div class="flex justify-between items-center py-1.5 border-b border-slate-900 ${entry.user_name === profile?.name ? 'text-amber-400 font-bold' : 'text-slate-300'}">
+    list.innerHTML=rows.map((entry,idx)=>`
+      <div class="flex justify-between items-center py-1.5 border-b border-slate-900 ${entry.user_id===user?.id?'text-amber-400 font-bold':entry.user_name===profile?.name?'text-amber-400 font-bold':'text-slate-300'}">
         <div class="flex items-center space-x-2">
-          <span class="w-5 text-xs font-black">${idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '#'+(idx+1)}</span>
-          <span>${esc(entry.user_name)}</span>
+          <span class="w-5 text-xs font-black">${idx===0?'🥇':idx===1?'🥈':idx===2?'🥉':'#'+(idx+1)}</span>
+          <span>${esc(entry.user_name||'NEET Aspirant')}</span>
         </div>
         <div class="flex items-center space-x-3 text-xs">
-          <span>${entry.score} / ${DAILY_BATTLE_QUESTIONS}</span>
-          <span class="text-emerald-400 font-bold">+${entry.xp_earned} XP</span>
+          <span>${Number(entry.score||0)} / ${DAILY_BATTLE_QUESTIONS}</span>
+          <span class="text-emerald-400 font-bold">+${Number(entry.xp_earned||0)} XP</span>
         </div>
       </div>
     `).join("");
-  } catch (e) {
-    list.innerHTML = `<div class="text-slate-500 text-xs">Leaderboard update failed.</div>`;
-    console.warn("Daily leaderboard failed:", e);
+  } catch(e) {
+    console.warn("Daily leaderboard failed:",e);
+    list.innerHTML=`<div class="text-red-400 text-xs">Leaderboard update failed: ${esc(e?.message||"Unknown error")}</div>`;
   }
 }
-
-// Keep the clock running from the official scheduled timestamp.
-// No local 30-second countdown is used for question changes, preventing drift
-// between users/devices.
-battleSyncInterval = setInterval(() => {
-  syncDailyBattleClock();
-}, 250);
-
 
 /* ==================== DAILY 9 PM ADMIN SCHEDULER ==================== */
 document.getElementById('admin-battle-form')?.addEventListener('submit', async (e) => {
