@@ -343,7 +343,7 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
 <select id="mat-category" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
 <option>Biology</option><option>Chemistry</option><option>Physics</option><option>PYQ</option><option>Test</option><option>Notes</option><option>Other</option>
 </select>
-<input id="mat-file" type="file" required accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,image/*" class="text-xs text-slate-400">
+<div><input id="mat-file" type="file" required accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,image/*" class="w-full text-xs text-slate-400"><div class="text-[10px] text-slate-500 mt-1">Minimum 1 MB • Maximum 200 MB</div></div>
 </div>
 <button id="mat-btn" class="w-full bg-red-600 hover:bg-red-500 py-2.5 rounded-lg text-sm font-bold">Upload Material</button>
 </form>
@@ -857,10 +857,12 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 
 <section id="section-materials" class="hidden">
 <div class="bg-slate-800/95 rounded-2xl p-5">
-<div class="flex gap-2 mb-4">
-<input id="material-search" oninput="renderMaterials()" placeholder="Search study material..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
-<select id="material-filter" onchange="renderMaterials()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm"><option value="">All</option><option>Biology</option><option>Chemistry</option><option>Physics</option><option>PYQ</option><option>Test</option><option>Notes</option><option>Other</option></select>
-</div>
+<div class="flex gap-2 mb-2 flex-wrap">
+ <input id="material-search" oninput="renderMaterials()" placeholder="Search study material..." class="flex-1 min-w-[180px] bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+ <select id="material-filter" onchange="renderMaterials()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm"><option value="">All</option><option>Biology</option><option>Chemistry</option><option>Physics</option><option>PYQ</option><option>Test</option><option>Notes</option><option>Other</option></select>
+ <button type="button" onclick="loadMaterials(true)" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-rotate mr-1"></i>Refresh</button>
+ </div>
+ <p class="text-[10px] text-slate-500 mb-4">Google Drive Materials folder automatically sync hota hai • Upload limit: 1 MB–200 MB</p>
 <div id="materials-box" class="space-y-3"></div>
 </div>
 </section>
@@ -1067,9 +1069,10 @@ const GOOGLE_DRIVE_FUNCTION = 'google-drive';
 // Google Drive supports large files. Small files use the existing JSON/base64
 // path; larger files use a browser -> Google Drive resumable upload so the
 // Supabase Edge Function never has to buffer the whole file.
-const GOOGLE_DRIVE_MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2 GB
+const GOOGLE_DRIVE_MAX_FILE_SIZE = 200 * 1024 * 1024; // 200 MB
 const GOOGLE_DRIVE_BASE64_LIMIT = 10 * 1024 * 1024; // 10 MB
-const GOOGLE_DRIVE_CHUNK_SIZE = 8 * 1024 * 1024; // 8 MB
+const GOOGLE_DRIVE_CHUNK_SIZE = 8 * 1024 * 1024; // compatibility constant; large uploads use upload_stream
+const GOOGLE_DRIVE_MIN_MATERIAL_SIZE = 1 * 1024 * 1024; // 1 MB
 
 function blobToBase64(blob){
   return new Promise((resolve,reject)=>{
@@ -1103,86 +1106,61 @@ async function googleDriveRequest(body){
 }
 
 async function uploadLargeFileToGoogleDrive(folderName,file){
-  const token=await getGoogleDriveAccessToken();
-  const create=await googleDriveRequest({
-    action:'create_resumable',
-    folderName,
-    fileName:file.name,
-    mimeType:file.type||'application/octet-stream',
-    fileSize:file.size
-  });
-  if(!create?.uploadUrl) throw new Error('Google Drive upload session URL missing.');
-
-  const uploadUrl=String(create.uploadUrl);
-  const total=file.size;
-  let offset=0;
-
-  // IMPORTANT: do NOT PUT chunks directly to Google's upload URL from the
-  // browser. Some browsers/hosts report a generic NetworkError because the
-  // Google resumable endpoint's CORS/preflight can fail. Instead, send each
-  // small chunk to our Supabase Edge Function; the Edge Function proxies the
-  // chunk to Google. This keeps large files away from the old base64/JSON path.
-  const sessionToken=(await db.auth.getSession()).data?.session?.access_token;
-  if(!sessionToken) throw new Error('Login session expired. Please login again.');
-  const functionUrl=`${SUPABASE_URL}/functions/v1/${GOOGLE_DRIVE_FUNCTION}`;
-
-  while(offset<total){
-    const end=Math.min(offset+GOOGLE_DRIVE_CHUNK_SIZE,total);
-    const chunk=file.slice(offset,end);
-    const response=await fetch(functionUrl,{
-      method:'POST',
-      headers:{
-        apikey:SUPABASE_KEY,
-        Authorization:`Bearer ${sessionToken}`,
-        'Content-Type':'application/octet-stream',
-        'x-drive-action':'upload_chunk',
-        'x-upload-url':uploadUrl,
-        'x-upload-offset':String(offset),
-        'x-upload-total':String(total),
-        'x-upload-mime-type':file.type||'application/octet-stream'
-      },
-      body:chunk
-    });
-
-    const text=await response.text();
-    let result=null;
-    try{result=JSON.parse(text)}catch{}
-
-    if(response.status===308){
-      const range=result?.range||response.headers.get('Range')||response.headers.get('range')||'';
-      const m=String(range).match(/(\d+)\s*$/);
-      const confirmed=m?Number(m[1])+1:end;
-      offset=Math.max(end,confirmed);
-      continue;
-    }
-
-    if(!response.ok){
-      throw new Error(result?.error?.message||result?.error||text.slice(0,700)||`Google Drive chunk upload failed (${response.status}).`);
-    }
-    if(result?.id){
-      create.fileId=result.id;
-      offset=total;
-      break;
-    }
-    offset=end;
+  if(!file) throw new Error('File missing.');
+  if(file.size>GOOGLE_DRIVE_MAX_FILE_SIZE){
+    throw new Error('File is too large. Maximum 200 MB allowed.');
   }
 
-  if(!create.fileId) throw new Error('Google Drive upload completed without a file ID.');
+  const token=await getGoogleDriveAccessToken();
+  const functionUrl=`${SUPABASE_URL}/functions/v1/${GOOGLE_DRIVE_FUNCTION}`;
 
-  const final=await googleDriveRequest({
-    action:'finalize_upload',
-    folderName,
-    fileId:create.fileId
+  return await new Promise((resolve,reject)=>{
+    const xhr=new XMLHttpRequest();
+    xhr.open('POST',functionUrl,true);
+    xhr.setRequestHeader('apikey',SUPABASE_KEY);
+    xhr.setRequestHeader('Authorization',`Bearer ${token}`);
+    xhr.setRequestHeader('Content-Type','application/octet-stream');
+    xhr.setRequestHeader('x-drive-action','upload_stream');
+    xhr.setRequestHeader('x-folder-name',encodeURIComponent(folderName));
+    xhr.setRequestHeader('x-file-name',encodeURIComponent(file.name));
+    xhr.setRequestHeader('x-mime-type',file.type||'application/octet-stream');
+    xhr.setRequestHeader('x-file-size',String(file.size));
+
+    xhr.upload.onprogress=(event)=>{
+      if(!event.lengthComputable)return;
+      const pct=Math.min(100,Math.round(event.loaded/event.total*100));
+      const btn=document.getElementById('mat-btn');
+      if(btn&&folderName==='Materials')btn.textContent=`Uploading ${pct}%`;
+    };
+
+    xhr.onerror=()=>reject(new Error('Network error while uploading to Google Drive.'));
+    xhr.ontimeout=()=>reject(new Error('Google Drive upload timed out. Please try again.'));
+    xhr.timeout=0;
+
+    xhr.onload=()=>{
+      const raw=String(xhr.responseText||'');
+      let result=null;
+      try{result=JSON.parse(raw)}catch{}
+      if(xhr.status<200||xhr.status>=300||result?.error){
+        reject(new Error(result?.error||raw.slice(0,700)||`Google Drive upload failed (${xhr.status}).`));
+        return;
+      }
+      if(!result?.id){
+        reject(new Error('Google Drive upload completed without a file ID.'));
+        return;
+      }
+      resolve(result);
+    };
+
+    try{xhr.send(file)}catch(e){reject(e)}
   });
-  if(!final?.id) throw new Error('Google Drive finalization failed: file ID missing.');
-  return final;
 }
 
-/* 10 MB तक old JSON/base64 method, बड़ी files के लिए direct browser -> Drive resumable upload. */
+/* 10 MB तक old JSON/base64 method, बड़ी files के लिए raw streaming upload. */
 async function uploadToGoogleDrive(folderName,file){
   if(!file) throw new Error('File missing.');
   if(file.size>GOOGLE_DRIVE_MAX_FILE_SIZE){
-    throw new Error('File is too large. Maximum 2 GB allowed for Google Drive upload.');
+    throw new Error('File is too large. Maximum 200 MB allowed for Google Drive upload.');
   }
 
   if(file.size<=GOOGLE_DRIVE_BASE64_LIMIT){
@@ -1303,13 +1281,13 @@ async function boot(){
  }
  setDefaultDiaryDate();
  setDefaultBattleDateTime();
- await Promise.all([loadMaterials(),loadPosts(),loadPeople(),loadChatMessages(),loadDiary(),loadStories(),loadVault(),loadLeaderboard(),loadHubEvents(),loadSpinStatus(),loadScheduledBattle()]); 
+ await Promise.all([loadMaterials(),loadPosts(),loadPeople(),loadChatMessages(),loadDiary(),loadStories(),loadVault(),loadLeaderboard(),loadHubEvents(),loadSpinStatus(),loadScheduledBattle()]); startMaterialsAutoRefresh(); 
  await initGamePresence(); subscribeToChat(); renderStudyRooms();
   qbInit();qbAutoJoinFromLink();
  if(profile.role==='admin')populateBackgroundForm();
- initFocusSystem(); applyRHSectionHeaders(); renderHomeDashboard(); switchTab('home');
+ initFocusSystem(); applyRHSectionHeaders(); renderHomeDashboard(); switchTab(isAdmin?'adminpanel':'home');
 }
-db.auth.onAuthStateChange((event,s)=>{if(event==='SIGNED_OUT')cleanupChatSubscription();if(s&&!session)setTimeout(boot,0)});
+db.auth.onAuthStateChange((event,s)=>{if(event==='SIGNED_OUT'){session=null;user=null;profile=null;cleanupChatSubscription();return;}if(s){session=s;if(!user||String(user.id)!==String(s.user?.id))setTimeout(boot,0)}});
 async function cleanupFocusSystem(){if(focusInterval)clearInterval(focusInterval);focusInterval=null;if(focusHeartbeat)clearInterval(focusHeartbeat);focusHeartbeat=null;if(focusChannel){try{await db.removeChannel(focusChannel)}catch(e){}focusChannel=null}focusReady=false}
 async function logout(){await cleanupChatSubscription();await cleanupGamePresence();await cleanupFocusSystem();stopAllVoiceAndRooms();await db.auth.signOut();location.reload()}
 
@@ -1487,57 +1465,148 @@ async function deleteDiary(id){
 }
 
 document.getElementById('material-form').addEventListener('submit',async e=>{
- e.preventDefault();if(profile?.role!=='admin')return toast('Admin only',false);
- const file=document.getElementById('mat-file').files[0];if(!file)return;
- const btn=document.getElementById('mat-btn');btn.disabled=true;btn.textContent='Uploading...';
- try{
-  const drive=await uploadToGoogleDrive('Materials',file);
-  if(!drive?.id)throw new Error('Google Drive upload completed, but no file ID was returned.');
-  const title=document.getElementById('mat-title').value.trim();
-  const desc=document.getElementById('mat-desc').value.trim();
-  const category=document.getElementById('mat-category').value;
-  const materialRow={author_id:user.id,author:profile.name,title,desc,file_name:file.name,file_url:drive.viewUrl||driveViewUrl(drive.id),storage_path:drive.id,file_type:file.type||'application/octet-stream',file_size:file.size,category,is_material:true};
+  e.preventDefault();
+  if(profile?.role!=='admin')return toast('Admin only',false);
+  const file=document.getElementById('mat-file').files[0];
+  if(!file)return toast('File select karein.',false);
+  if(file.size<GOOGLE_DRIVE_MIN_MATERIAL_SIZE)return toast('Material file kam se kam 1 MB hona chahiye.',false);
+  if(file.size>GOOGLE_DRIVE_MAX_FILE_SIZE)return toast('Material file maximum 200 MB ho sakta hai.',false);
 
-  // Save the Drive file reference in posts. If an older posts schema does not
-  // have file_size, retry once without that optional field instead of losing
-  // the material entry after a successful Drive upload.
-  let result=await db.from('posts').insert(materialRow);
-  if(result.error && ['42703','22003'].includes(String(result.error.code||''))){
-    const fallback={...materialRow};delete fallback.file_size;
-    result=await db.from('posts').insert(fallback);
-  }
-  if(result.error){
-    console.error('Material DB insert failed:',result.error);
-    throw new Error(`Drive upload ho gaya, lekin Material database me save nahi hua: ${result.error.message||result.error.details||result.error.hint||'Unknown database error'}`);
-  }
+  const btn=document.getElementById('mat-btn');
+  btn.disabled=true;btn.textContent='Uploading 0%';
 
-  document.getElementById('material-form').reset();
-  toast('Material uploaded successfully');
-  await loadMaterials();
-  switchTab('materials');
- }catch(err){
-  console.error('Material upload failed:',err);
-  toast(err.message||'Upload failed',false);
- }finally{btn.disabled=false;btn.textContent='Upload Material'}
+  try{
+    const drive=await uploadToGoogleDrive('Materials',file);
+    if(!drive?.id)throw new Error('Google Drive upload completed, but no file ID was returned.');
+
+    const title=document.getElementById('mat-title').value.trim();
+    const desc=document.getElementById('mat-desc').value.trim();
+    const category=document.getElementById('mat-category').value;
+    const materialRow={
+      author_id:user.id,author:profile.name,title,desc,file_name:file.name,
+      file_url:drive.viewUrl||driveViewUrl(drive.id),storage_path:drive.id,
+      file_type:file.type||'application/octet-stream',file_size:file.size,
+      category,is_material:true
+    };
+
+    let result=await db.from('posts').insert(materialRow);
+    if(result.error&&['42703','22003'].includes(String(result.error.code||''))){
+      const fallback={...materialRow};delete fallback.file_size;
+      result=await db.from('posts').insert(fallback);
+    }
+    if(result.error){
+      console.error('Material DB insert failed:',result.error);
+      throw new Error(`Drive upload ho gaya, lekin Material database me save nahi hua: ${result.error.message||result.error.details||result.error.hint||'Unknown database error'}`);
+    }
+
+    document.getElementById('material-form').reset();
+    toast('Material uploaded to Google Drive successfully');
+    await loadMaterials(true);
+    switchTab('materials');
+  }catch(err){
+    console.error('Material upload failed:',err);
+    toast(err.message||'Upload failed',false);
+  }finally{
+    btn.disabled=false;btn.textContent='Upload Material';
+  }
 });
 
-async function loadMaterials(){
- const {data,error}=await db.from('posts').select('*').eq('is_material',true).order('created_at',{ascending:false});
- if(error){
-  console.error('loadMaterials failed:',error);
-  const box=document.getElementById('materials-box');
-  if(box)box.innerHTML=`<div class=\"text-center py-10 text-red-300\">Materials load failed: ${esc(error.message||'Database error')}</div>`;
-  return;
- }
- materials=data||[];
- renderMaterials();
+async function loadMaterials(showDriveSyncToast=false){
+  if(!user)return;
+
+  const dbResult=await db.from('posts').select('*').eq('is_material',true).order('created_at',{ascending:false});
+  if(dbResult.error){
+    console.error('loadMaterials database failed:',dbResult.error);
+    const box=document.getElementById('materials-box');
+    if(box)box.innerHTML=`<div class="text-center py-10 text-red-300">Materials load failed: ${esc(dbResult.error.message||'Database error')}</div>`;
+    return;
+  }
+
+  const dbRows=dbResult.data||[];
+  let driveRows=[];
+  try{
+    const drive=await googleDriveRequest({action:'list_folder',folderName:'Materials'});
+    driveRows=Array.isArray(drive?.files)?drive.files:[];
+  }catch(err){
+    console.warn('Google Drive Materials sync failed:',err);
+    if(showDriveSyncToast)toast(`Drive sync failed: ${err.message||'Unknown error'}`,false);
+  }
+
+  const knownDriveIds=new Set(dbRows.map(m=>String(m.storage_path||'')).filter(Boolean));
+  const driveOnly=driveRows.filter(f=>f?.id&&!knownDriveIds.has(String(f.id))).map(f=>({
+    id:null,drive_id:String(f.id),drive_only:true,author_id:null,author:'Google Drive',
+    title:f.name||'Material',desc:'Google Drive • manually added',file_name:f.name||'File',
+    file_url:f.viewUrl||driveViewUrl(f.id),storage_path:String(f.id),
+    file_type:f.mimeType||'application/octet-stream',file_size:Number(f.size||0),
+    category:'Other',is_material:true,created_at:f.createdTime||f.modifiedTime||new Date().toISOString()
+  }));
+
+  materials=[...dbRows,...driveOnly].sort((a,b)=>{
+    const ad=new Date(a.created_at||0).getTime(),bd=new Date(b.created_at||0).getTime();
+    return bd-ad;
+  });
+  renderMaterials();
+  if(showDriveSyncToast)toast(`Materials refreshed • ${driveRows.length} Drive files found`);
 }
+
 function renderMaterials(){
- const q=document.getElementById('material-search').value.toLowerCase(),cat=document.getElementById('material-filter').value;
- const arr=materials.filter(m=>(!q||`${m.title} ${m.desc} ${m.category}`.toLowerCase().includes(q))&&(!cat||m.category===cat));
- document.getElementById('materials-box').innerHTML=arr.length?arr.map(m=>`<div class="bg-slate-900/80 border border-amber-500/20 p-4 rounded-xl flex justify-between gap-3 items-center"><div class="min-w-0"><span class="text-[10px] bg-amber-500/10 text-amber-300 px-2 py-1 rounded">${esc(m.category||'Study')}</span><h4 class="font-bold text-sm mt-2">${esc(m.title)}</h4><p class="text-xs text-slate-400">${esc(m.desc||'')}</p><p class="text-[10px] text-slate-500 mt-1">${esc(m.file_name||'File')}</p></div><div class="flex gap-2 shrink-0"><a target="_blank" href="${safeUrl(m.file_url)}" class="bg-amber-500 text-slate-950 px-3 py-2 rounded-lg text-xs font-bold">Open</a>${m.storage_path?`<a target="_blank" rel="noopener" href="${safeUrl(driveDownloadUrl(m.storage_path))}" download class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-download mr-1"></i>Download</a>`:''}${profile?.role==='admin'?`<button onclick="deleteMaterial('${m.id}')" class="bg-red-600 px-3 py-2 rounded-lg text-xs font-bold">Delete</button>`:''}</div></div>`).join(''):'<div class="text-center py-10 text-slate-500">No material found.</div>';
+  const q=(document.getElementById('material-search')?.value||'').toLowerCase().trim();
+  const cat=document.getElementById('material-filter')?.value||'';
+  const arr=materials.filter(m=>
+    (!q||`${m.title||''} ${m.desc||''} ${m.category||''} ${m.file_name||''}`.toLowerCase().includes(q)) &&
+    (!cat||m.category===cat)
+  );
+
+  document.getElementById('materials-box').innerHTML=arr.length?arr.map(m=>{
+    const driveOnly=!!m.drive_only;
+    const size=m.file_size?fmtBytes(m.file_size):'';
+    const deleteButton=(profile?.role==='admin'&&!driveOnly&&m.id)
+      ?`<button onclick="deleteMaterial('${m.id}')" class="bg-red-600 hover:bg-red-500 px-3 py-2 rounded-lg text-xs font-bold">Delete</button>`:'';
+    return `<div class="bg-slate-900/80 border border-amber-500/20 p-4 rounded-xl flex justify-between gap-3 items-center">
+      <div class="min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-[10px] bg-amber-500/10 text-amber-300 px-2 py-1 rounded">${esc(m.category||'Study')}</span>
+          ${driveOnly?'<span class="text-[10px] bg-sky-500/10 text-sky-300 px-2 py-1 rounded">DRIVE</span>':''}
+        </div>
+        <h4 class="font-bold text-sm mt-2">${esc(m.title||m.file_name||'Material')}</h4>
+        <p class="text-xs text-slate-400">${esc(m.desc||'')}</p>
+        <p class="text-[10px] text-slate-500 mt-1">${esc(m.file_name||'File')}${size?' • '+esc(size):''}</p>
+      </div>
+      <div class="flex gap-2 shrink-0 flex-wrap justify-end">
+        <a target="_blank" rel="noopener" href="${safeUrl(m.file_url||driveViewUrl(m.storage_path))}" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-3 py-2 rounded-lg text-xs font-bold">Open</a>
+        ${m.storage_path?`<a target="_blank" rel="noopener" href="${safeUrl(driveDownloadUrl(m.storage_path))}" download class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-download mr-1"></i>Download</a>`:''}
+        ${deleteButton}
+      </div>
+    </div>`;
+  }).join(''):'<div class="text-center py-10 text-slate-500">No material found.</div>';
 }
-async function deleteMaterial(id){if(profile?.role!=='admin')return;if(!confirm('Delete this material?'))return;const item=materials.find(x=>String(x.id)===String(id));const{error}=await db.from('posts').delete().eq('id',id);if(error)return toast(error.message,false);if(item?.storage_path){try{await deleteFromGoogleDrive(item.storage_path)}catch(e){console.warn('Drive delete failed',e)}}toast('Deleted');await loadMaterials()}
+
+async function deleteMaterial(id){
+  if(profile?.role!=='admin'||!id)return;
+  if(!confirm('Delete this material?'))return;
+  const item=materials.find(x=>String(x.id)===String(id));
+  const{error}=await db.from('posts').delete().eq('id',id);
+  if(error)return toast(error.message,false);
+  if(item?.storage_path){
+    try{await deleteFromGoogleDrive(item.storage_path)}catch(e){console.warn('Drive delete failed',e)}
+  }
+  toast('Deleted');
+  await loadMaterials(true);
+}
+
+let materialsRefreshTimer=null;
+function startMaterialsAutoRefresh(){
+  if(materialsRefreshTimer)clearInterval(materialsRefreshTimer);
+  materialsRefreshTimer=setInterval(()=>{
+    if(user&&document.visibilityState==='visible'){
+      const sec=document.getElementById('section-materials');
+      if(sec&&!sec.classList.contains('hidden'))loadMaterials(false);
+    }
+  },30000);
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&user)loadMaterials(false);
+});
 
 document.getElementById('post-form').addEventListener('submit',async e=>{
  e.preventDefault();const btn=document.getElementById('post-btn');btn.disabled=true;btn.textContent='Posting...';
@@ -3678,6 +3747,26 @@ function focusStatsKey(){return focusKey()+'_stats'}
 function focusDefaultStats(){return {sessions:[],goalHours:4}}
 function readFocusStats(){try{return JSON.parse(localStorage.getItem(focusStatsKey())||JSON.stringify(focusDefaultStats()))}catch{return focusDefaultStats()}}
 function writeFocusStats(x){localStorage.setItem(focusStatsKey(),JSON.stringify(x))}
+let focusDbReady=false,focusDbLoading=false;
+function focusSessionId(s){return s.id||((crypto&&crypto.randomUUID)?crypto.randomUUID():('fs_'+Date.now()+'_'+Math.random().toString(36).slice(2)))}
+async function migrateLocalFocusSessionsToSupabase(){
+  if(!user)return;
+  try{
+    const st=readFocusStats(),sessions=Array.isArray(st.sessions)?st.sessions:[];
+    if(!sessions.length)return;
+    const rows=sessions.filter(x=>Number(x.seconds||0)>=60).map(x=>({id:focusSessionId(x),user_id:user.id,date:x.date,seconds:Math.round(Number(x.seconds||0)),subject:x.subject||'Other',started_at:x.at||new Date().toISOString()}));
+    if(!rows.length)return;
+    const {error}=await db.from('focus_sessions').upsert(rows,{onConflict:'id'});if(error)throw error;
+  }catch(e){console.warn('Local focus migration failed:',e)}
+}
+async function loadFocusSessionsFromSupabase(){
+  if(!user||focusDbLoading)return; focusDbLoading=true;
+  try{const {data,error}=await db.from('focus_sessions').select('id,date,seconds,subject,started_at,created_at').eq('user_id',user.id).order('started_at',{ascending:false}).limit(5000);if(error)throw error;const rows=(data||[]).map(r=>({id:r.id,date:r.date,seconds:Number(r.seconds||0),subject:r.subject||'Other',at:r.started_at||r.created_at||new Date().toISOString()}));const st=readFocusStats();st.sessions=rows;writeFocusStats(st);focusDbReady=true}catch(e){console.warn('Focus DB load failed:',e);focusDbReady=false}finally{focusDbLoading=false;renderFocusDashboard();renderHomeDashboard()}
+}
+async function persistFocusSession(session){
+  if(!user||!session)return;const id=focusSessionId(session);session.id=id;
+  try{const {error}=await db.from('focus_sessions').upsert({id,user_id:user.id,date:session.date,seconds:Math.round(Number(session.seconds||0)),subject:session.subject||'Other',started_at:session.at||new Date().toISOString()},{onConflict:'id'});if(error)throw error;focusDbReady=true}catch(e){console.warn('Focus session save failed:',e);toast('Focus data database me save nahi hua. RLS policy check karein.',false)}
+}
 function saveFocusState(){if(!user)return;localStorage.setItem(focusStoreKey(),JSON.stringify(focusState))}
 function readFocusState(){try{const x=JSON.parse(localStorage.getItem(focusStoreKey())||'null');return x&&Number(x.duration)>0?x:null}catch{return null}}
 function fmtFocus(sec){sec=Math.max(0,Math.floor(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}
@@ -3746,21 +3835,14 @@ function completeFocusTimer(){
 }
 function startPomodoroBreak(){if(focusInterval)clearInterval(focusInterval);focusState={duration:600,remaining:600,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:focusState.subject||'Other',pomodoro:true,break:true};saveFocusState();renderFocusTimer();startFocusTimer();notifyFocus('🍅 Break time','50-minute focus complete. Take a 10-minute break.');}
 function renderFocusTimer(){const d=document.getElementById('focus-timer-display');if(!d)return;const rem=focusRemaining();d.textContent=fmtFocus(rem);const pct=focusState.duration?Math.min(100,Math.max(0,(1-rem/focusState.duration)*100)):0;const bar=document.getElementById('focus-progress');if(bar)bar.style.width=pct+'%';const mode=document.getElementById('focus-mode-label');if(mode)mode.textContent=focusState.break?'BREAK':'FOCUS SESSION';const st=document.getElementById('focus-session-status');if(st)st.textContent=focusState.status==='running'?(focusState.break?'Break running ☕':'Studying now 🔥'):focusState.status==='paused'?'Paused ⏸️':'Ready to study';const sb=document.getElementById('focus-start-btn'),pb=document.getElementById('focus-pause-btn'),xb=document.getElementById('focus-stop-btn');if(sb)sb.classList.toggle('hidden',focusState.status==='running');if(pb)pb.classList.toggle('hidden',focusState.status!=='running');if(xb)xb.classList.toggle('hidden',!['running','paused'].includes(focusState.status));}
-function recordFocusSession(seconds,subject){
-  if(seconds<60)return;
-  const st=readFocusStats();
-  const now=new Date();
-  st.sessions=Array.isArray(st.sessions)?st.sessions:[];
-  st.sessions.push({date:localDay(now),seconds:Math.round(seconds),subject:subject||'Other',at:now.toISOString()});
-  st.sessions=st.sessions.slice(-2000);
-  writeFocusStats(st);
-  renderFocusDashboard();
-  renderHomeDashboard();
-  broadcastFocus();
-  const today=st.sessions.filter(x=>x.date===localDay()).reduce((a,x)=>a+Number(x.seconds||0),0);
-  const goal=Number(st.goalHours||4)*3600;
-  if(today>=goal&&!st.goalNotifiedDate){st.goalNotifiedDate=localDay();writeFocusStats(st);notifyFocus('🎯 Daily goal complete!','Your study goal for today is complete.');toast('Daily goal complete! 🏆');}
+async function recordFocusSession(seconds,subject){
+  if(seconds<60||!user)return;const st=readFocusStats();const now=new Date();st.sessions=Array.isArray(st.sessions)?st.sessions:[];
+  const session={id:((crypto&&crypto.randomUUID)?crypto.randomUUID():('fs_'+Date.now()+'_'+Math.random().toString(36).slice(2))),date:localDay(now),seconds:Math.round(seconds),subject:subject||'Other',at:now.toISOString()};
+  st.sessions.push(session);st.sessions=st.sessions.slice(-2000);writeFocusStats(st);renderFocusDashboard();renderHomeDashboard();broadcastFocus();await persistFocusSession(session);
+  const today=st.sessions.filter(x=>x.date===localDay()).reduce((a,x)=>a+Number(x.seconds||0),0),goal=Number(st.goalHours||4)*3600;
+  if(today>=goal&&!st.goalNotifiedDate){st.goalNotifiedDate=localDay();writeFocusStats(st);notifyFocus('🎯 Daily goal complete!','Your study goal for today is complete.');toast('Daily goal complete! 🏆')}
 }
+
 function saveFocusGoal(){const st=readFocusStats();let h=Math.min(24,Math.max(.25,Number(document.getElementById('focus-goal-hours').value)||4));st.goalHours=h;writeFocusStats(st);renderFocusDashboard();renderHomeDashboard()}
 function renderFocusDashboard(){
   if(!user)return;
@@ -3850,6 +3932,8 @@ async function initFocusSystem(){
   const st=readFocusStats();
   if(!st.goalHours)st.goalHours=4;
   writeFocusStats(st);
+  await migrateLocalFocusSessionsToSupabase();
+  await loadFocusSessionsFromSupabase();
   if(focusChannel){try{await db.removeChannel(focusChannel)}catch(e){}}
   focusChannel=db.channel('rathod-hub-focus-live',{config:{presence:{key:user.id},broadcast:{self:false}}})
     .on('presence',{event:'sync'},()=>{renderLiveFocusUsers()})
