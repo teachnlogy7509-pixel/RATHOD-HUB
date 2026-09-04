@@ -1535,7 +1535,7 @@ async function migrateMaterialsToGoogleDrive(){
     if(last?.type==='complete'){
       const failedCount=Number(last.failed||0);
       if(failedCount>0){
-        const firstErrors=Array.isArray(last.errors)?last.errors.slice(0,3).map(x=>`${x.name}: ${x.error}`).join(' | '):'';
+        const firstErrors=Array.isArray(last.errors)?last.errors.slice(0,5).map(x=>`${x.name}: ${x.error}`).join(' | '):'';
         toast(`Migration complete • ${last.success||0} migrated • ${failedCount} failed${firstErrors?' • '+firstErrors:''}`,false);
         console.error('Migration failures:',last.errors||[]);
       }else{
@@ -1555,39 +1555,101 @@ async function migrateMaterialsToGoogleDrive(){
   }
 }
 
+let materialsLoadInProgress=false;
+let materialsLastSyncAt=0;
+
 async function loadMaterials(showDriveSyncToast=false){
-  if(!user)return;
+  if(!user || materialsLoadInProgress)return;
+  materialsLoadInProgress=true;
 
-  const dbResult=await db.from('posts').select('*').eq('is_material',true).order('created_at',{ascending:false});
-  if(dbResult.error){
-    console.error('loadMaterials database failed:',dbResult.error);
-  }
-
-  const dbRows=dbResult.error?[]:(dbResult.data||[]);
-  let driveRows=[];
   try{
-    const drive=await googleDriveRequest({action:'list_folder',folderName:'Materials'});
-    driveRows=Array.isArray(drive?.files)?drive.files:[];
-  }catch(err){
-    console.warn('Google Drive Materials sync failed:',err);
-    if(showDriveSyncToast)toast(`Drive sync failed: ${err.message||'Unknown error'}`,false);
+    let dbRows=[];
+    try{
+      const dbResult=await db.from('posts')
+        .select('*')
+        .eq('is_material',true)
+        .order('created_at',{ascending:false});
+      if(dbResult.error)console.warn('Materials DB load failed:',dbResult.error);
+      else dbRows=dbResult.data||[];
+    }catch(err){
+      console.warn('Materials DB exception:',err);
+    }
+
+    let driveRows=[];
+    let driveError=null;
+
+    try{
+      // Use direct function URL + current session so list_folder works
+      // even if the Supabase SDK invocation has a stale client state.
+      const token=await getGoogleDriveAccessToken();
+      const response=await fetch(`${SUPABASE_URL}/functions/v1/${GOOGLE_DRIVE_FUNCTION}`,{
+        method:'POST',
+        headers:{
+          'apikey':SUPABASE_KEY,
+          'Authorization':`Bearer ${token}`,
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({action:'list_folder',folderName:'Materials'})
+      });
+
+      const text=await response.text();
+      let drive=null;
+      try{drive=JSON.parse(text)}catch{}
+
+      if(!response.ok||drive?.error){
+        throw new Error(drive?.error||text.slice(0,700)||`Drive sync failed (${response.status})`);
+      }
+
+      driveRows=Array.isArray(drive?.files)?drive.files:[];
+      materialsLastSyncAt=Date.now();
+    }catch(err){
+      driveError=err;
+      console.error('Google Drive Materials sync failed:',err);
+    }
+
+    const knownDriveIds=new Set(
+      dbRows.map(m=>String(m.storage_path||'')).filter(x=>x)
+    );
+
+    // If a DB row already points to a Drive ID, don't duplicate it.
+    const driveOnly=driveRows
+      .filter(f=>f?.id&&!knownDriveIds.has(String(f.id)))
+      .map(f=>({
+        id:null,
+        drive_id:String(f.id),
+        drive_only:true,
+        author_id:null,
+        author:'Google Drive',
+        title:f.name||'Material',
+        desc:'Google Drive • manually added',
+        file_name:f.name||'File',
+        file_url:f.viewUrl||driveViewUrl(f.id),
+        storage_path:String(f.id),
+        file_type:f.mimeType||'application/octet-stream',
+        file_size:Number(f.size||0),
+        category:'Other',
+        is_material:true,
+        created_at:f.createdTime||f.modifiedTime||new Date().toISOString()
+      }));
+
+    materials=[...dbRows,...driveOnly].sort((a,b)=>{
+      const ad=new Date(a.created_at||0).getTime();
+      const bd=new Date(b.created_at||0).getTime();
+      return bd-ad;
+    });
+
+    renderMaterials();
+
+    if(showDriveSyncToast){
+      if(driveError){
+        toast(`Drive sync failed: ${driveError.message||'Unknown error'}`,false);
+      }else{
+        toast(`Google Drive synced • ${driveRows.length} files found`,true);
+      }
+    }
+  }finally{
+    materialsLoadInProgress=false;
   }
-
-  const knownDriveIds=new Set(dbRows.map(m=>String(m.storage_path||'')).filter(Boolean));
-  const driveOnly=driveRows.filter(f=>f?.id&&!knownDriveIds.has(String(f.id))).map(f=>({
-    id:null,drive_id:String(f.id),drive_only:true,author_id:null,author:'Google Drive',
-    title:f.name||'Material',desc:'Google Drive • manually added',file_name:f.name||'File',
-    file_url:f.viewUrl||driveViewUrl(f.id),storage_path:String(f.id),
-    file_type:f.mimeType||'application/octet-stream',file_size:Number(f.size||0),
-    category:'Other',is_material:true,created_at:f.createdTime||f.modifiedTime||new Date().toISOString()
-  }));
-
-  materials=[...dbRows,...driveOnly].sort((a,b)=>{
-    const ad=new Date(a.created_at||0).getTime(),bd=new Date(b.created_at||0).getTime();
-    return bd-ad;
-  });
-  renderMaterials();
-  if(showDriveSyncToast)toast(`Materials synced • ${driveRows.length} Google Drive files found`,true);
 }
 
 function renderMaterials(){
@@ -1645,6 +1707,7 @@ function startMaterialsAutoRefresh(){
     }
   },5000);
 }
+window.addEventListener('focus',()=>{if(user)loadMaterials(false)});
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'&&user)loadMaterials(false);
 });
