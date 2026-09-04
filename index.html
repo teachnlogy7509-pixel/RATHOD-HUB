@@ -1385,9 +1385,26 @@ function getFocusTodayMinutes(){
   return Math.round(todaySec/60);
 }
 
+function getFocusTodaySeconds(){
+  const st=readFocusStats();
+  const today=localDay();
+  let sec=(st.sessions||[]).filter(x=>x.date===today).reduce((a,x)=>a+Number(x.seconds||0),0);
+  if(focusState&&focusState.status==='running'&&!focusState.break){
+    sec+=Math.min(Number(focusState.duration||0),Math.max(0,focusElapsed()));
+  }
+  return Math.max(0,sec);
+}
+
 function getFocusStreak(){
   const st=readFocusStats();
-  return focusStreak(st.sessions||[]);
+  const sessions=Array.isArray(st.sessions)?st.sessions.slice():[];
+  if(focusState&&focusState.status==='running'&&!focusState.break&&focusElapsed()>=60){
+    const today=localDay();
+    const existing=sessions.find(x=>x.date===today);
+    if(existing) existing.seconds=Math.max(Number(existing.seconds||0),Math.round(focusElapsed()));
+    else sessions.push({date:today,seconds:Math.round(focusElapsed()),subject:focusState.subject||'Other',at:new Date().toISOString()});
+  }
+  return focusStreak(sessions);
 }
 
 async function loadChatMessages(){
@@ -3336,7 +3353,7 @@ function tickHubCountdown(){
 }
 setInterval(tickHubCountdown,1000);
 setInterval(()=>{if(user&&document.visibilityState==='visible')loadHubEvents()},60000);
-setInterval(()=>{if(user)renderHomeDashboard()},5000);
+setInterval(()=>{if(user){renderHomeDashboard();if(focusState&&focusState.status==='running'){renderFocusDashboard();if(typeof rhRathodNewRefresh==='function'&&!document.getElementById('section-rathodnew')?.classList.contains('hidden'))rhRathodNewRefresh()}}},1000);
 
 function renderHubEventsAdminList(){
  const box=document.getElementById('hub-events-list');if(!box)return;
@@ -3745,7 +3762,24 @@ function recordFocusSession(seconds,subject){
   if(today>=goal&&!st.goalNotifiedDate){st.goalNotifiedDate=localDay();writeFocusStats(st);notifyFocus('🎯 Daily goal complete!','Your study goal for today is complete.');toast('Daily goal complete! 🏆');}
 }
 function saveFocusGoal(){const st=readFocusStats();let h=Math.min(24,Math.max(.25,Number(document.getElementById('focus-goal-hours').value)||4));st.goalHours=h;writeFocusStats(st);renderFocusDashboard();renderHomeDashboard()}
-function renderFocusDashboard(){if(!user)return;const st=readFocusStats(),today=localDay(),todaySec=getFocusTodaySeconds();const goal=Number(st.goalHours||4);const t=document.getElementById('focus-today-time');if(t)t.textContent=fmtHM(todaySec);const ses=document.getElementById('focus-sessions');if(ses)ses.textContent=st.sessions.length;const gh=document.getElementById('focus-goal-hours');if(gh)gh.value=goal;const gl=document.getElementById('focus-goal-label');if(gl)gl.textContent=`${fmtHM(todaySec)} / ${goal}h`;const gb=document.getElementById('focus-goal-bar');if(gb)gb.style.width=Math.min(100,todaySec/(goal*3600)*100)+'%';const streak=document.getElementById('focus-streak');if(streak)streak.textContent=(focusStreak(st.sessions))+' 🔥';renderFocusWeek(st.sessions);renderFocusAchievements(st.sessions);renderFocusTimer();updateNotifyStatus()}
+function renderFocusDashboard(){
+  if(!user)return;
+  const st=readFocusStats(),today=localDay(),todaySec=getFocusTodaySeconds();
+  const goal=Number(st.goalHours||4);
+  const t=document.getElementById('focus-today-time');if(t)t.textContent=fmtHM(todaySec);
+  const ses=document.getElementById('focus-sessions');if(ses)ses.textContent=st.sessions.length+(focusState.status==='running'&&!focusState.break&&focusElapsed()>=60?1:0);
+  const gh=document.getElementById('focus-goal-hours');if(gh)gh.value=goal;
+  const gl=document.getElementById('focus-goal-label');if(gl)gl.textContent=`${fmtHM(todaySec)} / ${goal}h`;
+  const gb=document.getElementById('focus-goal-bar');if(gb)gb.style.width=Math.min(100,todaySec/(goal*3600)*100)+'%';
+  const streak=getFocusStreak();const streakEl=document.getElementById('focus-streak');if(streakEl)streakEl.textContent=streak+' 🔥';
+  const sessions=st.sessions.slice();
+  if(focusState.status==='running'&&!focusState.break&&focusElapsed()>=60){
+    const idx=sessions.findIndex(x=>x.date===today);
+    if(idx>=0)sessions[idx]={...sessions[idx],seconds:Math.max(Number(sessions[idx].seconds||0),Math.round(focusElapsed()))};
+    else sessions.push({date:today,seconds:Math.round(focusElapsed()),subject:focusState.subject||'Other',at:new Date().toISOString()});
+  }
+  renderFocusWeek(sessions);renderFocusAchievements(sessions);renderFocusTimer();updateNotifyStatus();
+}
 function focusStreak(sessions){const days=new Set((sessions||[]).filter(x=>Number(x.seconds||0)>=60).map(x=>x.date));let d=localDay();let n=0;while(days.has(d)){n++;d=addDays(d,-1)}return n}
 function renderFocusWeek(sessions){const box=document.getElementById('focus-week-chart');if(!box)return;const vals=[];for(let i=6;i>=0;i--){const day=addDays(localDay(),-i);const sec=(sessions||[]).filter(x=>x.date===day).reduce((a,x)=>a+Number(x.seconds||0),0);vals.push({day,sec})}const max=Math.max(1,...vals.map(x=>x.sec));const total=vals.reduce((a,x)=>a+x.sec,0);const wt=document.getElementById('focus-week-total');if(wt)wt.textContent=fmtHM(total);box.innerHTML=vals.map(v=>`<div class="h-full flex flex-col justify-end items-center gap-1"><span class="text-[9px] text-slate-500">${v.sec?fmtHM(v.sec).replace(' ',''):''}</span><div class="w-full bg-emerald-500/70 rounded-t-md" style="height:${Math.max(6,v.sec/max*100)}%" title="${v.day}: ${fmtHM(v.sec)}"></div><span class="text-[9px] text-slate-500">${new Date(v.day+'T12:00:00').toLocaleDateString(undefined,{weekday:'short'}).slice(0,3)}</span></div>`).join('')}
 function renderFocusAchievements(sessions){const total=(sessions||[]).reduce((a,x)=>a+Number(x.seconds||0),0),streak=focusStreak(sessions);const items=[['🌱','First Session',sessions.length>=1],['⏱️','1 Hour',total>=3600],['🔥','7 Day Streak',streak>=7],['🏆','10 Hours',total>=36000],['💎','25 Sessions',sessions.length>=25],['🚀','25 Hours',total>=90000],['🧠','50 Sessions',sessions.length>=50],['👑','50 Hour Club',total>=180000]];const box=document.getElementById('focus-achievements');if(box)box.innerHTML=items.map(x=>`<div class="rounded-xl p-3 border ${x[2]?'border-fuchsia-500/40 bg-fuchsia-500/10':'border-slate-700 bg-slate-900/60 opacity-50'}"><div class="text-xl">${x[0]}</div><b class="text-xs block mt-1">${x[1]}</b><span class="text-[9px] text-slate-500">${x[2]?'UNLOCKED':'Locked'}</span></div>`).join('')}
