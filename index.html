@@ -863,7 +863,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
  <select id="material-filter" onchange="renderMaterials()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm"><option value="">All</option><option>Biology</option><option>Chemistry</option><option>Physics</option><option>PYQ</option><option>Test</option><option>Notes</option><option>Other</option></select>
  <button type="button" onclick="loadMaterials(true)" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-rotate mr-1"></i>Refresh</button>
  </div>
- <p class="text-[10px] text-slate-500 mb-4">Google Drive Materials folder automatically sync hota hai • Upload limit: 1 MB–500 MB</p>
+ <p class="text-[10px] text-slate-500 mb-4">Google Drive Materials folder auto-sync hota hai • Refresh every 5 sec • Upload limit: 1 MB–500 MB</p>
 <div id="materials-box" class="space-y-3"></div>
 </div>
 </section>
@@ -1533,7 +1533,14 @@ async function migrateMaterialsToGoogleDrive(){
     for(const line of lines){try{last=JSON.parse(line);}catch{}}
     if(!response.ok)throw new Error(last?.error||text.slice(0,700)||`Migration failed (${response.status})`);
     if(last?.type==='complete'){
-      toast(`Migration complete • ${last.success||0} migrated • ${last.failed||0} failed`,(last.failed||0)===0);
+      const failedCount=Number(last.failed||0);
+      if(failedCount>0){
+        const firstErrors=Array.isArray(last.errors)?last.errors.slice(0,3).map(x=>`${x.name}: ${x.error}`).join(' | '):'';
+        toast(`Migration complete • ${last.success||0} migrated • ${failedCount} failed${firstErrors?' • '+firstErrors:''}`,false);
+        console.error('Migration failures:',last.errors||[]);
+      }else{
+        toast(`Migration complete • ${last.success||0} migrated • 0 failed`,true);
+      }
     }else if(last?.type==='fatal'){
       throw new Error(last.error||'Migration failed.');
     }else{
@@ -1554,12 +1561,9 @@ async function loadMaterials(showDriveSyncToast=false){
   const dbResult=await db.from('posts').select('*').eq('is_material',true).order('created_at',{ascending:false});
   if(dbResult.error){
     console.error('loadMaterials database failed:',dbResult.error);
-    const box=document.getElementById('materials-box');
-    if(box)box.innerHTML=`<div class="text-center py-10 text-red-300">Materials load failed: ${esc(dbResult.error.message||'Database error')}</div>`;
-    return;
   }
 
-  const dbRows=dbResult.data||[];
+  const dbRows=dbResult.error?[]:(dbResult.data||[]);
   let driveRows=[];
   try{
     const drive=await googleDriveRequest({action:'list_folder',folderName:'Materials'});
@@ -1583,7 +1587,7 @@ async function loadMaterials(showDriveSyncToast=false){
     return bd-ad;
   });
   renderMaterials();
-  if(showDriveSyncToast)toast(`Materials refreshed • ${driveRows.length} Drive files found`);
+  if(showDriveSyncToast)toast(`Materials synced • ${driveRows.length} Google Drive files found`,true);
 }
 
 function renderMaterials(){
@@ -1639,7 +1643,7 @@ function startMaterialsAutoRefresh(){
       const sec=document.getElementById('section-materials');
       if(sec&&!sec.classList.contains('hidden'))loadMaterials(false);
     }
-  },10000);
+  },5000);
 }
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'&&user)loadMaterials(false);
