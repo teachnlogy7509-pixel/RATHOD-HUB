@@ -322,6 +322,8 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
  <button onclick="switchTab('games')" id="btn-games" class="rh-nav-btn"><i class="fa-solid fa-gamepad"></i><span>Games</span></button>
  <button onclick="switchTab('hubevents')" id="btn-hubevents" class="rh-nav-btn"><i class="fa-solid fa-bolt"></i><span>Live Events</span></button>
  <button onclick="switchTab('leaderboard')" id="btn-leaderboard" class="rh-nav-btn"><i class="fa-solid fa-trophy"></i><span>Leaderboard</span></button>
+       <button onclick="switchTab('rathodnew');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2 border border-violet-500/30"><i class="fa-solid fa-wand-magic-sparkles text-violet-400 text-lg"></i><span>RATHOD NEW</span></button>
+ <button onclick="switchTab('rathodnew')" id="btn-rathodnew" class="rh-nav-btn"><i class="fa-solid fa-wand-magic-sparkles"></i><span>RATHOD NEW</span></button>
  <button onclick="switchTab('adminpanel')" id="btn-adminpanel" class="rh-nav-btn hidden" style="color:#f87171"><i class="fa-solid fa-shield-halved"></i><span>Admin Panel</span></button>
  <div class="rh-side-sep"></div>
  <button onclick="openProfile()" class="rh-nav-btn"><i class="fa-solid fa-user"></i><span>My Profile</span></button>
@@ -467,7 +469,38 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
 </section>
 
 <!-- HOME DASHBOARD -->
-<section id="section-home" class="rh-old-section space-y-5">
+<section id="section-home" class="rh-old-section space-y-5"><!-- RATHOD HUB AI STUDY COACH -->
+<section id="rh-ai-coach-card" class="mt-5 rounded-3xl border border-indigo-100 bg-gradient-to-br from-white via-indigo-50/60 to-violet-50 p-5 shadow-sm">
+  <div class="flex items-start justify-between gap-3">
+    <div>
+      <div class="text-xs font-black uppercase tracking-wider text-indigo-600">🤖 AI Study Coach</div>
+      <h3 class="mt-1 text-xl font-black text-slate-800">Talk to Your Preparation</h3>
+      <p class="mt-1 text-sm text-slate-500">Apne study data ke baare mein AI se baat karo.</p>
+    </div>
+    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg">🤖</div>
+  </div>
+  <div class="mt-4 grid gap-3 sm:grid-cols-3">
+    <div class="rounded-2xl bg-white/80 p-3 border border-white"><div class="text-[11px] text-slate-500">Aaj ke questions</div><div id="rh-coach-q" class="mt-1 text-lg font-black text-slate-800">—</div></div>
+    <div class="rounded-2xl bg-white/80 p-3 border border-white"><div class="text-[11px] text-slate-500">Aaj ka study time</div><div id="rh-coach-time" class="mt-1 text-lg font-black text-slate-800">—</div></div>
+    <div class="rounded-2xl bg-white/80 p-3 border border-white"><div class="text-[11px] text-slate-500">Current XP</div><div id="rh-coach-xp" class="mt-1 text-lg font-black text-slate-800">—</div></div>
+  </div>
+  <div class="mt-4 rounded-2xl bg-white p-4 border border-indigo-100">
+    <div class="flex items-center gap-2 text-sm font-bold text-slate-700">💬 Ask your preparation</div>
+    <div id="rh-coach-messages" class="mt-3 max-h-64 space-y-2 overflow-auto">
+      <div class="rounded-2xl rounded-tl-md bg-slate-50 p-3 text-sm text-slate-600">Main tumhari preparation ko samajhne mein help karunga. Pucho: <b>“Aaj mujhe kya revise karna chahiye?”</b></div>
+    </div>
+    <div class="mt-3 flex gap-2">
+      <input id="rh-coach-input" type="text" maxlength="300" placeholder="Jaise: aaj kya padhun?" class="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100">
+      <button id="rh-coach-send" type="button" class="rounded-2xl bg-indigo-600 px-4 py-3 text-sm font-black text-white shadow hover:bg-indigo-700">Ask</button>
+    </div>
+    <div class="mt-2 flex flex-wrap gap-2">
+      <button type="button" class="rh-coach-chip rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700" data-coach-q="Aaj mujhe kya padhna chahiye?">Aaj kya padhun?</button>
+      <button type="button" class="rh-coach-chip rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700" data-coach-q="Meri preparation mein kis cheez par focus karun?">Kis par focus karun?</button>
+      <button type="button" class="rh-coach-chip rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700" data-coach-q="Mujhe revision plan do.">Revision plan</button>
+    </div>
+  </div>
+</section>
+
  <div class="rh-home-grid">
   <div class="rh-home-main">
  <div class="rh-page-head"><div><div class="rh-page-title">Home</div><div class="rh-page-sub">Aapki NEET preparation ka complete dashboard</div></div><button onclick="switchTab('focus')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm"><i class="fa-solid fa-stopwatch mr-2"></i>Start Studying</button></div>
@@ -486,6 +519,7 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
   <div class="rh-feature" onclick="switchTab('games')"><div class="rh-feature-icon"><i class="fa-solid fa-gamepad"></i></div><b>1v1 Games</b><p>Chess & Tic Tac Toe</p></div>
   <div class="rh-feature" onclick="switchTab('hubevents')"><div class="rh-feature-icon"><i class="fa-solid fa-bolt"></i></div><b>Live Events</b><p>Daily challenge & Quiz</p></div>
   <div class="rh-feature" onclick="switchTab('leaderboard')"><div class="rh-feature-icon"><i class="fa-solid fa-ranking-star"></i></div><b>Leaderboard</b><p>XP • Level • Rank</p></div>
+  <div class="rh-feature" onclick="switchTab('rathodnew')"><div class="rh-feature-icon">🆕</div><b>RATHOD NEW</b><p>Island • Tree • AI • Rewards</p></div>
  </div>
  <div class="grid lg:grid-cols-2 gap-4">
   <div class="rh-live"><div class="flex justify-between items-center"><div><b style="font-size:14px">Live Students</b><p style="font-size:10px;color:#8b93a0;margin-top:3px">Abhi kaun padh raha hai?</p></div><button onclick="switchTab('focus')" style="font-size:10px;color:#635bff;font-weight:800">View all →</button></div><div class="mt-3 flex items-center"><span class="rh-live-dot"></span><b id="home-live-count" style="font-size:13px">0 students studying</b></div></div>
@@ -512,6 +546,15 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
  </div>
 </section>
 
+<section id="section-rathodnew" class="hidden space-y-5">
+<div class="rounded-3xl border border-violet-500/30 p-5" style="background:linear-gradient(145deg,#080b12,#10131d)">
+<div class="flex items-center justify-between"><div><div class="text-[10px] font-black tracking-[.2em] uppercase text-violet-300">RATHOD HUB • NEW EXPERIENCE</div><h2 class="text-2xl md:text-3xl font-black">🆕 RATHOD NEW</h2><p class="text-sm text-slate-400">Tumhari preparation ka living dashboard.</p></div><div class="text-4xl">🌌</div></div>
+<div class="grid md:grid-cols-2 gap-4 mt-5"><button onclick="rhNewScroll('rh-island-card')" class="text-left rounded-3xl p-5 border border-cyan-400/20 bg-cyan-500/5"><div class="text-3xl">🏝️</div><b>Study Island</b><div class="text-xs text-slate-400">Study ke saath island grow karega.</div></button><button onclick="rhNewScroll('rh-tree-card')" class="text-left rounded-3xl p-5 border border-emerald-400/20 bg-emerald-500/5"><div class="text-3xl">🌳</div><b>Knowledge Tree</b><div class="text-xs text-slate-400">Progress se branches unlock hongi.</div></button></div></div>
+<div id="rh-island-card" class="rounded-3xl border border-cyan-400/20 p-5"><h3 class="text-xl font-black">🏝️ Study Island <span id="rh-island-level" class="float-right text-sm text-cyan-300"></span></h3><div id="rh-island-scene" class="mt-4 rounded-3xl min-h-[220px] relative overflow-hidden" style="background:linear-gradient(#10263a 0 52%,#0c2530 52% 100%)"><div id="rh-island-art" class="absolute inset-0 flex items-center justify-center text-6xl"></div><div class="absolute left-4 top-4 rounded-2xl bg-black/30 px-3 py-2 text-xs"><span id="rh-island-minutes">0m</span> studied today</div></div><div class="grid grid-cols-3 gap-2 mt-3"><div class="bg-white/5 rounded-2xl p-3 text-center"><small>Focus</small><b id="rh-island-focus" class="block">0m</b></div><div class="bg-white/5 rounded-2xl p-3 text-center"><small>XP</small><b id="rh-island-xp" class="block">0</b></div><div class="bg-white/5 rounded-2xl p-3 text-center"><small>Stage</small><b id="rh-island-stage" class="block">1</b></div></div></div>
+<div id="rh-tree-card" class="rounded-3xl border border-emerald-400/20 p-5"><div class="flex justify-between"><h3 class="text-xl font-black">🌳 Knowledge Tree</h3><span id="rh-tree-progress" class="text-emerald-300">0%</span></div><div id="rh-knowledge-tree" class="mt-4 rounded-3xl border border-white/10 p-5 text-center min-h-[240px] flex flex-col items-center justify-center"></div></div>
+<div class="rounded-3xl border border-purple-400/20 p-5"><h3 class="text-xl font-black">🗣️ Talk to Your Preparation</h3><p class="text-xs text-slate-400 mt-1">AI tumhare available study data ko context mein lekar reply karega.</p><div id="rh-prep-chat" class="mt-4 max-h-72 overflow-auto space-y-2"><div class="bg-white/5 p-3 rounded-2xl text-sm">Pucho: “Aaj mujhe kya karna chahiye?”</div></div><div class="mt-3 flex gap-2"><input id="rh-prep-input" maxlength="400" class="min-w-0 flex-1 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm" placeholder="Apni preparation ke baare mein pucho..."><button id="rh-prep-send" class="rounded-2xl bg-purple-600 px-5 py-3 font-black">Ask</button></div></div>
+<div class="grid md:grid-cols-2 gap-4"><div class="rounded-3xl border border-amber-400/20 p-5"><div class="text-3xl">🌟</div><h3 class="font-black">Student of the Day</h3><div id="rh-student-day" class="mt-3"></div></div><div class="rounded-3xl border border-pink-400/20 p-5"><div class="text-3xl">🎁</div><h3 class="font-black">Mystery Reward</h3><div id="rh-reward-box" class="mt-3"></div></div></div>
+</section>
 <section id="section-focus" class="hidden space-y-5">
 <div class="bg-slate-800/95 border border-teal-500/30 rounded-2xl p-5 shadow-xl">
  <div class="flex justify-between items-start gap-3 flex-wrap">
@@ -947,7 +990,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 <div id="study-rooms-box" class="grid md:grid-cols-3 gap-4"></div>
 </section>
 
-<section id="section-leaderboard" class="hidden"><div class="bg-slate-800/95 rounded-2xl overflow-hidden border border-amber-500/20"><div class="p-5 border-b border-slate-700 flex justify-between items-center"><div><h3 class="text-amber-300 font-bold text-xl"><i class="fa-solid fa-trophy mr-2"></i>Leaderboard</h3><p class="text-xs text-slate-400 mt-1">Rank • Name • XP • Level — सभी members</p></div><div class="text-2xl">🏆</div></div><div class="p-4"><div class="bg-slate-900 rounded-xl p-4 mb-4"><div class="flex justify-between text-sm"><span>My XP</span><b id="my-xp">0 XP</b></div><div class="flex justify-between text-sm mt-2"><span>My Level</span><b id="my-level">Level 1</b></div><div class="mt-3 h-2 bg-slate-700 rounded-full overflow-hidden"><div id="my-xp-bar" class="h-full bg-amber-500" style="width:0%"></div></div></div><div id="leaderboard-list" class="space-y-2"></div></div></div></section>
+<section id="section-leaderboard" class="hidden"><div class="bg-slate-800/95 rounded-2xl overflow-hidden border border-amber-500/20"><div class="p-5 border-b border-slate-700 flex justify-between items-center"><div><h3 class="text-amber-300 font-bold text-xl"><i class="fa-solid fa-trophy mr-2"></i>Leaderboard</h3><p class="text-xs text-slate-400 mt-1">Top 10 • XP के हिसाब से Rank • हर 5000 XP पर अगला Level • Max Level 10</p></div><div class="text-2xl">🏆</div></div><div class="p-4"><div class="bg-slate-900 rounded-xl p-4 mb-4"><div class="flex justify-between text-sm"><span>My XP</span><b id="my-xp">0 XP</b></div><div class="flex justify-between text-sm mt-2"><span>My Level</span><b id="my-level">Level 1</b></div><div class="mt-3 h-2 bg-slate-700 rounded-full overflow-hidden"><div id="my-xp-bar" class="h-full bg-amber-500" style="width:0%"></div></div></div><div id="leaderboard-list" class="space-y-2"></div></div></div></section>
 
 <div class="mt-8 bg-slate-900/95 border border-slate-700 rounded-2xl p-5 text-center"><div class="text-xs uppercase tracking-wider text-slate-500 mb-3">Join Us / Contact Us</div><div class="flex justify-center gap-3 flex-wrap"><a href="https://t.me/YPTSTUDY1" target="_blank" rel="noopener" class="bg-sky-600 hover:bg-sky-500 px-4 py-2.5 rounded-xl text-sm font-bold"><i class="fa-brands fa-telegram mr-2"></i>Join Group</a><a href="https://t.me/Ashish_Thakur1" target="_blank" rel="noopener" title="Contact Us" aria-label="Contact Us" class="bg-sky-600 hover:bg-sky-500 w-11 h-11 rounded-full text-lg font-bold flex items-center justify-center"><i class="fa-brands fa-telegram"></i></a></div></div>
 </main></div></div></div>
@@ -1280,7 +1323,7 @@ function openDailyBattle(){
 }
 
 function switchTab(tab){
-  ['home','ai','quiz','battle','neet720','daily-battle','materials','community','chatroom','diary','stories','games','vault','hubevents','studyrooms','leaderboard','focus','adminpanel'].forEach(x=>{
+  ['home','ai','quiz','battle','neet720','daily-battle','materials','community','chatroom','diary','stories','games','vault','hubevents','studyrooms','leaderboard','focus','adminpanel','rathodnew'].forEach(x=>{
     const sec=document.getElementById('section-'+x); if(sec)sec.classList.add('hidden');
     const btn=document.getElementById('btn-'+x); if(btn)btn.classList.remove('rh-active');
   });
@@ -1301,6 +1344,7 @@ function switchTab(tab){
   if(tab==='quiz')loadScheduledBattle();
    if(tab==='battle'){qbShowLiveLayout();qbLoadRooms();if(qbRoom)qbSyncCurrentRoom();}
   if(tab==='neet720'){n720ShowLobby();n720LoadRooms();n720SyncCurrentRoom();}
+  if(tab==='rathodnew'&&typeof rhRathodNewRefresh==='function'){rhRathodNewRefresh();if(typeof renderFocusDashboard==='function')renderFocusDashboard();}
 }
 const RH_SECTION_META={
  ai:['AI Doubt','Ask and solve your NEET doubts','fa-circle-question','indigo'],
@@ -1326,7 +1370,7 @@ function renderHomeDashboard(){
   const n=profile.name||user?.email||'Student';
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
   set('home-user-name',n); set('home-study-time',formatMinutesSimple(getFocusTodayMinutes())); set('home-streak',(getFocusStreak())+' 🔥');
-  set('home-xp',((profile.xp||0))+' XP'); set('home-level','Level '+(profile.level||1));
+  set('home-xp',((profile.xp||0))+' XP'); set('home-level','Level '+levelFromXp(profile.xp));
   renderRHHomeRail();
 }
 function formatMinutesSimple(m){m=Math.max(0,Math.round(Number(m)||0));return Math.floor(m/60)+'h '+(m%60)+'m'}
@@ -1334,7 +1378,10 @@ function formatMinutesSimple(m){m=Math.max(0,Math.round(Number(m)||0));return Ma
 function getFocusTodayMinutes(){
   const st=readFocusStats();
   const today=localDay();
-  const todaySec=(st.sessions||[]).filter(x=>x.date===today).reduce((a,x)=>a+Number(x.seconds||0),0);
+  let todaySec=(st.sessions||[]).filter(x=>x.date===today).reduce((a,x)=>a+Number(x.seconds||0),0);
+  if(typeof focusState!=='undefined'&&focusState&&focusState.status==='running'&&!focusState.break){
+    todaySec+=Math.min(Number(focusState.duration||0),Math.max(0,focusElapsed()));
+  }
   return Math.round(todaySec/60);
 }
 
@@ -1557,13 +1604,14 @@ async function deletePost(id){if(!confirm('Delete this post?'))return;const item
 async function toggleRecording(){
  if(!isRecording){try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});mediaRecorder=new MediaRecorder(stream);audioChunks=[];mediaRecorder.ondataavailable=e=>audioChunks.push(e.data);mediaRecorder.onstop=()=>{recordedAudioBlob=new Blob(audioChunks,{type:'audio/webm'});stream.getTracks().forEach(t=>t.stop());document.getElementById('rec-status').textContent='Voice recorded ✓'};mediaRecorder.start();isRecording=true;document.getElementById('record-btn').textContent='🎙 Stop Recording';document.getElementById('rec-status').textContent='Recording...'}catch(e){toast('Microphone permission denied',false)}}else{mediaRecorder.stop();isRecording=false;document.getElementById('record-btn').textContent='🎙 Record Voice'}}
 
-async function awardQuizXP(correct){if(!correct||!user)return;try{const next=Number(profile.xp||0)+10;const level=Math.max(1,Math.floor(next/500)+1);const{error}=await db.from('profiles').update({xp:next,level}).eq('id',user.id);if(error)throw error;profile.xp=next;profile.level=level;toast('+10 XP 🎉');renderHomeDashboard();loadLeaderboard();}catch(e){console.warn('XP update failed',e)}}
+async function awardQuizXP(correct){if(!correct||!user)return;try{const next=Number(profile.xp||0)+10;const level=levelFromXp(next);const{error}=await db.from('profiles').update({xp:next,level}).eq('id',user.id);if(error)throw error;profile.xp=next;profile.level=level;toast('+10 XP 🎉');renderHomeDashboard();loadLeaderboard();}catch(e){console.warn('XP update failed',e)}}
 
 /* ==================== RATHOD HUB NEW FEATURES ==================== */
 let stories=[],vaultItems=[],leaderboard=[];
-const XP_LEVEL_SIZE=500;
-function levelFromXp(x){return Math.max(1,Math.floor(Number(x||0)/XP_LEVEL_SIZE)+1)}
-function xpPercent(x){return Math.min(100,(Number(x||0)%XP_LEVEL_SIZE)/XP_LEVEL_SIZE*100)}
+const XP_LEVEL_SIZE=5000;
+const MAX_LEVEL=10;
+function levelFromXp(x){return Math.min(MAX_LEVEL,Math.max(1,Math.floor(Number(x||0)/XP_LEVEL_SIZE)+1))}
+function xpPercent(x){const n=Math.max(0,Number(x||0));return n>=XP_LEVEL_SIZE*(MAX_LEVEL-1)?100:(n%XP_LEVEL_SIZE)/XP_LEVEL_SIZE*100}
 
 /* Stories */
 async function loadStories(){if(!user)return;const{data,error}=await db.from('stories').select('*').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false});if(error){document.getElementById('stories-row').innerHTML='<div class="text-xs text-slate-500 p-3">Stories table setup required.</div>';return}stories=data||[];renderStories()}
@@ -2008,27 +2056,8 @@ async function openVaultFile(id){
 async function deleteVault(id){const v=vaultItems.find(x=>String(x.id)===String(id));if(!v||!confirm('Delete this vault file?'))return;const{error}=await db.from('vault').delete().eq('id',id).eq('user_id',user.id);if(error)return toast(error.message,false);if(v.storage_path){try{await deleteFromGoogleDrive(v.storage_path)}catch(e){console.warn('Storage delete failed',e)}}toast('Vault file deleted');loadVault()}
 
 /* Leaderboard */
-async function loadLeaderboard(){if(!user)return;const{data,error}=await db.from('profiles').select('id,name,pfp_url,role,xp,level').order('xp',{ascending:false}).limit(100);if(error){document.getElementById('leaderboard-list').innerHTML='<div class="text-xs text-slate-500 p-3">Leaderboard ke liye profiles table check karein.</div>';return}leaderboard=(data||[]).map(p=>({...p,xp:Number(p.xp||0),level:Number(p.level||levelFromXp(p.xp))}));renderLeaderboard();renderRHHomeRail()}
-function renderLeaderboard(){const me=leaderboard.find(p=>p.id===user.id)||{xp:Number(profile.xp||0),level:Number(profile.level||levelFromXp(profile.xp))};document.getElementById('my-xp').textContent=`${me.xp} XP`;document.getElementById('my-level').textContent=`Level ${me.level}`;document.getElementById('my-xp-bar').style.width=xpPercent(me.xp)+'%';const medals=['🥇','🥈','🥉'];document.getElementById('leaderboard-list').innerHTML=leaderboard.map((p,i)=>`<div class="bg-slate-900/80 border ${p.id===user.id?'border-amber-500/50':'border-slate-700'} rounded-xl p-3 flex items-center gap-3"><div class="w-9 text-center font-bold text-lg">${medals[i]||('#'+(i+1))}</div><div class="w-9 h-9 rounded-full overflow-hidden bg-slate-700">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}" class="w-full h-full object-cover">`:'👤'}</div><div class="min-w-0 flex-1"><b class="block truncate text-sm">${esc(p.name||'Member')}${p.id===user.id?' (You)':''}</b><span class="text-[10px] text-slate-500">Level ${p.level}</span></div><b class="text-sm text-amber-300">${p.xp} XP</b></div>`).join('')||'<div class="text-center py-8 text-slate-500">No members found.</div>'}
-
-function renderRHHomeRail(){
-  const lb=document.getElementById('rh-home-leaderboard');
-  if(lb && Array.isArray(leaderboard)){
-    const top=leaderboard.slice(0,5);
-    lb.innerHTML=top.map((p,i)=>`<div class="rh-mini-row"><div class="rh-rank">#${i+1}</div><div class="rh-mini-avatar">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}">`:'👤'}</div><div class="rh-mini-name"><b>${esc(p.name||'Member')}</b><span>Level ${p.level||1}</span></div><div class="rh-mini-xp">${Number(p.xp||0).toLocaleString()} XP</div></div>`).join('') || '<div style="font-size:11px;color:#9ba3ae">No members yet.</div>';
-  }
-  const online=document.getElementById('rh-home-online');
-  if(online){
-    const src=document.querySelectorAll('#focus-live-users [data-live-user]');
-    const nodes=[...src].slice(0,6);
-    online.innerHTML=nodes.map(n=>{const name=n.getAttribute('data-live-user')||'Student';return `<div class="rh-online-user"><div class="rh-online-avatar">${n.querySelector('img')?`<img src="${n.querySelector('img').src}">`:'👤'}</div><div style="margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(name)}</div></div>`}).join('') || '<span style="font-size:11px;color:#9ba3ae">अभी कोई live study नहीं कर रहा.</span>';
-  }
-  const mins=getFocusTodayMinutes();
-  const goal=360;
-  const gb=document.getElementById('rh-goal-time-bar'); if(gb)gb.style.width=Math.min(100,Math.round(mins/goal*100))+'%';
-  const gt=document.getElementById('rh-goal-time'); if(gt)gt.textContent=formatMinutesSimple(mins);
-  const streak=getFocusStreak(); const sb=document.getElementById('rh-goal-streak-bar'); if(sb)sb.style.width=Math.min(100,Math.round(streak/30*100))+'%'; const gs=document.getElementById('rh-goal-streak'); if(gs)gs.textContent=streak+' 🔥';
-}
+async function loadLeaderboard(){if(!user)return;const{data,error}=await db.from('profiles').select('id,name,pfp_url,role,xp,level').order('xp',{ascending:false}).limit(10);if(error){document.getElementById('leaderboard-list').innerHTML='<div class="text-xs text-slate-500 p-3">Leaderboard ke liye profiles table check karein.</div>';return}leaderboard=(data||[]).map(p=>({...p,xp:Number(p.xp||0),level:levelFromXp(p.xp)}));renderLeaderboard();renderRHHomeRail()}
+function renderLeaderboard(){const me=leaderboard.find(p=>p.id===user.id)||{xp:Number(profile.xp||0),level:levelFromXp(profile.xp)};document.getElementById('my-xp').textContent=`${me.xp} XP`;document.getElementById('my-level').textContent=`Level ${me.level}`;document.getElementById('my-xp-bar').style.width=xpPercent(me.xp)+'%';const medals=['🥇','🥈','🥉'];document.getElementById('leaderboard-list').innerHTML=leaderboard.slice(0,10).map((p,i)=>`<div class="bg-slate-900/80 border ${p.id===user.id?'border-amber-500/50':'border-slate-700'} rounded-xl p-3 flex items-center gap-3"><div class="w-9 text-center font-bold text-lg">${medals[i]||('#'+(i+1))}</div><div class="w-9 h-9 rounded-full overflow-hidden bg-slate-700">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}" class="w-full h-full object-cover">`:'👤'}</div><div class="min-w-0 flex-1"><b class="block truncate text-sm">${esc(p.name||'Member')}${p.id===user.id?' (You)':''}</b><span class="text-[10px] text-slate-500">Level ${p.level} • ${Math.max(0,XP_LEVEL_SIZE-(p.xp%XP_LEVEL_SIZE))===XP_LEVEL_SIZE?'0':Math.max(0,XP_LEVEL_SIZE-(p.xp%XP_LEVEL_SIZE))} XP to next level</span></div><b class="text-sm text-amber-300">${p.xp.toLocaleString()} XP</b></div>`).join('')||'<div class="text-center py-8 text-slate-500">No members found.</div>'}
 async function askAI(){
   const q=document.getElementById('ai-input').value.trim();
   const out=document.getElementById('ai-output');
@@ -3653,7 +3682,11 @@ function startFocusTimer(){
 function startFocusTicker(){if(focusInterval)clearInterval(focusInterval);focusInterval=setInterval(tickFocus,500);tickFocus()}
 function tickFocus(){
  if(!focusReady)return;
- const rem=focusRemaining();focusState.remaining=rem;renderFocusTimer();broadcastFocusThrottled();
+ const rem=focusRemaining();focusState.remaining=rem;renderFocusTimer();
+ if(typeof renderFocusDashboard==='function')renderFocusDashboard();
+ if(typeof renderHomeDashboard==='function')renderHomeDashboard();
+ if(typeof renderRHHomeRail==='function')renderRHHomeRail();
+ broadcastFocusThrottled();
  if(focusState.status==='running'&&rem<=0)completeFocusTimer();
 }
 function pauseFocusTimer(){if(focusState.status!=='running')return;focusState.elapsedBeforePause=focusElapsed();focusState.remaining=Math.max(0,focusState.duration-focusState.elapsedBeforePause);focusState.status='paused';focusState.startedAt=null;focusState.pausedAt=Date.now();saveFocusState();renderFocusTimer();broadcastFocus();toast('Timer paused ⏸️')}
@@ -3712,7 +3745,7 @@ function recordFocusSession(seconds,subject){
   if(today>=goal&&!st.goalNotifiedDate){st.goalNotifiedDate=localDay();writeFocusStats(st);notifyFocus('🎯 Daily goal complete!','Your study goal for today is complete.');toast('Daily goal complete! 🏆');}
 }
 function saveFocusGoal(){const st=readFocusStats();let h=Math.min(24,Math.max(.25,Number(document.getElementById('focus-goal-hours').value)||4));st.goalHours=h;writeFocusStats(st);renderFocusDashboard();renderHomeDashboard()}
-function renderFocusDashboard(){if(!user)return;const st=readFocusStats(),today=localDay(),todaySec=st.sessions.filter(x=>x.date===today).reduce((a,x)=>a+Number(x.seconds||0),0);const goal=Number(st.goalHours||4);const t=document.getElementById('focus-today-time');if(t)t.textContent=fmtHM(todaySec);const ses=document.getElementById('focus-sessions');if(ses)ses.textContent=st.sessions.length;const gh=document.getElementById('focus-goal-hours');if(gh)gh.value=goal;const gl=document.getElementById('focus-goal-label');if(gl)gl.textContent=`${fmtHM(todaySec)} / ${goal}h`;const gb=document.getElementById('focus-goal-bar');if(gb)gb.style.width=Math.min(100,todaySec/(goal*3600)*100)+'%';const streak=document.getElementById('focus-streak');if(streak)streak.textContent=(focusStreak(st.sessions))+' 🔥';renderFocusWeek(st.sessions);renderFocusAchievements(st.sessions);renderFocusTimer();updateNotifyStatus()}
+function renderFocusDashboard(){if(!user)return;const st=readFocusStats(),today=localDay(),todaySec=getFocusTodaySeconds();const goal=Number(st.goalHours||4);const t=document.getElementById('focus-today-time');if(t)t.textContent=fmtHM(todaySec);const ses=document.getElementById('focus-sessions');if(ses)ses.textContent=st.sessions.length;const gh=document.getElementById('focus-goal-hours');if(gh)gh.value=goal;const gl=document.getElementById('focus-goal-label');if(gl)gl.textContent=`${fmtHM(todaySec)} / ${goal}h`;const gb=document.getElementById('focus-goal-bar');if(gb)gb.style.width=Math.min(100,todaySec/(goal*3600)*100)+'%';const streak=document.getElementById('focus-streak');if(streak)streak.textContent=(focusStreak(st.sessions))+' 🔥';renderFocusWeek(st.sessions);renderFocusAchievements(st.sessions);renderFocusTimer();updateNotifyStatus()}
 function focusStreak(sessions){const days=new Set((sessions||[]).filter(x=>Number(x.seconds||0)>=60).map(x=>x.date));let d=localDay();let n=0;while(days.has(d)){n++;d=addDays(d,-1)}return n}
 function renderFocusWeek(sessions){const box=document.getElementById('focus-week-chart');if(!box)return;const vals=[];for(let i=6;i>=0;i--){const day=addDays(localDay(),-i);const sec=(sessions||[]).filter(x=>x.date===day).reduce((a,x)=>a+Number(x.seconds||0),0);vals.push({day,sec})}const max=Math.max(1,...vals.map(x=>x.sec));const total=vals.reduce((a,x)=>a+x.sec,0);const wt=document.getElementById('focus-week-total');if(wt)wt.textContent=fmtHM(total);box.innerHTML=vals.map(v=>`<div class="h-full flex flex-col justify-end items-center gap-1"><span class="text-[9px] text-slate-500">${v.sec?fmtHM(v.sec).replace(' ',''):''}</span><div class="w-full bg-emerald-500/70 rounded-t-md" style="height:${Math.max(6,v.sec/max*100)}%" title="${v.day}: ${fmtHM(v.sec)}"></div><span class="text-[9px] text-slate-500">${new Date(v.day+'T12:00:00').toLocaleDateString(undefined,{weekday:'short'}).slice(0,3)}</span></div>`).join('')}
 function renderFocusAchievements(sessions){const total=(sessions||[]).reduce((a,x)=>a+Number(x.seconds||0),0),streak=focusStreak(sessions);const items=[['🌱','First Session',sessions.length>=1],['⏱️','1 Hour',total>=3600],['🔥','7 Day Streak',streak>=7],['🏆','10 Hours',total>=36000],['💎','25 Sessions',sessions.length>=25],['🚀','25 Hours',total>=90000],['🧠','50 Sessions',sessions.length>=50],['👑','50 Hour Club',total>=180000]];const box=document.getElementById('focus-achievements');if(box)box.innerHTML=items.map(x=>`<div class="rounded-xl p-3 border ${x[2]?'border-fuchsia-500/40 bg-fuchsia-500/10':'border-slate-700 bg-slate-900/60 opacity-50'}"><div class="text-xl">${x[0]}</div><b class="text-xs block mt-1">${x[1]}</b><span class="text-[9px] text-slate-500">${x[2]?'UNLOCKED':'Locked'}</span></div>`).join('')}
@@ -3845,5 +3878,67 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
+<script>
+(function(){
+  const state={busy:false,stats:null};
+  const el=id=>document.getElementById(id);
+  const esc=s=>{const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;};
+  function mins(){try{return Math.max(0,Number(typeof getFocusTodayMinutes==='function'?getFocusTodayMinutes():0)||0)}catch(e){return 0}}
+  function time(){const m=mins();return Math.floor(m/60)+'h '+(m%60)+'m'}
+  function stats(){
+    const xp=(typeof profile!=='undefined'&&profile)?Number(profile.xp||0):0;
+    const s={studyMinutes:mins(),xp};
+    if(el('rh-coach-time'))el('rh-coach-time').textContent=time();
+    if(el('rh-coach-xp'))el('rh-coach-xp').textContent=xp.toLocaleString()+' XP';
+    if(el('rh-coach-q'))el('rh-coach-q').textContent='—';
+    state.stats=s;
+  }
+  function msg(text,who){
+    const box=el('rh-coach-messages');if(!box)return null;
+    const d=document.createElement('div');
+    d.className=who==='user'?'ml-6 rounded-2xl rounded-tr-md bg-indigo-600 p-3 text-sm text-white':'mr-6 rounded-2xl rounded-tl-md bg-slate-50 p-3 text-sm text-slate-700';
+    d.innerHTML=esc(text).replace(/\n/g,'<br>');
+    box.appendChild(d);box.scrollTop=box.scrollHeight;return d;
+  }
+  async function ask(q){
+    q=String(q||'').trim();if(!q||state.busy)return;
+    state.busy=true;const input=el('rh-coach-input'),btn=el('rh-coach-send');
+    if(input)input.value='';if(btn){btn.disabled=true;btn.textContent='Thinking…';}
+    msg(q,'user');const loading=msg('Tumhari preparation dekh raha hoon…','ai');
+    try{
+      stats();const s=state.stats||{};
+      const prompt=['You are the AI Study Coach inside RATHOD HUB, a NEET study app.','Reply in simple Hindi/Hinglish. Give practical, encouraging guidance. Never invent unavailable statistics.',`Current XP: ${s.xp||0}.`,`Study time today: ${s.studyMinutes||0} minutes.`,`Student question: ${q}`].join('\n');
+      const {data,error}=await db.functions.invoke('ai-chat',{body:{question:prompt}});
+      if(error)throw error;
+      const answer=data?.answer||data?.message||'AI ne abhi answer nahi diya. Thodi der baad try karo.';
+      if(loading)loading.innerHTML=esc(answer).replace(/\n/g,'<br>');
+    }catch(e){
+      if(loading)loading.innerHTML='AI Coach abhi connect nahi ho pa raha. Please thodi der baad try karo.<br><small>'+esc(e?.message||'Request failed')+'</small>';
+    }finally{state.busy=false;if(btn){btn.disabled=false;btn.textContent='Ask';}stats();}
+  }
+  function init(){
+    const input=el('rh-coach-input'),btn=el('rh-coach-send');
+    if(btn)btn.addEventListener('click',()=>ask(input?.value||''));
+    if(input)input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ask(input.value)}});
+    document.querySelectorAll('.rh-coach-chip').forEach(b=>b.addEventListener('click',()=>ask(b.dataset.coachQ||'')));
+    stats();setInterval(stats,30000);
+  }
+  window.rhAIStudyCoach={ask,refresh:stats};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+\n<script>
+(function(){
+const $=id=>document.getElementById(id),esc=s=>{const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML},day=()=>typeof localDay==='function'?localDay():new Date().toISOString().slice(0,10),mins=()=>{try{return Math.max(0,Number(getFocusTodayMinutes())||0)}catch(e){return 0}},xp=()=>Number((typeof profile!=='undefined'&&profile)?profile.xp||0:0);
+const key=k=>`rh_new_${k}_${typeof user!=='undefined'&&user?user.id:'guest'}`;
+async function qs(){if(typeof db==='undefined'||!user)return{count:0,correct:0};try{let{data}=await db.from('hub_daily_answers').select('is_correct').eq('user_id',user.id).eq('answer_date',day()).limit(200);return{count:data?.length||0,correct:(data||[]).filter(x=>x.is_correct).length}}catch(e){return{count:0,correct:0}}}
+function msg(t,w){let b=$('rh-prep-chat');if(!b)return;let d=document.createElement('div');d.className=w==='user'?'ml-6 rounded-2xl bg-purple-600 p-3 text-sm':'mr-6 rounded-2xl bg-white/5 p-3 text-sm';d.innerHTML=esc(t).replace(/\n/g,'<br>');b.appendChild(d);b.scrollTop=b.scrollHeight;return d}
+async function render(){let m=mins(),X=xp(),q=await qs(),a=q.count?Math.round(q.correct/q.count*100):0,stage=Math.min(6,1+Math.floor((m+X/10+q.count*2)/90)),arts=['🌊🏝️','🌴🏝️','🌴🌴🏝️','🏠🌴🌴🏝️','📚🏠🌴🌴','🏰📚🌴🌴'];$('rh-island-art').textContent=arts[stage-1];$('rh-island-level').textContent='STAGE '+stage;$('rh-island-minutes').textContent=m+'m';$('rh-island-focus').textContent=m+'m';$('rh-island-xp').textContent=X;$('rh-island-stage').textContent=stage;let p=Math.min(100,Math.round(m/360*60+a/100*40));$('rh-tree-progress').textContent=p+'%';let b=[['Foundation','🌱',0],['Biology','🧬',20],['Chemistry','⚗️',40],['Physics','⚛️',60],['Revision','📖',80],['Mastery','👑',95]];$('rh-knowledge-tree').innerHTML='<div class="text-7xl">🌳</div><b class="mt-2">Your Knowledge Tree</b><div class="mt-4 flex flex-wrap justify-center gap-2">'+b.map(x=>`<span class="rounded-full px-3 py-2 text-xs border ${p>=x[2]?'border-emerald-400/40 bg-emerald-400/10':'border-white/10 bg-white/5 text-slate-500'}">${x[1]} ${x[0]}${p>=x[2]?' ✓':' 🔒'}</span>`).join('')+'</div>';await student();await reward(m,q)}
+async function student(){let b=$('rh-student-day');try{if(typeof loadLeaderboard==='function')await loadLeaderboard();let a=Array.isArray(window.leaderboard)?leaderboard:[],w=a[0];b.innerHTML=w?`<div class="bg-white/5 rounded-2xl p-4"><b>${esc(w.name||'Student')}</b><div class="text-xs text-slate-400 mt-1">Current leaderboard standout • ${Number(w.xp||0).toLocaleString()} XP</div></div><div class="text-[10px] text-slate-500 mt-2">Daily improvement metric app mein available nahi hai, isliye leaderboard fallback hai.</div>`:'<div class="text-sm text-slate-500">Data available nahi hai.</div>'}catch(e){b.innerHTML='<div class="text-sm text-slate-500">Data load nahi ho saka.</div>'}}
+async function reward(m,q){let b=$('rh-reward-box'),done=m>=60||q.count>=20,claimed=localStorage.getItem(key('reward'))===day();if(claimed){b.innerHTML='<div class="p-4 rounded-2xl bg-emerald-500/10">🎉 Reward already claimed today!</div>';return}if(done){b.innerHTML='<button id="rh-claim-reward" class="w-full p-4 rounded-2xl bg-pink-500/10">🎁 <b>Mystery Reward Unlocked!</b><div class="text-xs mt-1">Tap to reveal</div></button>';$('rh-claim-reward').onclick=async()=>{localStorage.setItem(key('reward'),day());try{if(typeof grantXP==='function')await grantXP(25)}catch(e){}b.innerHTML='<div class="p-5 rounded-2xl bg-pink-500/10 text-center text-lg">🎁 🌟 Mystery Star<br><small>+25 XP unlocked!</small></div>';if(typeof toast==='function')toast('🎁 Mystery Reward unlocked! +25 XP')}}else{let p=Math.min(100,Math.max(Math.round(m/60*100),Math.round(q.count/20*100)));b.innerHTML=`<div class="p-4 rounded-2xl bg-white/5"><div class="flex justify-between text-xs"><span>Daily target</span><b>${p}%</b></div><div class="mt-2 h-2 bg-white/10 rounded"><div class="h-full bg-pink-500 rounded" style="width:${p}%"></div></div><div class="text-[10px] text-slate-500 mt-2">${Math.max(0,60-m)} min focus OR ${Math.max(0,20-q.count)} questions remaining.</div></div>`}}
+async function ask(q){q=String(q||'').trim();if(!q)return;msg(q,'user');let l=msg('Tumhari preparation analyze kar raha hoon…','ai');try{let qd=await qs(),p=`You are RATHOD HUB AI Study Coach. Reply in simple Hindi/Hinglish. Use only these stats: study today ${mins()} minutes, XP ${xp()}, quiz questions today ${qd.count}, accuracy ${qd.count?Math.round(qd.correct/qd.count*100):0}%. Student asks: ${q}. Give a practical next step.`;let{data,error}=await db.functions.invoke('ai-chat',{body:{question:p}});if(error)throw error;l.innerHTML=esc(data?.answer||data?.message||'AI ne answer nahi diya.').replace(/\n/g,'<br>')}catch(e){l.textContent='AI Coach connect nahi ho pa raha. Please try again.'}}
+window.rhNewScroll=id=>$(id)?.scrollIntoView({behavior:'smooth'});window.rhRathodNewRefresh=render;
+function init(){let i=$('rh-prep-input'),b=$('rh-prep-send');if(b)b.onclick=()=>ask(i?.value);if(i)i.addEventListener('keydown',e=>{if(e.key==='Enter')ask(i.value)});render();setInterval(()=>{if(!$('section-rathodnew')?.classList.contains('hidden'))render()},30000)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();</script>
 </body>
 </html>
