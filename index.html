@@ -8,20 +8,20 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
-<title>RATHOD HUB - NEET Preparation, MCQ, PYQ & Live Quiz</title>
-<meta name="description" content="RATHOD HUB is a NEET learning platform for NEET MCQs, PYQs, Assertion-Reason practice, NCERT Detective live quizzes, study material, focus timer and student community.">
-<meta name="keywords" content="NEET preparation, NEET MCQ, NEET PYQ, NEET Assertion Reason, NCERT Detective, NEET live quiz, Biology MCQ, Chemistry MCQ, Physics MCQ, RATHOD HUB">
-<meta name="robots" content="index, follow, max-image-preview:large">
+<title>RATHOD HUB - NEET Preparation, MCQ, PYQ, Live Quiz & Study Community</title>
+<meta name="description" content="RATHOD HUB is a NEET preparation platform for MCQ, PYQ, Assertion-Reason, NCERT Detective Live Quiz, AI study notes, formula cards, study rooms, live voice and student community.">
+<meta name="keywords" content="RATHOD HUB, NEET preparation, NEET MCQ, NEET PYQ, NEET Assertion Reason, NCERT Detective, NEET Live Quiz, Biology MCQ, Chemistry MCQ, Physics MCQ, NEET notes, NEET formula, NEET study community, peer study groups, doubt bounties">
+<meta name="robots" content="index,follow,max-image-preview:large">
 <link rel="canonical" href="https://teachnlogy7509-pixel.github.io/RATHOD-HUB/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="RATHOD HUB - NEET Preparation & Live Quiz">
-<meta property="og:description" content="NEET MCQ, PYQ, Assertion-Reason, NCERT Detective live quiz, study material, focus timer and student community.">
+<meta property="og:description" content="NEET MCQ, PYQ, Assertion-Reason, NCERT Detective, AI notes, formula cards, study rooms and student community.">
 <meta property="og:url" content="https://teachnlogy7509-pixel.github.io/RATHOD-HUB/">
 <meta property="og:site_name" content="RATHOD HUB">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="RATHOD HUB - NEET Preparation & Live Quiz">
-<meta name="twitter:description" content="NEET MCQ, PYQ, Assertion-Reason, NCERT Detective live quiz and study community.">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"RATHOD HUB","url":"https://teachnlogy7509-pixel.github.io/RATHOD-HUB/","description":"NEET learning platform with MCQ, PYQ, Assertion-Reason practice, NCERT Detective live quizzes, study material and student community."}</script>
+<meta name="twitter:description" content="AI-powered NEET preparation, Live Quiz, NCERT Detective, notes, formulas and peer study.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"RATHOD HUB","url":"https://teachnlogy7509-pixel.github.io/RATHOD-HUB/","description":"NEET preparation platform with MCQ, PYQ, Assertion-Reason, NCERT Detective Live Quiz, AI notes, formula cards, study rooms and student community."}</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -221,10 +221,12 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
   .qb-final-stat .qb-final-stat-label{font-size:8px}
 }
 
+
+/* ===== RATHOD HUB NEW AI / NOTIFICATION / COMMUNITY UI ===== */
+.rh-notify-wrap{position:relative}.rh-notify-badge{position:absolute;right:-3px;top:-4px;min-width:17px;height:17px;padding:0 4px;border-radius:99px;background:#ef2b2b;color:#fff;font-size:9px;font-weight:900;display:none;align-items:center;justify-content:center;border:2px solid #07090d}.rh-notify-panel{position:absolute;right:0;top:46px;width:min(380px,calc(100vw - 24px));background:#0b0f14;border:1px solid rgba(255,255,255,.16);border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.45);overflow:hidden;z-index:900}.rh-notify-item{display:flex;gap:10px;padding:12px;border-bottom:1px solid rgba(255,255,255,.08);cursor:pointer}.rh-notify-item:hover{background:rgba(239,43,43,.08)}.rh-notify-item b{font-size:12px}.rh-notify-item p{font-size:10px;color:#aeb4bf;margin-top:3px}.rh-notify-empty{padding:28px 12px;text-align:center;color:#7f8792;font-size:11px}.rh-ai-card-preview{width:100%;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:#090d12;display:block}.rh-card-actions{display:flex;gap:8px;flex-wrap:wrap}.rh-bounty-open{border-color:rgba(239,43,43,.35)!important}.rh-group-pill{font-size:10px;padding:5px 8px;border-radius:999px;background:rgba(239,43,43,.08);border:1px solid rgba(239,43,43,.22);color:#ff7b7b}.rh-detective-mode{border-color:rgba(245,158,11,.45)!important;background:rgba(245,158,11,.06)!important}.rh-detective-mode .qb-mode-icon{background:rgba(245,158,11,.10)!important}.voice-help{font-size:10px;color:#9ca3af;line-height:1.5}
 </style>
 </head>
 <body class="doctor-bg min-h-screen font-sans">
-<noscript><section style="padding:24px;max-width:900px;margin:auto"><h1>RATHOD HUB - NEET Preparation Platform</h1><p>NEET MCQ, PYQ, Assertion-Reason practice, NCERT Detective live quiz, Biology Chemistry Physics study material, focus timer and student community.</p></section></noscript>
 
 <div id="hub-bg-layer" style="position:fixed;inset:0;z-index:-2;background-repeat:no-repeat;"></div>
 <div id="hub-bg-overlay" style="position:fixed;inset:0;z-index:-1;background:rgba(0,0,0,.6);"></div>
@@ -303,7 +305,7 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
   <button id="install-app-btn" class="rh-icon-btn" style="display:none" onclick="installRathodHub()" title="Download / Install App"><i class="fa-solid fa-download"></i></button>
   <button class="rh-icon-btn rh-more-trigger" onclick="openMobileMenu()" title="All Features" aria-label="More options"><i class="fa-solid fa-bars"></i></button>
   <button class="rh-icon-btn" onclick="switchTab('focus')" title="Focus Timer"><i class="fa-solid fa-stopwatch"></i></button>
-  <button class="rh-icon-btn" onclick="requestFocusNotifications();hubNotificationCount=0;this.querySelector('.rh-notify-badge')?.remove()" title="Notifications"><i class="fa-regular fa-bell"></i></button>
+  <div class="rh-notify-wrap"><button id="hub-notify-btn" class="rh-icon-btn" onclick="toggleHubNotifications()" title="Notifications" aria-label="Notifications"><i class="fa-regular fa-bell"></i><span id="hub-notify-badge" class="rh-notify-badge">0</span></button><div id="hub-notify-panel" class="rh-notify-panel hidden"><div class="p-3 flex items-center justify-between border-b border-white/10"><div><b class="text-sm">🔔 Notifications</b><p class="text-[10px] text-slate-500">Nayi activity yahan dikhegi.</p></div><button onclick="clearHubNotifications()" class="text-[10px] text-red-400 font-bold">Clear all</button></div><div id="hub-notify-list" class="max-h-[360px] overflow-y-auto"></div></div></div>
   <button class="rh-icon-btn" onclick="switchTab('leaderboard')" title="Leaderboard"><i class="fa-solid fa-trophy"></i></button>
   <div class="rh-user"><div id="nav-pfp" class="w-9 h-9 rounded-full overflow-hidden border border-indigo-200 bg-slate-100 flex items-center justify-center shrink-0"></div><div><div id="nav-name" class="rh-user-name">User</div><span id="user-badge" class="text-[9px] uppercase font-bold text-indigo-600">Member</span></div><button onclick="openProfile()" class="rh-icon-btn" title="Profile"><i class="fa-solid fa-chevron-down"></i></button></div>
  </div>
@@ -322,6 +324,7 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
  <div class="rh-side-sep"></div>
  <div class="rh-side-title">Study</div>
  <button onclick="switchTab('materials')" id="btn-materials" class="rh-nav-btn"><i class="fa-solid fa-folder-open"></i><span>Study Material</span></button>
+  <button onclick="switchTab('aicards')" id="btn-aicards" class="rh-nav-btn"><i class="fa-solid fa-wand-magic-sparkles"></i><span>AI Notes & Formula</span></button>
  <button onclick="switchTab('focus')" id="btn-focus" class="rh-nav-btn"><i class="fa-solid fa-stopwatch"></i><span>Focus Timer</span></button>
  <button onclick="switchTab('studyrooms')" id="btn-studyrooms" class="rh-nav-btn"><i class="fa-solid fa-door-open"></i><span>Study Rooms</span></button>
  <button onclick="switchTab('diary')" id="btn-diary" class="rh-nav-btn"><i class="fa-solid fa-calendar-check"></i><span>Study Diary</span></button>
@@ -329,6 +332,7 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
  <div class="rh-side-sep"></div>
  <div class="rh-side-title">Community</div>
  <button onclick="switchTab('community')" id="btn-community" class="rh-nav-btn"><i class="fa-solid fa-users"></i><span>Community</span></button>
+  <button onclick="switchTab('peergroups')" id="btn-peergroups" class="rh-nav-btn"><i class="fa-solid fa-people-group"></i><span>Peer Groups</span></button>
  <button onclick="switchTab('chatroom')" id="btn-chatroom" class="rh-nav-btn"><i class="fa-solid fa-comments"></i><span>Live Chat</span></button>
  <button onclick="switchTab('stories')" id="btn-stories" class="rh-nav-btn"><i class="fa-solid fa-circle-play"></i><span>Stories</span></button>
  <div class="rh-side-sep"></div>
@@ -634,7 +638,7 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
     </div>
 
     <div id="qb-lobby" class="space-y-4">
-      <div class="grid md:grid-cols-4 gap-3">
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
         <button type="button" id="qb-mode-public" onclick="qbSelectMode('public')" class="qb-mode-card active">
           <div class="qb-mode-icon"><i class="fa-solid fa-globe"></i></div>
           <b class="block mt-3 text-sm">Public Quiz</b>
@@ -650,7 +654,7 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
           <b class="block mt-3 text-sm">1 vs 1 Battle Quiz</b>
           <span class="text-[10px] text-slate-500">Exactly 2 players • Fast head-to-head</span>
         </button>
-        <button type="button" id="qb-mode-detective" onclick="qbSelectMode('detective')" class="qb-mode-card">
+        <button type="button" id="qb-mode-detective" onclick="qbSelectMode('detective')" class="qb-mode-card rh-detective-mode">
           <div class="qb-mode-icon">🕵️</div>
           <b class="block mt-3 text-sm">NCERT Detective</b>
           <span class="text-[10px] text-slate-500">Clue-by-clue NCERT concept mystery</span>
@@ -716,7 +720,7 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
       <div>
         <div class="text-emerald-400 text-[10px] uppercase tracking-[.18em] font-black">NEET 720 • LIVE PRACTICE</div>
         <h2 class="text-2xl font-black mt-1"><i class="fa-solid fa-notes-medical text-emerald-400 mr-2"></i>NEET 720</h2>
-        <p class="text-xs text-slate-400 mt-1">NEET-level MCQ / PYQ / Assertion-Reason • Biology, Chemistry, Physics • 5 / 15 / 25 Questions • +50 XP per correct answer.</p>
+        <p class="text-xs text-slate-400 mt-1">NEET-level MCQ / PYQ • Biology, Chemistry, Physics • 5 / 15 / 25 Questions • +50 XP per correct answer.</p>
       </div>
       <span id="n720-global-status" class="px-3 py-1.5 rounded-full bg-slate-900 border border-white/10 text-[10px] font-bold text-slate-400">NO QUIZ</span>
     </div>
@@ -732,10 +736,9 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
               <button type="button" onclick="n720PickSubject('Chemistry',this)" class="n720-subject-btn bg-slate-800 rounded-xl py-2.5 text-xs font-bold">Chemistry</button>
               <button type="button" onclick="n720PickSubject('Physics',this)" class="n720-subject-btn bg-slate-800 rounded-xl py-2.5 text-xs font-bold">Physics</button>
             </div>
-            <div class="grid grid-cols-3 gap-2">
+            <div class="grid grid-cols-2 gap-2">
               <button type="button" onclick="n720PickType('MCQ',this)" class="n720-type-btn bg-red-600 rounded-xl py-2.5 text-xs font-bold">NEET MCQ</button>
               <button type="button" onclick="n720PickType('PYQ',this)" class="n720-type-btn bg-slate-800 rounded-xl py-2.5 text-xs font-bold">PYQ</button>
-              <button type="button" onclick="n720PickType('ASSERTION',this)" class="n720-type-btn bg-slate-800 rounded-xl py-2.5 text-xs font-bold">Assertion-Reason</button>
             </div>
             <div class="grid grid-cols-3 gap-2">
               <button type="button" onclick="n720PickCount(5,this)" class="n720-count-btn bg-red-600 rounded-xl py-2.5 text-xs font-bold">5 Q</button>
@@ -883,7 +886,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
  <select id="material-filter" onchange="renderMaterials()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm"><option value="">All</option><option>Biology</option><option>Chemistry</option><option>Physics</option><option>PYQ</option><option>Test</option><option>Notes</option><option>Other</option></select>
  <button type="button" onclick="loadMaterials(true)" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-rotate mr-1"></i>Refresh</button>
  </div>
- <p class="text-[10px] text-slate-500 mb-4">Google Drive Materials folder auto-sync hota hai • Refresh every 5 sec • Upload limit: 1 MB–200 MB</p>
+ <p class="text-[10px] text-slate-500 mb-4">Google Drive Materials folder auto-sync hota hai • Refresh every 5 sec • Upload limit: 1 MB–500 MB</p>
 <div id="materials-box" class="space-y-3"></div>
 </div>
 </section>
@@ -1005,10 +1008,30 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 </div>
 </section>
 
+<section id="section-aicards" class="hidden space-y-5">
+  <div class="bg-slate-800/95 border border-pink-500/20 rounded-2xl p-5">
+    <div class="flex items-start justify-between gap-3 flex-wrap"><div><h3 class="font-black text-xl">✨ AI Shorts Notes & Formula Cards</h3><p class="text-xs text-slate-400 mt-1">Admin upload ki zarurat nahi. Topic do → AI content banayega → RATHOD HUB usse image card mein render karega.</p></div><span class="rh-group-pill">AI GENERATED</span></div>
+    <div class="grid md:grid-cols-[1fr_auto_auto] gap-2 mt-4"><input id="ai-card-topic" maxlength="160" placeholder="Example: Photosynthesis light reaction / Kinematics formulas" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm"><button onclick="generateAICard('notes')" class="bg-pink-600 hover:bg-pink-500 px-4 py-3 rounded-xl text-xs font-black">📝 Short Notes</button><button onclick="generateAICard('formula')" class="bg-red-600 hover:bg-red-500 px-4 py-3 rounded-xl text-xs font-black">📐 Formula Sheet</button></div>
+    <div id="ai-card-status" class="text-xs text-slate-500 mt-3"></div>
+    <div id="ai-card-result" class="mt-4 hidden space-y-3"><canvas id="ai-card-canvas" class="hidden"></canvas><img id="ai-card-image" class="rh-ai-card-preview" alt="AI study card preview"><div class="rh-card-actions"><button onclick="openAICardImage()" class="bg-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold">Open Image</button><button onclick="saveAICardImage()" class="bg-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold">Save Image</button><button onclick="generateAICard('notes')" class="bg-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold">Regenerate</button></div><pre id="ai-card-text" class="whitespace-pre-wrap text-xs leading-5 bg-slate-950 rounded-xl p-4 border border-slate-800"></pre></div>
+  </div>
+</section>
+
+<section id="section-peergroups" class="hidden space-y-5">
+  <div class="bg-slate-800/95 border border-fuchsia-500/20 rounded-2xl p-5">
+    <div class="flex items-start justify-between gap-3 flex-wrap"><div><h3 class="font-black text-xl">👥 Peer Study Groups & Doubt Bounties</h3><p class="text-xs text-slate-400 mt-1">Students apna study group bana sakte hain aur difficult doubt par XP bounty laga sakte hain.</p></div><span class="rh-group-pill">STUDENT POWERED</span></div>
+    <div class="grid lg:grid-cols-2 gap-4 mt-4">
+      <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-4"><h4 class="font-black text-sm">Create / Join Study Group</h4><form id="peer-group-form" class="space-y-2 mt-3"><input id="peer-group-name" required maxlength="60" placeholder="Group name" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm"><div class="grid grid-cols-2 gap-2"><select id="peer-group-subject" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm"><option>Biology</option><option>Chemistry</option><option>Physics</option><option>All NEET</option></select><input id="peer-group-desc" maxlength="120" placeholder="Goal / chapter" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm"></div><button class="w-full bg-fuchsia-600 hover:bg-fuchsia-500 py-2.5 rounded-xl text-xs font-black">Create Group</button></form><div id="peer-groups-list" class="mt-4 space-y-2"></div></div>
+      <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-4"><h4 class="font-black text-sm">💰 Doubt Bounty</h4><p class="text-[10px] text-slate-500 mt-1">Aap difficult question post karo. Other students solution de sakte hain. Reward XP hai, real money nahi.</p><form id="doubt-bounty-form" class="space-y-2 mt-3"><input id="bounty-title" required maxlength="90" placeholder="Doubt title" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm"><textarea id="bounty-question" required maxlength="1000" rows="4" placeholder="Question / doubt clearly likho" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm"></textarea><div class="grid grid-cols-2 gap-2"><select id="bounty-subject" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm"><option>Biology</option><option>Chemistry</option><option>Physics</option></select><select id="bounty-reward" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm"><option value="10">10 XP</option><option value="20" selected>20 XP</option><option value="30">30 XP</option><option value="50">50 XP</option></select></div><button class="w-full bg-red-600 hover:bg-red-500 py-2.5 rounded-xl text-xs font-black">Post Doubt Bounty</button></form></div>
+    </div>
+  </div>
+  <div class="bg-slate-800/95 border border-red-500/20 rounded-2xl p-5"><div class="flex items-center justify-between"><div><h3 class="font-black">🔥 Open Doubt Bounties</h3><p class="text-[10px] text-slate-500">Solve karo aur bounty claim karo.</p></div><button onclick="loadDoubtBounties()" class="text-xs text-red-400 font-bold">↻ Refresh</button></div><div id="doubt-bounties-list" class="grid md:grid-cols-2 gap-3 mt-4"></div></div>
+</section>
+
 <section id="section-studyrooms" class="hidden space-y-5">
 <div class="bg-slate-800/95 rounded-2xl p-5">
 <h3 class="font-bold text-slate-200"><i class="fa-solid fa-door-open mr-2 text-teal-400"></i>Study Rooms</h3>
-<p class="text-xs text-slate-400 mt-1">Room join karo, phir Live Voice दबाकर साथ पढ़ो. Microphone permission allow karna hoga.</p>
+<p class="text-xs text-slate-400 mt-1">Room join karo, phir Live Voice दबाकर साथ पढ़ो. Microphone permission allow karna hoga.</p><p class="voice-help mt-2">Voice ke liye direct HTTPS GitHub Pages tab use karo. Browser address bar → 🔒 → Microphone → Allow. Test Mic se pehle permission check kar sakte ho.</p>
 </div>
 <div id="study-rooms-box" class="grid md:grid-cols-3 gap-4"></div>
 </section>
@@ -1040,11 +1063,13 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
       <button onclick="switchTab('neet720');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2 border border-emerald-500/20"><i class="fa-solid fa-notes-medical text-emerald-400 text-lg"></i><span>NEET 720</span></button>
       <button onclick="openDailyBattle();closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2 border border-red-500/30"><i class="fa-solid fa-clock text-red-400 text-lg"></i><span>Daily 9 PM</span></button>
       <button onclick="switchTab('materials');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-folder-open text-amber-400 text-lg"></i><span>Materials</span></button>
+       <button onclick="switchTab('aicards');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-pink-400 text-lg"></i><span>AI Notes</span></button>
       <button onclick="switchTab('focus');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-stopwatch text-red-500 text-lg"></i><span>Focus</span></button>
       <button onclick="switchTab('studyrooms');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-door-open text-cyan-400 text-lg"></i><span>Study Rooms</span></button>
       <button onclick="switchTab('diary');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-calendar-check text-emerald-400 text-lg"></i><span>Study Diary</span></button>
       <button onclick="switchTab('vault');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-lock text-purple-400 text-lg"></i><span>My Vault</span></button>
       <button onclick="switchTab('community');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-users text-indigo-400 text-lg"></i><span>Community</span></button>
+       <button onclick="switchTab('peergroups');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-people-group text-fuchsia-400 text-lg"></i><span>Peer Groups</span></button>
       <button onclick="switchTab('chatroom');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-comments text-sky-400 text-lg"></i><span>Live Chat</span></button>
       <button onclick="switchTab('stories');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-circle-play text-pink-400 text-lg"></i><span>Stories</span></button>
       <button onclick="switchTab('games');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-gamepad text-fuchsia-400 text-lg"></i><span>1v1 Games</span></button>
@@ -1331,7 +1356,7 @@ async function boot(){
   setDefaultDiaryDate();
   setDefaultBattleDateTime();
   await Promise.all([loadMaterials(),loadPosts(),loadPeople(),loadChatMessages(),loadDiary(),loadStories(),loadVault(),loadLeaderboard(),loadHubEvents(),loadSpinStatus(),loadScheduledBattle()]); startMaterialsAutoRefresh();
-  await initGamePresence(); initHubNotifications(); subscribeToChat(); renderStudyRooms();
+  await initGamePresence(); subscribeToChat(); renderStudyRooms(); initHubNotifications();
   qbInit();qbAutoJoinFromLink();
   if(profile.role==='admin')populateBackgroundForm();
   initFocusSystem(); applyRHSectionHeaders(); renderHomeDashboard(); switchTab(isAdmin?'adminpanel':'home');
@@ -1343,8 +1368,7 @@ db.auth.onAuthStateChange((event,s)=>{
  if(s){session=s;const nextId=s.user?.id||null;if(nextId&&nextId!==bootUserId)setTimeout(()=>boot(),0);}
 });
 async function cleanupFocusSystem(){if(focusInterval)clearInterval(focusInterval);focusLiveSessionId=null;focusLastDbSyncAt=0;focusInterval=null;if(focusHeartbeat)clearInterval(focusHeartbeat);focusHeartbeat=null;if(focusChannel){try{await db.removeChannel(focusChannel)}catch(e){}focusChannel=null}focusReady=false}
-async function cleanupHubNotifications(){if(hubNotifyChannel){try{await db.removeChannel(hubNotifyChannel)}catch(e){}hubNotifyChannel=null}}
-async function logout(){await cleanupChatSubscription();await cleanupGamePresence();await cleanupHubNotifications();await cleanupFocusSystem();stopAllVoiceAndRooms();await db.auth.signOut();location.reload()}
+async function logout(){await cleanupChatSubscription();await cleanupGamePresence();await cleanupFocusSystem();stopAllVoiceAndRooms();await db.auth.signOut();location.reload()}
 
 function openDailyBattle(){
   switchTab('quiz');
@@ -1356,13 +1380,15 @@ function openDailyBattle(){
 }
 
 function switchTab(tab){
-  ['home','ai','quiz','battle','neet720','daily-battle','materials','community','chatroom','diary','stories','games','vault','hubevents','studyrooms','leaderboard','focus','adminpanel','rathodnew'].forEach(x=>{
+  ['home','ai','quiz','battle','neet720','daily-battle','materials','aicards','community','peergroups','chatroom','diary','stories','games','vault','hubevents','studyrooms','leaderboard','focus','adminpanel','rathodnew'].forEach(x=>{
     const sec=document.getElementById('section-'+x); if(sec)sec.classList.add('hidden');
     const btn=document.getElementById('btn-'+x); if(btn)btn.classList.remove('rh-active');
   });
   const target=document.getElementById('section-'+tab); if(target)target.classList.remove('hidden');
   const active=document.getElementById('btn-'+tab); if(active)active.classList.add('rh-active');
   if(tab==='materials' && user) setTimeout(()=>loadMaterials(false),0);
+  if(tab==='aicards')document.getElementById('ai-card-topic')?.focus();
+  if(tab==='peergroups'){loadPeerGroups();loadDoubtBounties();}
   ['mob-home','mob-materials','mob-focus','mob-chat','mob-more'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('rh-active')});
   const mobMap={home:'mob-home',materials:'mob-materials',focus:'mob-focus',chatroom:'mob-chat'};if(mobMap[tab])document.getElementById(mobMap[tab])?.classList.add('rh-active');
   if(tab==='home')renderHomeDashboard();
@@ -1386,6 +1412,7 @@ const RH_SECTION_META={
  neet720:['NEET 720','NEET-level MCQ & PYQ practice • 5/15/25 questions • +50 XP/correct','fa-notes-medical','emerald'],
  materials:['Study Material','All notes, PDFs, PYQs and study files','fa-folder-open','amber'],
  community:['Community','Posts, students and discussions','fa-users','violet'],
+ peergroups:['Peer Groups','Study groups and doubt bounties','fa-people-group','fuchsia'],
  chatroom:['Live Chat','Live student discussion and doubts','fa-comments','sky'],
  diary:['Study Diary','Track your daily preparation','fa-calendar-check','emerald'],
  stories:['Stories','See what the community is sharing','fa-circle-play','pink'],
@@ -1906,17 +1933,6 @@ document.getElementById('story-form').addEventListener('submit',async e=>{e.prev
 function openStory(id){const s=stories.find(x=>String(x.id)===String(id));if(!s)return;document.getElementById('story-viewer-content').innerHTML=`<div class="text-left mb-2"><b>${esc(s.name||'Member')}</b><div class="text-xs text-slate-400">Expires ${new Date(s.expires_at).toLocaleString()}</div></div>${s.media_type?.startsWith('video/')?`<video controls autoplay class="max-h-[75vh] w-full rounded-2xl bg-black" src="${safeUrl(s.media_url)}"></video>`:`<img class="max-h-[75vh] w-full rounded-2xl object-contain bg-black" src="${safeUrl(s.media_url)}">`}${s.caption?`<p class="mt-3 text-sm">${esc(s.caption)}</p>`:''}`;document.getElementById('story-viewer').classList.remove('hidden')}
 function closeStoryViewer(){document.getElementById('story-viewer').classList.add('hidden');document.getElementById('story-viewer-content').innerHTML=''}
 
-/* ==================== GLOBAL HUB NOTIFICATIONS ==================== */
-let hubNotifyChannel=null,hubNotificationCount=0;
-function showHubNotification(title,body,tag='rathod-hub'){
- hubNotificationCount++;const bell=document.querySelector('.rh-top-actions .fa-bell')?.closest('button');
- if(bell){bell.classList.add('relative');let badge=bell.querySelector('.rh-notify-badge');if(!badge){badge=document.createElement('span');badge.className='rh-notify-badge absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-red-600 text-white text-[9px] font-black flex items-center justify-center';bell.appendChild(badge)}badge.textContent=String(Math.min(99,hubNotificationCount));}
- toast('🔔 '+title+' — '+body,true);
- if('Notification' in window&&Notification.permission==='granted'){try{new Notification(title,{body,tag,icon:document.querySelector('link[rel="icon"]')?.href||undefined})}catch(e){}}
-}
-function initHubNotifications(){if(!user)return;if(hubNotifyChannel)try{db.removeChannel(hubNotifyChannel)}catch(e){}hubNotifyChannel=db.channel('rathod-hub-global-notifications',{config:{broadcast:{self:false}}}).on('broadcast',{event:'hub-notification'},x=>{const p=x.payload||{};if(p.fromId===user.id)return;showHubNotification(p.title||'RATHOD HUB',p.body||'New activity',p.tag||'rathod-hub')}).subscribe();}
-async function sendHubNotification(title,body,tag='rathod-hub'){try{if(hubNotifyChannel)await hubNotifyChannel.send({type:'broadcast',event:'hub-notification',payload:{fromId:user?.id||null,title,body,tag}})}catch(e){}}
-
 /* Presence + game invites */
 let gamePresence=null,gameEvents=null,gameRoom=null;
 let currentGame={type:null,online:false,roomId:null,role:null,chess:null,ttt:null,selected:null,gameOver:false,connected:false};
@@ -2000,7 +2016,6 @@ async function invitePlayer(targetId,targetName,type){
 
 function receiveInvite(p){
   if(!p||p.targetId!==user.id)return;
-  showHubNotification('Game Invite',`${p.fromName||'A student'} ne ${p.game==='chess'?'Chess':'Tic Tac Toe'} ke liye bulaya hai.`,'game-invite');
   const box=document.getElementById('game-invites');
   const d=document.createElement('div');
   d.className='bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex justify-between items-center gap-2';
@@ -2488,13 +2503,13 @@ function qbSetFinishedLayout(finished){document.body.classList.toggle('qb-finish
 function qbShowLiveLayout(){qbSetFinishedLayout(false);}
 function qbSelectMode(mode){
   qbMode=mode;
-  qbQuizType=mode==='detective'?'NCERT_DETECTIVE':'MCQ';
   ['public','private','duel','detective'].forEach(m=>document.getElementById(`qb-mode-${m}`)?.classList.toggle('active',m===mode));
+  qbQuizType=mode==='detective'?'NCERT_DETECTIVE':'MCQ';
   const title=document.getElementById('qb-create-title'),sub=document.getElementById('qb-create-sub'),btn=document.getElementById('qb-host-btn');
   if(mode==='public'){title.textContent='🌐 Start Public Quiz';sub.textContent='Quiz live list mein turant show hoga.';btn.innerHTML='<i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Generate 15 Questions & Start';}
   if(mode==='private'){title.textContent='🔒 Start Private Quiz';sub.textContent='Public list se hidden rahega; invite link se join hoga.';btn.innerHTML='<i class="fa-solid fa-lock mr-2"></i>Generate 15 Questions & Create Private Quiz';}
   if(mode==='duel'){title.textContent='⚔️ Start 1 vs 1 Battle';sub.textContent='Exactly 2 players allowed.';btn.innerHTML='<i class="fa-solid fa-user-group mr-2"></i>Generate 15 Questions & Create Battle';}
-  if(mode==='detective'){title.textContent='🕵️ Start NCERT Detective';sub.textContent='Clue-by-clue NCERT concept mystery • NEET level.';btn.innerHTML='<i class="fa-solid fa-magnifying-glass mr-2"></i>Generate 15 Detective Questions';}
+  if(mode==='detective'){title.textContent='🕵️ Start NCERT Detective';sub.textContent='NCERT clues → concept mystery → MCQ.';btn.innerHTML='<i class="fa-solid fa-magnifying-glass mr-2"></i>Generate 15 Detective Questions & Start';}
 }
 async function qbCopyPrivateLink(){if(!qbRoom)return;const link=`${location.origin}${location.pathname}?livequiz=${encodeURIComponent(qbRoom.room_code)}`;try{await navigator.clipboard.writeText(link);toast('Private invite link copied ✓')}catch(e){prompt('Private invite link',link)}}
 async function qbLoadMyFinalStats(){
@@ -2520,26 +2535,25 @@ async function qbLoadRooms(silent=false){
     const {data,error}=await db.from('quiz_battle_rooms').select('room_code,topic,host_name,status,started_at,created_at,mode').in('status',['waiting','live']).in('mode',['public','duel']).order('created_at',{ascending:false}).limit(30);
     if(error)throw error;
     if(!data?.length){box.innerHTML='<div class="text-xs text-slate-500 text-center py-8">Abhi koi Public/1v1 Live Quiz nahi hai. Aap pehla start karo ⚡</div>';return;}
-    box.innerHTML=data.map(r=>{const live=r.status==='live',duel=r.mode==='duel',detective=String(r.topic||'').startsWith('🕵️');return `<button onclick="qbJoinRoom('${qbEsc(r.room_code)}')" class="qb-room-row w-full rounded-xl p-3 text-left"><div class="flex items-center justify-between gap-2"><b class="text-sm text-white truncate">${qbEsc(r.topic)}</b><span class="text-[9px] font-black ${live?'text-emerald-400':'text-amber-400'}">${live?'● LIVE':'WAITING'}</span></div><div class="text-[10px] text-slate-500 mt-1">${detective?'🕵️ NCERT Detective':duel?'⚔️ 1 vs 1':'🌐 Public'} • Host: ${qbEsc(r.host_name||'Student')}</div></button>`}).join('');
+    box.innerHTML=data.map(r=>{const live=r.status==='live',duel=r.mode==='duel',detective=String(r.topic||'').startsWith('🕵️ NCERT Detective');return `<button onclick="qbJoinRoom('${qbEsc(r.room_code)}')" class="qb-room-row w-full rounded-xl p-3 text-left"><div class="flex items-center justify-between gap-2"><b class="text-sm text-white truncate">${detective?'🕵️ NCERT Detective':qbEsc(r.topic)}</b><span class="text-[9px] font-black ${live?'text-emerald-400':'text-amber-400'}">${live?'● LIVE':'WAITING'}</span></div><div class="text-[10px] text-slate-500 mt-1">${duel?'⚔️ 1 vs 1':'🌐 Public'} • Host: ${qbEsc(r.host_name||'Student')}</div></button>`}).join('');
   }catch(e){box.innerHTML='<div class="text-xs text-slate-500 text-center py-6">Live Quiz SQL setup required.</div>';console.warn('qbLoadRooms',e)}
 }
 async function qbHostMatch(){
   if(!user||!profile)return toast('Pehle login karein.',false);const topic=document.getElementById('qb-host-topic')?.value.trim();if(!topic)return toast('Topic/Chapter enter karein.',false);const btn=document.getElementById('qb-host-btn');btn.disabled=true;btn.innerHTML='⏳ AI 15 Questions bana raha hai...';
   try{
-    const detectivePrompt=qbQuizType==='NCERT_DETECTIVE'?' (NCERT Detective: har question NCERT-based clue mystery ho; pehle clue/concept do, phir NEET-level MCQ; exact NCERT facts par based, ambiguous ya invented facts nahi.)':'';
-    const generated=await rhGenerateFreshQuiz({count:QB_QUESTION_COUNT,subject:qbSubject,type:'MCQ',topic:`${topic||'General'} (NEET Live Quiz)${detectivePrompt}`,storage:true});const questions=generated.questions;
+    const detectiveRule=qbQuizType==='NCERT_DETECTIVE'?' 🕵️ NCERT Detective: har question clue-by-clue NCERT concept mystery ho; exact NCERT facts par based ho; invented/ambiguous clues nahi.':'';
+    const generated=await rhGenerateFreshQuiz({count:QB_QUESTION_COUNT,subject:qbSubject,type:'MCQ',topic:`${topic||'General'} (NEET Live Quiz)${detectiveRule}`,storage:true});const questions=generated.questions;
     const seen=new Set();
     const clean=questions.map(q=>({question:String(q.question||'').trim(),options:Array.isArray(q.options)?q.options.slice(0,4).map(x=>String(x).trim()):[],correct_index:Number(q.correct_index??q.answer??0)}))
       .filter(q=>q.question&&q.options.length===4&&q.options.every(Boolean)&&q.correct_index>=0&&q.correct_index<4)
       .filter(q=>{const key=q.question.normalize('NFKC').replace(/[\\u200B-\\u200D\\uFEFF]/g,'').replace(/\\s+/g,' ').trim().toLowerCase();if(!key||seen.has(key))return false;seen.add(key);return true;})
       .slice(0,15);
     if(clean.length!==15)throw new Error(`AI ne 15 unique questions nahi diye (${clean.length}/15). Please try again.`);
-    const room_code=qbCode();const mode=qbMode==='detective'?'public':qbMode;
-    const roomTopic=qbQuizType==='NCERT_DETECTIVE'?`🕵️ NCERT Detective • ${qbSubject} • ${topic}`:`${qbSubject} • ${topic}`;
-    const payload={room_code,topic:roomTopic,host_id:user.id,host_name:profile.name||user.email||'Student',questions:clean,question_count:15,status:'waiting',mode};
+    const room_code=qbCode();const mode=qbMode;
+    const payload={room_code,topic:`${qbSubject} • ${topic}`,host_id:user.id,host_name:profile.name||user.email||'Student',questions:clean,question_count:15,status:'waiting',mode};
     const {data,error}=await db.from('quiz_battle_rooms').insert(payload).select('*').single();if(error)throw error;qbRoom=data;await qbJoinRoom(room_code,true,false);document.getElementById('qb-private-invite')?.classList.toggle('hidden',mode!=='private');
     toast(qbQuizType==='NCERT_DETECTIVE'?'🕵️ NCERT Detective created!':mode==='public'?'Public Live Quiz started!':'Quiz created.');
-    await sendHubNotification(qbQuizType==='NCERT_DETECTIVE'?'🕵️ NCERT Detective LIVE':'🔴 Live Quiz LIVE',`${profile.name||'A student'} ne ${qbQuizType==='NCERT_DETECTIVE'?'NCERT Detective':'Live Quiz'} start kiya: ${topic}`,'live-quiz');
+     sendHubNotification(qbQuizType==='NCERT_DETECTIVE'?'🕵️ NCERT Detective Started':'🔴 New Live Quiz',displayTopic,'livequiz');
   }catch(e){console.error('qbHostMatch',e);toast(e.message||'Quiz create failed',false)}finally{btn.disabled=false;qbSelectMode(qbMode)}
 }
 async function qbJoinRoom(code,afterCreate=false,privateOnly=false){
@@ -2560,7 +2574,7 @@ async function qbRefreshPresenceCount(){if(!qbChannel)return;try{const state=qbC
 async function qbReloadRoomAndSync(){if(!qbRoom)return;const {data}=await db.from('quiz_battle_rooms').select('*').eq('room_code',qbRoom.room_code).maybeSingle();if(data){qbRoom=data;qbRenderRoom();qbSyncCurrentRoom();if(data.status==='finished'){await qbRefreshParticipants();await qbLoadMyFinalStats()}}}
 function qbRenderRoom(){
   document.getElementById('qb-lobby')?.classList.add('hidden');document.getElementById('qb-match')?.classList.remove('hidden');const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};set('qb-match-topic',qbRoom.topic||'Live Quiz');set('qb-match-host',qbRoom.host_name||'Student');const isHost=qbRoom.host_id===user.id;document.getElementById('qb-start-btn')?.classList.toggle('hidden',!isHost||qbRoom.status!=='waiting');document.getElementById('qb-waiting-panel')?.classList.toggle('hidden',qbRoom.status!=='waiting');document.getElementById('qb-question-panel')?.classList.toggle('hidden',qbRoom.status!=='live');document.getElementById('qb-finished-panel')?.classList.toggle('hidden',qbRoom.status!=='finished');set('qb-match-status',qbRoom.status==='live'?'LIVE':qbRoom.status==='finished'?'FINISHED':'WAITING');set('qb-global-status',qbRoom.status==='live'?'● LIVE QUIZ':qbRoom.status==='finished'?'FINISHED':'WAITING');set('qb-waiting-title',qbRoom.mode==='duel'?'Waiting for opponent...':'Waiting for players...');set('qb-waiting-note',qbRoom.mode==='duel'?'1 vs 1 ke liye 2 players required.':'Host quiz start karega to sabka timer same hoga.');const invite=document.getElementById('qb-match-invite-code');if(invite){invite.classList.toggle('hidden',qbRoom.mode!=='private');invite.textContent=qbRoom.mode==='private'?`Invite code: ${qbRoom.room_code}`:''}if(qbRoom.status!=='finished')qbShowLiveLayout();}
-async function qbStartMatch(){if(!qbRoom||qbRoom.host_id!==user.id||qbRoom.status!=='waiting')return;if(qbRoom.mode==='duel'){const {count,error}=await db.from('quiz_battle_participants').select('user_id',{count:'exact',head:true}).eq('room_code',qbRoom.room_code);if(error)return toast(error.message,false);if((count||0)<2)return toast('1 vs 1 start karne ke liye opponent join kare.',false)}const started_at=new Date().toISOString();const {data,error}=await db.from('quiz_battle_rooms').update({status:'live',started_at}).eq('room_code',qbRoom.room_code).eq('host_id',user.id).eq('status','waiting').select('*').single();if(error)return toast(error.message||'Quiz start failed',false);qbRoom=data;qbRenderRoom();qbSyncCurrentRoom();showHubNotification(qbRoom.topic?.startsWith('🕵️')?'🕵️ NCERT Detective Started':'🔴 Live Quiz Started',`${qbRoom.topic||'Quiz'} ab LIVE hai.`,'quiz-start');try{await qbChannel?.send({type:'broadcast',event:'battle-event',payload:{type:'started'}})}catch(e){}}
+async function qbStartMatch(){if(!qbRoom||qbRoom.host_id!==user.id||qbRoom.status!=='waiting')return;if(qbRoom.mode==='duel'){const {count,error}=await db.from('quiz_battle_participants').select('user_id',{count:'exact',head:true}).eq('room_code',qbRoom.room_code);if(error)return toast(error.message,false);if((count||0)<2)return toast('1 vs 1 start karne ke liye opponent join kare.',false)}const started_at=new Date().toISOString();const {data,error}=await db.from('quiz_battle_rooms').update({status:'live',started_at}).eq('room_code',qbRoom.room_code).eq('host_id',user.id).eq('status','waiting').select('*').single();if(error)return toast(error.message||'Quiz start failed',false);qbRoom=data;qbRenderRoom();qbSyncCurrentRoom();try{await qbChannel?.send({type:'broadcast',event:'battle-event',payload:{type:'started'}})}catch(e){}}
 function qbCurrentIndex(){if(!qbRoom?.started_at)return -1;const elapsed=Date.now()-new Date(qbRoom.started_at).getTime();if(elapsed<0)return -1;return Math.floor(elapsed/(QB_QUESTION_SECONDS*1000))}
 function qbSecondsLeft(){if(!qbRoom?.started_at)return 30;const elapsed=Math.max(0,Date.now()-new Date(qbRoom.started_at).getTime());const used=Math.floor((elapsed%(QB_QUESTION_SECONDS*1000))/1000);return QB_QUESTION_SECONDS-used}
 function qbSyncCurrentRoom(){
@@ -2650,8 +2664,8 @@ function n720StartLobbyPoll(){clearInterval(n720LobbyPoll);n720LobbyPoll=setInte
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){if(typeof qbStartLobbyPoll==='function')qbStartLobbyPoll();if(typeof n720StartLobbyPoll==='function')n720StartLobbyPoll();}});
 async function n720HostQuiz(){
  if(!user||!profile)return toast('Pehle login karein.',false);const btn=document.getElementById('n720-host-btn');btn.disabled=true;btn.innerHTML='⏳ Questions ban rahe hain...';
- try{const topic=document.getElementById('n720-topic')?.value.trim();const base=topic||`${n720Subject} ${n720Type==='PYQ'?'NEET PYQ':n720Type==='ASSERTION'?'NEET Assertion-Reason':'NEET Level MCQ'}`;const assertionRule=n720Type==='ASSERTION'?' Assertion-Reason format strictly use karo: Assertion (A) aur Reason (R) do. Options exactly ye standard format follow karein: (1) A and R both true, and R is the correct explanation of A; (2) A and R both true, but R is not the correct explanation of A; (3) A is true, but R is false; (4) A is false, but R is true. NEET-level, NCERT-aligned, unambiguous aur conceptually challenging questions banao.':' ';const prompt=`NEET 720 ${n720Type}: ${n720Subject}. ${base}.${assertionRule} Generate ${n720Count} high-quality NEET-level questions in Hindi. Four options A-D. Return correct_index 0-3. For PYQ mode, use NEET previous-year-question style and clearly identify the exam/year only if known; do not invent year/question claims.`;
-  const generated=await rhGenerateFreshQuiz({count:n720Count,subject:n720Subject,type:'MCQ',topic:`${base}${assertionRule}`,storage:true});const qs=generated.questions;
+ try{const topic=document.getElementById('n720-topic')?.value.trim();const base=topic||`${n720Subject} ${n720Type==='PYQ'?'NEET PYQ':'NEET Level MCQ'}`;const prompt=`NEET 720 ${n720Type}: ${n720Subject}. ${base}. Generate ${n720Count} high-quality NEET-level questions in Hindi. Four options A-D. Return correct_index 0-3. For PYQ mode, use NEET previous-year-question style and clearly identify the exam/year only if known; do not invent year/question claims.`;
+  const generated=await rhGenerateFreshQuiz({count:n720Count,subject:n720Subject,type:n720Type,topic:base,storage:true});const qs=generated.questions;
   const clean=qs.slice(0,n720Count).map(q=>({question:String(q.question||''),options:Array.isArray(q.options)?q.options.slice(0,4):[],correct_index:Number(q.correct_index??q.answer??0)})).filter(q=>q.question&&q.options.length===4&&q.correct_index>=0&&q.correct_index<4);if(clean.length!==n720Count)throw new Error('Question format invalid. Please try again.');
   const room_code=(typeof qbCode==='function'?qbCode():Math.random().toString(36).slice(2,8).toUpperCase());const payload={room_code,topic:`${n720Subject} • ${n720Type} • ${n720Count} Q`,host_id:user.id,host_name:profile.name||user.email||'Student',questions:clean,question_count:n720Count,status:'waiting',mode:'neet720'};
   const {data,error}=await db.from('quiz_battle_rooms').insert(payload).select('*').single();if(error)throw error;n720Room=data;await n720JoinRoom(room_code,true);toast('NEET 720 quiz created! Students can join from the Live list.');
@@ -3682,7 +3696,7 @@ document.getElementById('hub-event-form').addEventListener('submit',async e=>{
   });
   if(error)throw error;
   e.target.reset();document.getElementById('event-active').checked=true;renderEventQuestionInputs();
-  toast('HUB Event created');await loadHubEvents();
+  toast('HUB Event created');await sendHubNotification('📅 New HUB Event',document.getElementById('event-title').value.trim(),'event','hubevents');await loadHubEvents();
  }catch(err){toast(err.message||'Event create failed',false)}
  finally{btn.disabled=false;btn.textContent='Create Event'}
 });
@@ -3776,8 +3790,8 @@ function studyRoomCardHtml(r){
     <button id="voice-join-${r.key}" onclick="joinVoice('${r.key}')" class="flex-1 bg-fuchsia-600 hover:bg-fuchsia-500 py-2 rounded-lg text-xs font-bold">Join Voice</button>
     <button id="voice-mute-${r.key}" onclick="toggleMute('${r.key}')" class="hidden flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-lg text-xs font-bold">Mute</button>
     <button id="voice-leave-${r.key}" onclick="leaveVoice('${r.key}')" class="hidden flex-1 bg-red-600 hover:bg-red-500 py-2 rounded-lg text-xs font-bold">Leave Voice</button>
+     <button type="button" onclick="testVoiceMicrophone('${r.key}')" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-xs font-bold">🎙 Test Mic</button>
    </div>
-   <button type="button" onclick="testVoiceMicrophone()" class="mt-2 w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 py-2 rounded-lg text-[10px] font-bold">🎙 Test Microphone</button>
    <div id="room-audio-${r.key}" class="hidden"></div>
   </div>
  </div>`;
@@ -3868,45 +3882,51 @@ function startVoiceHeartbeat(key){
  },10000);
 }
 function stopVoiceHeartbeat(key){const vs=voiceState[key];if(vs?.heartbeat)clearInterval(vs.heartbeat);if(vs)vs.heartbeat=null}
-async function testVoiceMicrophone(){
- if(!window.isSecureContext&&location.hostname!=='localhost')return toast('🎙 Voice ke liye HTTPS zaroori hai.',false);
- if(!navigator.mediaDevices?.getUserMedia)return toast('🎙 Browser microphone API support nahi karta.',false);
- try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});stream.getTracks().forEach(t=>t.stop());toast('🎙 Microphone ready hai ✓');}
- catch(e){if(e?.name==='NotAllowedError')toast('🎙 Mic blocked hai. Direct HTTPS site par 🔒 → Microphone → Allow karo. Preview/iframe me mic allowed nahi ho sakta.',false);else toast('🎙 Mic test failed: '+(e?.message||e.name||'Unknown error'),false)}
+async function testVoiceMicrophone(key){
+  if(!window.isSecureContext&&location.hostname!=='localhost')return toast('Voice ke liye direct HTTPS GitHub Pages URL open karo.',false);
+  if(!navigator.mediaDevices?.getUserMedia)return toast('Is browser/context mein microphone support nahi hai.',false);
+  try{
+    if(navigator.permissions?.query){try{const p=await navigator.permissions.query({name:'microphone'});if(p.state==='denied')return toast('Microphone blocked hai. Address bar 🔒 → Microphone → Allow karo.',false)}catch(e){}}
+    const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+    stream.getTracks().forEach(t=>t.stop());
+    toast('🎙 Microphone working hai. Ab Join Voice try karo.');
+  }catch(e){
+    console.error('testVoiceMicrophone',e);
+    if(e?.name==='NotAllowedError')toast('Mic permission blocked hai ya page embedded/preview context mein hai. Direct HTTPS page kholo aur Microphone → Allow karo.',false);
+    else if(e?.name==='NotFoundError')toast('Microphone device nahi mila.',false);
+    else toast(e?.message||'Microphone test failed.',false);
+  }
 }
 async function joinVoice(key){
- const vs=ensureVoiceState(key);if(vs.joined)return;
- const rc=roomChannels[key];if(!rc||!rc.joined)return toast('Pehle room join karein.',false);
- if(!window.isSecureContext&&location.hostname!=='localhost')return toast('Live Voice ke liye HTTPS zaroori hai.',false);
- if(!navigator.mediaDevices?.getUserMedia)return toast('Microphone support nahi hai.',false);
- const current=getVoicePeople(key);
- if(current.length>=MAX_VOICE_USERS)return toast(`Live Voice full hai.`,false);
- try{
-  await rc.ready;
-  if(navigator.permissions?.query){
-   try{const perm=await navigator.permissions.query({name:'microphone'});if(perm.state==='denied')throw new DOMException('Microphone permission is blocked for this site.','NotAllowedError')}
-   catch(e){if(e?.name==='NotAllowedError')throw e}
-  }
-  await reserveVoiceSlot(key);
+  const vs=ensureVoiceState(key);if(vs.joined)return;
+  const rc=roomChannels[key];if(!rc||!rc.joined)return toast('Pehle room join karein.',false);
+  if(!window.isSecureContext&&location.hostname!=='localhost')return toast('Live Voice ke liye HTTPS zaroori hai.',false);
+  if(!navigator.mediaDevices?.getUserMedia)return toast('Microphone support nahi hai.',false);
   try{
-   vs.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
-  }catch(e){await releaseVoiceSlot(key);throw e}
-  vs.joined=true;vs.muted=false;
-  await rc.channel.track({user_id:user.id,name:profile?.name||user.email||'Member',voice:true});
-  startVoiceHeartbeat(key);
-  await rc.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'join',fromId:user.id}});
-  document.getElementById(`voice-join-${key}`).classList.add('hidden');
-  const mb=document.getElementById(`voice-mute-${key}`);mb.classList.remove('hidden');mb.textContent='Mute';
-  document.getElementById(`voice-leave-${key}`).classList.remove('hidden');
-  renderRoomMembers(key);
- }catch(e){
-  console.error('joinVoice failed',e);
-  if(vs.stream)vs.stream.getTracks().forEach(t=>t.stop());vs.stream=null;vs.joined=false;
-  if(e?.name==='NotAllowedError')toast('🎙 Mic allow nahi hua. RATHOD HUB ko direct HTTPS tab mein kholo, address-bar 🔒 → Microphone → Allow karo, phir Join Voice dabao. Agar app iframe/preview mein khula hai to direct GitHub Pages URL use karo.',false);
-  else if(e?.name==='NotFoundError')toast('🎙 Microphone device nahi mila. Headset/mic connect karke dobara try karo.',false);
-  else toast(e?.message||'Live Voice start nahi hua.',false);
- }
+    if(navigator.permissions?.query){try{const p=await navigator.permissions.query({name:'microphone'});if(p.state==='denied')return toast('Microphone blocked hai. Address bar 🔒 → Microphone → Allow karo.',false)}catch(e){}}
+    const current=getVoicePeople(key);
+    if(current.length>=MAX_VOICE_USERS)return toast('Live Voice full hai.',false);
+    await rc.ready;
+    await reserveVoiceSlot(key);
+    try{vs.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}})}catch(e){await releaseVoiceSlot(key);throw e}
+    vs.joined=true;vs.muted=false;
+    await rc.channel.track({user_id:user.id,name:profile?.name||user.email||'Member',voice:true});
+    startVoiceHeartbeat(key);
+    await rc.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'join',fromId:user.id}});
+    document.getElementById(`voice-join-${key}`)?.classList.add('hidden');
+    document.getElementById(`voice-mute-${key}`)?.classList.remove('hidden');
+    document.getElementById(`voice-leave-${key}`)?.classList.remove('hidden');
+    renderRoomMembers(key);
+    toast('🎙 Live Voice joined');
+  }catch(e){
+    console.error('joinVoice failed',e);
+    if(vs.stream)vs.stream.getTracks().forEach(t=>t.stop());vs.stream=null;vs.joined=false;
+    if(e?.name==='NotAllowedError')toast('Microphone permission blocked hai. Direct HTTPS GitHub Pages page kholo → 🔒 → Microphone → Allow. Preview/iframe mein mic block ho sakta hai.',false);
+    else if(e?.name==='NotFoundError')toast('Microphone device nahi mila.',false);
+    else toast(e?.message||'Live Voice start nahi hua.',false);
+  }
 }
+
 function createPeer(key,peerId){
  const vs=ensureVoiceState(key);if(vs.peers[peerId])return vs.peers[peerId];
  let pc;try{pc=new RTCPeerConnection(RTC_CONFIG)}catch(e){console.warn('RTCPeerConnection failed',e);return null}
@@ -3918,7 +3938,7 @@ function createPeer(key,peerId){
   audio.srcObject=e.streams[0];audio.play().catch(()=>{});
  };
  pc.onconnectionstatechange=()=>{if(['failed','closed'].includes(pc.connectionState))closePeer(key,peerId)};
- pc.oniceconnectionstatechange=()=>{if(pc.iceConnectionState==='failed'){try{pc.restartIce()}catch(e){}}};
+  pc.oniceconnectionstatechange=()=>{if(pc.iceConnectionState==='failed'){try{pc.restartIce()}catch(e){}}};
  vs.peers[peerId]=pc;return pc;
 }
 function closePeer(key,peerId){
@@ -3944,8 +3964,7 @@ async function handleVoiceSignal(key,payload){
   }else if(payload.type==='answer'&&payload.targetId===user.id){
    const pc=vs.peers[payload.fromId];if(pc&&!pc.remoteDescription)await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
   }else if(payload.type==='ice'&&payload.targetId===user.id){
-   const pc=vs.peers[payload.fromId];
-   if(!pc){(vs.pendingIce[payload.fromId]??=[]).push(payload.candidate);return;}
+   const pc=vs.peers[payload.fromId];if(!pc)return;
    if(pc.remoteDescription?.type)await pc.addIceCandidate(payload.candidate).catch(()=>{});else (vs.pendingIce[payload.fromId]??=[]).push(payload.candidate);
   }else if(payload.type==='leave')closePeer(key,payload.fromId);
  }catch(e){console.warn('Voice signaling failed',e)}
@@ -4326,6 +4345,49 @@ async function reward(m,q){let b=$('rh-reward-box'),done=m>=60||q.count>=20,clai
 async function ask(q){q=String(q||'').trim();if(!q)return;msg(q,'user');let l=msg('Tumhari preparation analyze kar raha hoon…','ai');try{let qd=await qs(),p=`You are RATHOD HUB AI Study Coach. Reply in simple Hindi/Hinglish. Use only these stats: study today ${mins()} minutes, XP ${xp()}, quiz questions today ${qd.count}, accuracy ${qd.count?Math.round(qd.correct/qd.count*100):0}%. Student asks: ${q}. Give a practical next step.`;let{data,error}=await db.functions.invoke('ai-chat',{body:{question:p}});if(error)throw error;l.innerHTML=esc(data?.answer||data?.message||'AI ne answer nahi diya.').replace(/\n/g,'<br>')}catch(e){l.textContent='AI Coach connect nahi ho pa raha. Please try again.'}}
 window.rhNewScroll=id=>$(id)?.scrollIntoView({behavior:'smooth'});window.rhRathodNewRefresh=render;
 function init(){let i=$('rh-prep-input'),b=$('rh-prep-send');if(b)b.onclick=()=>ask(i?.value);if(i)i.addEventListener('keydown',e=>{if(e.key==='Enter')ask(i.value)});render();setInterval(()=>{if(!$('section-rathodnew')?.classList.contains('hidden'))render()},30000)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
-})();</script>
+})();
+/* ==================== GLOBAL HUB NOTIFICATIONS ==================== */
+let hubNotifyChannel=null,hubNotifications=[];
+function hubNotifyKey(){return `rh_hub_notifications_${user?.id||'guest'}`}
+function loadHubNotificationStore(){try{const a=JSON.parse(localStorage.getItem(hubNotifyKey())||'[]');hubNotifications=Array.isArray(a)?a.slice(0,50):[]}catch{hubNotifications=[]}renderHubNotifications()}
+function saveHubNotificationStore(){try{localStorage.setItem(hubNotifyKey(),JSON.stringify(hubNotifications.slice(0,50)))}catch{}renderHubNotifications()}
+function renderHubNotifications(){const list=document.getElementById('hub-notify-list'),badge=document.getElementById('hub-notify-badge');if(!list)return;const n=hubNotifications.length;if(badge){badge.textContent=n>99?'99+':String(n);badge.style.display=n?'flex':'none'}list.innerHTML=n?hubNotifications.map(x=>`<div class="rh-notify-item" onclick="openHubNotification('${esc(x.id)}')"><div class="text-xl">${esc(x.icon||'🔔')}</div><div class="min-w-0 flex-1"><b>${esc(x.title||'RATHOD HUB')}</b><p>${esc(x.body||'')}</p><span class="text-[9px] text-slate-600">${new Date(x.created_at||Date.now()).toLocaleString()}</span></div></div>`).join(''):'<div class="rh-notify-empty">Koi unread notification nahi hai.<br>New activity aayegi to yahan dikhegi.</div>'}
+function toggleHubNotifications(){const p=document.getElementById('hub-notify-panel');if(!p)return;p.classList.toggle('hidden');renderHubNotifications();if(!p.classList.contains('hidden')&&'Notification'in window&&Notification.permission==='default')Notification.requestPermission().catch(()=>{})}
+function clearHubNotifications(){hubNotifications=[];saveHubNotificationStore();toast('Notifications cleared ✓')}
+function openHubNotification(id){const n=hubNotifications.find(x=>String(x.id)===String(id));hubNotifications=hubNotifications.filter(x=>String(x.id)!==String(id));saveHubNotificationStore();document.getElementById('hub-notify-panel')?.classList.add('hidden');if(n?.action==='battle')switchTab('battle');else if(n?.action==='peergroups')switchTab('peergroups');else if(n?.action==='aicards')switchTab('aicards');else if(n?.action==='studyrooms')switchTab('studyrooms')}
+function showHubNotification(title,body,tag='rathod-hub',action=''){const item={id:(crypto?.randomUUID?crypto.randomUUID():`n_${Date.now()}_${Math.random()}`),title,body,tag,action,icon:tag==='livequiz'?'⚡':tag==='bounty'?'💰':tag==='group'?'👥':'🔔',created_at:new Date().toISOString()};hubNotifications.unshift(item);hubNotifications=hubNotifications.slice(0,50);saveHubNotificationStore();toast(`${item.icon} ${title}`);if('Notification'in window&&Notification.permission==='granted'){try{const nn=new Notification(title,{body,tag});nn.onclick=()=>{window.focus();openHubNotification(item.id)}}catch(e){}}}
+async function sendHubNotification(title,body,tag='rathod-hub',action=''){showHubNotification(title,body,tag,action);try{await hubNotifyChannel?.send({type:'broadcast',event:'hub-notification',payload:{title,body,tag,action,sourceId:user?.id||null}})}catch(e){}}
+function initHubNotifications(){if(!user)return;loadHubNotificationStore();if(hubNotifyChannel)try{db.removeChannel(hubNotifyChannel)}catch(e){};hubNotifyChannel=db.channel('rathod-hub-global-notifications',{config:{broadcast:{self:false}}});hubNotifyChannel.on('broadcast',{event:'hub-notification'},({payload})=>{if(payload?.sourceId===user.id)return;showHubNotification(payload?.title||'RATHOD HUB',payload?.body||'',payload?.tag||'rathod-hub',payload?.action||'')}).subscribe()}
+function cleanupHubNotifications(){if(hubNotifyChannel){try{db.removeChannel(hubNotifyChannel)}catch(e){}hubNotifyChannel=null}hubNotifications=[]}
+document.addEventListener('click',e=>{const w=document.querySelector('.rh-notify-wrap');if(w&&!w.contains(e.target))document.getElementById('hub-notify-panel')?.classList.add('hidden')});
+
+/* ==================== AI SHORT NOTES / FORMULA IMAGE CARDS ==================== */
+let aiCardLastData=null;
+async function generateAICard(kind='notes'){
+  if(!user)return toast('Pehle login karein.',false);
+  const topic=document.getElementById('ai-card-topic')?.value.trim();if(!topic)return toast('Topic likho.',false);
+  const status=document.getElementById('ai-card-status'),result=document.getElementById('ai-card-result');if(status)status.textContent='⏳ AI content bana raha hai...';if(result)result.classList.add('hidden');
+  try{
+    const instruction=kind==='formula'?'Create a compact NEET formula sheet in simple Hindi/Hinglish for this topic. Include only verified formulas, symbol meanings and 1-line usage notes. Do not invent formulas. Plain text only.': 'Create very short NEET revision notes in simple Hindi/Hinglish for this topic. Use headings and bullet-like lines. Focus on NCERT/high-yield facts. No invented facts. Plain text only.';
+    const prompt=`You are RATHOD HUB AI revision-card generator. ${instruction}\nTopic: ${topic}\nKeep it concise enough for a mobile image card.`;
+    const {data,error}=await db.functions.invoke('ai-chat',{body:{question:prompt}});if(error)throw error;const text=String(data?.answer||data?.message||'').trim();if(!text)throw new Error('AI ne content nahi diya.');
+    aiCardLastData={kind,topic,text};document.getElementById('ai-card-text').textContent=text;renderAICardCanvas(topic,text,kind);result?.classList.remove('hidden');if(status)status.textContent='✓ AI card ready';
+  }catch(e){if(status)status.textContent='AI request failed.';toast(e.message||'AI card failed',false)}
+}
+function wrapCanvasText(ctx,text,maxWidth){const words=String(text).split(/\s+/),lines=[];let line='';for(const w of words){const test=line?line+' '+w:w;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=w}else line=test}if(line)lines.push(line);return lines}
+function renderAICardCanvas(topic,text,kind){const c=document.getElementById('ai-card-canvas'),img=document.getElementById('ai-card-image');if(!c||!img)return;c.width=1200;c.height=675;const ctx=c.getContext('2d');ctx.fillStyle='#0b0f14';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#ef2b2b';ctx.fillRect(0,0,14,c.height);ctx.fillStyle='#ffffff';ctx.font='900 42px Inter, Arial';ctx.fillText(kind==='formula'?'📐 RATHOD HUB FORMULA':'📝 RATHOD HUB SHORT NOTES',50,68);ctx.font='700 30px Inter, Arial';ctx.fillStyle='#ff6b6b';ctx.fillText(topic.slice(0,52),50,112);ctx.font='24px Inter, Arial';ctx.fillStyle='#e5e7eb';let y=155;const max=1080;for(const para of text.split(/\n+/)){if(!para.trim())continue;for(const line of wrapCanvasText(ctx,para,max)){if(y>625)break;ctx.fillText(line,50,y);y+=31}y+=8;if(y>625)break}ctx.font='600 18px Inter, Arial';ctx.fillStyle='#9ca3af';ctx.fillText('AI revision card • Verify with your NCERT/class notes',50,650);img.src=c.toDataURL('image/png');}
+function openAICardImage(){const src=document.getElementById('ai-card-image')?.src;if(src)window.open(src,'_blank','noopener')}
+function saveAICardImage(){const src=document.getElementById('ai-card-image')?.src;if(!src)return;const a=document.createElement('a');a.href=src;a.download=`RATHOD-HUB-${(aiCardLastData?.topic||'study-card').replace(/[^a-z0-9]+/gi,'-').slice(0,50)}.png`;a.click()}
+
+/* ==================== PEER GROUPS / DOUBT BOUNTIES ==================== */
+let peerGroups=[],doubtBounties=[];
+async function loadPeerGroups(){const box=document.getElementById('peer-groups-list');if(!box||!user)return;try{const {data,error}=await db.from('study_groups').select('*').order('created_at',{ascending:false}).limit(50);if(error)throw error;peerGroups=data||[];box.innerHTML=peerGroups.length?peerGroups.map(g=>`<div class="border border-slate-800 rounded-xl p-3"><div class="flex justify-between gap-2"><b class="text-xs">${esc(g.name)}</b><span class="rh-group-pill">${esc(g.subject||'All NEET')}</span></div><p class="text-[10px] text-slate-500 mt-1">${esc(g.description||'Study group')}</p><div class="flex justify-end mt-2"><button onclick="joinPeerGroup('${esc(g.id)}')" class="bg-fuchsia-600 px-3 py-1.5 rounded-lg text-[10px] font-bold">Join</button></div></div>`).join(''):'<div class="text-xs text-slate-500 py-4">Abhi koi group nahi hai.</div>'}catch(e){box.innerHTML='<div class="text-xs text-amber-400 py-4">Peer Groups ke liye SQL setup run karna hoga.</div>'}}
+async function joinPeerGroup(id){if(!user)return;try{const {error}=await db.from('study_group_members').upsert({group_id:id,user_id:user.id},{onConflict:'group_id,user_id'});if(error)throw error;toast('👥 Group joined ✓')}catch(e){toast(e.message||'Group join failed',false)}}
+document.getElementById('peer-group-form')?.addEventListener('submit',async e=>{e.preventDefault();if(!user)return;const b=e.target.querySelector('button');b.disabled=true;try{const payload={name:document.getElementById('peer-group-name').value.trim(),subject:document.getElementById('peer-group-subject').value,description:document.getElementById('peer-group-desc').value.trim(),owner_id:user.id};const {data,error}=await db.from('study_groups').insert(payload).select('*').single();if(error)throw error;await db.from('study_group_members').upsert({group_id:data.id,user_id:user.id},{onConflict:'group_id,user_id'});e.target.reset();toast('👥 Study group created');await loadPeerGroups();await sendHubNotification('New Peer Study Group',`${data.name} • ${data.subject}`,'group','peergroups')}catch(e){toast(e.message||'Group create failed. SQL setup check karo.',false)}finally{b.disabled=false}});
+async function loadDoubtBounties(){const box=document.getElementById('doubt-bounties-list');if(!box||!user)return;try{const {data,error}=await db.from('doubt_bounties').select('*').eq('status','open').order('created_at',{ascending:false}).limit(50);if(error)throw error;doubtBounties=data||[];box.innerHTML=doubtBounties.length?doubtBounties.map(b=>`<article class="rh-bounty-open bg-slate-950/70 border rounded-2xl p-4"><div class="flex justify-between gap-2"><span class="rh-group-pill">${esc(b.subject)}</span><b class="text-amber-300 text-xs">+${Number(b.reward_xp||0)} XP</b></div><h4 class="font-black text-sm mt-3">${esc(b.title)}</h4><p class="text-xs text-slate-300 whitespace-pre-wrap mt-2">${esc(b.question)}</p><div class="mt-3 flex justify-between items-center"><span class="text-[9px] text-slate-500">${new Date(b.created_at).toLocaleString()}</span><button onclick="answerDoubtBounty('${esc(b.id)}')" class="bg-red-600 px-3 py-2 rounded-lg text-[10px] font-black">Answer</button></div></article>`).join(''):'<div class="text-xs text-slate-500 py-6 md:col-span-2 text-center">No open doubt bounties.</div>'}catch(e){box.innerHTML='<div class="text-xs text-amber-400 py-6 md:col-span-2">Doubt Bounties ke liye SQL setup run karna hoga.</div>'}}
+document.getElementById('doubt-bounty-form')?.addEventListener('submit',async e=>{e.preventDefault();if(!user)return;const b=e.target.querySelector('button');b.disabled=true;try{const payload={user_id:user.id,title:document.getElementById('bounty-title').value.trim(),question:document.getElementById('bounty-question').value.trim(),subject:document.getElementById('bounty-subject').value,reward_xp:Number(document.getElementById('bounty-reward').value),status:'open'};const {data,error}=await db.from('doubt_bounties').insert(payload).select('*').single();if(error)throw error;e.target.reset();document.getElementById('bounty-reward').value='20';toast('💰 Doubt bounty posted');await loadDoubtBounties();await sendHubNotification('New Doubt Bounty',`${data.subject} • +${data.reward_xp} XP`,'bounty','peergroups')}catch(e){toast(e.message||'Bounty create failed. SQL setup check karo.',false)}finally{b.disabled=false}});
+async function answerDoubtBounty(id){if(!user)return;const bounty=doubtBounties.find(x=>String(x.id)===String(id));if(!bounty)return;const answer=prompt('Apna solution/explanation likho:');if(!answer?.trim())return;try{const {data,error}=await db.from('doubt_bounty_answers').insert({bounty_id:id,user_id:user.id,answer:answer.trim()}).select('*').single();if(error)throw error;toast('Answer submitted ✓');await db.from('doubt_bounties').update({status:'solved',solver_id:user.id,solved_at:new Date().toISOString()}).eq('id',id).eq('status','open');await grantXP(Number(bounty.reward_xp||0));await loadDoubtBounties();await sendHubNotification('Bounty Solved',`+${Number(bounty.reward_xp||0)} XP awarded`,'bounty','peergroups')}catch(e){toast(e.message||'Answer save failed. SQL setup check karo.',false)}}
+
+</script>
 </body>
 </html>
