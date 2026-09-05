@@ -1378,6 +1378,27 @@ const RH_SECTION_META={
 function applyRHSectionHeaders(){
  Object.entries(RH_SECTION_META).forEach(([key,m])=>{const sec=document.getElementById('section-'+key);if(!sec||sec.querySelector('.rh-inner-head'))return;const h=document.createElement('div');h.className='rh-page-head rh-inner-head';h.innerHTML=`<div><div class="rh-page-title"><i class="fa-solid ${m[2]} mr-2" style="color:#635bff"></i>${m[0]}</div><div class="rh-page-sub">${m[1]}</div></div><button onclick="switchTab('home')" class="bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 px-3 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-house mr-1"></i>Home</button>`;sec.prepend(h);});
 }
+function renderRHHomeRail(){
+  const lb=document.getElementById('rh-home-leaderboard');
+  if(lb && Array.isArray(leaderboard)){
+    const top=leaderboard.slice(0,5);
+    lb.innerHTML=top.map((p,i)=>`<div class="rh-mini-row"><div class="rh-rank">#${i+1}</div><div class="rh-mini-avatar">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}">`:'👤'}</div><div class="rh-mini-name"><b>${esc(p.name||'Member')}</b><span>Level ${p.level||1}</span></div><div class="rh-mini-xp">${Number(p.xp||0).toLocaleString()} XP</div></div>`).join('') || '<div style="font-size:11px;color:#9ba3ae">No members yet.</div>';
+  }
+  const online=document.getElementById('rh-home-online');
+  if(online){
+    const src=document.querySelectorAll('#focus-live-users [data-live-user]');
+    const nodes=[...src].slice(0,6);
+    online.innerHTML=nodes.map(n=>{const name=n.getAttribute('data-live-user')||'Student';return `<div class="rh-online-user"><div class="rh-online-avatar">${n.querySelector('img')?`<img src="${n.querySelector('img').src}">`:'👤'}</div><div style="margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(name)}</div></div>`}).join('') || '<span style="font-size:11px;color:#9ba3ae">अभी कोई live study नहीं कर रहा.</span>';
+  }
+  const mins=getFocusTodayMinutes();
+  const goal=360;
+  const gb=document.getElementById('rh-goal-time-bar'); if(gb)gb.style.width=Math.min(100,Math.round(mins/goal*100))+'%';
+  const gt=document.getElementById('rh-goal-time'); if(gt)gt.textContent=formatMinutesSimple(mins);
+  const streak=getFocusStreak();
+  const sb=document.getElementById('rh-goal-streak-bar'); if(sb)sb.style.width=Math.min(100,Math.round(streak/30*100))+'%';
+  const gs=document.getElementById('rh-goal-streak'); if(gs)gs.textContent=streak+' 🔥';
+}
+
 function renderHomeDashboard(){
   if(!profile)return;
   const n=profile.name||user?.email||'Student';
