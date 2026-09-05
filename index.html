@@ -4370,15 +4370,47 @@ async function generateAICard(kind='notes'){
   const topic=document.getElementById('ai-card-topic')?.value.trim();if(!topic)return toast('Topic likho.',false);
   const status=document.getElementById('ai-card-status'),result=document.getElementById('ai-card-result');if(status)status.textContent='⏳ AI content bana raha hai...';if(result)result.classList.add('hidden');
   try{
-    const instruction=kind==='formula'?'Create a compact NEET formula sheet in simple Hindi/Hinglish for this topic. Include only verified formulas, symbol meanings and 1-line usage notes. Do not invent formulas. Plain text only.': 'Create very short NEET revision notes in simple Hindi/Hinglish for this topic. Use headings and bullet-like lines. Focus on NCERT/high-yield facts. No invented facts. Plain text only.';
-    const prompt=`You are RATHOD HUB AI revision-card generator. ${instruction}\nTopic: ${topic}\nKeep it concise enough for a mobile image card.`;
+    const instruction=kind==='formula'
+      ?'Create a compact NEET formula revision sheet in simple Hindi/Hinglish. Give a clear title, then short formula lines, symbol meanings, and tiny usage notes. Use Unicode symbols where useful. Only verified formulas; never invent. Plain text only. Keep it short enough for one handwritten notebook page.'
+      :'Create a compact NEET revision note in simple Hindi/Hinglish. Start with a short title line, then 5-9 short handwritten-style revision lines. Use NCERT/high-yield facts, keywords, arrows (→), equals (＝), and very short headings where useful. No markdown tables, no long paragraphs, no invented facts. Plain text only. Keep it short enough for one handwritten notebook page.';
+    const prompt=`You are RATHOD HUB AI handwritten revision-card generator. ${instruction}\nTopic: ${topic}\nThe final output will be drawn as a realistic student notebook revision page, so prefer short natural lines rather than paragraph prose.`;
     const {data,error}=await db.functions.invoke('ai-chat',{body:{question:prompt}});if(error)throw error;const text=String(data?.answer||data?.message||'').trim();if(!text)throw new Error('AI ne content nahi diya.');
-    aiCardLastData={kind,topic,text};document.getElementById('ai-card-text').textContent=text;renderAICardCanvas(topic,text,kind);result?.classList.remove('hidden');if(status)status.textContent='✓ AI card ready';
+    aiCardLastData={kind,topic,text};document.getElementById('ai-card-text').textContent=text;renderAICardCanvas(topic,text,kind);result?.classList.remove('hidden');if(status)status.textContent='✓ AI handwritten card ready';
   }catch(e){if(status)status.textContent='AI request failed.';toast(e.message||'AI card failed',false)}
 }
 function wrapCanvasText(ctx,text,maxWidth){const words=String(text).replace(/\r/g,'').split(/\s+/),lines=[];let line='';for(const w of words){const test=line?line+' '+w:w;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=w}else line=test}if(line)lines.push(line);return lines}
-function drawNotebookPaper(ctx,w,h){ctx.fillStyle='#fffdf5';ctx.fillRect(0,0,w,h);ctx.strokeStyle='rgba(80,120,170,.18)';ctx.lineWidth=2;for(let y=108;y<h-45;y+=42){ctx.beginPath();ctx.moveTo(50,y);ctx.lineTo(w-48,y);ctx.stroke()}ctx.strokeStyle='rgba(225,70,70,.30)';ctx.beginPath();ctx.moveTo(105,0);ctx.lineTo(105,h);ctx.stroke();for(let y=18;y<h;y+=28){ctx.fillStyle='rgba(80,80,80,.14)';ctx.beginPath();ctx.arc(24,y,3,0,Math.PI*2);ctx.fill()}}
-function renderAICardCanvas(topic,text,kind){const c=document.getElementById('ai-card-canvas'),img=document.getElementById('ai-card-image');if(!c||!img)return;c.width=1200;c.height=760;const ctx=c.getContext('2d');drawNotebookPaper(ctx,c.width,c.height);ctx.textBaseline='alphabetic';ctx.fillStyle='#172554';ctx.font='700 42px Caveat, "Comic Sans MS", cursive';ctx.fillText(kind==='formula'?'📐 Formula Sheet':'📝 Short Notes',130,62);ctx.fillStyle='#b91c1c';ctx.font='700 31px Caveat, "Comic Sans MS", cursive';ctx.fillText(String(topic).slice(0,58),130,98);ctx.fillStyle='#172033';ctx.font='600 29px Caveat, "Comic Sans MS", cursive';let y=142;const max=1010;for(const para of String(text).split(/\n+/)){if(!para.trim())continue;const lines=wrapCanvasText(ctx,para.replace(/^[-•*]\s*/,'• '),max);for(const line of lines){if(y>680)break;ctx.fillText(line,125,y);y+=38}y+=7;if(y>680)break}ctx.fillStyle='#64748b';ctx.font='600 20px Caveat, "Comic Sans MS", cursive';ctx.fillText('RATHOD HUB • AI Revision • NCERT se verify karein',130,725);img.src=c.toDataURL('image/png')}
+function drawNotebookPaper(ctx,w,h){
+  const g=ctx.createLinearGradient(0,0,w,h);g.addColorStop(0,'#fffef8');g.addColorStop(1,'#fbf7e8');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='rgba(72,105,155,.18)';ctx.lineWidth=2;
+  for(let y=112;y<h-48;y+=44){ctx.beginPath();ctx.moveTo(55,y);ctx.lineTo(w-48,y);ctx.stroke()}
+  ctx.strokeStyle='rgba(220,65,65,.38)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(112,0);ctx.lineTo(112,h);ctx.stroke();
+  for(let y=22;y<h;y+=30){ctx.fillStyle='rgba(70,70,70,.12)';ctx.beginPath();ctx.arc(25,y,3,0,Math.PI*2);ctx.fill()}
+  ctx.fillStyle='rgba(90,80,60,.08)';ctx.fillRect(0,0,w,10);ctx.fillRect(0,h-10,w,10);
+}
+function drawHandUnderline(ctx,x,y,width){ctx.strokeStyle='rgba(30,64,175,.55)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x+width*.5,y+5,x+width,y-1);ctx.stroke()}
+function drawHandBox(ctx,x,y,w,h){ctx.strokeStyle='rgba(220,38,38,.55)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+w-5,y+2);ctx.lineTo(x+w,y+h-4);ctx.lineTo(x+5,y+h);ctx.closePath();ctx.stroke()}
+function renderAICardCanvas(topic,text,kind){
+  const c=document.getElementById('ai-card-canvas'),img=document.getElementById('ai-card-image');if(!c||!img)return;
+  c.width=1200;c.height=820;const ctx=c.getContext('2d');drawNotebookPaper(ctx,c.width,c.height);ctx.textBaseline='alphabetic';
+  ctx.fillStyle='#172554';ctx.font='700 50px Caveat, "Comic Sans MS", cursive';ctx.fillText(kind==='formula'?'Formula Revision':'Short Notes',138,62);
+  drawHandUnderline(ctx,138,75,300);
+  ctx.fillStyle='#b91c1c';ctx.font='700 34px Caveat, "Comic Sans MS", cursive';ctx.fillText(String(topic).slice(0,58),138,108);
+  const lines=[];for(const para of String(text).split(/\n+/)){if(!para.trim())continue;const clean=para.trim().replace(/^#{1,6}\s*/,'').replace(/^[-*]\s*/,'');const wrapped=wrapCanvasText(ctx,clean,950);wrapped.forEach(x=>lines.push(x));}
+  let y=155;const maxLines=14;
+  lines.slice(0,maxLines).forEach((line,i)=>{
+    const isFormula=kind==='formula' || /[=→←×÷√∑π²³⁴⁵]/.test(line);
+    const isImportant=/important|याद|ध्यान|key|note|मुख्य|NCERT/i.test(line);
+    ctx.font=`${isImportant?'700':'600'} ${isFormula?'34':'32'}px Caveat, "Comic Sans MS", cursive`;
+    ctx.fillStyle=isImportant?'#be123c':(isFormula?'#1d4ed8':'#20263a');
+    const prefix=/^[•·]/.test(line)?'': '• ';
+    const shown=prefix+line;
+    if(isImportant){drawHandBox(ctx,128,y-29,980,40)}
+    ctx.fillText(shown,140,y);y+=44;
+  });
+  if(lines.length>maxLines){ctx.fillStyle='#9f1239';ctx.font='700 27px Caveat, "Comic Sans MS", cursive';ctx.fillText('… बाकी details AI text में उपलब्ध हैं',140,745)}
+  ctx.fillStyle='#64748b';ctx.font='600 22px Caveat, "Comic Sans MS", cursive';ctx.fillText('RATHOD HUB  •  AI Revision  •  NCERT se verify karein',140,790);
+  img.src=c.toDataURL('image/png');
+}
 function openAICardImage(){const src=document.getElementById('ai-card-image')?.src;if(src)window.open(src,'_blank','noopener')}
 function saveAICardImage(){const src=document.getElementById('ai-card-image')?.src;if(!src)return;const a=document.createElement('a');a.href=src;a.download=`RATHOD-HUB-${(aiCardLastData?.topic||'study-card').replace(/[^a-z0-9]+/gi,'-').slice(0,50)}.png`;a.click()}
 
