@@ -1070,7 +1070,7 @@ const GOOGLE_DRIVE_FUNCTION = 'google-drive';
 // Google Drive supports large files. Small files use the existing JSON/base64
 // path; larger files use a browser -> Google Drive resumable upload so the
 // Supabase Edge Function never has to buffer the whole file.
-const GOOGLE_DRIVE_MAX_FILE_SIZE = 200 * 1024 * 1024; // 200 MB
+const GOOGLE_DRIVE_MAX_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
 const GOOGLE_DRIVE_BASE64_LIMIT = 10 * 1024 * 1024; // 10 MB
 const GOOGLE_DRIVE_CHUNK_SIZE = 8 * 1024 * 1024; // compatibility constant; large uploads use upload_stream
 const GOOGLE_DRIVE_MIN_MATERIAL_SIZE = 1 * 1024 * 1024; // 1 MB
@@ -1505,7 +1505,7 @@ document.getElementById('material-form').addEventListener('submit',async e=>{
   const file=document.getElementById('mat-file').files[0];
   if(!file)return toast('File select karein.',false);
   if(file.size<GOOGLE_DRIVE_MIN_MATERIAL_SIZE)return toast('Material file kam se kam 1 MB hona chahiye.',false);
-  if(file.size>GOOGLE_DRIVE_MAX_FILE_SIZE)return toast('Material file maximum 200 MB ho sakta hai.',false);
+  if(file.size>GOOGLE_DRIVE_MAX_FILE_SIZE)return toast('Material file maximum 500 MB ho sakta hai.',false);
 
   const btn=document.getElementById('mat-btn');
   btn.disabled=true;btn.textContent='Uploading 0%';
@@ -3894,6 +3894,11 @@ function stopAllVoiceAndRooms(){
 window.addEventListener('pagehide',()=>{try{stopAllVoiceAndRooms()}catch(e){}});
 window.addEventListener('beforeunload',()=>{try{stopAllVoiceAndRooms()}catch(e){}});
 
+/* Focus timer visual heartbeat: rendering is local and continues independently of DB sync. */
+setInterval(()=>{
+  if(typeof focusState!=='undefined'&&focusState&&focusState.status==='running')tickFocus();
+},1000);
+
 /* ==================== RATHOD HUB FOCUS / YPT-STYLE TIMER ==================== */
 let focusState={duration:1800,remaining:1800,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:'Biology',pomodoro:false,break:false};
 let focusInterval=null,focusChannel=null,focusHeartbeat=null,focusReady=false;
@@ -3959,14 +3964,21 @@ function startFocusTimer(){
  focusState.startedAt=Date.now();focusState.status='running';focusState.pausedAt=null;if(!focusLiveSessionId)focusLiveSessionId=((crypto&&crypto.randomUUID)?crypto.randomUUID():('live_'+Date.now()+'_'+Math.random().toString(36).slice(2)));focusLastDbSyncAt=0;saveFocusState();startFocusTicker();syncFocusLiveSession(true);broadcastFocus();renderFocusTimer();toast('Focus session started 🔥');
 }
 
-function startFocusTicker(){if(focusInterval)clearInterval(focusInterval);focusInterval=setInterval(tickFocus,500);tickFocus()}
+function startFocusTicker(){
+ if(focusInterval)clearInterval(focusInterval);
+ focusInterval=setInterval(tickFocus,250);
+ tickFocus();
+}
 function tickFocus(){
- if(!focusReady)return;
- const rem=focusRemaining();focusState.remaining=rem;renderFocusTimer();
+ /* Local timer must never depend on Supabase/RLS/network readiness. */
+ if(!focusState)return;
+ const rem=focusRemaining();
+ focusState.remaining=rem;
+ renderFocusTimer();
  if(typeof renderFocusDashboard==='function')renderFocusDashboard();
  if(typeof renderHomeDashboard==='function')renderHomeDashboard();
  if(typeof renderRHHomeRail==='function')renderRHHomeRail();
- broadcastFocusThrottled();
+ if(focusState.status==='running')broadcastFocusThrottled();
  if(focusState.status==='running'&&!focusState.break)syncFocusLiveSession(false);
  if(focusState.status==='running'&&rem<=0)completeFocusTimer();
 }
@@ -4027,7 +4039,8 @@ function renderFocusDashboard(){
   if(!user)return;
   const st=readFocusStats(),today=localDay(),todaySec=getFocusTodaySeconds();
   const goal=Number(st.goalHours||4);
-  const t=document.getElementById('focus-today-time');if(t)t.textContent=fmtHM(todaySec);
+  const t=document.getElementById('focus-today-time');
+  if(t)t.textContent=(focusState.status==='running'&&!focusState.break)?fmtFocus(todaySec):fmtHM(todaySec);
   const ses=document.getElementById('focus-sessions');if(ses)ses.textContent=st.sessions.length+(focusState.status==='running'&&!focusState.break&&focusElapsed()>=60?1:0);
   const gh=document.getElementById('focus-goal-hours');if(gh)gh.value=goal;
   const gl=document.getElementById('focus-goal-label');if(gl)gl.textContent=`${fmtHM(todaySec)} / ${goal}h`;
