@@ -225,6 +225,7 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
 
 /* ===== RATHOD HUB NEW AI / NOTIFICATION / COMMUNITY UI ===== */
 .rh-notify-wrap{position:relative}.rh-notify-badge{position:absolute;right:-3px;top:-4px;min-width:17px;height:17px;padding:0 4px;border-radius:99px;background:#ef2b2b;color:#fff;font-size:9px;font-weight:900;display:none;align-items:center;justify-content:center;border:2px solid #07090d}.rh-notify-panel{position:absolute;right:0;top:46px;width:min(380px,calc(100vw - 24px));background:#0b0f14;border:1px solid rgba(255,255,255,.16);border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.45);overflow:hidden;z-index:900}.rh-notify-item{display:flex;gap:10px;padding:12px;border-bottom:1px solid rgba(255,255,255,.08);cursor:pointer}.rh-notify-item:hover{background:rgba(239,43,43,.08)}.rh-notify-item b{font-size:12px}.rh-notify-item p{font-size:10px;color:#aeb4bf;margin-top:3px}.rh-notify-empty{padding:28px 12px;text-align:center;color:#7f8792;font-size:11px}.rh-ai-card-preview{width:100%;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:#090d12;display:block}.rh-card-actions{display:flex;gap:8px;flex-wrap:wrap}.rh-bounty-open{border-color:rgba(239,43,43,.35)!important}.rh-group-pill{font-size:10px;padding:5px 8px;border-radius:999px;background:rgba(239,43,43,.08);border:1px solid rgba(239,43,43,.22);color:#ff7b7b}.rh-detective-mode{border-color:rgba(245,158,11,.45)!important;background:rgba(245,158,11,.06)!important}.rh-detective-mode .qb-mode-icon{background:rgba(245,158,11,.10)!important}.voice-help{font-size:10px;color:#9ca3af;line-height:1.5}
+.nth-stop{min-width:0;border:1px solid rgba(139,92,246,.22);background:rgba(15,23,42,.62);border-radius:14px;padding:9px 4px;text-align:center;font-size:20px}.nth-stop span{display:block;font-size:9px;color:#94a3b8;margin-top:3px;font-weight:800}.nth-stop:nth-child(5){border-color:rgba(245,158,11,.35)}
 </style>
 </head>
 <body class="doctor-bg min-h-screen font-sans">
@@ -341,6 +342,8 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
  <button onclick="switchTab('games')" id="btn-games" class="rh-nav-btn"><i class="fa-solid fa-gamepad"></i><span>Games</span></button>
  <button onclick="switchTab('hubevents')" id="btn-hubevents" class="rh-nav-btn"><i class="fa-solid fa-bolt"></i><span>Live Events</span></button>
  <button onclick="switchTab('leaderboard')" id="btn-leaderboard" class="rh-nav-btn"><i class="fa-solid fa-trophy"></i><span>Leaderboard</span></button>
+ <button onclick="switchTab('tests')" id="btn-tests" class="rh-nav-btn"><i class="fa-solid fa-file-pen"></i><span>45Q Tests</span></button>
+ <button onclick="switchTab('treasure')" id="btn-treasure" class="rh-nav-btn"><i class="fa-solid fa-map-location-dot"></i><span>NEET Treasure Hunt</span></button>
        <button onclick="switchTab('rathodnew');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2 border border-violet-500/30"><i class="fa-solid fa-wand-magic-sparkles text-violet-400 text-lg"></i><span>RATHOD NEW</span></button>
  <button onclick="switchTab('rathodnew')" id="btn-rathodnew" class="rh-nav-btn"><i class="fa-solid fa-wand-magic-sparkles"></i><span>RATHOD NEW</span></button>
  <button onclick="switchTab('adminpanel')" id="btn-adminpanel" class="rh-nav-btn hidden" style="color:#f87171"><i class="fa-solid fa-shield-halved"></i><span>Admin Panel</span></button>
@@ -392,6 +395,40 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
   </div>
 </div>
 <button id="admin-battle-btn" class="w-full bg-red-600 hover:bg-red-500 py-2.5 rounded-lg text-sm font-bold text-white shadow-lg">Schedule & Generate Questions With AI</button>
+</form>
+</div>
+
+<!-- ADMIN 45 QUESTION TEST CREATOR -->
+<div id="admin-test-panel" class="hidden bg-slate-800/95 border border-emerald-500/30 rounded-2xl p-5 shadow-xl">
+<div class="flex justify-between items-center mb-3">
+<h3 class="font-bold text-emerald-300"><i class="fa-solid fa-file-pen mr-2"></i>Admin 45-Question Test</h3>
+<span class="text-[10px] bg-emerald-500/10 text-emerald-300 px-2 py-1 rounded">ADMIN ONLY</span>
+</div>
+<form id="admin-test-form" class="space-y-3">
+<div class="grid md:grid-cols-2 gap-3">
+<div><label class="block text-[10px] uppercase text-slate-400 mb-1">Subject</label><select id="admin-test-subject" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"><option>Physics</option><option>Chemistry</option></select></div>
+<div><label class="block text-[10px] uppercase text-slate-400 mb-1">Timer</label><select id="admin-test-duration" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"><option value="45">45 Minutes</option><option value="60">60 Minutes</option><option value="30">30 Minutes</option></select></div>
+</div>
+<div><label class="block text-[10px] uppercase text-slate-400 mb-1">Topic (sirf Admin dale)</label><input id="admin-test-topic" required placeholder="Current Electricity / Organic Chemistry etc." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div>
+<div class="bg-slate-900 border border-emerald-500/20 rounded-xl px-4 py-3 text-xs text-slate-300">AI se <b class="text-emerald-300">exactly 45 NEET-level Hindi-medium MCQs</b> generate honge. Har question ke 4 options honge.</div>
+<button id="admin-test-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 py-2.5 rounded-lg text-sm font-bold text-white shadow-lg">Create & Publish 45Q Test</button>
+</form>
+</div>
+
+<!-- ADMIN NEET TREASURE HUNT CREATOR -->
+<div id="admin-treasure-panel" class="hidden bg-slate-800/95 border border-violet-500/30 rounded-2xl p-5 shadow-xl">
+<div class="flex justify-between items-center mb-3">
+<h3 class="font-bold text-violet-300"><i class="fa-solid fa-map-location-dot mr-2"></i>Admin NEET Treasure Hunt</h3>
+<span class="text-[10px] bg-violet-500/10 text-violet-300 px-2 py-1 rounded">ADMIN ONLY</span>
+</div>
+<form id="admin-treasure-form" class="space-y-3">
+<div class="grid md:grid-cols-2 gap-3">
+<div><label class="block text-[10px] uppercase text-slate-400 mb-1">Subject</label><select id="admin-treasure-subject" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"><option>Biology</option><option>Physics</option><option>Chemistry</option></select></div>
+<div><label class="block text-[10px] uppercase text-slate-400 mb-1">Seconds / Question</label><select id="admin-treasure-seconds" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"><option value="20">20 sec</option><option value="25" selected>25 sec</option><option value="30">30 sec</option></select></div>
+</div>
+<div><label class="block text-[10px] uppercase text-slate-400 mb-1">Topic</label><input id="admin-treasure-topic" required placeholder="Human Physiology / Current Electricity etc." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div>
+<div class="bg-slate-900 border border-violet-500/20 rounded-xl px-4 py-3 text-xs text-slate-300">AI exactly <b class="text-violet-300">10 Hindi-medium NEET MCQs</b> banayega. 5 treasure checkpoints mein 2-2 questions honge.</div>
+<button id="admin-treasure-btn" class="w-full bg-violet-600 hover:bg-violet-500 py-2.5 rounded-lg text-sm font-bold text-white">Create Treasure Hunt</button>
 </form>
 </div>
 
@@ -468,6 +505,7 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
   <div class="grid sm:grid-cols-3 gap-2 mt-5">
    <button onclick="document.getElementById('admin-panel')?.scrollIntoView({behavior:'smooth',block:'start'})" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-folder-open text-amber-400"></i><b class="block text-sm mt-2">Study Material</b><span class="text-[10px] text-slate-500">Upload / manage material</span></button>
    <button onclick="document.getElementById('admin-battle-panel')?.scrollIntoView({behavior:'smooth',block:'start'})" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-bolt text-red-400"></i><b class="block text-sm mt-2">Live Quiz Battle</b><span class="text-[10px] text-slate-500">Schedule daily battle</span></button>
+   <button onclick="document.getElementById('admin-test-panel')?.scrollIntoView({behavior:'smooth',block:'start'})" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-file-pen text-emerald-400"></i><b class="block text-sm mt-2">45Q Test</b><span class="text-[10px] text-slate-500">Physics/Chemistry • Admin topic</span></button>
    <button onclick="document.getElementById('admin-bg-panel')?.scrollIntoView({behavior:'smooth',block:'start'})" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-image text-indigo-400"></i><b class="block text-sm mt-2">Background</b><span class="text-[10px] text-slate-500">Global background settings</span></button>
    <button onclick="document.getElementById('admin-logo-panel')?.scrollIntoView({behavior:'smooth',block:'start'})" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-image text-pink-400"></i><b class="block text-sm mt-2">App Logo</b><span class="text-[10px] text-slate-500">Change app logo</span></button>
    <button onclick="document.getElementById('hub-admin-composer')?.scrollIntoView({behavior:'smooth',block:'start'})" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-calendar-plus text-amber-300"></i><b class="block text-sm mt-2">HUB Events</b><span class="text-[10px] text-slate-500">Create / manage events</span></button>
@@ -1038,9 +1076,62 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 <div id="study-rooms-box" class="grid md:grid-cols-3 gap-4"></div>
 </section>
 
+<section id="section-tests" class="hidden space-y-5">
+  <div class="bg-slate-900/95 border border-emerald-500/20 rounded-2xl p-5">
+    <div class="flex items-center justify-between gap-3">
+      <div><h2 class="text-xl font-black text-emerald-300"><i class="fa-solid fa-file-pen mr-2"></i>45 Questions Test</h2><p class="text-xs text-slate-400 mt-1">Physics / Chemistry • Hindi Medium • Timer ke saath</p></div><div class="text-3xl">⏱️</div>
+    </div>
+    <div id="hub-test-list" class="mt-5 space-y-3"><div class="text-xs text-slate-500 text-center py-8">Tests load ho rahe hain...</div></div>
+  </div>
+  <div id="hub-test-arena" class="hidden bg-slate-900/95 border border-emerald-500/20 rounded-2xl p-5">
+    <div class="flex justify-between items-center gap-3 mb-4"><div><b id="hub-test-title" class="text-lg font-black text-white">Test</b><p id="hub-test-subtitle" class="text-[11px] text-slate-500"></p></div><div id="hub-test-timer" class="font-mono font-black text-2xl text-red-400">45:00</div></div>
+    <div class="h-2 bg-slate-800 rounded-full overflow-hidden mb-5"><div id="hub-test-progress" class="h-full bg-emerald-500" style="width:0%"></div></div>
+    <div id="hub-test-question" class="text-base font-semibold text-slate-100"></div>
+    <div id="hub-test-options" class="grid gap-2.5 mt-4"></div>
+    <div class="flex justify-between gap-2 mt-5"><button onclick="hubTestPrev()" class="bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold">Previous</button><button onclick="hubTestNext()" class="bg-emerald-600 px-4 py-2 rounded-xl text-xs font-bold">Next</button></div>
+  </div>
+  <div id="hub-test-result" class="hidden bg-slate-900/95 border border-amber-500/20 rounded-2xl p-5 text-center"></div>
+</section>
+
+<section id="section-treasure" class="hidden space-y-5">
+<div class="bg-gradient-to-br from-violet-950/90 via-slate-900 to-amber-950/70 border border-violet-500/30 rounded-3xl p-5 md:p-6 shadow-2xl overflow-hidden relative">
+<div class="absolute -right-8 -top-8 text-8xl opacity-10">🗺️</div>
+<div class="flex items-start justify-between gap-3 relative">
+<div><div class="text-[10px] uppercase tracking-[.2em] text-violet-300 font-black">RATHOD HUB ADVENTURE</div><h2 class="text-2xl md:text-3xl font-black text-white mt-1">🔥 NEET TREASURE HUNT</h2><p class="text-xs text-slate-300 mt-2 max-w-2xl">Live room banao ya kisi room mein join karo. 5 checkpoints, timed NEET questions, live players aur final treasure score.</p></div><div class="text-5xl">🏆</div>
+</div>
+<div class="grid grid-cols-5 gap-2 mt-5" id="nth-map"><div class="nth-stop">🌱<span>Start</span></div><div class="nth-stop">🧬<span>Cell</span></div><div class="nth-stop">⚡<span>Power</span></div><div class="nth-stop">🧪<span>Lab</span></div><div class="nth-stop">💎<span>Treasure</span></div></div>
+</div>
+
+<div id="nth-lobby" class="space-y-4">
+<div class="bg-slate-800/95 border border-violet-500/20 rounded-2xl p-5">
+<div class="flex justify-between items-center gap-3 mb-4"><div><h3 class="font-black text-lg text-violet-300">Create a Live Hunt</h3><p class="text-[11px] text-slate-500">Topic tum choose kar sakte ho. AI 10 questions banayega.</p></div><span id="nth-online" class="text-[10px] text-emerald-400 font-black">● LIVE</span></div>
+<div class="grid md:grid-cols-3 gap-2">
+<select id="nth-subject" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm"><option>Biology</option><option>Physics</option><option>Chemistry</option></select>
+<input id="nth-topic" maxlength="120" placeholder="Topic / chapter" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm">
+<select id="nth-seconds" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm"><option value="20">20 sec/Q</option><option value="25" selected>25 sec/Q</option><option value="30">30 sec/Q</option></select>
+</div>
+<button onclick="nthCreateRoom()" class="w-full mt-3 bg-violet-600 hover:bg-violet-500 py-3 rounded-xl font-black text-sm">🗺️ Create Live Treasure Room</button>
+</div>
+<div class="bg-slate-800/95 border border-slate-700 rounded-2xl p-5"><div class="flex justify-between items-center mb-3"><h3 class="font-black">🌐 Live Treasure Rooms</h3><button onclick="nthLoadRooms()" class="text-[10px] text-violet-300 font-bold">Refresh</button></div><div id="nth-room-list" class="space-y-2"><div class="text-xs text-slate-500 text-center py-6">Live rooms load ho rahe hain...</div></div></div>
+</div>
+
+<div id="nth-arena" class="hidden space-y-4">
+<div class="bg-slate-800/95 border border-violet-500/30 rounded-2xl p-5">
+<div class="flex flex-wrap justify-between items-center gap-3"><div><div class="text-[9px] uppercase text-violet-300 font-black">LIVE TREASURE ROOM</div><h3 id="nth-room-title" class="text-xl font-black text-white">Treasure Hunt</h3><p id="nth-room-meta" class="text-[10px] text-slate-500 mt-1"></p></div><div class="flex items-center gap-2"><span id="nth-room-code" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-black tracking-widest">------</span><button onclick="nthShareRoom()" class="bg-indigo-600 px-3 py-2 rounded-xl text-xs font-black">Share Room</button></div></div>
+<div class="grid grid-cols-5 gap-1.5 mt-5" id="nth-arena-map"></div>
+<div class="flex justify-between text-xs mt-4"><span id="nth-progress-text">Checkpoint 1/5</span><b id="nth-timer" class="text-amber-300 font-mono">25s</b></div><div class="h-2 bg-slate-900 rounded-full overflow-hidden mt-2"><div id="nth-timer-bar" class="h-full bg-violet-500" style="width:100%"></div></div>
+</div>
+<div class="grid lg:grid-cols-[1fr_260px] gap-4">
+<div class="bg-slate-800/95 border border-slate-700 rounded-2xl p-5"><div id="nth-question" class="text-base md:text-lg font-black text-white"></div><div id="nth-options" class="grid gap-2 mt-5"></div><div id="nth-answer-note" class="text-[11px] text-slate-500 mt-3"></div></div>
+<div class="bg-slate-800/95 border border-slate-700 rounded-2xl p-5"><h4 class="font-black text-amber-300">👥 Live Players</h4><div id="nth-players" class="space-y-2 mt-3"></div><div id="nth-host-controls" class="hidden mt-4"><button onclick="nthStartRoom()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-2.5 rounded-xl text-xs font-black">🚀 Start Hunt</button></div><button onclick="nthLeaveRoom()" class="w-full bg-slate-900 hover:bg-slate-700 mt-3 py-2.5 rounded-xl text-xs font-bold">Leave Room</button></div>
+</div>
+</div>
+<div id="nth-result" class="hidden bg-slate-800/95 border border-amber-500/30 rounded-2xl p-6 text-center"></div>
+</section>
+
 <section id="section-leaderboard" class="hidden"><div class="bg-slate-800/95 rounded-2xl overflow-hidden border border-amber-500/20"><div class="p-5 border-b border-slate-700 flex justify-between items-center"><div><h3 class="text-amber-300 font-bold text-xl"><i class="fa-solid fa-trophy mr-2"></i>Leaderboard</h3><p class="text-xs text-slate-400 mt-1">Top 10 • XP के हिसाब से Rank • हर 5000 XP पर अगला Level • Max Level 10</p></div><div class="text-2xl">🏆</div></div><div class="p-4"><div class="bg-slate-900 rounded-xl p-4 mb-4"><div class="flex justify-between text-sm"><span>My XP</span><b id="my-xp">0 XP</b></div><div class="flex justify-between text-sm mt-2"><span>My Level</span><b id="my-level">Level 1</b></div><div class="mt-3 h-2 bg-slate-700 rounded-full overflow-hidden"><div id="my-xp-bar" class="h-full bg-amber-500" style="width:0%"></div></div></div><div id="leaderboard-list" class="space-y-2"></div></div></div></section>
 
-<div class="mt-8 bg-slate-900/95 border border-slate-700 rounded-2xl p-5 text-center"><div class="text-xs uppercase tracking-wider text-slate-500 mb-3">Join Us / Contact Us</div><div class="flex justify-center gap-3 flex-wrap"><a href="https://t.me/YPTSTUDY1" target="_blank" rel="noopener" class="bg-sky-600 hover:bg-sky-500 px-4 py-2.5 rounded-xl text-sm font-bold"><i class="fa-brands fa-telegram mr-2"></i>Join Group</a><a href="https://t.me/Ashish_Thakur1" target="_blank" rel="noopener" title="Contact Us" aria-label="Contact Us" class="bg-sky-600 hover:bg-sky-500 w-11 h-11 rounded-full text-lg font-bold flex items-center justify-center"><i class="fa-brands fa-telegram"></i></a></div></div>
+<div class="mt-8 bg-slate-900/95 border border-slate-700 rounded-2xl p-5 text-center"><div class="text-xs uppercase tracking-wider text-slate-500 mb-3">Join Us / Contact Us</div><div class="flex justify-center gap-3 flex-wrap"><a href="https://t.me/YPTSTUDY1" target="_blank" rel="noopener" class="bg-sky-600 hover:bg-sky-500 px-4 py-2.5 rounded-xl text-sm font-bold"><i class="fa-brands fa-telegram mr-2"></i>Join Group</a><a href="https://t.me/Ashish_Thakur1" target="_blank" rel="noopener" title="Contact Us" aria-label="Contact Us" class="bg-sky-600 hover:bg-sky-500 w-11 h-11 rounded-full text-lg font-bold flex items-center justify-center"><i class="fa-brands fa-telegram"></i></a><button onclick="shareRathodHub()" title="Share RATHOD HUB" aria-label="Share RATHOD HUB" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2.5 rounded-xl text-sm font-bold"><i class="fa-solid fa-share-nodes mr-2"></i>Share App</button></div></div>
 </main></div></div></div>
 
 <nav class="rh-mobile-bottom">
@@ -1077,6 +1168,9 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
       <button onclick="switchTab('games');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-gamepad text-fuchsia-400 text-lg"></i><span>1v1 Games</span></button>
       <button onclick="switchTab('hubevents');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-bolt text-amber-300 text-lg"></i><span>Live Events</span></button>
       <button onclick="switchTab('leaderboard');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-trophy text-yellow-400 text-lg"></i><span>Leaderboard</span></button>
+      <button onclick="switchTab('tests');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2 border border-emerald-500/20"><i class="fa-solid fa-file-pen text-emerald-400 text-lg"></i><span>45Q Tests</span></button>
+      <button onclick="switchTab('treasure');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2 border border-violet-500/30"><i class="fa-solid fa-map-location-dot text-violet-400 text-lg"></i><span>Treasure Hunt</span></button>
+      <a href="https://ncert.nic.in/textbook.php" target="_blank" rel="noopener noreferrer" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2 border border-blue-500/20"><i class="fa-solid fa-book-open text-blue-400 text-lg"></i><span>NCERT</span></a>
       <button onclick="switchTab('adminpanel');closeMobileMenu()" id="mob-adminpanel" class="hidden bg-red-950/60 border border-red-500/30 p-3 rounded-xl flex flex-col items-center gap-2 text-red-400"><i class="fa-solid fa-shield-halved text-lg"></i><span>Admin Panel</span></button>
       <button onclick="openProfile();closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-user-pen text-slate-300 text-lg"></i><span>Profile</span></button>
       <button onclick="logout()" class="bg-red-950/60 border border-red-500/30 p-3 rounded-xl flex flex-col items-center gap-2 text-red-400"><i class="fa-solid fa-right-from-bracket text-lg"></i><span>Logout</span></button>
@@ -1347,19 +1441,22 @@ async function boot(){
   const isAdmin=profile.role==='admin';
   document.getElementById('admin-panel').classList.toggle('hidden',!isAdmin);
   document.getElementById('admin-battle-panel').classList.toggle('hidden',!isAdmin);
+  document.getElementById('admin-test-panel').classList.toggle('hidden',!isAdmin);
+  document.getElementById('admin-treasure-panel').classList.toggle('hidden',!isAdmin);
+  loadHubTests();
   document.getElementById('admin-bg-panel').classList.toggle('hidden',profile.role!=='admin');document.getElementById('admin-logo-panel').classList.toggle('hidden',profile.role!=='admin');
   document.getElementById('hub-admin-composer').classList.toggle('hidden',!isAdmin);
   const adminNav=document.getElementById('btn-adminpanel');if(adminNav)adminNav.classList.toggle('hidden',!isAdmin);
   const adminMob=document.getElementById('mob-adminpanel');if(adminMob)adminMob.classList.toggle('hidden',!isAdmin);
   if(isAdmin){
    const host=document.getElementById('admin-controls-host');
-   ['admin-panel','admin-battle-panel','admin-bg-panel','admin-logo-panel','hub-admin-composer'].forEach(id=>{const el=document.getElementById(id);if(el&&host&&!host.contains(el))host.appendChild(el);});
+   ['admin-panel','admin-battle-panel','admin-test-panel','admin-treasure-panel','admin-bg-panel','admin-logo-panel','hub-admin-composer'].forEach(id=>{const el=document.getElementById(id);if(el&&host&&!host.contains(el))host.appendChild(el);});
   }
   setDefaultDiaryDate();
   setDefaultBattleDateTime();
   await Promise.all([loadMaterials(),loadPosts(),loadPeople(),loadChatMessages(),loadDiary(),loadStories(),loadVault(),loadLeaderboard(),loadHubEvents(),loadSpinStatus(),loadScheduledBattle()]); startMaterialsAutoRefresh();
   await initGamePresence(); subscribeToChat(); renderStudyRooms(); initHubNotifications();
-  qbInit();qbAutoJoinFromLink();
+  qbInit();qbAutoJoinFromLink();nthAutoJoinFromLink();
   if(profile.role==='admin')populateBackgroundForm();
   initFocusSystem(); applyRHSectionHeaders(); renderHomeDashboard(); switchTab(isAdmin?'adminpanel':'home');
  })();
@@ -1370,7 +1467,7 @@ db.auth.onAuthStateChange((event,s)=>{
  if(s){session=s;const nextId=s.user?.id||null;if(nextId&&nextId!==bootUserId)setTimeout(()=>boot(),0);}
 });
 async function cleanupFocusSystem(){if(focusInterval)clearInterval(focusInterval);focusLiveSessionId=null;focusLastDbSyncAt=0;focusInterval=null;if(focusHeartbeat)clearInterval(focusHeartbeat);focusHeartbeat=null;if(focusChannel){try{await db.removeChannel(focusChannel)}catch(e){}focusChannel=null}focusReady=false}
-async function logout(){await cleanupChatSubscription();await cleanupGamePresence();await cleanupFocusSystem();stopAllVoiceAndRooms();await db.auth.signOut();location.reload()}
+async function logout(){await cleanupChatSubscription();await cleanupGamePresence();await cleanupFocusSystem();await nthCleanup();stopAllVoiceAndRooms();await db.auth.signOut();location.reload()}
 
 function openDailyBattle(){
   switchTab('quiz');
@@ -1382,7 +1479,7 @@ function openDailyBattle(){
 }
 
 function switchTab(tab){
-  ['home','ai','quiz','battle','neet720','daily-battle','materials','aicards','community','peergroups','chatroom','diary','stories','games','vault','hubevents','studyrooms','leaderboard','focus','adminpanel','rathodnew'].forEach(x=>{
+  ['home','ai','quiz','battle','neet720','daily-battle','materials','aicards','community','peergroups','chatroom','diary','stories','games','vault','hubevents','studyrooms','leaderboard','focus','tests','treasure','adminpanel','rathodnew'].forEach(x=>{
     const sec=document.getElementById('section-'+x); if(sec)sec.classList.add('hidden');
     const btn=document.getElementById('btn-'+x); if(btn)btn.classList.remove('rh-active');
   });
@@ -1404,6 +1501,8 @@ function switchTab(tab){
   if(tab==='studyrooms')renderStudyRooms();
   if(tab==='community')loadPeople();
   if(tab==='quiz')loadScheduledBattle();
+  if(tab==='tests')loadHubTests();
+  if(tab==='treasure'){nthLoadRooms();nthStartLobbyPoll();}
    if(tab==='battle'){qbShowLiveLayout();qbLoadRooms();if(qbRoom)qbSyncCurrentRoom();}
   if(tab==='neet720'){n720ShowLobby();n720LoadRooms();n720SyncCurrentRoom();}
   if(tab==='rathodnew'&&typeof rhRathodNewRefresh==='function'){rhRathodNewRefresh();if(typeof renderFocusDashboard==='function')renderFocusDashboard();}
@@ -1423,7 +1522,9 @@ const RH_SECTION_META={
  hubevents:['Live Events','Upcoming tests, challenges and events','fa-bolt','amber'],
  studyrooms:['Study Rooms','Join a room and study together','fa-door-open','teal'],
  leaderboard:['Leaderboard','XP, level and rank','fa-trophy','amber'],
- focus:['Focus Timer','YPT-style live study timer and statistics','fa-stopwatch','indigo']
+ focus:['Focus Timer','YPT-style live study timer and statistics','fa-stopwatch','indigo'],
+ treasure:['NEET Treasure Hunt','Live multiplayer NEET adventure with 5 checkpoints','fa-map-location-dot','violet'],
+ tests:['45Q Tests','Physics / Chemistry Hindi-medium tests','fa-file-pen','emerald']
 };
 function applyRHSectionHeaders(){
  Object.entries(RH_SECTION_META).forEach(([key,m])=>{const sec=document.getElementById('section-'+key);if(!sec||sec.querySelector('.rh-inner-head'))return;const h=document.createElement('div');h.className='rh-page-head rh-inner-head';h.innerHTML=`<div><div class="rh-page-title"><i class="fa-solid ${m[2]} mr-2" style="color:#635bff"></i>${m[0]}</div><div class="rh-page-sub">${m[1]}</div></div><button onclick="switchTab('home')" class="bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 px-3 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-house mr-1"></i>Home</button>`;sec.prepend(h);});
@@ -4422,6 +4523,92 @@ document.getElementById('peer-group-form')?.addEventListener('submit',async e=>{
 async function loadDoubtBounties(){const box=document.getElementById('doubt-bounties-list');if(!box||!user)return;try{const {data,error}=await db.from('doubt_bounties').select('*').eq('status','open').order('created_at',{ascending:false}).limit(50);if(error)throw error;doubtBounties=data||[];box.innerHTML=doubtBounties.length?doubtBounties.map(b=>`<article class="rh-bounty-open bg-slate-950/70 border rounded-2xl p-4"><div class="flex justify-between gap-2"><span class="rh-group-pill">${esc(b.subject)}</span><b class="text-amber-300 text-xs">+${Number(b.reward_xp||0)} XP</b></div><h4 class="font-black text-sm mt-3">${esc(b.title)}</h4><p class="text-xs text-slate-300 whitespace-pre-wrap mt-2">${esc(b.question)}</p><div class="mt-3 flex justify-between items-center"><span class="text-[9px] text-slate-500">${new Date(b.created_at).toLocaleString()}</span><button onclick="answerDoubtBounty('${esc(b.id)}')" class="bg-red-600 px-3 py-2 rounded-lg text-[10px] font-black">Answer</button></div></article>`).join(''):'<div class="text-xs text-slate-500 py-6 md:col-span-2 text-center">No open doubt bounties.</div>'}catch(e){box.innerHTML='<div class="text-xs text-amber-400 py-6 md:col-span-2">Doubt Bounties ke liye SQL setup run karna hoga.</div>'}}
 document.getElementById('doubt-bounty-form')?.addEventListener('submit',async e=>{e.preventDefault();if(!user)return;const b=e.target.querySelector('button');b.disabled=true;try{const payload={user_id:user.id,title:document.getElementById('bounty-title').value.trim(),question:document.getElementById('bounty-question').value.trim(),subject:document.getElementById('bounty-subject').value,reward_xp:Number(document.getElementById('bounty-reward').value),status:'open'};const {data,error}=await db.from('doubt_bounties').insert(payload).select('*').single();if(error)throw error;e.target.reset();document.getElementById('bounty-reward').value='20';toast('💰 Doubt bounty posted');await loadDoubtBounties();await sendHubNotification('New Doubt Bounty',`${data.subject} • +${data.reward_xp} XP`,'bounty','peergroups')}catch(e){toast(e.message||'Bounty create failed. SQL setup check karo.',false)}finally{b.disabled=false}});
 async function answerDoubtBounty(id){if(!user)return;const bounty=doubtBounties.find(x=>String(x.id)===String(id));if(!bounty)return;const answer=prompt('Apna solution/explanation likho:');if(!answer?.trim())return;try{const {data,error}=await db.from('doubt_bounty_answers').insert({bounty_id:id,user_id:user.id,answer:answer.trim()}).select('*').single();if(error)throw error;toast('Answer submitted ✓');await db.from('doubt_bounties').update({status:'solved',solver_id:user.id,solved_at:new Date().toISOString()}).eq('id',id).eq('status','open');await grantXP(Number(bounty.reward_xp||0));await loadDoubtBounties();await sendHubNotification('Bounty Solved',`+${Number(bounty.reward_xp||0)} XP awarded`,'bounty','peergroups')}catch(e){toast(e.message||'Answer save failed. SQL setup check karo.',false)}}
+
+
+/* ==================== APP SHARE ==================== */
+async function shareRathodHub(){
+ const url='https://teachnlogy7509-pixel.github.io/RATHOD-HUB/';
+ const data={title:'RATHOD HUB',text:'🔥 RATHOD HUB — NEET MCQ, Live Quiz, Treasure Hunt & Study Community',url};
+ try{if(navigator.share){await navigator.share(data);return}}catch(e){if(e?.name==='AbortError')return}
+ try{await navigator.clipboard.writeText(url);toast('🔗 App link copied — ab share kar do ✓')}catch(e){prompt('RATHOD HUB link',url)}
+}
+
+/* ==================== LIVE NEET TREASURE HUNT ==================== */
+let nthRooms=[],nthRoom=null,nthChannel=null,nthTimer=null,nthLastIndex=-1,nthSelected={},nthEndsAt=0,nthLobbyPoll=null;
+const NTH_QUESTIONS=10,NTH_CHECKPOINTS=5;
+function nthCode(){return Math.random().toString(36).slice(2,8).toUpperCase()}
+function nthEsc(v){return esc(String(v??''))}
+function nthRoomLink(){return `${location.origin}${location.pathname}?treasure=${encodeURIComponent(nthRoom?.room_code||'')}`}
+async function nthShareRoom(){if(!nthRoom)return;const url=nthRoomLink();try{if(navigator.share){await navigator.share({title:'NEET Treasure Hunt',text:`🔥 RATHOD HUB live Treasure Hunt room: ${nthRoom.room_code}`,url});return}}catch(e){if(e?.name==='AbortError')return}try{await navigator.clipboard.writeText(url);toast('🔗 Treasure room link copied ✓')}catch(e){prompt('Treasure room link',url)}}
+function nthStartLobbyPoll(){clearInterval(nthLobbyPoll);nthLobbyPoll=setInterval(()=>{if(user&&!nthRoom&&document.getElementById('section-treasure')&&!document.getElementById('section-treasure').classList.contains('hidden'))nthLoadRooms(true)},8000)}
+function nthStopLobbyPoll(){clearInterval(nthLobbyPoll);nthLobbyPoll=null}
+async function nthLoadRooms(silent=false){const box=document.getElementById('nth-room-list');if(!box||!user)return;try{const{data,error}=await db.from('treasure_hunt_rooms').select('*').in('status',['waiting','live']).order('created_at',{ascending:false}).limit(20);if(error)throw error;nthRooms=data||[];box.innerHTML=nthRooms.length?nthRooms.map(r=>`<div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 flex items-center gap-3"><div class="text-2xl">${r.status==='live'?'🔥':'🗺️'}</div><div class="min-w-0 flex-1"><b class="block truncate text-sm">${nthEsc(r.topic)}</b><span class="text-[10px] text-slate-500">${nthEsc(r.subject)} • ${r.status==='live'?'LIVE NOW':'Waiting'} • ${nthEsc(r.room_code)}</span></div><button onclick="nthJoinRoom('${nthEsc(r.room_code)}')" class="bg-violet-600 hover:bg-violet-500 px-3 py-2 rounded-lg text-[10px] font-black">${r.status==='live'?'Join Live':'Join'}</button></div>`).join(''):'<div class="text-xs text-slate-500 text-center py-6">Abhi koi live Treasure Room nahi hai. Pehla room tum banao 🗺️</div>'}catch(e){if(!silent)box.innerHTML='<div class="text-xs text-amber-400 text-center py-6">Treasure Hunt ke liye SQL setup run karo.</div>'}}
+function nthAutoJoinFromLink(){const code=new URLSearchParams(location.search).get('treasure');if(code&&user)setTimeout(()=>nthJoinRoom(code),600)}
+async function nthCreateRoom(opts={}){if(!user)return toast('Pehle login karein.',false);const subject=String(opts.subject||document.getElementById('nth-subject')?.value||'Biology'),topic=String(opts.topic||document.getElementById('nth-topic')?.value||'').trim(),seconds=Number(opts.seconds||document.getElementById('nth-seconds')?.value||25);if(!topic)return toast('Topic / chapter likho.',false);const btn=opts.admin?document.getElementById('admin-treasure-btn'):null;if(btn){btn.disabled=true;btn.textContent='AI questions bana raha hai...'}try{const promptTopic=`${topic} — LIVE NEET TREASURE HUNT. Subject: ${subject}. Hindi Medium. Exactly 10 unique NEET-level MCQs, NCERT aligned. Questions should be short enough for a timed live game. Exactly 4 options and one correct_index 0-3. No duplicate, no ambiguous questions, no explanations.`;const generated=await rhGenerateFreshQuiz({count:10,subject,type:'MCQ',topic:promptTopic,storage:true});const questions=(generated.questions||[]).map(q=>({question:String(q.question||''),options:Array.isArray(q.options)?q.options.slice(0,4):[],correct_index:Number(q.correct_index??q.answer??0)}));if(questions.length!==10||questions.some(q=>q.options.length!==4))throw new Error('AI ne valid 10 questions nahi diye.');const code=nthCode();const{data,error}=await db.from('treasure_hunt_rooms').insert({room_code:code,host_id:user.id,subject,topic,duration_seconds:seconds,questions,status:'waiting',created_by:user.id}).select('*').single();if(error)throw error;if(opts.admin){document.getElementById('admin-treasure-form')?.reset();document.getElementById('admin-treasure-seconds').value='25';toast('🗺️ Treasure Hunt publish ho gaya');await sendHubNotification('New NEET Treasure Hunt',`${subject} • ${topic}`,'treasure','treasure')}else toast(`🗺️ Room ${code} ready — friends ko link share karo!`);await nthJoinRoom(code)}catch(e){toast(e.message||'Treasure room create failed. SQL setup check karo.',false)}finally{if(btn){btn.disabled=false;btn.textContent='Create Treasure Hunt'}}}
+async function nthJoinRoom(code){if(!user)return;const r=nthRooms.find(x=>String(x.room_code)===String(code));try{let room=r;if(!room){const z=await db.from('treasure_hunt_rooms').select('*').eq('room_code',code).maybeSingle();if(z.error)throw z.error;room=z.data}if(!room)return toast('Room nahi mila.',false);if(room.status==='finished')return toast('Ye hunt finish ho chuka hai.',false);nthRoom=room;const{error}=await db.from('treasure_hunt_participants').upsert({room_code:room.room_code,user_id:user.id,name:profile?.name||user.email||'Student',score:0,last_seen:new Date().toISOString()},{onConflict:'room_code,user_id'});if(error)throw error;nthStopLobbyPoll();document.getElementById('nth-lobby')?.classList.add('hidden');document.getElementById('nth-result')?.classList.add('hidden');document.getElementById('nth-arena')?.classList.remove('hidden');nthSubscribe(room.room_code);nthRenderRoom();nthSyncRoom();window.scrollTo({top:0,behavior:'smooth'})}catch(e){toast(e.message||'Room join failed.',false)}}
+async function nthSubscribe(code){if(nthChannel)try{await db.removeChannel(nthChannel)}catch(e){}nthChannel=db.channel(`treasure-hunt-${code}`,{config:{broadcast:{self:false},presence:{key:user.id}}});nthChannel.on('broadcast',{event:'treasure-event'},({payload})=>{if(payload?.sourceId===user.id)return;if(payload?.type==='refresh'||payload?.type==='started'||payload?.type==='finished')nthReloadRoom()});nthChannel.on('presence',{event:'sync'},()=>nthRefreshPlayers());nthChannel.on('presence',{event:'join'},()=>nthRefreshPlayers());nthChannel.on('presence',{event:'leave'},()=>nthRefreshPlayers());await nthChannel.subscribe(async status=>{if(status==='SUBSCRIBED'){try{await nthChannel.track({user_id:user.id,name:profile?.name||user.email||'Student'})}catch(e){}}})}
+async function nthReloadRoom(){if(!nthRoom)return;const{data,error}=await db.from('treasure_hunt_rooms').select('*').eq('room_code',nthRoom.room_code).maybeSingle();if(!error&&data){nthRoom=data;nthRenderRoom();nthSyncRoom()}}
+async function nthRefreshPlayers(){const box=document.getElementById('nth-players');if(!box||!nthRoom)return;try{const{data}=await db.from('treasure_hunt_participants').select('user_id,name,score').eq('room_code',nthRoom.room_code).order('score',{ascending:false});const arr=data||[];box.innerHTML=arr.map((p,i)=>`<div class="flex items-center gap-2 bg-slate-950/60 rounded-xl p-2"><span class="text-[10px] text-slate-500">#${i+1}</span><div class="w-7 h-7 rounded-full bg-violet-900 flex items-center justify-center text-xs">${i===0?'👑':'👤'}</div><span class="text-xs font-bold truncate flex-1">${nthEsc(p.name||'Student')}</span><b class="text-[10px] text-amber-300">${Number(p.score||0)} pts</b></div>`).join('')||'<div class="text-xs text-slate-500">No players.</div>'}catch(e){}}
+function nthRenderRoom(){if(!nthRoom)return;document.getElementById('nth-room-title').textContent=nthRoom.topic;document.getElementById('nth-room-meta').textContent=`${nthRoom.subject} • 10 Questions • ${Number(nthRoom.duration_seconds||25)} sec/question`;document.getElementById('nth-room-code').textContent=nthRoom.room_code;document.getElementById('nth-host-controls').classList.toggle('hidden',!(nthRoom.host_id===user.id&&nthRoom.status==='waiting'));document.getElementById('nth-question').innerHTML=nthRoom.status==='waiting'?'<div class="text-center py-10"><div class="text-5xl">🗺️</div><h3 class="text-xl font-black mt-3">Treasure Room Ready!</h3><p class="text-xs text-slate-400 mt-2">Players join hone ka wait karo. Host Start Hunt dabayega.</p></div>':'';document.getElementById('nth-options').innerHTML='';nthRefreshPlayers();}
+async function nthStartRoom(){if(!nthRoom||nthRoom.host_id!==user.id||nthRoom.status!=='waiting')return;const started_at=new Date().toISOString();const{data,error}=await db.from('treasure_hunt_rooms').update({status:'live',started_at}).eq('room_code',nthRoom.room_code).eq('host_id',user.id).eq('status','waiting').select('*').single();if(error)return toast(error.message||'Start failed',false);nthRoom=data;nthRenderRoom();try{await nthChannel?.send({type:'broadcast',event:'treasure-event',payload:{type:'started',sourceId:user.id}})}catch(e){ }nthSyncRoom()}
+function nthCurrentIndex(){if(!nthRoom?.started_at)return -1;const elapsed=Date.now()-new Date(nthRoom.started_at).getTime();return Math.floor(Math.max(0,elapsed)/(Number(nthRoom.duration_seconds||25)*1000))}
+function nthSecondsLeft(){if(!nthRoom?.started_at)return Number(nthRoom?.duration_seconds||25);const total=Number(nthRoom.duration_seconds||25),elapsed=Math.max(0,Date.now()-new Date(nthRoom.started_at).getTime()),used=Math.floor((elapsed%(total*1000))/1000);return total-used}
+function nthSyncRoom(){clearInterval(nthTimer);if(!nthRoom)return;nthRefreshPlayers();if(nthRoom.status==='waiting'){document.getElementById('nth-progress-text').textContent='Waiting for host…';return}if(nthRoom.status==='finished'){nthFinishView();return}nthTimer=setInterval(nthTick,500);nthTick()}
+function nthTick(){if(!nthRoom||nthRoom.status!=='live')return;const idx=nthCurrentIndex();if(idx>=NTH_QUESTIONS){if(nthRoom.host_id===user.id)nthFinishRoom();else nthReloadRoom();return}const sec=nthSecondsLeft(),total=Number(nthRoom.duration_seconds||25);document.getElementById('nth-timer').textContent=`${sec}s`;document.getElementById('nth-timer-bar').style.width=`${Math.max(0,Math.min(100,sec/total*100))}%`;const checkpoint=Math.floor(idx/2)+1;document.getElementById('nth-progress-text').textContent=`Checkpoint ${checkpoint}/5 • Question ${idx+1}/10`;if(idx!==nthLastIndex){nthLastIndex=idx;nthRenderQuestion(idx)}}
+function nthRenderQuestion(idx){const q=nthRoom?.questions?.[idx];if(!q)return;document.getElementById('nth-question').innerHTML=`<div class="text-[10px] uppercase text-violet-300 font-black mb-2">Checkpoint ${Math.floor(idx/2)+1} • Q${idx+1}/10</div><div>${nthEsc(q.question)}</div>`;const box=document.getElementById('nth-options');box.innerHTML=(q.options||[]).map((o,j)=>`<button onclick="nthAnswer(${idx},${j},this)" ${nthSelected[idx]!=null?'disabled':''} class="text-left bg-slate-950 border ${nthSelected[idx]===j?'border-violet-500 bg-violet-500/10':'border-slate-800'} rounded-xl p-3 text-sm hover:border-violet-500">${String.fromCharCode(65+j)}. ${nthEsc(o)}</button>`).join('');document.getElementById('nth-answer-note').textContent=nthSelected[idx]!=null?'Answer submitted. Next checkpoint live sync hoga.':'';nthRenderMap(Math.floor(idx/2))}
+function nthRenderMap(cp){const map=document.getElementById('nth-arena-map');if(!map)return;const icons=['🌱','🧬','⚡','🧪','💎'];map.innerHTML=icons.map((x,i)=>`<div class="rounded-xl border ${i<=cp?'border-violet-500 bg-violet-500/10':'border-slate-800 bg-slate-950/50'} p-2 text-center"><div class="text-xl">${x}</div><span class="text-[9px]">${i===4?'Treasure':'Checkpoint '+(i+1)}</span></div>`).join('')}
+async function nthAnswer(idx,selected,clicked){if(!nthRoom||nthRoom.status!=='live'||nthCurrentIndex()!==idx||nthSelected[idx]!=null)return;nthSelected[idx]=selected;document.querySelectorAll('#nth-options button').forEach(b=>b.disabled=true);const q=nthRoom.questions[idx],correct=Number(q.correct_index??0),isCorrect=selected===correct;clicked.classList.add(isCorrect?'border-emerald-500':'border-red-500');document.getElementById('nth-answer-note').textContent=isCorrect?'✅ Correct! +10 points':'❌ Wrong — next clue is coming';try{const{error}=await db.from('treasure_hunt_answers').upsert({room_code:nthRoom.room_code,user_id:user.id,question_index:idx,selected_index:selected,is_correct:isCorrect},{onConflict:'room_code,user_id,question_index'});if(error)throw error;if(isCorrect){const{data:me}=await db.from('treasure_hunt_participants').select('score').eq('room_code',nthRoom.room_code).eq('user_id',user.id).maybeSingle();await db.from('treasure_hunt_participants').update({score:Number(me?.score||0)+10,last_seen:new Date().toISOString()}).eq('room_code',nthRoom.room_code).eq('user_id',user.id);await grantXP(10)}else{await db.from('treasure_hunt_participants').update({last_seen:new Date().toISOString()}).eq('room_code',nthRoom.room_code).eq('user_id',user.id)}await nthRefreshPlayers();try{await nthChannel?.send({type:'broadcast',event:'treasure-event',payload:{type:'refresh',sourceId:user.id}})}catch(e){}}catch(e){toast(e.message||'Answer save nahi hua.',false)}}
+async function nthFinishRoom(){if(!nthRoom||nthRoom.host_id!==user.id)return;const{data,error}=await db.from('treasure_hunt_rooms').update({status:'finished',finished_at:new Date().toISOString()}).eq('room_code',nthRoom.room_code).eq('status','live').select('*').single();if(!error&&data){nthRoom=data;try{await nthChannel?.send({type:'broadcast',event:'treasure-event',payload:{type:'finished',sourceId:user.id}})}catch(e){}nthFinishView()}}
+async function nthFinishView(){clearInterval(nthTimer);await nthRefreshPlayers();const box=document.getElementById('nth-result');if(!box)return;let my=0;try{const{data}=await db.from('treasure_hunt_participants').select('score').eq('room_code',nthRoom.room_code).eq('user_id',user.id).maybeSingle();my=Number(data?.score||0)}catch(e){}box.classList.remove('hidden');box.innerHTML=`<div class="text-6xl">💎</div><h3 class="text-2xl font-black text-amber-300 mt-2">Treasure Hunt Complete!</h3><p class="text-xs text-slate-400 mt-2">${nthEsc(nthRoom.topic)} • Your Score: <b class="text-white">${my}</b> points</p><p class="text-sm text-slate-300 mt-3">🏆 Live ranking neeche update hoti rahegi.</p><button onclick="nthLeaveRoom()" class="mt-5 bg-violet-600 px-5 py-2.5 rounded-xl text-xs font-black">Back to Treasure Lobby</button>`}
+async function nthLeaveRoom(){clearInterval(nthTimer);nthStopLobbyPoll();if(nthChannel){try{await db.removeChannel(nthChannel)}catch(e){}nthChannel=null}if(nthRoom&&user){try{await db.from('treasure_hunt_participants').delete().eq('room_code',nthRoom.room_code).eq('user_id',user.id)}catch(e){}}nthRoom=null;nthSelected={};nthLastIndex=-1;document.getElementById('nth-arena')?.classList.add('hidden');document.getElementById('nth-result')?.classList.add('hidden');document.getElementById('nth-lobby')?.classList.remove('hidden');nthLoadRooms();nthStartLobbyPoll()}
+async function nthCleanup(){clearInterval(nthTimer);clearInterval(nthLobbyPoll);if(nthChannel){try{await db.removeChannel(nthChannel)}catch(e){}nthChannel=null}nthRoom=null}
+async function createAdminTreasure(e){e.preventDefault();if(profile?.role!=='admin')return toast('Admin only',false);const subject=document.getElementById('admin-treasure-subject').value,topic=document.getElementById('admin-treasure-topic').value.trim(),seconds=Number(document.getElementById('admin-treasure-seconds').value||25);await nthCreateRoom({admin:true,subject,topic,seconds})}
+document.getElementById('admin-treasure-form')?.addEventListener('submit',createAdminTreasure);
+/* ==================== ADMIN 45Q TESTS ==================== */
+let hubTests=[],hubActiveTest=null,hubTestIndex=0,hubTestAnswers={},hubTestInterval=null,hubTestEndsAt=0;
+async function loadHubTests(){
+  const box=document.getElementById('hub-test-list'); if(!box)return;
+  try{
+    const {data,error}=await db.from('admin_tests').select('*').eq('active',true).order('created_at',{ascending:false}).limit(20);
+    if(error)throw error; hubTests=data||[];
+    box.innerHTML=hubTests.length?hubTests.map(t=>`<div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-4"><div class="flex justify-between gap-3"><div><span class="text-[9px] uppercase font-black text-emerald-400">${esc(t.subject)}</span><h3 class="font-black text-white mt-1">${esc(t.topic)}</h3><p class="text-[10px] text-slate-500 mt-1">45 Questions • ${Number(t.duration_minutes||45)} Minutes • Hindi Medium</p></div><button onclick="startHubTest('${esc(t.id)}')" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl text-xs font-black">Start Test</button></div></div>`).join(''):'<div class="text-xs text-slate-500 text-center py-8">Abhi koi active 45-question test nahi hai.</div>';
+  }catch(e){box.innerHTML='<div class="text-xs text-amber-400 text-center py-8">Tests ke liye Supabase SQL setup required hai.</div>'}
+}
+async function createHubTest(e){
+  e.preventDefault(); if(profile?.role!=='admin'){toast('Admin only',false);return}
+  const btn=document.getElementById('admin-test-btn'); btn.disabled=true; btn.textContent='45 Questions generate ho rahe hain...';
+  try{
+    const subject=document.getElementById('admin-test-subject').value, topic=document.getElementById('admin-test-topic').value.trim(), duration=Number(document.getElementById('admin-test-duration').value||45);
+    const promptTopic=`${topic} — Hindi Medium NEET Test. Exactly 45 MCQs. Subject: ${subject}. NCERT/NEET aligned. Questions Hindi mein hon, technical terms zarurat par English mein brackets ke saath. Har question ke exactly 4 options, ek correct_index (0-3). No explanations, no markdown, no duplicate questions, no ambiguous questions.`;
+    const generated=await rhGenerateFreshQuiz({count:45,subject,type:'MCQ',topic:promptTopic,storage:true});
+    const questions=generated.questions.map(q=>({question:String(q.question||''),options:Array.isArray(q.options)?q.options.slice(0,4):[],correct_index:Number(q.correct_index??0)}));
+    if(questions.length!==45||questions.some(q=>q.options.length!==4))throw new Error('AI ne valid 45 questions nahi diye.');
+    const {data,error}=await db.from('admin_tests').insert({subject,topic,duration_minutes:duration,questions,active:true,created_by:user.id}).select('*').single(); if(error)throw error;
+    e.target.reset(); document.getElementById('admin-test-duration').value='45'; toast('✅ 45Q Test publish ho gaya'); await loadHubTests(); await sendHubNotification('New 45Q Test',`${subject} • ${topic}`,'test','tests');
+  }catch(err){toast(err.message||'Test create failed. SQL setup check karo.',false)}finally{btn.disabled=false;btn.textContent='Create & Publish 45Q Test'}
+}
+function hubTestRender(){
+  if(!hubActiveTest)return; const qs=Array.isArray(hubActiveTest.questions)?hubActiveTest.questions:[], q=qs[hubTestIndex]; if(!q)return;
+  document.getElementById('hub-test-title').textContent=hubActiveTest.topic;document.getElementById('hub-test-subtitle').textContent=`${hubActiveTest.subject} • Question ${hubTestIndex+1} of ${qs.length}`;
+  document.getElementById('hub-test-progress').style.width=`${((hubTestIndex+1)/qs.length)*100}%`;document.getElementById('hub-test-question').innerHTML=`<div class="text-[10px] text-emerald-400 font-black mb-2">Q${hubTestIndex+1}</div>${esc(q.question)}`;
+  document.getElementById('hub-test-options').innerHTML=(q.options||[]).map((o,i)=>`<button onclick="hubTestChoose(${i})" class="text-left bg-slate-950 border ${hubTestAnswers[hubTestIndex]===i?'border-emerald-500 bg-emerald-500/10':'border-slate-800'} rounded-xl p-3 text-sm hover:border-emerald-500">${String.fromCharCode(65+i)}. ${esc(o)}</button>`).join('');
+}
+function hubTestChoose(i){hubTestAnswers[hubTestIndex]=i;hubTestRender()}
+function hubTestPrev(){if(hubTestIndex>0){hubTestIndex--;hubTestRender()}}
+function hubTestNext(){if(!hubActiveTest)return;if(hubTestIndex<hubActiveTest.questions.length-1){hubTestIndex++;hubTestRender()}else finishHubTest()}
+async function startHubTest(id){
+  const t=hubTests.find(x=>String(x.id)===String(id)); if(!t)return; hubActiveTest=t;hubTestIndex=0;hubTestAnswers={};
+  document.getElementById('hub-test-list').classList.add('hidden');document.getElementById('hub-test-result').classList.add('hidden');document.getElementById('hub-test-arena').classList.remove('hidden');
+  hubTestEndsAt=Date.now()+Number(t.duration_minutes||45)*60000; hubTestRender(); clearInterval(hubTestInterval); hubTestInterval=setInterval(()=>{const left=Math.max(0,hubTestEndsAt-Date.now());const sec=Math.ceil(left/1000);document.getElementById('hub-test-timer').textContent=`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;if(sec<=0){clearInterval(hubTestInterval);finishHubTest()}},500); window.scrollTo({top:0,behavior:'smooth'});
+}
+async function finishHubTest(){
+  if(!hubActiveTest)return;clearInterval(hubTestInterval);let correct=0;hubActiveTest.questions.forEach((q,i)=>{if(Number(hubTestAnswers[i])===Number(q.correct_index))correct++});const attempted=Object.keys(hubTestAnswers).length,wrong=attempted-correct,score=correct;
+  document.getElementById('hub-test-arena').classList.add('hidden');document.getElementById('hub-test-result').classList.remove('hidden');document.getElementById('hub-test-result').innerHTML=`<div class="text-4xl">🏆</div><h3 class="text-2xl font-black text-emerald-300 mt-2">Test Complete!</h3><p class="text-sm text-slate-300 mt-2">${esc(hubActiveTest.subject)} • ${esc(hubActiveTest.topic)}</p><div class="grid grid-cols-3 gap-2 mt-5"><div class="bg-slate-950 rounded-xl p-3"><b class="text-emerald-400 text-xl">${correct}</b><div class="text-[10px] text-slate-500">Correct</div></div><div class="bg-slate-950 rounded-xl p-3"><b class="text-red-400 text-xl">${wrong}</b><div class="text-[10px] text-slate-500">Wrong</div></div><div class="bg-slate-950 rounded-xl p-3"><b class="text-white text-xl">${45-attempted}</b><div class="text-[10px] text-slate-500">Skipped</div></div></div><button onclick="document.getElementById('hub-test-result').classList.add('hidden');document.getElementById('hub-test-list').classList.remove('hidden');loadHubTests()" class="mt-5 bg-slate-800 px-5 py-2.5 rounded-xl text-xs font-black">Back to Tests</button>`;
+  try{await db.from('admin_test_attempts').insert({test_id:hubActiveTest.id,user_id:user.id,correct,wrong,skipped:45-attempted,score});}catch(e){console.warn('attempt save failed',e)}
+}
+document.getElementById('admin-test-form')?.addEventListener('submit',createHubTest);
+
+
 
 </script>
 </body>
