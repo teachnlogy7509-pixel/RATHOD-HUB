@@ -1057,7 +1057,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 
 <section id="section-aicards" class="hidden space-y-5">
   <div class="bg-slate-800/95 border border-pink-500/20 rounded-2xl p-5">
-    <div class="flex items-start justify-between gap-3 flex-wrap"><div><h3 class="font-black text-xl">✨ AI Short Notes & Formula Sheets</h3><p class="text-xs text-slate-400 mt-1">Topic do → AI content banayega → 2-3 page professional study sheet automatically banegi.</p></div><span class="rh-group-pill">AI GENERATED</span></div>
+    <div class="flex items-start justify-between gap-3 flex-wrap"><div><h3 class="font-black text-xl">✨ AI Short Notes & Formula Sheets</h3><p class="text-xs text-slate-400 mt-1">Topic do → AI content banayega → compact professional study sheet, flow, cards aur diagrams automatically banenge.</p></div><span class="rh-group-pill">AI GENERATED</span></div>
     <div class="grid md:grid-cols-[1fr_auto_auto] gap-2 mt-4"><input id="ai-card-topic" maxlength="160" placeholder="Example: Photosynthesis light reaction / Kinematics formulas" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm"><button onclick="generateAICard('notes')" class="bg-pink-600 hover:bg-pink-500 px-4 py-3 rounded-xl text-xs font-black">📝 Short Notes</button><button onclick="generateAICard('formula')" class="bg-red-600 hover:bg-red-500 px-4 py-3 rounded-xl text-xs font-black">📐 Formula Sheet</button><button onclick="dynamicFormulaBook()" class="bg-blue-600 hover:bg-blue-500 px-4 py-3 rounded-xl text-xs font-black">📚 1-Click Formula Book</button></div>
     <div id="ai-card-status" class="text-xs text-slate-500 mt-3"></div>
     <div id="ai-card-result" class="mt-4 hidden space-y-3"><canvas id="ai-card-canvas" class="hidden"></canvas><img id="ai-card-image" class="rh-ai-card-preview" alt="AI study card preview"><div class="rh-card-actions"><button onclick="openAICardImage()" class="bg-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold">Open Image</button><button onclick="saveAICardImage()" class="bg-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold">Save PNG</button><button onclick="generateAICard(aiCardLastData?.kind||'notes')" class="bg-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold">Regenerate</button></div><pre id="ai-card-text" class="whitespace-pre-wrap text-xs leading-5 bg-slate-950 rounded-xl p-4 border border-slate-800"></pre></div>
@@ -4505,11 +4505,24 @@ async function generateAICard(kind='notes'){
   if(result)result.classList.add('hidden');
   try{
     const instruction=kind==='formula'
-      ?'Create a detailed NEET formula sheet in simple Hindi/Hinglish for the given topic. Organize it into clear sections such as core formulas, symbol meanings, important relations, special cases, and quick revision. Include verified formulas and tiny usage notes. Use Unicode symbols where useful. Plain text only. Aim for enough useful content for 2-3 study-sheet pages, not one page. Do not omit important formulas just to keep it short.'
-      :'Create detailed NEET short notes in simple Hindi/Hinglish for the given topic. Organize the content into clear sections with short headings, key concepts, definitions, NCERT facts, processes, comparisons, keywords, and quick-revision points where relevant. Use arrows (→), equals (＝), and short bullet-style lines. Plain text only. Aim for enough useful content for 2-3 study-sheet pages, not one page. Do not compress everything into 5-9 lines.';
+      ?'Create a complete NEET formula/revision sheet in simple Hindi/Hinglish for the given topic. Cover the important formulas, symbol meanings, units, relations, special cases, graph/relationship ideas, common traps and quick revision points. Use Unicode symbols. Give enough useful material to fill a compact study sheet naturally; do not force a second page if one page can contain it.'
+      :'Create complete NEET short notes in simple Hindi/Hinglish for the given topic. Cover definitions, core concepts, NCERT facts, structure, functions, steps/process, cause-effect, comparisons, examples, keywords and quick-revision points wherever relevant. Prefer 18-30 concise study lines/points for a normal chapter topic so the sheet is useful, not just 5-9 lines.';
     const prompt=`You are RATHOD HUB AI study-sheet content generator. ${instruction}
 Topic: ${topic}
-The final output will be arranged automatically into a clean 2-3 page NEET study-sheet layout. Use clear section headings on separate lines, concise study points, and accurate NCERT/NEET-level content. Never invent facts. Do not use markdown tables.`;
+
+IMPORTANT OUTPUT FORMAT:
+Use plain text only. Do not use markdown tables.
+Use these simple tags on their own lines when relevant:
+[SECTION] heading
+[FLOW] A → B → C → D
+[FORMULA] formula — meaning/condition
+[TABLE] item | item | item
+[DIAGRAM] central concept → part 1, part 2, part 3
+[KEY] high-yield NCERT point
+[COMPARE] A: point 1; point 2 || B: point 1; point 2
+[EXAMPLE] short example
+End with [QUICK REVISION] and 5-8 rapid recall points.
+Use only scientifically accurate NCERT/NEET-level facts. Do not invent facts. The renderer will turn these tags into clean cards, flow diagrams, mini tables and diagrams. Keep wording concise so the page can stay readable with a small study-material font.`;
     const {data,error}=await db.functions.invoke('ai-chat',{body:{question:prompt}});
     if(error)throw error;
     const text=String(data?.answer||data?.message||'').trim();
@@ -4518,7 +4531,7 @@ The final output will be arranged automatically into a clean 2-3 page NEET study
     document.getElementById('ai-card-text').textContent=text;
     renderAICardCanvas(topic,text,kind);
     result?.classList.remove('hidden');
-    if(status)status.textContent='✓ 2-3 page study sheet ready';
+    if(status)status.textContent='✓ Professional study sheet ready';
   }catch(e){
     if(status)status.textContent='AI request failed.';
     toast(e.message||'AI card failed',false)
@@ -4536,117 +4549,223 @@ function aiSheetLines(text){
   }
   return out;
 }
-function aiIsHeading(line){
-  const x=String(line).trim();
-  if(/^(\d+[\).\:]|[IVX]+[\).\:]|[A-Z][\).\:])\s*/.test(x))return true;
-  if(x.length<=55 && !/[.!?]$/.test(x) && (/^[A-Za-zÀ-ÿ\u0900-\u097F][^.!?]{2,55}$/.test(x)))return true;
-  return /^(important|महत्वपूर्ण|मुख्य|quick revision|quick recall|याद रखें|ध्यान दें|definition|परिभाषा|formula|सूत्र|classification|वर्गीकरण|structure|संरचना|functions|कार्य|properties|गुण|difference|अंतर|process|प्रक्रिया|key points|मुख्य बिंदु)/i.test(x);
-}
-function aiCleanBullet(line){
-  return String(line).replace(/^\s*(?:[-*•·▪◦]|\d+[\.\)])\s*/,'').trim();
+function aiRoundRect(ctx,x,y,w,h,r){
+  const rr=Math.min(r,w/2,h/2);
+  ctx.beginPath();ctx.moveTo(x+rr,y);ctx.arcTo(x+w,y,x+w,y+h,rr);
+  ctx.arcTo(x+w,y+h,x,y+h,rr);ctx.arcTo(x,y+h,x,y,rr);
+  ctx.arcTo(x,y,x+w,y,rr);ctx.closePath();
 }
 function aiWrapLines(ctx,text,maxWidth,font){
   ctx.font=font;
-  const words=String(text).split(/\s+/),lines=[];
-  let line='';
+  const words=String(text).split(/\s+/),lines=[];let line='';
   for(const w of words){
     const test=line?line+' '+w:w;
-    if(ctx.measureText(test).width>maxWidth && line){lines.push(line);line=w}else line=test;
+    if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=w}else line=test;
   }
   if(line)lines.push(line);
   return lines;
 }
-function aiRoundRect(ctx,x,y,w,h,r){
-  const rr=Math.min(r,w/2,h/2);
-  ctx.beginPath();
-  ctx.moveTo(x+rr,y);ctx.arcTo(x+w,y,x+w,y+h,rr);ctx.arcTo(x+w,y+h,x,y+h,rr);
-  ctx.arcTo(x,y+h,x,y,rr);ctx.arcTo(x,y,x+w,y,rr);ctx.closePath();
+function aiTag(line){
+  const m=String(line).match(/^\[(SECTION|FLOW|FORMULA|TABLE|DIAGRAM|KEY|COMPARE|EXAMPLE|QUICK REVISION)\]\s*(.*)$/i);
+  return m?{tag:m[1].toUpperCase(),text:m[2].trim()}:null;
 }
-function drawStudyPage(ctx,x,y,w,h,pageNo,total,topic,kind){
-  ctx.save();
-  const g=ctx.createLinearGradient(x,y,x+w,y+h);
-  g.addColorStop(0,'#ffffff');g.addColorStop(1,'#f7f9fc');
-  ctx.fillStyle=g;ctx.fillRect(x,y,w,h);
-  ctx.strokeStyle='#d8dee8';ctx.lineWidth=2;ctx.strokeRect(x+1,y+1,w-2,h-2);
-  ctx.fillStyle='#1e293b';ctx.fillRect(x,y,x+w,8);
-  ctx.fillStyle='#2563eb';ctx.fillRect(x,y+8,9,62);
-  ctx.fillStyle='#0f172a';ctx.font='700 38px Arial, "Noto Sans", sans-serif';
-  ctx.fillText(kind==='formula'?'FORMULA SHEET':'SHORT NOTES',x+34,y+48);
-  ctx.fillStyle='#64748b';ctx.font='600 16px Arial, "Noto Sans", sans-serif';
-  const topicText=String(topic).slice(0,90);
-  ctx.fillText(topicText,x+34,y+72);
-  ctx.fillStyle='#eff6ff';aiRoundRect(ctx,x+w-170,y+24,132,34,17);ctx.fill();
-  ctx.fillStyle='#1d4ed8';ctx.font='700 15px Arial, sans-serif';ctx.fillText(`PAGE ${pageNo} / ${total}`,x+w-151,y+46);
-  ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x+30,y+92);ctx.lineTo(x+w-30,y+92);ctx.stroke();
-  ctx.restore();
+function aiIsHeading(line){
+  const t=aiTag(line); if(t)return t.tag==='SECTION'||t.tag==='QUICK REVISION';
+  const x=String(line).trim();
+  return /^(\d+[\).\:]|[IVX]+[\).\:]|[A-Z][\).\:])\s*/.test(x) ||
+    (x.length<=52&&!/[.!?]$/.test(x)&&/^(definition|परिभाषा|formula|सूत्र|structure|संरचना|functions|कार्य|process|प्रक्रिया|properties|गुण|difference|अंतर|classification|वर्गीकरण|key points|मुख्य बिंदु|quick revision|याद रखें)/i.test(x));
+}
+function aiCleanBullet(line){
+  return String(line).replace(/^\s*(?:[-*•·▪◦]|\d+[\.\)])\s*/,'').trim();
+}
+function aiTextLines(ctx,text,maxWidth,font,maxLines=4){
+  const a=aiWrapLines(ctx,text,maxWidth,font);
+  return a.slice(0,maxLines);
+}
+function aiDrawHeader(ctx,x,y,w,h,topic,kind,pageNo,total){
+  ctx.fillStyle='#ffffff';ctx.fillRect(x,y,w,h);
+  ctx.fillStyle='#0f172a';ctx.fillRect(x,y,w,7);
+  ctx.fillStyle='#2563eb';ctx.fillRect(x,y+7,8,h-7);
+  ctx.fillStyle='#0f172a';ctx.font='800 32px Arial, "Noto Sans", sans-serif';
+  ctx.fillText(kind==='formula'?'NEET FORMULA SHEET':'NEET SHORT NOTES',x+28,y+43);
+  ctx.fillStyle='#475569';ctx.font='600 15px Arial, "Noto Sans", sans-serif';
+  ctx.fillText(String(topic).slice(0,105),x+28,y+67);
+  ctx.fillStyle='#eff6ff';aiRoundRect(ctx,x+w-145,y+25,112,30,15);ctx.fill();
+  ctx.fillStyle='#1d4ed8';ctx.font='700 13px Arial, sans-serif';
+  ctx.fillText(`PAGE ${pageNo}/${total}`,x+w-130,y+45);
+  ctx.strokeStyle='#cbd5e1';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x+25,y+h-1);ctx.lineTo(x+w-25,y+h-1);ctx.stroke();
+}
+function aiDrawSection(ctx,x,y,w,title,no){
+  ctx.fillStyle=no%2?'#fef2f2':'#eff6ff';
+  aiRoundRect(ctx,x,y,w,34,9);ctx.fill();
+  ctx.fillStyle=no%2?'#b91c1c':'#1d4ed8';
+  ctx.font='800 17px Arial, "Noto Sans", sans-serif';
+  ctx.fillText(title.slice(0,70),x+13,y+23);
+  return y+44;
+}
+function aiDrawFlow(ctx,x,y,w,text){
+  const parts=String(text).split(/→|->|⇒/).map(s=>s.trim()).filter(Boolean).slice(0,7);
+  if(parts.length<2)return aiDrawCompact(ctx,x,y,w,'FLOW: '+text);
+  const gap=9,boxW=Math.min(210,(w-(parts.length-1)*gap)/parts.length),boxH=54;
+  parts.forEach((p,i)=>{
+    const bx=x+i*(boxW+gap);
+    ctx.fillStyle='#f8fafc';ctx.strokeStyle='#93c5fd';ctx.lineWidth=1.5;
+    aiRoundRect(ctx,bx,y,boxW,boxH,10);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#1e3a8a';ctx.font='700 13px Arial, "Noto Sans", sans-serif';
+    const ls=aiTextLines(ctx,p,boxW-18,'700 13px Arial, "Noto Sans", sans-serif',2);
+    ls.forEach((l,j)=>ctx.fillText(l,bx+9,y+20+j*16));
+    if(i<parts.length-1){ctx.fillStyle='#2563eb';ctx.font='800 18px Arial';ctx.fillText('→',bx+boxW+1,y+34)}
+  });
+  return y+boxH+10;
+}
+function aiDrawCompact(ctx,x,y,w,text,kind='normal'){
+  const font=kind==='formula'?'600 14px Arial, "Noto Sans", sans-serif':'500 14px Arial, "Noto Sans", sans-serif';
+  const lines=aiTextLines(ctx,text,w-24,font,3),h=lines.length*19+12;
+  ctx.fillStyle=kind==='formula'?'#eff6ff':'#f8fafc';ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;
+  aiRoundRect(ctx,x,y,w,h,8);ctx.fill();ctx.stroke();
+  ctx.fillStyle=kind==='formula'?'#1d4ed8':'#334155';ctx.font=font;
+  lines.forEach((l,i)=>ctx.fillText(l,x+12,y+20+i*19));
+  return y+h+7;
+}
+function aiDrawKey(ctx,x,y,w,text){
+  const font='600 14px Arial, "Noto Sans", sans-serif';
+  const lines=aiTextLines(ctx,text,w-34,font,3),h=lines.length*19+16;
+  ctx.fillStyle='#fff7ed';aiRoundRect(ctx,x,y,w,h,8);ctx.fill();
+  ctx.fillStyle='#9a3412';ctx.font='800 12px Arial, sans-serif';ctx.fillText('HIGH-YIELD',x+12,y+16);
+  ctx.fillStyle='#7c2d12';ctx.font=font;
+  lines.forEach((l,i)=>ctx.fillText(l,x+12,y+35+i*19));
+  return y+h+8;
+}
+function aiDrawDiagram(ctx,x,y,w,text){
+  const m=String(text).split(/→|->|⇒/).map(s=>s.trim()).filter(Boolean);
+  const center=m[0]||text, children=(m[1]||'').split(/,|;|•/).map(s=>s.trim()).filter(Boolean).slice(0,6);
+  if(children.length<2)return aiDrawCompact(ctx,x,y,w,'DIAGRAM: '+text);
+  const cx=x+w/2,centerW=Math.min(230,w*.42),centerH=48;
+  ctx.fillStyle='#eef2ff';ctx.strokeStyle='#818cf8';ctx.lineWidth=1.5;
+  aiRoundRect(ctx,cx-centerW/2,y,centerW,centerH,12);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#3730a3';ctx.font='800 14px Arial, "Noto Sans", sans-serif';
+  ctx.fillText(center.slice(0,30),cx-centerW/2+12,y+29);
+  const cols=Math.min(3,children.length),cw=(w-18*(cols-1))/cols,cy=y+70;
+  children.forEach((p,i)=>{
+    const col=i%cols,row=Math.floor(i/cols),bx=x+col*(cw+18),by=cy+row*55;
+    ctx.strokeStyle='#c7d2fe';ctx.beginPath();ctx.moveTo(cx,y+centerH);ctx.lineTo(bx+cw/2,by);ctx.stroke();
+    ctx.fillStyle='#ffffff';aiRoundRect(ctx,bx,by,cw,40,9);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#334155';ctx.font='600 12px Arial, "Noto Sans", sans-serif';
+    ctx.fillText(p.slice(0,34),bx+9,by+25);
+  });
+  return cy+Math.ceil(children.length/cols)*55+4;
+}
+function aiDrawCompare(ctx,x,y,w,text){
+  const sides=String(text).split('||').map(s=>s.trim()).filter(Boolean);
+  if(sides.length<2)return aiDrawCompact(ctx,x,y,w,text);
+  const gap=10,cw=(w-gap)/2,cols=sides.slice(0,2);
+  cols.forEach((s,i)=>{
+    const parts=s.split(':');const title=(parts.shift()||'').trim()||`Side ${i+1}`;
+    const body=parts.join(':').trim();
+    const bx=x+i*(cw+gap);
+    ctx.fillStyle=i?'#eff6ff':'#fef2f2';aiRoundRect(ctx,bx,y,cw,88,10);ctx.fill();
+    ctx.fillStyle=i?'#1d4ed8':'#b91c1c';ctx.font='800 14px Arial, "Noto Sans", sans-serif';ctx.fillText(title.slice(0,28),bx+10,y+21);
+    ctx.fillStyle='#334155';ctx.font='500 12px Arial, "Noto Sans", sans-serif';
+    aiTextLines(ctx,body,cw-20,'500 12px Arial, "Noto Sans", sans-serif',3).forEach((l,j)=>ctx.fillText(l,bx+10,y+41+j*15));
+  });
+  return y+96;
+}
+function aiDrawTable(ctx,x,y,w,text){
+  const cells=String(text).split('|').map(s=>s.trim()).filter(Boolean).slice(0,6);
+  if(cells.length<2)return aiDrawCompact(ctx,x,y,w,text);
+  const cw=w/cells.length,h=48;
+  cells.forEach((c,i)=>{
+    ctx.fillStyle=i%2?'#f8fafc':'#f1f5f9';ctx.strokeStyle='#cbd5e1';ctx.lineWidth=1;
+    ctx.fillRect(x+i*cw,y,cw,h);ctx.strokeRect(x+i*cw,y,cw,h);
+    ctx.fillStyle='#334155';ctx.font='600 12px Arial, "Noto Sans", sans-serif';
+    aiTextLines(ctx,c,cw-12,'600 12px Arial, "Noto Sans", sans-serif',2).forEach((l,j)=>ctx.fillText(l,x+i*cw+6,y+18+j*15));
+  });
+  return y+h+7;
+}
+function aiBuildBlocks(raw){
+  const blocks=[];let currentSection='Key Concepts';
+  for(const line0 of raw){
+    const line=line0.trim();if(!line)continue;
+    const t=aiTag(line);
+    if(t){
+      if(t.tag==='SECTION'||t.tag==='QUICK REVISION'){currentSection=t.text||currentSection;blocks.push({type:'section',text:currentSection});continue}
+      blocks.push({type:t.tag.toLowerCase(),text:t.text||''});continue;
+    }
+    if(aiIsHeading(line)){blocks.push({type:'section',text:aiCleanBullet(line)});continue}
+    if(/→|->|⇒/.test(line)&&line.split(/→|->|⇒/).length>=3){blocks.push({type:'flow',text:aiCleanBullet(line)});continue}
+    blocks.push({type:'point',text:aiCleanBullet(line)});
+  }
+  return blocks;
+}
+function aiBlockHeight(b,w){
+  if(b.type==='section')return 43;
+  if(b.type==='flow')return 68;
+  if(b.type==='diagram')return 130;
+  if(b.type==='compare')return 105;
+  if(b.type==='table')return 58;
+  if(b.type==='key')return 75;
+  if(b.type==='formula'||b.type==='example')return 65;
+  return 48;
 }
 function renderAICardCanvas(topic,text,kind){
   const c=document.getElementById('ai-card-canvas'),img=document.getElementById('ai-card-image');if(!c||!img)return;
-  const W=1200,PAGE_H=1500,GAP=34;
-  const raw=aiSheetLines(text);
-  const chunks=[];
-  let current=[],used=0;
-  const estimated=(line)=>aiIsHeading(line)?80:58;
-  for(const line of raw){
-    const h=estimated(line);
-    if(current.length && used+h>1240){chunks.push(current);current=[];used=0}
-    current.push(line);used+=h;
+  const W=1400,PAGE_H=1800,GAP=28,M=44,HEADER=98;
+  const blocks=aiBuildBlocks(aiSheetLines(text));
+  const usable=PAGE_H-M-HEADER-55;
+  const pages=[];let page=[],used=0;
+  for(const b of blocks){
+    const h=aiBlockHeight(b,W-2*M);
+    if(page.length&&used+h>usable){pages.push(page);page=[];used=0}
+    page.push(b);used+=h;
   }
-  if(current.length)chunks.push(current);
-  while(chunks.length<2 && raw.length>0){
-    const mid=Math.ceil(raw.length/2);
-    chunks.length=0;chunks.push(raw.slice(0,mid),raw.slice(mid));
-  }
-  if(chunks.length>3){
-    const merged=[chunks[0],chunks[1]];
-    merged[1]=chunks.slice(1).flat();
-    chunks.splice(0,chunks.length,...merged);
-  }
-  const total=chunks.length||1;
+  if(page.length)pages.push(page);
+  const total=Math.max(1,pages.length);
   c.width=W;c.height=total*PAGE_H+(total-1)*GAP;
   const ctx=c.getContext('2d');ctx.textBaseline='alphabetic';ctx.fillStyle='#e5e7eb';ctx.fillRect(0,0,c.width,c.height);
 
-  chunks.forEach((chunk,pi)=>{
-    const py=pi*(PAGE_H+GAP),PX=48,PW=W-96;
-    drawStudyPage(ctx,PX,py,PW,PAGE_H,pi+1,total,topic,kind);
-    let y=py+128;
-    let sectionNo=0;
-    for(let i=0;i<chunk.length;i++){
-      const rawLine=chunk[i], line=aiCleanBullet(rawLine);
-      if(!line)continue;
-      const heading=aiIsHeading(rawLine);
-      if(heading){
-        sectionNo++;
-        const boxH=42;
-        ctx.fillStyle=sectionNo%2?'#fef2f2':'#eff6ff';
-        aiRoundRect(ctx,PX+24,y-28,PW-48,boxH,10);ctx.fill();
-        ctx.fillStyle=sectionNo%2?'#b91c1c':'#1d4ed8';
-        ctx.font='700 22px Arial, "Noto Sans", sans-serif';
-        const hs=aiWrapLines(ctx,line.slice(0,85),PW-90,'700 22px Arial, "Noto Sans", sans-serif')[0];
-        ctx.fillText(hs,PX+42,y);
-        y+=54;
-        continue;
+  pages.forEach((page,pi)=>{
+    const py=pi*(PAGE_H+GAP),x=M,w=W-2*M;
+    ctx.fillStyle='#ffffff';ctx.fillRect(x,py,w,PAGE_H);
+    ctx.strokeStyle='#dbe2ea';ctx.lineWidth=1;ctx.strokeRect(x+.5,py+.5,w-1,PAGE_H-1);
+    aiDrawHeader(ctx,x,py,w,HEADER,topic,kind,pi+1,total);
+    let y=py+HEADER+18,sectionNo=0;
+    // Two-column compact study-material layout. This fills the page naturally and
+    // only creates another page when the content actually exceeds available space.
+    let col=0;const colW=(w-22)/2,colX=[x,x+colW+22],colY=[y,y];
+    const place=(b)=>{
+      let h=aiBlockHeight(b,colW);
+      if(colY[col]+h>py+PAGE_H-55){
+        col=1-col;
+        if(colY[col]+h>py+PAGE_H-55){
+          return false;
+        }
       }
-      const isFormula=kind==='formula'||/[=→←×÷√∑π²³⁴⁵]/.test(line);
-      const important=/important|महत्वपूर्ण|याद|ध्यान|NCERT|key|मुख्य/i.test(line);
-      const font=important?'600 20px Arial, "Noto Sans", sans-serif':'500 19px Arial, "Noto Sans", sans-serif';
-      const wrapped=aiWrapLines(ctx,line,PW-92,font);
-      const blockH=wrapped.length*29+10;
-      if(y+blockH>py+PAGE_H-70){
-        break;
+      let bx=colX[col],by=colY[col],next=by+h;
+      if(b.type==='section'){sectionNo++;next=aiDrawSection(ctx,bx,by,colW,b.text,sectionNo)}
+      else if(b.type==='flow')next=aiDrawFlow(ctx,bx,by,colW,b.text)
+      else if(b.type==='diagram')next=aiDrawDiagram(ctx,bx,by,colW,b.text)
+      else if(b.type==='compare')next=aiDrawCompare(ctx,bx,by,colW,b.text)
+      else if(b.type==='table')next=aiDrawTable(ctx,bx,by,colW,b.text)
+      else if(b.type==='key')next=aiDrawKey(ctx,bx,by,colW,b.text)
+      else if(b.type==='formula')next=aiDrawCompact(ctx,bx,by,colW,b.text,'formula')
+      else if(b.type==='example')next=aiDrawCompact(ctx,bx,by,colW,'Example • '+b.text)
+      else {
+        const isFormula=kind==='formula'||/[=→←×÷√∑π²³⁴⁵]/.test(b.text);
+        const important=/important|महत्वपूर्ण|याद|ध्यान|NCERT|मुख्य|key/i.test(b.text);
+        next=important?aiDrawKey(ctx,bx,by,colW,b.text):aiDrawCompact(ctx,bx,by,colW,b.text,isFormula?'formula':'normal');
       }
-      if(important){
-        ctx.fillStyle='#fff7ed';aiRoundRect(ctx,PX+28,y-22,PW-56,blockH-3,8);ctx.fill();
+      colY[col]=next;return true;
+    };
+    for(const b of page){
+      if(!place(b)){
+        // If a column is full, draw the remaining block in a compact continuation
+        // rather than clipping it. Normally pagination above prevents this.
+        col=1;
+        if(!place(b))break;
       }
-      wrapped.forEach((wl,j)=>{
-        ctx.fillStyle=isFormula?'#1d4ed8':(important?'#9f1239':'#1f2937');
-        ctx.font=font;
-        ctx.fillText((j===0?'• ':'  ')+wl,PX+42,y+j*29);
-      });
-      y+=blockH;
     }
-    ctx.fillStyle='#64748b';ctx.font='600 14px Arial, "Noto Sans", sans-serif';
-    ctx.fillText('RATHOD HUB  •  NEET Study Sheet  •  NCERT se verify karein',PX+34,py+PAGE_H-30);
+    ctx.fillStyle='#64748b';ctx.font='600 12px Arial, "Noto Sans", sans-serif';
+    ctx.fillText('RATHOD HUB • NEET Study Sheet • NCERT se verify karein',x+24,py+PAGE_H-20);
   });
   img.src=c.toDataURL('image/png');
 }
@@ -4709,7 +4828,7 @@ function nthStartLobbyPoll(){clearInterval(nthLobbyPoll);nthLobbyPoll=setInterva
 function nthStopLobbyPoll(){clearInterval(nthLobbyPoll);nthLobbyPoll=null}
 async function nthLoadRooms(silent=false){const box=document.getElementById('nth-room-list');if(!box||!user)return;try{const{data,error}=await db.from('treasure_hunt_rooms').select('*').in('status',['waiting','live']).order('created_at',{ascending:false}).limit(20);if(error)throw error;nthRooms=data||[];box.innerHTML=nthRooms.length?nthRooms.map(r=>`<div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 flex items-center gap-3"><div class="text-2xl">${r.status==='live'?'🔥':'🗺️'}</div><div class="min-w-0 flex-1"><b class="block truncate text-sm">${nthEsc(r.topic)}</b><span class="text-[10px] text-slate-500">${nthEsc(r.subject)} • ${r.status==='live'?'LIVE NOW':'Waiting'} • ${nthEsc(r.room_code)}</span></div><button onclick="nthJoinRoom('${nthEsc(r.room_code)}')" class="bg-violet-600 hover:bg-violet-500 px-3 py-2 rounded-lg text-[10px] font-black">${r.status==='live'?'Join Live':'Join'}</button></div>`).join(''):'<div class="text-xs text-slate-500 text-center py-6">Abhi koi live Treasure Room nahi hai. Pehla room tum banao 🗺️</div>'}catch(e){if(!silent)box.innerHTML='<div class="text-xs text-amber-400 text-center py-6">Treasure Hunt ke liye SQL setup run karo.</div>'}}
 function nthAutoJoinFromLink(){const code=new URLSearchParams(location.search).get('treasure');if(code&&user)setTimeout(()=>nthJoinRoom(code),600)}
-async function nthCreateRoom(opts={}){if(!user)return toast('Pehle login karein.',false);const subject=String(opts.subject||document.getElementById('nth-subject')?.value||'Biology'),topic=String(opts.topic||document.getElementById('nth-topic')?.value||'').trim(),seconds=Number(opts.seconds||document.getElementById('nth-seconds')?.value||25);if(!topic)return toast('Topic / chapter likho.',false);const btn=opts.admin?document.getElementById('admin-treasure-btn'):null;if(btn){btn.disabled=true;btn.textContent='AI questions bana raha hai...'}try{const promptTopic=`${topic} — LIVE NEET TREASURE HUNT. Subject: ${subject}. Hindi Medium. Exactly 10 unique NEET-level MCQs, NCERT aligned. Questions should be short enough for a timed live game. Exactly 4 options and one correct_index 0-3. No duplicate, no ambiguous questions, no explanations.`;const generated=await rhGenerateFreshQuiz({count:10,subject,type:'MCQ',topic:promptTopic,storage:true});const questions=(generated.questions||[]).map(q=>({question:String(q.question||''),options:Array.isArray(q.options)?q.options.slice(0,4):[],correct_index:Number(q.correct_index??q.answer??0)}));if(questions.length!==10||questions.some(q=>q.options.length!==4))throw new Error('AI ne valid 10 questions nahi diye.');const code=nthCode();const{data,error}=await db.from('treasure_hunt_rooms').insert({room_code:code,host_id:user.id,subject,topic,duration_seconds:seconds,questions,status:'waiting',created_by:user.id}).select('*').single();if(error)throw error;if(opts.admin){document.getElementById('admin-treasure-form')?.reset();document.getElementById('admin-treasure-seconds').value='25';toast('🗺️ Treasure Hunt publish ho gaya');await sendHubNotification('New NEET Treasure Hunt',`${subject} • ${topic}`,'treasure','treasure')}else toast(`🗺️ Room ${code} ready — friends ko link share karo!`);await nthJoinRoom(code)}catch(e){toast(e.message||'Treasure room create failed. SQL setup check karo.',false)}finally{if(btn){btn.disabled=false;btn.textContent='Create Treasure Hunt'}}}
+async function nthCreateRoom(opts={}){if(!user)return toast('Pehle login karein.',false);const subject=String(opts.subject||document.getElementById('nth-subject')?.value||'Biology'),topic=String(opts.topic||document.getElementById('nth-topic')?.value||'').trim(),seconds=Number(opts.seconds||document.getElementById('nth-seconds')?.value||25);if(!topic)return toast('Topic / chapter likho.',false);const btn=opts.admin?document.getElementById('admin-treasure-btn'):null;if(btn){btn.disabled=true;btn.textContent='AI questions bana raha hai...'}try{const promptTopic=`${topic} — LIVE NEET TREASURE HUNT. Subject: ${subject}. Hindi Medium. Exactly 10 unique NEET-level MCQs, NCERT aligned. Questions should be short enough for a timed live game. Exactly 4 options and one correct_index 0-3. No duplicate, no ambiguous questions, no explanations.`;const generated=await rhGenerateFreshQuiz({count:10,subject,type:'MCQ',topic:promptTopic,storage:true});const questions=(generated.questions||[]).map(q=>({question:String(q.question||''),options:Array.isArray(q.options)?q.options.slice(0,4):[],correct_index:Number(q.correct_index??q.answer??0)}));if(questions.length!==10||questions.some(q=>q.options.length!==4))throw new Error('AI ne valid 10 questions nahi diye.');const code=nthCode();const{data,error}=await db.from('treasure_hunt_rooms').insert({room_code:code,host_id:user.id,subject,topic,duration_seconds:seconds,questions,status:'waiting'}).select('*').single();if(error)throw error;if(opts.admin){document.getElementById('admin-treasure-form')?.reset();document.getElementById('admin-treasure-seconds').value='25';toast('🗺️ Treasure Hunt publish ho gaya');await sendHubNotification('New NEET Treasure Hunt',`${subject} • ${topic}`,'treasure','treasure')}else toast(`🗺️ Room ${code} ready — friends ko link share karo!`);await nthJoinRoom(code)}catch(e){toast(e.message||'Treasure room create failed. SQL setup check karo.',false)}finally{if(btn){btn.disabled=false;btn.textContent='Create Treasure Hunt'}}}
 async function nthJoinRoom(code){if(!user)return;const r=nthRooms.find(x=>String(x.room_code)===String(code));try{let room=r;if(!room){const z=await db.from('treasure_hunt_rooms').select('*').eq('room_code',code).maybeSingle();if(z.error)throw z.error;room=z.data}if(!room)return toast('Room nahi mila.',false);if(room.status==='finished')return toast('Ye hunt finish ho chuka hai.',false);nthRoom=room;const{error}=await db.from('treasure_hunt_participants').upsert({room_code:room.room_code,user_id:user.id,name:profile?.name||user.email||'Student',score:0,last_seen:new Date().toISOString()},{onConflict:'room_code,user_id'});if(error)throw error;nthStopLobbyPoll();document.getElementById('nth-lobby')?.classList.add('hidden');document.getElementById('nth-result')?.classList.add('hidden');document.getElementById('nth-arena')?.classList.remove('hidden');nthSubscribe(room.room_code);nthRenderRoom();nthSyncRoom();window.scrollTo({top:0,behavior:'smooth'})}catch(e){toast(e.message||'Room join failed.',false)}}
 async function nthSubscribe(code){if(nthChannel)try{await db.removeChannel(nthChannel)}catch(e){}nthChannel=db.channel(`treasure-hunt-${code}`,{config:{broadcast:{self:false},presence:{key:user.id}}});nthChannel.on('broadcast',{event:'treasure-event'},({payload})=>{if(payload?.sourceId===user.id)return;if(payload?.type==='refresh'||payload?.type==='started'||payload?.type==='finished')nthReloadRoom()});nthChannel.on('presence',{event:'sync'},()=>nthRefreshPlayers());nthChannel.on('presence',{event:'join'},()=>nthRefreshPlayers());nthChannel.on('presence',{event:'leave'},()=>nthRefreshPlayers());await nthChannel.subscribe(async status=>{if(status==='SUBSCRIBED'){try{await nthChannel.track({user_id:user.id,name:profile?.name||user.email||'Student'})}catch(e){}}})}
 async function nthReloadRoom(){if(!nthRoom)return;const{data,error}=await db.from('treasure_hunt_rooms').select('*').eq('room_code',nthRoom.room_code).maybeSingle();if(!error&&data){nthRoom=data;nthRenderRoom();nthSyncRoom()}}
