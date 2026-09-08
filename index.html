@@ -1362,13 +1362,22 @@ function driveViewUrl(fileId){
   return `https://drive.google.com/file/d/${encodeURIComponent(fileId)}/view?usp=sharing`;
 }
 function driveImageUrl(fileId){
-  return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w1200`;
+  return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w1000`;
 }
 function extractDriveFileId(url){
   try{
-    const raw=String(url||'');
-    const m=raw.match(/drive\.google\.com\/(?:file\/d\/|thumbnail\?id=|uc\?[^#]*?id=)([A-Za-z0-9_-]{10,})/i);
-    return m?m[1]:null;
+    const raw=String(url||'').trim();
+    const patterns=[
+      /drive\.google\.com\/file\/d\/([A-Za-z0-9_-]{10,})/i,
+      /drive\.google\.com\/thumbnail\?[^#]*?\bid=([A-Za-z0-9_-]{10,})/i,
+      /drive\.google\.com\/uc\?[^#]*?\bid=([A-Za-z0-9_-]{10,})/i,
+      /[?&]id=([A-Za-z0-9_-]{10,})/i
+    ];
+    for(const p of patterns){
+      const m=raw.match(p);
+      if(m?.[1]) return m[1];
+    }
+    return null;
   }catch{return null}
 }
 function drivePreviewUrl(url){
@@ -1379,7 +1388,10 @@ function driveImgHtml(url,cls='w-full h-full object-cover'){
   const src=safeUrl(drivePreviewUrl(url));
   const fb=safeUrl(url||'');
   if(src==='#')return '';
-  return `<img src="${src}" class="${cls}" loading="lazy" onerror="this.onerror=null;${fb&&fb!=='#'?`this.src='${fb}'`:''}">`;
+  const fallback=fb&&fb!=='#'&&fb!==src
+    ? `this.src='${fb.replace(/'/g,"&#39;")}'`
+    : `this.parentElement&&(this.parentElement.innerHTML='👤')`;
+  return `<img src="${src}" class="${cls}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;${fallback}">`;
 }
 function driveDownloadUrl(fileId){
   return `https://drive.google.com/uc?export=download&id=${encodeURIComponent(fileId)}`;
@@ -1571,7 +1583,7 @@ function renderRHHomeRail(){
   const lb=document.getElementById('rh-home-leaderboard');
   if(lb && Array.isArray(leaderboard)){
     const top=leaderboard.slice(0,5);
-    lb.innerHTML=top.map((p,i)=>`<div class="rh-mini-row"><div class="rh-rank">#${i+1}</div><div class="rh-mini-avatar">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}">`:'👤'}</div><div class="rh-mini-name"><b>${esc(p.name||'Member')}</b><span>Level ${p.level||1}</span></div><div class="rh-mini-xp">${Number(p.xp||0).toLocaleString()} XP</div></div>`).join('') || '<div style="font-size:11px;color:#9ba3ae">No members yet.</div>';
+    lb.innerHTML=top.map((p,i)=>`<div class="rh-mini-row"><div class="rh-rank">#${i+1}</div><div class="rh-mini-avatar">${p.pfp_url?driveImgHtml(p.pfp_url,'w-full h-full object-cover'):'👤'}</div><div class="rh-mini-name"><b>${esc(p.name||'Member')}</b><span>Level ${p.level||1}</span></div><div class="rh-mini-xp">${Number(p.xp||0).toLocaleString()} XP</div></div>`).join('') || '<div style="font-size:11px;color:#9ba3ae">No members yet.</div>';
   }
   const online=document.getElementById('rh-home-online');
   if(online){
@@ -2010,7 +2022,7 @@ function renderPosts(){
  document.getElementById('posts-box').innerHTML=posts.length?posts.map(p=>{
  const likes=Array.isArray(p.likes)?p.likes:[], comments=Array.isArray(p.comments)?p.comments:[],liked=likes.includes(user.id);
  return `<article class="bg-slate-900/80 border border-slate-700 rounded-2xl p-4 space-y-3">
- <div class="flex justify-between"><div class="flex gap-3 items-center"><div class="w-9 h-9 rounded-full overflow-hidden bg-slate-800">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}" class="w-full h-full object-cover">`:'<div class="h-full flex items-center justify-center">👤</div>'}</div><div><b class="text-sm">${esc(p.author)}</b><div class="text-[10px] text-slate-500">${new Date(p.created_at).toLocaleString()}</div></div></div>${profile.role==='admin'||p.author_id===user.id?`<button onclick="deletePost('${p.id}')" class="text-red-400 text-xs">Delete</button>`:''}</div>
+ <div class="flex justify-between"><div class="flex gap-3 items-center"><div class="w-9 h-9 rounded-full overflow-hidden bg-slate-800">${p.pfp_url?driveImgHtml(p.pfp_url,'w-full h-full object-cover'):'<div class="h-full flex items-center justify-center">👤</div>'}</div><div><b class="text-sm">${esc(p.author)}</b><div class="text-[10px] text-slate-500">${new Date(p.created_at).toLocaleString()}</div></div></div>${profile.role==='admin'||p.author_id===user.id?`<button onclick="deletePost('${p.id}')" class="text-red-400 text-xs">Delete</button>`:''}</div>
  <h4 class="font-bold text-teal-300">${esc(p.title)}</h4><p class="text-sm text-slate-300 whitespace-pre-wrap">${esc(p.desc)}</p>
  ${p.file_url?(p.file_type?.startsWith('image/')?`<img onclick="window.open('${safeUrl(p.file_url)}','_blank')" src="${safeUrl(drivePreviewUrl(p.file_url))}" onerror="this.onerror=null;this.src='${safeUrl(p.file_url)}'" class="max-h-80 max-w-full rounded-xl cursor-pointer" loading="lazy">`:`<a target="_blank" href="${safeUrl(p.file_url)}" class="block bg-slate-800 p-3 rounded-xl text-sm">📎 ${esc(p.file_name||'Attached file')}</a>`):''}
  ${p.voice_url?`<audio controls src="${safeUrl(p.voice_url)}" class="w-full"></audio>`:''}
