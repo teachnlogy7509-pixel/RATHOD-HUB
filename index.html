@@ -1994,11 +1994,12 @@ function startMaterialsAutoRefresh(){
       const sec=document.getElementById('section-materials');
       if(sec&&!sec.classList.contains('hidden'))loadMaterials(false);
     }
-  },5000);
+  },15000);
 }
-window.addEventListener('focus',()=>{if(user)loadMaterials(false)});
+window.addEventListener('focus',()=>{const sec=document.getElementById('section-materials');if(user&&sec&&!sec.classList.contains('hidden'))loadMaterials(false)});
 document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='visible'&&user)loadMaterials(false);
+  const sec=document.getElementById('section-materials');
+  if(document.visibilityState==='visible'&&user&&sec&&!sec.classList.contains('hidden'))loadMaterials(false);
 });
 
 document.getElementById('post-form').addEventListener('submit',async e=>{
@@ -3836,13 +3837,21 @@ function tickHubCountdown(){
  const el=document.getElementById('hub-countdown');if(!el)return;
  if(!hubActiveEvent){el.textContent='--:--:--';return}
  const diff=new Date(hubActiveEvent.ends_at)-new Date();
- if(diff<=0){el.textContent='00:00:00';if(user)loadHubEvents();return}
+ if(diff<=0){el.textContent='00:00:00';if(user&&Date.now()-Number(tickHubCountdown.lastReload||0)>30000){tickHubCountdown.lastReload=Date.now();loadHubEvents()}return}
  const h=Math.floor(diff/3600000),m=Math.floor(diff%3600000/60000),s=Math.floor(diff%60000/1000);
  el.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
 setInterval(tickHubCountdown,1000);
 setInterval(()=>{if(user&&document.visibilityState==='visible')loadHubEvents()},60000);
-setInterval(()=>{if(user){renderHomeDashboard();if(focusState&&focusState.status==='running'){renderFocusDashboard();if(typeof rhRathodNewRefresh==='function'&&!document.getElementById('section-rathodnew')?.classList.contains('hidden'))rhRathodNewRefresh()}}},1000);
+setInterval(()=>{
+ if(!user||document.visibilityState!=='visible')return;
+ const home=document.getElementById('section-home');
+ const focus=document.getElementById('section-focus');
+ const rnew=document.getElementById('section-rathodnew');
+ if(home&&!home.classList.contains('hidden'))renderHomeDashboard();
+ if(focusState&&focusState.status==='running'&&focus&&!focus.classList.contains('hidden'))renderFocusDashboard();
+ if(focusState&&focusState.status==='running'&&typeof rhRathodNewRefresh==='function'&&rnew&&!rnew.classList.contains('hidden'))rhRathodNewRefresh();
+},5000);
 
 function renderHubEventsAdminList(){
  const box=document.getElementById('hub-events-list');if(!box)return;
@@ -4249,11 +4258,6 @@ function stopAllVoiceAndRooms(){
 window.addEventListener('pagehide',()=>{try{stopAllVoiceAndRooms()}catch(e){}});
 window.addEventListener('beforeunload',()=>{try{stopAllVoiceAndRooms()}catch(e){}});
 
-/* Focus timer visual heartbeat: rendering is local and continues independently of DB sync. */
-setInterval(()=>{
-  if(typeof focusState!=='undefined'&&focusState&&focusState.status==='running')tickFocus();
-},1000);
-
 /* ==================== RATHOD HUB FOCUS / YPT-STYLE TIMER ==================== */
 let focusState={duration:1800,remaining:1800,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:'Biology',pomodoro:false,break:false};
 let focusInterval=null,focusChannel=null,focusHeartbeat=null,focusReady=false;
@@ -4321,7 +4325,7 @@ function startFocusTimer(){
 
 function startFocusTicker(){
  if(focusInterval)clearInterval(focusInterval);
- focusInterval=setInterval(tickFocus,250);
+ focusInterval=setInterval(tickFocus,1000);
  tickFocus();
 }
 function tickFocus(){
@@ -4330,9 +4334,14 @@ function tickFocus(){
  const rem=focusRemaining();
  focusState.remaining=rem;
  renderFocusTimer();
- if(typeof renderFocusDashboard==='function')renderFocusDashboard();
- if(typeof renderHomeDashboard==='function')renderHomeDashboard();
- if(typeof renderRHHomeRail==='function')renderRHHomeRail();
+ const focusSection=document.getElementById('section-focus');
+ if(typeof renderFocusDashboard==='function'&&focusSection&&!focusSection.classList.contains('hidden'))renderFocusDashboard();
+ const homeSection=document.getElementById('section-home');
+ if(homeSection&&!homeSection.classList.contains('hidden')){
+   const time=document.getElementById('home-study-time');if(time)time.textContent=formatMinutesSimple(getFocusTodayMinutes());
+   const streak=getFocusStreak(),homeStreak=document.getElementById('home-streak'),headerStreak=document.getElementById('header-streak-count');
+   if(homeStreak)homeStreak.textContent=streak+' 🔥';if(headerStreak)headerStreak.textContent=streak;
+ }
  if(focusState.status==='running')broadcastFocusThrottled();
  if(focusState.status==='running'&&!focusState.break)syncFocusLiveSession(false);
  if(focusState.status==='running'&&rem<=0)completeFocusTimer();
