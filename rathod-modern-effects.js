@@ -155,14 +155,62 @@
     }
   }
 
-  // 5. Initialize on DOM Ready
+
+  // 5. Lightweight Ultra VIP polish (no heavy fixed blur layers)
+  function initVipExperience() {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+    function enhance(root = document) {
+      const hero = root.querySelector?.('.rh-home-hero');
+      if (hero && !hero.dataset.vipReady) {
+        hero.dataset.vipReady = '1';
+        hero.classList.add('rh-vip-hero');
+        const kicker = hero.querySelector('.rh-hero-kicker');
+        if (kicker && !hero.querySelector('.rh-vip-chip')) {
+          const chip = document.createElement('div');
+          chip.className = 'rh-vip-chip';
+          chip.innerHTML = '<span>◆</span> RATHOD ELITE EXPERIENCE';
+          kicker.before(chip);
+        }
+        if (!reduceMotion) {
+          const field = document.createElement('div');
+          field.className = 'rh-vip-particles';
+          field.setAttribute('aria-hidden', 'true');
+          field.innerHTML = Array.from({length: 5}, (_, i) => `<i style="--i:${i}"></i>`).join('');
+          hero.prepend(field);
+        }
+      }
+      root.querySelectorAll?.('.rh-metric-capsule,.rh-subject-chip,.rh-feature,.rh-rail-card,.rh-featured-action-card,.qb-card,#study-rooms-box > div').forEach((card) => {
+        if (card.dataset.vipCard) return;
+        card.dataset.vipCard = '1';
+        card.classList.add('rh-vip-card');
+        if (finePointer) card.addEventListener('pointermove', (e) => {
+          const r = card.getBoundingClientRect();
+          card.style.setProperty('--mx', `${e.clientX-r.left}px`);
+          card.style.setProperty('--my', `${e.clientY-r.top}px`);
+        }, {passive:true});
+      });
+    }
+    enhance();
+    let queued = false;
+    const observer = new MutationObserver(() => {
+      if (queued) return; queued = true;
+      requestAnimationFrame(() => { queued = false; enhance(); });
+    });
+    observer.observe(document.body, {childList:true, subtree:true});
+  }
+
+  // 6. Initialize on DOM Ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       initSplashDismissal();
       hookTabAnimations();
+      initVipExperience();
     });
   } else {
     initSplashDismissal();
     hookTabAnimations();
+    initVipExperience();
   }
 })();
