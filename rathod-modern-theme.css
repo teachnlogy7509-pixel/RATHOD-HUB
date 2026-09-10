@@ -1237,3 +1237,29 @@ button,
 }
 
 
+
+/* ==================== RATHOD ULTRA VIP + NOTIFICATIONS ==================== */
+.rh-vip-hero{position:relative;isolation:isolate;border-color:rgba(255,45,64,.62)!important;background:linear-gradient(118deg,rgba(14,17,24,.94),rgba(22,17,24,.78) 58%,rgba(8,11,17,.92))!important}
+.rh-vip-hero::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;padding:1px;background:linear-gradient(110deg,#ffb020,transparent 28%,transparent 65%,#ff3048);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;opacity:.9}
+.rh-vip-chip{position:relative;z-index:1;display:inline-flex;align-items:center;gap:8px;margin-bottom:10px;padding:7px 12px;border:1px solid rgba(245,158,11,.42);border-radius:8px;background:linear-gradient(135deg,rgba(245,158,11,.16),rgba(239,43,43,.08));color:#ffd079;font-size:10px;font-weight:900;letter-spacing:.16em;box-shadow:0 8px 28px rgba(245,158,11,.09)}
+.rh-vip-chip span{color:#ffb31a;text-shadow:0 0 12px rgba(255,179,26,.8)}
+.rh-vip-particles{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none;z-index:0}
+.rh-vip-particles i{position:absolute;left:calc(10% + var(--i)*19%);top:calc(18% + (var(--i)*13%));width:3px;height:3px;border-radius:50%;background:#ffd079;box-shadow:0 0 12px #ffb020;opacity:.2;animation:rhVipFloat calc(5s + var(--i)*.7s) ease-in-out infinite alternate}
+.rh-vip-card{position:relative;isolation:isolate;overflow:hidden;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
+.rh-vip-card::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(280px circle at var(--mx,-80px) var(--my,-80px),rgba(255,63,82,.13),transparent 56%);opacity:0;transition:opacity .2s ease}
+.rh-vip-card:hover{transform:translateY(-2px);border-color:rgba(255,70,87,.38)!important;box-shadow:0 16px 34px rgba(0,0,0,.2)}
+.rh-vip-card:hover::after{opacity:1}
+.rh-battle-glow{animation:rhVipBattlePulse 3.2s ease-in-out infinite}
+.rh-primary-btn,.rh-featured-action-card{position:relative;overflow:hidden}
+.rh-primary-btn::after,.rh-featured-action-card::before{content:"";position:absolute;top:-80%;left:-45%;width:28%;height:250%;transform:rotate(24deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);animation:rhVipShine 5.4s ease-in-out infinite;pointer-events:none}
+.rh-mobile-notify-badge,.rh-drawer-notify-badge{display:none;align-items:center;justify-content:center;position:absolute;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#ef2b2b;color:#fff;font-size:9px;font-weight:900;box-shadow:0 0 0 2px #080b10,0 0 14px rgba(239,43,43,.68)}
+.rh-mobile-notify-badge{right:-8px;top:-8px}.rh-drawer-notify-badge{right:-13px;top:-8px}
+.rh-mobile-notify-sheet{position:fixed;inset:0;z-index:800;display:flex;align-items:flex-end;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);padding:12px}
+.rh-mobile-notify-sheet.hidden{display:none!important}.rh-mobile-notify-card{width:100%;max-height:78vh;overflow:hidden;border:1px solid rgba(255,72,89,.42);border-radius:24px 24px 18px 18px;background:linear-gradient(145deg,#111722,#090c12);box-shadow:0 -24px 70px rgba(0,0,0,.5)}
+.rh-mobile-notify-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;border-bottom:1px solid rgba(255,255,255,.08)}.rh-mobile-notify-head b{font-size:15px;color:#fff}.rh-mobile-notify-head p{margin-top:2px;color:#7d8798;font-size:10px}.rh-notify-close{width:34px;height:34px;border-radius:10px;background:#1c2330;color:#9ca7b8}.rh-mobile-notify-list{max-height:calc(78vh - 70px);overflow:auto;padding:8px}
+.rh-notify-item{width:100%;display:flex;align-items:flex-start;gap:11px;padding:12px;border:0;border-bottom:1px solid rgba(255,255,255,.07);background:transparent;color:#fff;text-align:left;cursor:pointer}.rh-notify-item:hover{background:rgba(255,255,255,.035)}.rh-notify-item b{display:block;font-size:12px}.rh-notify-item p{margin:3px 0;color:#9aa5b6;font-size:10px;line-height:1.45}.rh-notify-item span{color:#5f6977;font-size:9px}.rh-notify-arrow{align-self:center;color:#475160;font-size:10px}.rh-notify-empty{padding:30px 16px;text-align:center;color:#758091;font-size:11px;line-height:1.6}
+@keyframes rhVipFloat{to{transform:translate3d(8px,-18px,0);opacity:.65}}@keyframes rhVipShine{0%,72%{transform:translateX(-160%) rotate(24deg)}88%,100%{transform:translateX(720%) rotate(24deg)}}@keyframes rhVipBattlePulse{0%,100%{box-shadow:0 0 0 rgba(245,158,11,0)}50%{box-shadow:0 0 28px rgba(245,158,11,.13)}}
+@media(max-width:640px){.rh-vip-chip{font-size:9px;padding:7px 10px;margin-bottom:9px}.rh-vip-card:hover{transform:none}.rh-vip-particles i:nth-child(n+4){display:none}.rh-mobile-notify-sheet{display:flex}.rh-notify-panel{display:none!important}}
+@media(min-width:641px){.rh-mobile-notify-sheet{display:none!important}}
+@media(prefers-reduced-motion:reduce){.rh-vip-particles i,.rh-battle-glow,.rh-primary-btn::after,.rh-featured-action-card::before{animation:none!important}.rh-vip-card{transition:none!important}}
+.rh-mobile-notify-head button{border:0;font-family:inherit;cursor:pointer}.rh-mobile-notify-head button.text-red-400{min-height:34px;padding:0 10px;border-radius:10px;background:rgba(239,43,43,.12);color:#ff6673!important}.rh-notify-close{display:inline-flex;align-items:center;justify-content:center;font-size:15px!important;font-weight:800!important}
