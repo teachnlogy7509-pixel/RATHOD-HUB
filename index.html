@@ -1516,11 +1516,22 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
     <div class="rh-dock-indicator"><i class="fa-solid fa-comments"></i></div>
     <span class="rh-dock-label">Chat</span>
   </button>
-  <button onclick="openMobileMenu()" id="mob-more" class="rh-dock-item">
-    <div class="rh-dock-indicator"><i class="fa-solid fa-grip"></i></div>
+  <button onclick="openMobileMenu()" id="mob-more" class="rh-dock-item rh-mobile-more-btn">
+    <div class="rh-dock-indicator"><i class="fa-solid fa-grip"></i><span id="mob-notify-badge" class="rh-mobile-notify-badge">0</span></div>
     <span class="rh-dock-label">Modules</span>
   </button>
 </nav>
+
+<!-- MOBILE NOTIFICATIONS SHEET -->
+<div id="rh-mobile-notify-sheet" class="rh-mobile-notify-sheet hidden" onclick="if(event.target===this)closeMobileNotifications()">
+  <div class="rh-mobile-notify-card">
+    <div class="rh-mobile-notify-head">
+      <div><b>🔔 Notifications</b><p>Admin updates, public quizzes aur live rooms.</p></div>
+      <div class="flex items-center gap-3"><button onclick="clearHubNotifications()" class="text-[10px] text-red-400 font-black">Clear all</button><button onclick="closeMobileNotifications()" class="rh-notify-close" aria-label="Close notifications">✕</button></div>
+    </div>
+    <div id="hub-notify-list-mobile" class="rh-mobile-notify-list"></div>
+  </div>
+</div>
 
 <!-- MOBILE ALL FEATURES DRAWER -->
 <div id="mobile-menu-drawer" class="rh-mobile-drawer hidden fixed inset-0 z-[600] bg-black/80 p-4 flex flex-col justify-end backdrop-blur-sm" onclick="if(event.target===this)closeMobileMenu()">
@@ -1530,6 +1541,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
       <button onclick="closeMobileMenu()" class="text-slate-400 hover:text-white text-lg">✕</button>
     </div>
     <div class="grid grid-cols-3 gap-2 text-center text-xs">
+      <button onclick="closeMobileMenu();toggleHubNotifications()" class="rh-mobile-notify-menu bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2 border border-amber-500/30"><span class="relative"><i class="fa-solid fa-bell text-amber-300 text-lg"></i><span id="drawer-notify-badge" class="rh-drawer-notify-badge">0</span></span><span>Notifications</span></button>
       <button onclick="switchTab('ai');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-circle-question text-red-400 text-lg"></i><span>AI Doubt</span></button>
       <button onclick="switchTab('quiz');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-brain text-teal-400 text-lg"></i><span>AI Quiz</span></button>
       <button onclick="switchTab('battle');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-trophy text-red-400 text-lg"></i><span>Live Quiz</span></button>
@@ -2171,6 +2183,7 @@ document.getElementById('material-form').addEventListener('submit',async e=>{
 
     document.getElementById('material-form').reset();
     toast('Material uploaded to Google Drive successfully');
+    await sendHubNotification('📚 New Study Material',`${title} • ${category}`,'material','materials',{title,category});
     await loadMaterials(true);
     switchTab('materials');
   }catch(err){
@@ -2408,8 +2421,11 @@ document.getElementById('post-form').addEventListener('submit',async e=>{
   const file=document.getElementById('post-file').files[0];let url=null,type=null,name=null;
   if(file){const drive=await uploadToGoogleDrive('Community',file);url=file.type?.startsWith('image/')?driveImageUrl(drive.id):driveViewUrl(drive.id);type=file.type;name=file.name}
    let voiceUrl=null;if(recordedAudioBlob){const voiceFile=new File([recordedAudioBlob],`voice_${crypto.randomUUID()}.webm`,{type:'audio/webm'});const drive=await uploadToGoogleDrive('Community',voiceFile);voiceUrl=driveDownloadUrl(drive.id)}
-  const {error}=await db.from('posts').insert({author_id:user.id,author:profile.name,pfp_url:profile.pfp_url,title:document.getElementById('post-title').value.trim(),desc:document.getElementById('post-desc').value.trim(),file_name:name,file_url:url,file_type:type,voice_url:voiceUrl,is_material:false});
-  if(error)throw error;document.getElementById('post-form').reset();recordedAudioBlob=null;toast('Post published');await loadPosts();
+  const postTitle=document.getElementById('post-title').value.trim(),postDesc=document.getElementById('post-desc').value.trim();
+  const {error}=await db.from('posts').insert({author_id:user.id,author:profile.name,pfp_url:profile.pfp_url,title:postTitle,desc:postDesc,file_name:name,file_url:url,file_type:type,voice_url:voiceUrl,is_material:false});
+  if(error)throw error;document.getElementById('post-form').reset();recordedAudioBlob=null;toast('Post published');
+  if(profile?.role==='admin')await sendHubNotification('📣 Admin Update',postTitle||postDesc.slice(0,120)||'RATHOD HUB par naya update','admin','community',{type:'community_post'});
+  await loadPosts();
  }catch(err){toast(err.message||'Post failed',false)}finally{btn.disabled=false;btn.textContent='Post'}
 });
 
@@ -3120,7 +3136,7 @@ async function qbHostMatch(){
     const payload={room_code,topic:`${qbSubject} • ${topic}`,host_id:user.id,host_name:profile.name||user.email||'Student',questions:clean,question_count:15,status:'waiting',mode};
     const {data,error}=await db.from('quiz_battle_rooms').insert(payload).select('*').single();if(error)throw error;qbRoom=data;await qbJoinRoom(room_code,true,false);document.getElementById('qb-private-invite')?.classList.toggle('hidden',mode!=='private');
     toast(qbQuizType==='NCERT_DETECTIVE'?'🕵️ NCERT Detective created!':mode==='public'?'Public Live Quiz started!':'Quiz created.');
-     sendHubNotification(qbQuizType==='NCERT_DETECTIVE'?'🕵️ NCERT Detective Started':'🔴 New Live Quiz',displayTopic,'livequiz');
+     if(mode!=='private')await sendHubNotification(qbQuizType==='NCERT_DETECTIVE'?'🕵️ NCERT Detective Started':'🔴 New Live Quiz',payload.topic,'livequiz','battle',{room:room_code,mode});
   }catch(e){console.error('qbHostMatch',e);toast(e.message||'Quiz create failed',false)}finally{btn.disabled=false;qbSelectMode(qbMode)}
 }
 async function qbJoinRoom(code,afterCreate=false,privateOnly=false){
@@ -3760,6 +3776,7 @@ document.getElementById('admin-battle-form')?.addEventListener('submit', async (
     if (error) throw error;
 
     toast('Daily 9 PM Quiz Scheduled Successfully 🎯');
+    await sendHubNotification('🏆 Daily 9 PM Quiz Scheduled',`${topic} • Aaj/agle slot 9:00 PM`,'dailyquiz','dailyquiz',{scheduled_at,topic});
     dailyBattleFinished = false;
     dailyBattleScoreSaved = false;
     await loadScheduledBattle();
@@ -4284,16 +4301,18 @@ document.getElementById('hub-event-form').addEventListener('submit',async e=>{
   const start_at=new Date(document.getElementById('event-start').value).toISOString();
   const ends_at=new Date(document.getElementById('event-end').value).toISOString();
   if(new Date(ends_at)<=new Date(start_at))throw new Error('End time start time se baad hona chahiye.');
+  const eventTitle=document.getElementById('event-title').value.trim();
+  const eventDesc=document.getElementById('event-desc').value.trim();
   const {error}=await db.from('hub_events').insert({
-   title:document.getElementById('event-title').value.trim(),
-   description:document.getElementById('event-desc').value.trim(),
+   title:eventTitle,
+   description:eventDesc,
    start_at,ends_at,
    is_active:document.getElementById('event-active').checked,
    questions,created_by:user.id
   });
   if(error)throw error;
   e.target.reset();document.getElementById('event-active').checked=true;renderEventQuestionInputs();
-  toast('HUB Event created');await sendHubNotification('📅 New HUB Event',document.getElementById('event-title').value.trim(),'event','hubevents');await loadHubEvents();
+  toast('HUB Event created');await sendHubNotification('📅 New HUB Event',eventTitle,'event','hubevents',{start_at,ends_at});await loadHubEvents();
  }catch(err){toast(err.message||'Event create failed',false)}
  finally{btn.disabled=false;btn.textContent='Create Event'}
 });
@@ -4551,6 +4570,8 @@ async function joinVoice(key,withCamera=false){
     document.getElementById(`camera-toggle-${key}`)?.classList.toggle('hidden',!vs.camera);
     if(vs.camera)showLocalCamera(key);
     renderRoomMembers(key);
+    const room=STUDY_ROOMS.find(r=>r.key===key),hostName=profile?.name||user.email||'Member';
+    await sendHubNotification(vs.camera?'🎥 Public Live Cam Started':'🎙 Public Voice Room Live',`${room?.name||key} • ${hostName}`,'voice','studyrooms',{room:key,camera:vs.camera});
     toast(vs.camera?'🎥 YPT Live Cam joined':'🎙 Live Voice joined');
   }catch(e){
     console.error('joinVoice failed',e);
@@ -5045,16 +5066,25 @@ function init(){let i=$('rh-prep-input'),b=$('rh-prep-send');if(b)b.onclick=()=>
 })();
 /* ==================== GLOBAL HUB NOTIFICATIONS ==================== */
 let hubNotifyChannel=null,hubNotifications=[];
+const HUB_NOTIFICATION_LIMIT=100;
 function hubNotifyKey(){return `rh_hub_notifications_${user?.id||'guest'}`}
-function loadHubNotificationStore(){try{const a=JSON.parse(localStorage.getItem(hubNotifyKey())||'[]');hubNotifications=Array.isArray(a)?a.slice(0,50):[]}catch{hubNotifications=[]}renderHubNotifications()}
-function saveHubNotificationStore(){try{localStorage.setItem(hubNotifyKey(),JSON.stringify(hubNotifications.slice(0,50)))}catch{}renderHubNotifications()}
-function renderHubNotifications(){const list=document.getElementById('hub-notify-list'),badge=document.getElementById('hub-notify-badge');if(!list)return;const n=hubNotifications.length;if(badge){badge.textContent=n>99?'99+':String(n);badge.style.display=n?'flex':'none'}list.innerHTML=n?hubNotifications.map(x=>`<div class="rh-notify-item" onclick="openHubNotification('${esc(x.id)}')"><div class="text-xl">${esc(x.icon||'🔔')}</div><div class="min-w-0 flex-1"><b>${esc(x.title||'RATHOD HUB')}</b><p>${esc(x.body||'')}</p><span class="text-[9px] text-slate-600">${new Date(x.created_at||Date.now()).toLocaleString()}</span></div></div>`).join(''):'<div class="rh-notify-empty">Koi unread notification nahi hai.<br>New activity aayegi to yahan dikhegi.</div>'}
-function toggleHubNotifications(){const p=document.getElementById('hub-notify-panel');if(!p)return;p.classList.toggle('hidden');renderHubNotifications();if(!p.classList.contains('hidden')&&'Notification'in window&&Notification.permission==='default')Notification.requestPermission().catch(()=>{})}
-function clearHubNotifications(){hubNotifications=[];saveHubNotificationStore();toast('Notifications cleared ✓')}
-function openHubNotification(id){const n=hubNotifications.find(x=>String(x.id)===String(id));hubNotifications=hubNotifications.filter(x=>String(x.id)!==String(id));saveHubNotificationStore();document.getElementById('hub-notify-panel')?.classList.add('hidden');if(n?.action==='battle')switchTab('battle');else if(n?.action==='peergroups')switchTab('peergroups');else if(n?.action==='aicards')switchTab('aicards');else if(n?.action==='studyrooms')switchTab('studyrooms')}
-function showHubNotification(title,body,tag='rathod-hub',action=''){const item={id:(crypto?.randomUUID?crypto.randomUUID():`n_${Date.now()}_${Math.random()}`),title,body,tag,action,icon:tag==='livequiz'?'⚡':tag==='bounty'?'💰':tag==='group'?'👥':'🔔',created_at:new Date().toISOString()};hubNotifications.unshift(item);hubNotifications=hubNotifications.slice(0,50);saveHubNotificationStore();toast(`${item.icon} ${title}`);if('Notification'in window&&Notification.permission==='granted'){try{const nn=new Notification(title,{body,tag});nn.onclick=()=>{window.focus();openHubNotification(item.id)}}catch(e){}}}
-async function sendHubNotification(title,body,tag='rathod-hub',action=''){showHubNotification(title,body,tag,action);try{await hubNotifyChannel?.send({type:'broadcast',event:'hub-notification',payload:{title,body,tag,action,sourceId:user?.id||null}})}catch(e){}}
-function initHubNotifications(){if(!user)return;loadHubNotificationStore();if(hubNotifyChannel)try{db.removeChannel(hubNotifyChannel)}catch(e){};hubNotifyChannel=db.channel('rathod-hub-global-notifications',{config:{broadcast:{self:false}}});hubNotifyChannel.on('broadcast',{event:'hub-notification'},({payload})=>{if(payload?.sourceId===user.id)return;showHubNotification(payload?.title||'RATHOD HUB',payload?.body||'',payload?.tag||'rathod-hub',payload?.action||'')}).subscribe()}
+function hubNotifySeenKey(){return `rh_hub_notification_seen_${user?.id||'guest'}`}
+function hubSeenIds(){try{return new Set(JSON.parse(localStorage.getItem(hubNotifySeenKey())||'[]'))}catch{return new Set()}}
+function markHubNotificationsSeen(ids=[]){try{const seen=hubSeenIds();ids.filter(Boolean).forEach(id=>seen.add(String(id)));localStorage.setItem(hubNotifySeenKey(),JSON.stringify([...seen].slice(-500)))}catch{}}
+function hubNotificationIcon(tag){return ({livequiz:'⚡',dailyquiz:'🏆',voice:'🎙️',material:'📚',admin:'📣',event:'📅',test:'📝',bounty:'💰',group:'👥',treasure:'🗺️'})[tag]||'🔔'}
+function loadHubNotificationStore(){try{const a=JSON.parse(localStorage.getItem(hubNotifyKey())||'[]');hubNotifications=Array.isArray(a)?a.slice(0,HUB_NOTIFICATION_LIMIT):[]}catch{hubNotifications=[]}renderHubNotifications()}
+function saveHubNotificationStore(){try{localStorage.setItem(hubNotifyKey(),JSON.stringify(hubNotifications.slice(0,HUB_NOTIFICATION_LIMIT)))}catch{}renderHubNotifications()}
+function hubNotificationMarkup(){return hubNotifications.length?hubNotifications.map(x=>`<button class="rh-notify-item" onclick="openHubNotification('${esc(String(x.id))}')"><div class="text-xl">${esc(x.icon||hubNotificationIcon(x.tag))}</div><div class="min-w-0 flex-1 text-left"><b>${esc(x.title||'RATHOD HUB')}</b><p>${esc(x.body||'')}</p><span>${new Date(x.created_at||Date.now()).toLocaleString()}</span></div><i class="fa-solid fa-chevron-right rh-notify-arrow"></i></button>`).join(''):'<div class="rh-notify-empty">Koi unread notification nahi hai.<br>Admin update, public quiz ya live room aayega to yahan dikhega.</div>'}
+function renderHubNotifications(){const n=hubNotifications.length,markup=hubNotificationMarkup();['hub-notify-list','hub-notify-list-mobile'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=markup});['hub-notify-badge','mob-notify-badge','drawer-notify-badge'].forEach(id=>{const badge=document.getElementById(id);if(!badge)return;badge.textContent=n>99?'99+':String(n);badge.style.display=n?'flex':'none'})}
+function closeMobileNotifications(){document.getElementById('rh-mobile-notify-sheet')?.classList.add('hidden')}
+function toggleHubNotifications(){const mobile=window.matchMedia('(max-width:640px)').matches,el=document.getElementById(mobile?'rh-mobile-notify-sheet':'hub-notify-panel');if(!el)return;el.classList.toggle('hidden');renderHubNotifications();if(!el.classList.contains('hidden')&&'Notification'in window&&Notification.permission==='default')Notification.requestPermission().catch(()=>{})}
+function clearHubNotifications(){markHubNotificationsSeen(hubNotifications.map(x=>x.id));hubNotifications=[];saveHubNotificationStore();toast('Notifications cleared ✓')}
+function openHubNotification(id){const n=hubNotifications.find(x=>String(x.id)===String(id));markHubNotificationsSeen([id]);hubNotifications=hubNotifications.filter(x=>String(x.id)!==String(id));saveHubNotificationStore();document.getElementById('hub-notify-panel')?.classList.add('hidden');closeMobileNotifications();const actions={battle:()=>switchTab('battle'),livequiz:()=>switchTab('battle'),dailyquiz:()=>openDailyBattle(),materials:()=>switchTab('materials'),material:()=>switchTab('materials'),studyrooms:()=>switchTab('studyrooms'),event:()=>switchTab('hubevents'),hubevents:()=>switchTab('hubevents'),tests:()=>switchTab('tests'),test:()=>switchTab('tests'),treasure:()=>switchTab('treasure'),peergroups:()=>switchTab('peergroups'),group:()=>switchTab('peergroups'),bounty:()=>switchTab('peergroups'),community:()=>switchTab('community'),aicards:()=>switchTab('aicards')};actions[n?.action]?.()}
+function showHubNotification(title,body,tag='rathod-hub',action='',opts={}){const id=String(opts.id||(crypto?.randomUUID?crypto.randomUUID():`n_${Date.now()}_${Math.random()}`));if(hubSeenIds().has(id)||hubNotifications.some(x=>String(x.id)===id))return null;const item={id,title,body,tag,action,metadata:opts.metadata||{},icon:hubNotificationIcon(tag),created_at:opts.created_at||new Date().toISOString()};hubNotifications.unshift(item);hubNotifications=hubNotifications.slice(0,HUB_NOTIFICATION_LIMIT);saveHubNotificationStore();if(!opts.silent)toast(`${item.icon} ${title}`);if(!opts.silent&&'Notification'in window&&Notification.permission==='granted'){try{const nn=new Notification(title,{body,tag});nn.onclick=()=>{window.focus();openHubNotification(item.id)}}catch(e){}}return item}
+function normalizeHubNotificationRow(row){return {id:row.id,title:row.title||'RATHOD HUB',body:row.body||'',tag:row.tag||'rathod-hub',action:row.action||'',metadata:row.metadata||{},created_at:row.created_at||new Date().toISOString()}}
+async function loadPersistedHubNotifications(){try{const {data,error}=await db.from('hub_notifications').select('id,title,body,tag,action,metadata,created_at,expires_at').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false}).limit(HUB_NOTIFICATION_LIMIT);if(error)throw error;const seen=hubSeenIds();(data||[]).slice().reverse().forEach(row=>{if(!seen.has(String(row.id)))showHubNotification(row.title,row.body,row.tag,row.action,{...row,silent:true})})}catch(e){console.info('Persistent notifications SQL not installed yet; realtime fallback active.',e?.message||e)}}
+async function sendHubNotification(title,body,tag='rathod-hub',action='',metadata={}){try{const {data,error}=await db.rpc('publish_hub_notification',{p_title:String(title||'RATHOD HUB'),p_body:String(body||''),p_tag:String(tag||'rathod-hub'),p_action:String(action||''),p_metadata:metadata||{}});if(error)throw error;const row=Array.isArray(data)?data[0]:data;if(row?.id)return showHubNotification(row.title,row.body,row.tag,row.action,{...row,silent:false})}catch(e){console.info('Persistent notification publish fallback.',e?.message||e)}const local=showHubNotification(title,body,tag,action,{metadata});try{await hubNotifyChannel?.send({type:'broadcast',event:'hub-notification',payload:{title,body,tag,action,metadata,sourceId:user?.id||null,id:local?.id}})}catch(e){}return local}
+async function initHubNotifications(){if(!user)return;loadHubNotificationStore();await loadPersistedHubNotifications();if(hubNotifyChannel)try{db.removeChannel(hubNotifyChannel)}catch(e){};hubNotifyChannel=db.channel('rathod-hub-global-notifications',{config:{broadcast:{self:false}}});hubNotifyChannel.on('postgres_changes',{event:'INSERT',schema:'public',table:'hub_notifications'},({new:row})=>{if(row?.id)showHubNotification(row.title,row.body,row.tag,row.action,{...row,silent:false})}).on('broadcast',{event:'hub-notification'},({payload})=>{if(payload?.sourceId===user.id)return;showHubNotification(payload?.title||'RATHOD HUB',payload?.body||'',payload?.tag||'rathod-hub',payload?.action||'',{id:payload?.id,metadata:payload?.metadata})}).subscribe()}
 function cleanupHubNotifications(){if(hubNotifyChannel){try{db.removeChannel(hubNotifyChannel)}catch(e){}hubNotifyChannel=null}hubNotifications=[]}
 document.addEventListener('click',e=>{const w=document.querySelector('.rh-notify-wrap');if(w&&!w.contains(e.target))document.getElementById('hub-notify-panel')?.classList.add('hidden')});
 
