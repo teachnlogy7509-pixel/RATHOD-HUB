@@ -3331,7 +3331,7 @@ async function loadScheduledBattle() {
       .select('*')
       .eq('is_active', true)
       .gte('scheduled_at', graceIso)
-      .order('scheduled_at', { ascending: false })
+      .order('scheduled_at', { ascending: true })
       .limit(1)
       .maybeSingle();
 
@@ -3624,29 +3624,41 @@ async function finishBattle() {
   await loadHomeDailyQuizLeaderboard();
 }
 
+async function fetchDailyBattleScoreRows(limit=100){
+  const {start,end}=dailyBattleDayRange();
+  const key=dailyBattleKey();
+  const dateQuery=db.from('quiz_battle_scores')
+    .select('user_id,user_name,score,xp_earned,created_at')
+    .gte('created_at',start).lt('created_at',end)
+    .order('score',{ascending:false}).order('xp_earned',{ascending:false}).limit(limit);
+  const keyedQuery=key
+    ? db.from('quiz_battle_scores').select('user_id,user_name,score,xp_earned,created_at')
+      .eq('battle_key',key).order('score',{ascending:false}).order('xp_earned',{ascending:false}).limit(limit)
+    : Promise.resolve({data:[],error:null});
+  const [dateResult,keyedResult]=await Promise.all([dateQuery,keyedQuery]);
+  const keyUnsupported=keyedResult?.error&&/battle_key|column/i.test(keyedResult.error.message||'');
+  if(dateResult.error && keyedResult?.error && !keyUnsupported) throw dateResult.error;
+  const combined=[...(keyedResult?.data||[]),...(dateResult.data||[])];
+  const seen=new Set();
+  return combined.filter(r=>{
+    const sig=[r.user_id||'',r.user_name||'',r.score||0,r.xp_earned||0,r.created_at||''].join('|');
+    if(seen.has(sig))return false;seen.add(sig);return true;
+  });
+}
+function bestDailyBattleScores(rows,limit=50){
+  const best=new Map();
+  (rows||[]).forEach(r=>{
+    const id=String(r.user_id||r.user_name||'');if(!id)return;
+    const old=best.get(id);
+    if(!old||Number(r.score||0)>Number(old.score||0)||(Number(r.score||0)===Number(old.score||0)&&Number(r.xp_earned||0)>Number(old.xp_earned||0)))best.set(id,r);
+  });
+  return [...best.values()].sort((a,b)=>Number(b.score||0)-Number(a.score||0)||Number(b.xp_earned||0)-Number(a.xp_earned||0)||new Date(a.created_at)-new Date(b.created_at)).slice(0,limit);
+}
+
 async function loadHomeDailyQuizLeaderboard(){
   if(!user)return;
   try{
-    const {start,end}=dailyBattleDayRange();
-    const key=dailyBattleKey();
-    let rows=null,error=null;
-    if(key){
-      const keyed=await db.from('quiz_battle_scores').select('user_id,user_name,score,xp_earned,created_at').eq('battle_key',key).order('score',{ascending:false}).order('xp_earned',{ascending:false}).limit(100);
-      if(!keyed.error&&keyed.data?.length)rows=keyed.data;
-      else if(keyed.error&&!/battle_key|column/i.test(keyed.error.message||''))error=keyed.error;
-    }
-    if(!rows&&!error){
-      const fallback=await db.from('quiz_battle_scores').select('user_id,user_name,score,xp_earned,created_at').gte('created_at',start).lt('created_at',end).order('score',{ascending:false}).order('xp_earned',{ascending:false}).limit(100);
-      rows=fallback.data||[];error=fallback.error||null;
-    }
-    if(error)throw error;
-    const best=new Map();
-    (rows||[]).forEach(r=>{
-      const id=String(r.user_id||r.user_name||'');if(!id)return;
-      const old=best.get(id);
-      if(!old||Number(r.score||0)>Number(old.score||0)||(Number(r.score||0)===Number(old.score||0)&&Number(r.xp_earned||0)>Number(old.xp_earned||0)))best.set(id,r);
-    });
-    dailyQuizLeaderboard=[...best.values()].sort((a,b)=>Number(b.score||0)-Number(a.score||0)||Number(b.xp_earned||0)-Number(a.xp_earned||0)).slice(0,5);
+    dailyQuizLeaderboard=bestDailyBattleScores(await fetchDailyBattleScoreRows(150),5);
   }catch(e){
     console.warn('Home Daily Quiz Top 5 load failed:',e);
     dailyQuizLeaderboard=[];
@@ -3655,74 +3667,42 @@ async function loadHomeDailyQuizLeaderboard(){
 }
 
 async function loadBattleLeaderboard() {
-  const list = document.getElementById("battleLeaderboardList");
-  if(!list) return;
-  list.innerHTML = `<div class="text-slate-500 text-xs">Loading Daily 9 PM Ranks...</div>`;
-
-  try {
-    const {start, end} = dailyBattleDayRange();
-    const key = dailyBattleKey();
-
-    // Do not select/filter by battle_key here. Older installations may not
-    // have that column, and today's timestamp is the reliable compatibility
-    // filter for the 9 PM battle.
-    let rows=null, error=null;
-
-    if(key){
-      const keyed=await db.from("quiz_battle_scores")
-        .select("user_id,user_name,score,xp_earned,created_at")
-        .eq("battle_key",key)
-        .order("score",{ascending:false})
-        .order("xp_earned",{ascending:false})
-        .limit(50);
-
-      if(!keyed.error && keyed.data?.length){
-        rows=keyed.data;
-      }else if(keyed.error && !/battle_key|column/i.test(keyed.error.message||'')){
-        console.warn("Battle key query failed; using date fallback:",keyed.error);
-      }
-    }
-
-    // Compatibility fallback: works whether battle_key exists or not.
-    if(!rows){
-      const fallback=await db.from("quiz_battle_scores")
-        .select("user_id,user_name,score,xp_earned,created_at")
-        .gte("created_at",start)
-        .lt("created_at",end)
-        .order("score",{ascending:false})
-        .order("xp_earned",{ascending:false})
-        .limit(50);
-      rows=fallback.data||null;
-      error=fallback.error||null;
-    }
-
-    if(error){
-      console.warn("Daily leaderboard query error:",error);
-      list.innerHTML=`<div class="text-red-400 text-xs">Leaderboard load failed: ${esc(error.message||"Database error")}</div>`;
+  const list=document.getElementById('battleLeaderboardList');
+  if(!list||!user)return;
+  if(!list.children.length)list.innerHTML='<div class="text-slate-500 text-xs">Loading Daily 9 PM Ranks...</div>';
+  try{
+    const rows=bestDailyBattleScores(await fetchDailyBattleScoreRows(200),50);
+    if(!rows.length){
+      list.innerHTML='<div class="text-slate-500 text-xs">Aaj ke Daily 9 PM Battle ka leaderboard abhi empty hai.</div>';
       return;
     }
-    if(!rows || rows.length===0){
-      list.innerHTML=`<div class="text-slate-500 text-xs">Aaj ke Daily 9 PM Battle ka leaderboard abhi empty hai.</div>`;
-      return;
-    }
-
     list.innerHTML=rows.map((entry,idx)=>`
       <div class="flex justify-between items-center py-1.5 border-b border-slate-900 ${entry.user_id===user?.id?'text-amber-400 font-bold':entry.user_name===profile?.name?'text-amber-400 font-bold':'text-slate-300'}">
-        <div class="flex items-center space-x-2">
-          <span class="w-5 text-xs font-black">${idx===0?'🥇':idx===1?'🥈':idx===2?'🥉':'#'+(idx+1)}</span>
-          <span>${esc(entry.user_name||'NEET Aspirant')}</span>
+        <div class="flex items-center space-x-2 min-w-0">
+          <span class="w-5 text-xs font-black shrink-0">${idx===0?'🥇':idx===1?'🥈':idx===2?'🥉':'#'+(idx+1)}</span>
+          <span class="truncate">${esc(entry.user_name||'NEET Aspirant')}</span>
         </div>
-        <div class="flex items-center space-x-3 text-xs">
+        <div class="flex items-center space-x-3 text-xs shrink-0">
           <span>${Number(entry.score||0)} / ${DAILY_BATTLE_QUESTIONS}</span>
           <span class="text-emerald-400 font-bold">+${Number(entry.xp_earned||0)} XP</span>
         </div>
-      </div>
-    `).join("");
-  } catch(e) {
-    console.warn("Daily leaderboard failed:",e);
-    list.innerHTML=`<div class="text-red-400 text-xs">Leaderboard update failed: ${esc(e?.message||"Unknown error")}</div>`;
+      </div>`).join('');
+  }catch(e){
+    console.warn('Daily leaderboard failed:',e);
+    list.innerHTML=`<div class="text-red-400 text-xs">Leaderboard update failed: ${esc(e?.message||'Unknown error')}</div>`;
   }
 }
+
+let dailyLeaderboardRefreshBusy=false;
+setInterval(async()=>{
+  if(!user||document.visibilityState!=='visible'||dailyLeaderboardRefreshBusy)return;
+  dailyLeaderboardRefreshBusy=true;
+  try{
+    await loadHomeDailyQuizLeaderboard();
+    const resultVisible=!document.getElementById('battleResultBox')?.classList.contains('hidden');
+    if(resultVisible)await loadBattleLeaderboard();
+  }finally{dailyLeaderboardRefreshBusy=false}
+},10000);
 
 /* ==================== DAILY 9 PM ADMIN SCHEDULER ==================== */
 document.getElementById('admin-battle-form')?.addEventListener('submit', async (e) => {
