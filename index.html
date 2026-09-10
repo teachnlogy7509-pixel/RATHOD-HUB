@@ -108,6 +108,16 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 .rh-topbar{position:fixed!important;left:0;right:0;top:0;height:70px!important;background:rgba(5,7,10,.92)!important;border-bottom:1px solid rgba(255,255,255,.12)!important;backdrop-filter:blur(16px);padding:0 20px!important;z-index:500;display:flex;align-items:center;justify-content:space-between}
 .rh-brand{display:flex;align-items:center;gap:10px;min-width:215px;font-weight:900;letter-spacing:.01em;color:#fff!important}
 .rh-brand-mark{width:38px!important;height:38px!important;border-radius:12px!important;background:rgba(239,43,43,.12)!important;border:1px solid rgba(239,43,43,.55)!important;color:var(--rh-red)!important;display:flex;align-items:center;justify-content:center}
+.rh-header-streak{display:flex;align-items:center;gap:5px;height:34px;padding:0 10px;margin-left:4px;border-radius:999px;background:linear-gradient(135deg,rgba(249,115,22,.18),rgba(239,68,68,.12));border:1px solid rgba(251,146,60,.42);color:#fdba74;font-size:12px;font-weight:900;cursor:pointer;transition:.18s;white-space:nowrap}
+.rh-header-streak:hover{transform:translateY(-1px);border-color:#fb923c;background:linear-gradient(135deg,rgba(249,115,22,.28),rgba(239,68,68,.20))}
+.rh-header-streak .rh-streak-fire{font-size:16px;filter:drop-shadow(0 0 5px rgba(249,115,22,.7))}
+@media(max-width:640px){.rh-header-streak{height:30px;padding:0 8px;margin-left:0;font-size:11px}.rh-header-streak .rh-streak-label{display:none}}
+.rh-live-cam-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.rh-live-cam-tile{position:relative;overflow:hidden;aspect-ratio:4/3;border-radius:12px;background:#05070a;border:1px solid rgba(34,211,238,.25)}
+.rh-live-cam-tile video{width:100%;height:100%;object-fit:cover;background:#05070a}
+.rh-live-cam-name{position:absolute;left:6px;bottom:6px;max-width:calc(100% - 12px);padding:3px 7px;border-radius:7px;background:rgba(0,0,0,.72);color:#fff;font-size:9px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rh-live-cam-local{transform:scaleX(-1)}
+@media(max-width:640px){.rh-live-cam-grid{grid-template-columns:1fr}}
 .rh-top-actions{display:flex;align-items:center;gap:10px!important}
 .rh-icon-btn{background:rgba(255,255,255,0.06)!important;color:#fff!important;border:1px solid rgba(255,255,255,.14)!important;border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.18s}
 .rh-icon-btn:hover{color:var(--rh-red)!important;border-color:rgba(239,43,43,.5)!important}
@@ -308,7 +318,7 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
 <!-- APP -->
 <div id="app" class="hidden min-h-screen flex flex-col">
 <header class="rh-topbar">
- <div class="rh-brand"><div id="hub-logo-mark" class="rh-brand-mark overflow-hidden"><img id="hub-logo-img" src="icon-192.png" alt="RATHOD HUB" class="w-full h-full object-cover"></div><div><div>RATHOD HUB</div><div style="font-size:9px;color:#8b93a0;font-weight:600;letter-spacing:.08em">NEET LEARNING PLATFORM</div></div></div>
+ <div class="rh-brand"><div id="hub-logo-mark" class="rh-brand-mark overflow-hidden"><img id="hub-logo-img" src="icon-192.png" alt="RATHOD HUB" class="w-full h-full object-cover"></div><div><div>RATHOD HUB</div><div style="font-size:9px;color:#8b93a0;font-weight:600;letter-spacing:.08em">NEET LEARNING PLATFORM</div></div><button class="rh-header-streak" onclick="switchTab('focus')" title="अपना Focus Streak देखें" aria-label="Focus streak"><span class="rh-streak-fire">🔥</span><span id="header-streak-count">0</span><span class="rh-streak-label">day streak</span></button></div>
  <div class="rh-top-actions">
   <button id="install-app-btn" class="rh-icon-btn" style="display:none" onclick="installRathodHub()" title="Download / Install App"><i class="fa-solid fa-download"></i></button>
   <button class="rh-icon-btn rh-more-trigger" onclick="openMobileMenu()" title="All Features" aria-label="More options"><i class="fa-solid fa-bars"></i></button>
@@ -594,7 +604,7 @@ body.qb-finished-layout .rh-content{padding-left:22px!important;padding-right:22
   </div>
  <aside class="rh-home-rail">
   <div class="rh-rail-card">
-   <div class="rh-rail-title"><span>Leaderboard (Top 5)</span><a href="#" onclick="switchTab('leaderboard');return false">सभी देखें →</a></div>
+   <div class="rh-rail-title"><span>🔥 Daily Quiz Top 5</span><a href="#" onclick="openDailyBattle();return false">सभी देखें →</a></div>
    <div id="rh-home-leaderboard"></div>
   </div>
   <div class="rh-rail-card">
@@ -1078,7 +1088,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 <section id="section-studyrooms" class="hidden space-y-5">
 <div class="bg-slate-800/95 rounded-2xl p-5">
 <h3 class="font-bold text-slate-200"><i class="fa-solid fa-door-open mr-2 text-teal-400"></i>Study Rooms</h3>
-<p class="text-xs text-slate-400 mt-1">Room join karo, phir Live Voice दबाकर साथ पढ़ो. Microphone permission allow karna hoga.</p><p class="voice-help mt-2">Voice ke liye direct HTTPS GitHub Pages tab use karo. Browser address bar → 🔒 → Microphone → Allow. Test Mic se pehle permission check kar sakte ho.</p>
+<p class="text-xs text-slate-400 mt-1">YPT की तरह room join करके Live Cam या Voice के साथ पढ़ें। Camera और microphone permission Allow करें।</p><p class="voice-help mt-2">Direct HTTPS GitHub Pages tab इस्तेमाल करें। Address bar → 🔒 → Camera/Microphone → Allow. आवाज़ न आए तो “आवाज़ चालू करें” button दबाएँ।</p>
 </div>
 <div id="study-rooms-box" class="grid md:grid-cols-3 gap-4"></div>
 </section>
@@ -1502,7 +1512,7 @@ async function boot(){
    ['admin-panel','admin-battle-panel','admin-test-panel','admin-treasure-panel','admin-bg-panel','admin-logo-panel','hub-admin-composer'].forEach(id=>{const el=document.getElementById(id);if(el&&host&&!host.contains(el))host.appendChild(el);});
   }
   setDefaultDiaryDate();
-  await Promise.all([loadMaterials(),loadPosts(),loadPeople(),loadChatMessages(),loadDiary(),loadStories(),loadVault(),loadLeaderboard(),loadHubEvents(),loadSpinStatus(),loadScheduledBattle()]); startMaterialsAutoRefresh();
+  await Promise.all([loadMaterials(),loadPosts(),loadPeople(),loadChatMessages(),loadDiary(),loadStories(),loadVault(),loadLeaderboard(),loadHomeDailyQuizLeaderboard(),loadHubEvents(),loadSpinStatus(),loadScheduledBattle()]); startMaterialsAutoRefresh();
   await initGamePresence(); subscribeToChat(); renderStudyRooms(); initHubNotifications(); initStudyPower();
   qbInit();qbAutoJoinFromLink();nthAutoJoinFromLink();
   if(profile.role==='admin'){populateBackgroundForm();}
@@ -1538,7 +1548,7 @@ function switchTab(tab){
   if(tab==='peergroups'){loadPeerGroups();loadDoubtBounties();}
   ['mob-home','mob-materials','mob-focus','mob-chat','mob-more'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('rh-active')});
   const mobMap={home:'mob-home',materials:'mob-materials',focus:'mob-focus',chatroom:'mob-chat'};if(mobMap[tab])document.getElementById(mobMap[tab])?.classList.add('rh-active');
-  if(tab==='home')renderHomeDashboard();
+  if(tab==='home'){renderHomeDashboard();loadHomeDailyQuizLeaderboard();}
   if(tab==='focus')renderFocusDashboard();
   if(tab==='chatroom')scrollChatToBottom();
   if(tab==='stories')loadStories();
@@ -1581,9 +1591,10 @@ function applyRHSectionHeaders(){
 }
 function renderRHHomeRail(){
   const lb=document.getElementById('rh-home-leaderboard');
-  if(lb && Array.isArray(leaderboard)){
-    const top=leaderboard.slice(0,5);
-    lb.innerHTML=top.map((p,i)=>`<div class="rh-mini-row"><div class="rh-rank">#${i+1}</div><div class="rh-mini-avatar">${p.pfp_url?driveImgHtml(p.pfp_url,'w-full h-full object-cover'):'👤'}</div><div class="rh-mini-name"><b>${esc(p.name||'Member')}</b><span>Level ${p.level||1}</span></div><div class="rh-mini-xp">${Number(p.xp||0).toLocaleString()} XP</div></div>`).join('') || '<div style="font-size:11px;color:#9ba3ae">No members yet.</div>';
+  if(lb && Array.isArray(dailyQuizLeaderboard)){
+    const top=dailyQuizLeaderboard.slice(0,5);
+    const medals=['🥇','🥈','🥉'];
+    lb.innerHTML=top.map((p,i)=>`<div class="rh-mini-row"><div class="rh-rank">${medals[i]||('#'+(i+1))}</div><div class="rh-mini-avatar">👤</div><div class="rh-mini-name"><b>${esc(p.user_name||'NEET Aspirant')}</b><span>Aaj ka Daily 9 PM Quiz</span></div><div class="rh-mini-xp">${Number(p.score||0)}/${DAILY_BATTLE_QUESTIONS}</div></div>`).join('') || '<div style="font-size:11px;color:#9ba3ae">Aaj ka Daily Quiz leaderboard abhi empty hai.</div>';
   }
   const online=document.getElementById('rh-home-online');
   if(online){
@@ -1604,7 +1615,9 @@ function renderHomeDashboard(){
   if(!profile)return;
   const n=profile.name||user?.email||'Student';
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
-  set('home-user-name',n); set('home-study-time',formatMinutesSimple(getFocusTodayMinutes())); set('home-streak',(getFocusStreak())+' 🔥');
+  const currentStreak=getFocusStreak();
+  set('home-user-name',n); set('home-study-time',formatMinutesSimple(getFocusTodayMinutes())); set('home-streak',currentStreak+' 🔥');
+  set('header-streak-count',currentStreak);
   set('home-xp',((profile.xp||0))+' XP'); set('home-level','Level '+levelFromXp(profile.xp));
   renderRHHomeRail();
 }
@@ -2073,7 +2086,7 @@ async function toggleRecording(){
 async function awardQuizXP(correct){if(!correct||!user)return;try{const next=Number(profile.xp||0)+10;const level=levelFromXp(next);const{error}=await db.from('profiles').update({xp:next,level}).eq('id',user.id);if(error)throw error;profile.xp=next;profile.level=level;toast('+10 XP 🎉');renderHomeDashboard();loadLeaderboard();}catch(e){console.warn('XP update failed',e)}}
 
 /* ==================== RATHOD HUB NEW FEATURES ==================== */
-let stories=[],vaultItems=[],leaderboard=[];
+let stories=[],vaultItems=[],leaderboard=[],dailyQuizLeaderboard=[];
 const XP_LEVEL_SIZE=5000;
 const MAX_LEVEL=10;
 function levelFromXp(x){return Math.min(MAX_LEVEL,Math.max(1,Math.floor(Number(x||0)/XP_LEVEL_SIZE)+1))}
@@ -3193,6 +3206,37 @@ async function finishBattle() {
   }
 
   await loadBattleLeaderboard();
+  await loadHomeDailyQuizLeaderboard();
+}
+
+async function loadHomeDailyQuizLeaderboard(){
+  if(!user)return;
+  try{
+    const {start,end}=dailyBattleDayRange();
+    const key=dailyBattleKey();
+    let rows=null,error=null;
+    if(key){
+      const keyed=await db.from('quiz_battle_scores').select('user_id,user_name,score,xp_earned,created_at').eq('battle_key',key).order('score',{ascending:false}).order('xp_earned',{ascending:false}).limit(100);
+      if(!keyed.error&&keyed.data?.length)rows=keyed.data;
+      else if(keyed.error&&!/battle_key|column/i.test(keyed.error.message||''))error=keyed.error;
+    }
+    if(!rows&&!error){
+      const fallback=await db.from('quiz_battle_scores').select('user_id,user_name,score,xp_earned,created_at').gte('created_at',start).lt('created_at',end).order('score',{ascending:false}).order('xp_earned',{ascending:false}).limit(100);
+      rows=fallback.data||[];error=fallback.error||null;
+    }
+    if(error)throw error;
+    const best=new Map();
+    (rows||[]).forEach(r=>{
+      const id=String(r.user_id||r.user_name||'');if(!id)return;
+      const old=best.get(id);
+      if(!old||Number(r.score||0)>Number(old.score||0)||(Number(r.score||0)===Number(old.score||0)&&Number(r.xp_earned||0)>Number(old.xp_earned||0)))best.set(id,r);
+    });
+    dailyQuizLeaderboard=[...best.values()].sort((a,b)=>Number(b.score||0)-Number(a.score||0)||Number(b.xp_earned||0)-Number(a.xp_earned||0)).slice(0,5);
+  }catch(e){
+    console.warn('Home Daily Quiz Top 5 load failed:',e);
+    dailyQuizLeaderboard=[];
+  }
+  renderRHHomeRail();
 }
 
 async function loadBattleLeaderboard() {
@@ -3915,7 +3959,8 @@ const RTC_CONFIG={iceServers:[
  {urls:'stun:stun.l.google.com:19302'},
  {urls:'stun:stun1.l.google.com:19302'},
  {urls:'stun:stun2.l.google.com:19302'},
- {urls:'stun.cloudflare.com:3478'}
+ {urls:'stun:stun.cloudflare.com:3478'},
+ {urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turns:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}
 ],iceCandidatePoolSize:10};
 let roomChannels={},voiceState={};
 
@@ -3928,14 +3973,19 @@ function studyRoomCardHtml(r){
    <button id="room-leave-${r.key}" onclick="leaveStudyRoom('${r.key}')" class="hidden flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-lg text-xs font-bold">Leave</button>
   </div>
   <div id="room-voice-${r.key}" class="hidden mt-3 pt-3 border-t border-slate-700">
-   <div class="flex justify-between items-center"><span class="text-[10px] uppercase text-slate-400">🎙 Live Voice</span><span id="room-voice-count-${r.key}" class="text-[10px] text-fuchsia-300">0/${MAX_VOICE_USERS}</span></div>
+   <div class="flex justify-between items-center"><span class="text-[10px] uppercase text-slate-400">🎥 YPT Live Study • Voice</span><span id="room-voice-count-${r.key}" class="text-[10px] text-fuchsia-300">0/${MAX_VOICE_USERS}</span></div>
+   <div id="room-live-time-${r.key}" class="mt-2 text-xs font-black text-cyan-300">⏱ Study time 00:00:00</div>
    <div id="room-speakers-${r.key}" class="mt-2 flex flex-wrap gap-1"></div>
-   <div class="mt-2 flex gap-2">
-    <button id="voice-join-${r.key}" onclick="joinVoice('${r.key}')" class="flex-1 bg-fuchsia-600 hover:bg-fuchsia-500 py-2 rounded-lg text-xs font-bold">Join Voice</button>
-    <button id="voice-mute-${r.key}" onclick="toggleMute('${r.key}')" class="hidden flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-lg text-xs font-bold">Mute</button>
-    <button id="voice-leave-${r.key}" onclick="leaveVoice('${r.key}')" class="hidden flex-1 bg-red-600 hover:bg-red-500 py-2 rounded-lg text-xs font-bold">Leave Voice</button>
-     <button type="button" onclick="testVoiceMicrophone('${r.key}')" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-xs font-bold">🎙 Test Mic</button>
+   <div class="mt-2 grid grid-cols-2 gap-2">
+    <button id="voice-join-${r.key}" onclick="joinVoice('${r.key}',false)" class="bg-fuchsia-600 hover:bg-fuchsia-500 py-2.5 rounded-lg text-xs font-bold">🎙 Join Voice</button>
+    <button id="camera-join-${r.key}" onclick="joinVoice('${r.key}',true)" class="bg-cyan-600 hover:bg-cyan-500 py-2.5 rounded-lg text-xs font-bold">🎥 Join Live Cam</button>
+    <button id="voice-mute-${r.key}" onclick="toggleMute('${r.key}')" class="hidden bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-xs font-bold">Mute</button>
+    <button id="camera-toggle-${r.key}" onclick="toggleCamera('${r.key}')" class="hidden bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-xs font-bold">Camera Off</button>
+    <button id="voice-leave-${r.key}" onclick="leaveVoice('${r.key}')" class="hidden bg-red-600 hover:bg-red-500 py-2.5 rounded-lg text-xs font-bold">Leave Live</button>
+    <button type="button" onclick="testVoiceMicrophone('${r.key}')" class="bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-xs font-bold">🎙 Test Mic</button>
    </div>
+   <button id="enable-audio-${r.key}" type="button" onclick="enableRoomAudio('${r.key}')" class="hidden mt-2 w-full bg-amber-500/15 border border-amber-500/30 text-amber-300 py-2 rounded-lg text-xs font-bold">🔊 आवाज़ चालू करने के लिए टैप करें</button>
+   <div id="room-video-${r.key}" class="rh-live-cam-grid hidden"></div>
    <div id="room-audio-${r.key}" class="hidden"></div>
   </div>
  </div>`;
@@ -3982,9 +4032,11 @@ function renderRoomMembers(key){
  const speakers=people.filter(p=>p.voice);
  const vc=document.getElementById(`room-voice-count-${key}`);if(vc)vc.textContent=`${speakers.length}/${MAX_VOICE_USERS} in voice`;
  const sp=document.getElementById(`room-speakers-${key}`);
- if(sp)sp.innerHTML=speakers.length?speakers.map(p=>`<span class="text-[10px] bg-fuchsia-500/10 text-fuchsia-300 border border-fuchsia-500/30 rounded-full px-2 py-1">🎙 ${esc(p.name||'Member')}</span>`).join(''):'<span class="text-[10px] text-slate-500">Koi bol nahi raha</span>';
+ if(sp)sp.innerHTML=speakers.length?speakers.map(p=>`<span class="text-[10px] bg-fuchsia-500/10 text-fuchsia-300 border border-fuchsia-500/30 rounded-full px-2 py-1">${p.camera?'🎥':'🎙'} ${esc(p.name||'Member')}</span>`).join(''):'<span class="text-[10px] text-slate-500">Koi live nahi hai</span>';
  const vb=document.getElementById(`voice-join-${key}`);
  if(vb&&!ensureVoiceState(key).joined)vb.disabled=speakers.length>=MAX_VOICE_USERS;
+ const cb=document.getElementById(`camera-join-${key}`);
+ if(cb&&!ensureVoiceState(key).joined)cb.disabled=speakers.length>=MAX_VOICE_USERS;
 }
 async function joinStudyRoom(key){
  const rc=ensureRoomChannel(key);if(!rc||rc.joined)return;
@@ -4006,7 +4058,7 @@ async function leaveStudyRoom(key){
  document.getElementById(`room-voice-${key}`).classList.add('hidden');
 }
 function ensureVoiceState(key){
- if(!voiceState[key])voiceState[key]={joined:false,muted:false,stream:null,peers:{},pendingIce:{},heartbeat:null};
+ if(!voiceState[key])voiceState[key]={joined:false,muted:false,camera:false,stream:null,cameraStream:null,peers:{},pendingIce:{},heartbeat:null,joinedAt:0,liveTimer:null};
  return voiceState[key];
 }
 async function reserveVoiceSlot(key){
@@ -4026,6 +4078,19 @@ function startVoiceHeartbeat(key){
  },10000);
 }
 function stopVoiceHeartbeat(key){const vs=voiceState[key];if(vs?.heartbeat)clearInterval(vs.heartbeat);if(vs)vs.heartbeat=null}
+function renderLiveStudyClock(key){
+ const vs=ensureVoiceState(key),el=document.getElementById(`room-live-time-${key}`);
+ const sec=vs.joinedAt?Math.max(0,Math.floor((Date.now()-vs.joinedAt)/1000)):0;
+ if(el)el.textContent=`⏱ Study time ${String(Math.floor(sec/3600)).padStart(2,'0')}:${String(Math.floor(sec%3600/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
+ return sec;
+}
+function startLiveStudyClock(key){
+ const vs=ensureVoiceState(key);vs.joinedAt=Date.now();clearInterval(vs.liveTimer);renderLiveStudyClock(key);vs.liveTimer=setInterval(()=>renderLiveStudyClock(key),1000);
+}
+async function stopLiveStudyClock(key,save=true){
+ const vs=ensureVoiceState(key),sec=renderLiveStudyClock(key);clearInterval(vs.liveTimer);vs.liveTimer=null;vs.joinedAt=0;renderLiveStudyClock(key);
+ if(save&&sec>=60&&typeof recordFocusSession==='function'&&!(focusState?.status==='running'))await recordFocusSession(sec,'Live Study Room');
+}
 async function testVoiceMicrophone(key){
   if(!window.isSecureContext&&location.hostname!=='localhost')return toast('Voice ke liye direct HTTPS GitHub Pages URL open karo.',false);
   if(!navigator.mediaDevices?.getUserMedia)return toast('Is browser/context mein microphone support nahi hai.',false);
@@ -4041,7 +4106,7 @@ async function testVoiceMicrophone(key){
     else toast(e?.message||'Microphone test failed.',false);
   }
 }
-async function joinVoice(key){
+async function joinVoice(key,withCamera=false){
   const vs=ensureVoiceState(key);if(vs.joined)return;
   const rc=roomChannels[key];if(!rc||!rc.joined)return toast('Pehle room join karein.',false);
   if(!window.isSecureContext&&location.hostname!=='localhost')return toast('Live Voice ke liye HTTPS zaroori hai.',false);
@@ -4052,23 +4117,62 @@ async function joinVoice(key){
     if(current.length>=MAX_VOICE_USERS)return toast('Live Voice full hai.',false);
     await rc.ready;
     await reserveVoiceSlot(key);
-    try{vs.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}})}catch(e){await releaseVoiceSlot(key);throw e}
-    vs.joined=true;vs.muted=false;
-    await rc.channel.track({user_id:user.id,name:profile?.name||user.email||'Member',voice:true});
+    try{
+      vs.stream=await navigator.mediaDevices.getUserMedia({
+        audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},
+        video:withCamera?{facingMode:'user',width:{ideal:640},height:{ideal:480}}:false
+      });
+    }catch(e){await releaseVoiceSlot(key);throw e}
+    vs.joined=true;vs.muted=false;vs.camera=withCamera&&vs.stream.getVideoTracks().length>0;
+    await rc.channel.track({user_id:user.id,name:profile?.name||user.email||'Member',voice:true,camera:vs.camera});
     startVoiceHeartbeat(key);
+    startLiveStudyClock(key);
     await rc.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'join',fromId:user.id}});
     document.getElementById(`voice-join-${key}`)?.classList.add('hidden');
+    document.getElementById(`camera-join-${key}`)?.classList.add('hidden');
     document.getElementById(`voice-mute-${key}`)?.classList.remove('hidden');
     document.getElementById(`voice-leave-${key}`)?.classList.remove('hidden');
+    document.getElementById(`camera-toggle-${key}`)?.classList.toggle('hidden',!vs.camera);
+    if(vs.camera)showLocalCamera(key);
     renderRoomMembers(key);
-    toast('🎙 Live Voice joined');
+    toast(vs.camera?'🎥 YPT Live Cam joined':'🎙 Live Voice joined');
   }catch(e){
     console.error('joinVoice failed',e);
-    if(vs.stream)vs.stream.getTracks().forEach(t=>t.stop());vs.stream=null;vs.joined=false;
+    await stopLiveStudyClock(key,false);
+    await releaseVoiceSlot(key);
+    if(vs.stream)vs.stream.getTracks().forEach(t=>t.stop());vs.stream=null;vs.joined=false;vs.camera=false;
     if(e?.name==='NotAllowedError')toast('Microphone permission blocked hai. Direct HTTPS GitHub Pages page kholo → 🔒 → Microphone → Allow. Preview/iframe mein mic block ho sakta hai.',false);
     else if(e?.name==='NotFoundError')toast('Microphone device nahi mila.',false);
     else toast(e?.message||'Live Voice start nahi hua.',false);
   }
+}
+
+function showLocalCamera(key){
+ const vs=ensureVoiceState(key),grid=document.getElementById(`room-video-${key}`);if(!grid||!vs.stream)return;
+ let tile=document.getElementById(`local-video-tile-${key}`);
+ if(!tile){tile=document.createElement('div');tile.id=`local-video-tile-${key}`;tile.className='rh-live-cam-tile';tile.innerHTML=`<video id="local-video-${key}" class="rh-live-cam-local" autoplay muted playsinline></video><span class="rh-live-cam-name">आप • Live Study</span>`;grid.prepend(tile)}
+ const video=document.getElementById(`local-video-${key}`);if(video)video.srcObject=vs.stream;
+ grid.classList.remove('hidden');
+}
+async function toggleCamera(key){
+ const vs=ensureVoiceState(key);if(!vs.joined||!vs.camera)return toast('Camera के लिए Leave Live करके “Join Live Cam” चुनें.',false);
+ const track=vs.stream?.getVideoTracks?.()[0];if(!track)return;
+ track.enabled=!track.enabled;
+ const btn=document.getElementById(`camera-toggle-${key}`);if(btn)btn.textContent=track.enabled?'Camera Off':'Camera On';
+ const tile=document.getElementById(`local-video-tile-${key}`);if(tile)tile.style.opacity=track.enabled?'1':'.45';
+}
+async function enableRoomAudio(key){
+ const box=document.getElementById(`room-audio-${key}`);
+ const media=[...(box?.querySelectorAll('audio')||[])];
+ await Promise.all(media.map(a=>a.play().catch(()=>null)));
+ document.getElementById(`enable-audio-${key}`)?.classList.add('hidden');
+ toast('🔊 Room audio चालू है');
+}
+
+async function flushPendingIce(vs,peerId,pc){
+ const pending=vs.pendingIce?.[peerId]||[];
+ for(const c of pending)await pc.addIceCandidate(c).catch(()=>{});
+ delete vs.pendingIce[peerId];
 }
 
 function createPeer(key,peerId){
@@ -4077,17 +4181,28 @@ function createPeer(key,peerId){
  if(vs.stream)vs.stream.getTracks().forEach(t=>pc.addTrack(t,vs.stream));
  pc.onicecandidate=e=>{if(e.candidate)roomChannels[key]?.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'ice',fromId:user.id,targetId:peerId,candidate:e.candidate}})};
  pc.ontrack=e=>{
-  let audio=document.getElementById(`voice-audio-${key}-${peerId}`);
-  if(!audio){audio=document.createElement('audio');audio.id=`voice-audio-${key}-${peerId}`;audio.autoplay=true;audio.playsInline=true;audio.controls=false;document.getElementById(`room-audio-${key}`).appendChild(audio)}
-  audio.srcObject=e.streams[0];audio.play().catch(()=>{});
+  const remoteStream=e.streams[0]||new MediaStream([e.track]);
+  if(e.track.kind==='video'){
+   const grid=document.getElementById(`room-video-${key}`);if(!grid)return;
+   let tile=document.getElementById(`remote-video-tile-${key}-${peerId}`);
+   if(!tile){tile=document.createElement('div');tile.id=`remote-video-tile-${key}-${peerId}`;tile.className='rh-live-cam-tile';tile.innerHTML=`<video id="remote-video-${key}-${peerId}" autoplay playsinline muted></video><span class="rh-live-cam-name">Live Student</span>`;grid.appendChild(tile)}
+   const video=document.getElementById(`remote-video-${key}-${peerId}`);if(video)video.srcObject=remoteStream;
+   grid.classList.remove('hidden');
+  }else{
+   let audio=document.getElementById(`voice-audio-${key}-${peerId}`);
+   if(!audio){audio=document.createElement('audio');audio.id=`voice-audio-${key}-${peerId}`;audio.autoplay=true;audio.playsInline=true;audio.controls=false;document.getElementById(`room-audio-${key}`).appendChild(audio)}
+   audio.srcObject=remoteStream;
+   audio.play().catch(()=>document.getElementById(`enable-audio-${key}`)?.classList.remove('hidden'));
+  }
  };
- pc.onconnectionstatechange=()=>{if(['failed','closed'].includes(pc.connectionState))closePeer(key,peerId)};
+ pc.onconnectionstatechange=()=>{if(['failed','closed'].includes(pc.connectionState))closePeer(key,peerId);else if(pc.connectionState==='connected')document.getElementById(`enable-audio-${key}`)?.classList.add('hidden')};
   pc.oniceconnectionstatechange=()=>{if(pc.iceConnectionState==='failed'){try{pc.restartIce()}catch(e){}}};
  vs.peers[peerId]=pc;return pc;
 }
 function closePeer(key,peerId){
  const vs=voiceState[key];if(!vs)return;const pc=vs.peers[peerId];if(pc){try{pc.close()}catch(e){}delete vs.peers[peerId]}
- delete vs.pendingIce?.[peerId];const audio=document.getElementById(`voice-audio-${key}-${peerId}`);if(audio)audio.remove();
+ delete vs.pendingIce?.[peerId];const audio=document.getElementById(`voice-audio-${key}-${peerId}`);if(audio)audio.remove();document.getElementById(`remote-video-tile-${key}-${peerId}`)?.remove();
+ const grid=document.getElementById(`room-video-${key}`);if(grid&&!grid.children.length)grid.classList.add('hidden');
 }
 function removeVoiceReservation(key,peerId){ if(peerId&&peerId!==user.id){} }
 async function handleVoiceSignal(key,payload){
@@ -4095,20 +4210,19 @@ async function handleVoiceSignal(key,payload){
  const vs=ensureVoiceState(key),rc=roomChannels[key];if(!rc||!vs.joined)return;
  try{
   if(payload.type==='join'){
-   if(String(user.id)>String(payload.fromId))return;
    const pc=createPeer(key,payload.fromId);if(!pc)return;
    const offer=await pc.createOffer();await pc.setLocalDescription(offer);
    await rc.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'offer',fromId:user.id,targetId:payload.fromId,sdp:offer}});
   }else if(payload.type==='offer'&&payload.targetId===user.id){
    const pc=createPeer(key,payload.fromId);if(!pc)return;
    await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
-   const pending=vs.pendingIce?.[payload.fromId]||[];for(const c of pending)await pc.addIceCandidate(c).catch(()=>{});delete vs.pendingIce[payload.fromId];
+   await flushPendingIce(vs,payload.fromId,pc);
    const answer=await pc.createAnswer();await pc.setLocalDescription(answer);
    await rc.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'answer',fromId:user.id,targetId:payload.fromId,sdp:answer}});
   }else if(payload.type==='answer'&&payload.targetId===user.id){
-   const pc=vs.peers[payload.fromId];if(pc&&!pc.remoteDescription)await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+   const pc=vs.peers[payload.fromId];if(pc&&!pc.remoteDescription){await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));await flushPendingIce(vs,payload.fromId,pc)}
   }else if(payload.type==='ice'&&payload.targetId===user.id){
-   const pc=vs.peers[payload.fromId];if(!pc)return;
+   const pc=vs.peers[payload.fromId];if(!pc){(vs.pendingIce[payload.fromId]??=[]).push(payload.candidate);return}
    if(pc.remoteDescription?.type)await pc.addIceCandidate(payload.candidate).catch(()=>{});else (vs.pendingIce[payload.fromId]??=[]).push(payload.candidate);
   }else if(payload.type==='leave')closePeer(key,payload.fromId);
  }catch(e){console.warn('Voice signaling failed',e)}
@@ -4120,15 +4234,16 @@ function toggleMute(key){
 async function leaveVoice(key){
  const vs=voiceState[key];if(!vs||!vs.joined)return;
  stopVoiceHeartbeat(key);
+ await stopLiveStudyClock(key,true);
  Object.keys(vs.peers).forEach(pid=>closePeer(key,pid));
- if(vs.stream)vs.stream.getTracks().forEach(t=>t.stop());vs.stream=null;vs.joined=false;vs.muted=false;
- const rc=roomChannels[key];if(rc){try{await rc.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'leave',fromId:user.id}})}catch(e){};if(rc.joined)try{await rc.channel.track({user_id:user.id,name:profile?.name||user.email||'Member',voice:false})}catch(e){}}
+ if(vs.stream)vs.stream.getTracks().forEach(t=>t.stop());vs.stream=null;vs.joined=false;vs.muted=false;vs.camera=false;
+ const rc=roomChannels[key];if(rc){try{await rc.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'leave',fromId:user.id}})}catch(e){};if(rc.joined)try{await rc.channel.track({user_id:user.id,name:profile?.name||user.email||'Member',voice:false,camera:false})}catch(e){}}
  await releaseVoiceSlot(key);
- const jb=document.getElementById(`voice-join-${key}`),mb=document.getElementById(`voice-mute-${key}`),lb=document.getElementById(`voice-leave-${key}`),ab=document.getElementById(`room-audio-${key}`);
- if(jb)jb.classList.remove('hidden');if(mb)mb.classList.add('hidden');if(lb)lb.classList.add('hidden');if(ab)ab.innerHTML='';renderRoomMembers(key);
+ const jb=document.getElementById(`voice-join-${key}`),cb=document.getElementById(`camera-join-${key}`),mb=document.getElementById(`voice-mute-${key}`),ct=document.getElementById(`camera-toggle-${key}`),lb=document.getElementById(`voice-leave-${key}`),ab=document.getElementById(`room-audio-${key}`),vg=document.getElementById(`room-video-${key}`);
+ if(jb)jb.classList.remove('hidden');if(cb)cb.classList.remove('hidden');if(mb)mb.classList.add('hidden');if(ct)ct.classList.add('hidden');if(lb)lb.classList.add('hidden');if(ab)ab.innerHTML='';if(vg){vg.innerHTML='';vg.classList.add('hidden')}document.getElementById(`enable-audio-${key}`)?.classList.add('hidden');renderRoomMembers(key);
 }
 function stopAllVoiceAndRooms(){
- Object.keys(voiceState).forEach(key=>{const vs=voiceState[key];if(!vs)return;stopVoiceHeartbeat(key);Object.keys(vs.peers).forEach(pid=>closePeer(key,pid));if(vs.stream)vs.stream.getTracks().forEach(t=>t.stop());try{releaseVoiceSlot(key)}catch(e){}});
+ Object.keys(voiceState).forEach(key=>{const vs=voiceState[key];if(!vs)return;stopVoiceHeartbeat(key);clearInterval(vs.liveTimer);Object.keys(vs.peers).forEach(pid=>closePeer(key,pid));if(vs.stream)vs.stream.getTracks().forEach(t=>t.stop());try{releaseVoiceSlot(key)}catch(e){}});
  voiceState={};Object.keys(roomChannels).forEach(key=>{const rc=roomChannels[key];if(!rc)return;try{rc.channel.untrack()}catch(e){}try{db.removeChannel(rc.channel)}catch(e){}});roomChannels={};
 }
 window.addEventListener('pagehide',()=>{try{stopAllVoiceAndRooms()}catch(e){}});
