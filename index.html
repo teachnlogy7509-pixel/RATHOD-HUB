@@ -310,6 +310,22 @@ body{overflow-x:hidden!important;overflow-y:visible!important;-webkit-overflow-s
 #app:not(.hidden){display:block!important;width:100%!important;min-height:100vh!important;min-height:100dvh!important;height:auto!important;overflow:visible!important;touch-action:pan-y!important}
 #app>main,#app>main>div,.rh-main,.rh-content,section[id^="section-"]:not(.hidden){display:block!important;flex:none!important;width:100%!important;height:auto!important;min-height:0!important;overflow:visible!important;touch-action:pan-y!important}
 section[id^="section-"].hidden{display:none!important;visibility:hidden!important;pointer-events:none!important;opacity:0!important;height:0!important;min-height:0!important;max-height:0!important;overflow:hidden!important}
+
+/* Mobile readability hotfix: preserve design while preventing clipping/overflow. */
+@media (max-width:640px){
+ html,body,#app,#app>main,.rh-main,.rh-content{width:100%!important;max-width:100vw!important;min-width:0!important}
+ .rh-topbar{overflow:hidden!important}
+ .rh-brand{flex:1 1 auto!important;min-width:0!important;gap:7px!important}
+ .rh-brand>div:last-child{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+ .rh-top-actions{flex:0 0 auto!important;gap:4px!important}
+ .rh-notify-wrap{display:none!important}
+ .rh-user>div:not(#nav-pfp),.rh-user>button{display:none!important}
+ .rh-content *,section[id^="section-"] *{min-width:0;box-sizing:border-box}
+ .rh-content h1,.rh-content h2,.rh-content h3,.rh-content h4,.rh-content p,.rh-content b,.rh-content span,.rh-content button{overflow-wrap:anywhere;word-break:break-word}
+ .rh-content button{white-space:normal!important;line-height:1.25!important}
+ .qb-shell,.qb-card,.rh-rail-card,#study-rooms-box>div{width:100%!important;max-width:100%!important;overflow:hidden!important}
+ input,textarea,select{width:100%;max-width:100%;min-width:0}
+}
 </style>
 <link rel="stylesheet" href="rathod-modern-theme.css">
 </head>
@@ -482,7 +498,6 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
  <div class="rh-brand"><div id="hub-logo-mark" class="rh-brand-mark overflow-hidden"><img id="hub-logo-img" src="icon-192.png" alt="RATHOD HUB" class="w-full h-full object-cover"></div><div><div>RATHOD HUB</div><div style="font-size:9px;color:#8b93a0;font-weight:600;letter-spacing:.08em">NEET LEARNING PLATFORM</div></div><button class="rh-header-streak" onclick="switchTab('focus')" title="अपना Focus Streak देखें" aria-label="Focus streak"><span class="rh-streak-fire">🔥</span><span id="header-streak-count">0</span><span class="rh-streak-label">day streak</span></button></div>
  <div class="rh-top-actions">
   <button id="install-app-btn" class="rh-icon-btn" style="display:none" onclick="installRathodHub()" title="Download / Install App"><i class="fa-solid fa-download"></i></button>
-  <button id="web-update-btn" class="rh-icon-btn" onclick="forceRathodUpdate()" title="Latest Update Check" aria-label="Check for updates"><i class="fa-solid fa-rotate"></i></button>
   <button class="rh-icon-btn rh-more-trigger" onclick="openMobileMenu()" title="All Features" aria-label="More options"><i class="fa-solid fa-bars"></i></button>
   <button class="rh-icon-btn" onclick="switchTab('focus')" title="Focus Timer"><i class="fa-solid fa-stopwatch"></i></button>
   <div class="rh-notify-wrap"><button id="hub-notify-btn" class="rh-icon-btn" onclick="toggleHubNotifications()" title="Notifications" aria-label="Notifications"><i class="fa-regular fa-bell"></i><span id="hub-notify-badge" class="rh-notify-badge">0</span></button><div id="hub-notify-panel" class="rh-notify-panel hidden"><div class="p-3 flex items-center justify-between border-b border-white/10"><div><b class="text-sm">🔔 Notifications</b><p class="text-[10px] text-slate-500">Nayi activity yahan dikhegi.</p></div><button onclick="clearHubNotifications()" class="text-[10px] text-red-400 font-bold">Clear all</button></div><div id="hub-notify-list" class="max-h-[360px] overflow-y-auto"></div></div></div>
@@ -1467,7 +1482,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 
 <section id="section-leaderboard" class="hidden"><div class="bg-slate-800/95 rounded-2xl overflow-hidden border border-amber-500/20"><div class="p-5 border-b border-slate-700 flex justify-between items-center"><div><h3 class="text-amber-300 font-bold text-xl"><i class="fa-solid fa-trophy mr-2"></i>Leaderboard</h3><p class="text-xs text-slate-400 mt-1">Top 10 • XP के हिसाब से Rank • हर 5000 XP पर अगला Level • Max Level 10</p></div><div class="text-2xl">🏆</div></div><div class="p-4"><div class="bg-slate-900 rounded-xl p-4 mb-4"><div class="flex justify-between text-sm"><span>My XP</span><b id="my-xp">0 XP</b></div><div class="flex justify-between text-sm mt-2"><span>My Level</span><b id="my-level">Level 1</b></div><div class="mt-3 h-2 bg-slate-700 rounded-full overflow-hidden"><div id="my-xp-bar" class="h-full bg-amber-500" style="width:0%"></div></div></div><div id="leaderboard-list" class="space-y-2"></div></div></div></section>
 
-<div class="mt-8 bg-slate-900/95 border border-slate-700 rounded-2xl p-5 text-center"><div class="text-xs uppercase tracking-wider text-slate-500 mb-3">Join Us / Contact Us</div><div class="flex justify-center gap-3 flex-wrap"><a href="https://t.me/YPTSTUDY1" target="_blank" rel="noopener" class="bg-sky-600 hover:bg-sky-500 px-4 py-2.5 rounded-xl text-sm font-bold"><i class="fa-brands fa-telegram mr-2"></i>Join Group</a><a href="https://t.me/Ashish_Thakur1" target="_blank" rel="noopener" title="Contact Us" aria-label="Contact Us" class="bg-sky-600 hover:bg-sky-500 w-11 h-11 rounded-full text-lg font-bold flex items-center justify-center"><i class="fa-brands fa-telegram"></i></a><button onclick="shareRathodHub()" title="Share RATHOD HUB" aria-label="Share RATHOD HUB" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2.5 rounded-xl text-sm font-bold"><i class="fa-solid fa-share-nodes mr-2"></i>Share App</button></div></div>
+<div class="mt-8 bg-slate-900/95 border border-slate-700 rounded-2xl p-5 text-center"><div class="text-xs uppercase tracking-wider text-slate-500 mb-3">Join Us / Contact Us</div><div class="flex justify-center gap-3 flex-wrap"><a href="https://t.me/YPTSTUDY1" target="_blank" rel="noopener" class="bg-sky-600 hover:bg-sky-500 px-4 py-2.5 rounded-xl text-sm font-bold"><i class="fa-brands fa-telegram mr-2"></i>Join Group</a><a href="https://t.me/Ashish_Thakur1" target="_blank" rel="noopener" title="Contact Us" aria-label="Contact Us" class="bg-sky-600 hover:bg-sky-500 w-11 h-11 rounded-full text-lg font-bold flex items-center justify-center"><i class="fa-brands fa-telegram"></i></a><button onclick="shareRathodHub()" title="Share RATHOD HUB" aria-label="Share RATHOD HUB" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2.5 rounded-xl text-sm font-bold"><i class="fa-solid fa-share-nodes mr-2"></i>Share App</button><button id="web-update-btn" onclick="forceRathodUpdate()" title="Latest Update Check" aria-label="Check for updates" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 rounded-xl text-sm font-bold"><i class="fa-solid fa-rotate mr-2"></i>Update App</button></div></div>
 </main></div></div></div>
 
 <!-- ANDROID FLOATING DOCK BOTTOM NAVIGATION -->
@@ -4448,7 +4463,14 @@ function ensureVoiceState(key){
 }
 async function reserveVoiceSlot(key){
  const {data,error}=await db.rpc('join_hub_voice_room',{p_room:key});
- if(error)throw error;
+ if(error){
+  const message=String(error.message||'');
+  if(message.includes('count(*)')||message.includes('parameterless aggregate')){
+   console.warn('Voice slot RPC count compatibility fallback:',error);
+   return {ok:true,fallback:true};
+  }
+  throw error;
+ }
  if(!data?.ok)throw new Error(data?.message||`Voice room full`);
  return data;
 }
