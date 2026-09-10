@@ -1898,9 +1898,11 @@ db.auth.onAuthStateChange((event,s)=>{
 async function cleanupFocusSystem(){if(focusInterval)clearInterval(focusInterval);focusLiveSessionId=null;focusLastDbSyncAt=0;focusInterval=null;if(focusHeartbeat)clearInterval(focusHeartbeat);focusHeartbeat=null;if(focusChannel){try{await db.removeChannel(focusChannel)}catch(e){}focusChannel=null}focusReady=false}
 async function logout(){await cleanupChatSubscription();await cleanupGamePresence();await cleanupFocusSystem();await nthCleanup();stopAllVoiceAndRooms();await db.auth.signOut();setAppScreenVisibility(false);location.reload()}
 
-function openDailyBattle(){
+async function openDailyBattle(){
   switchTab('quiz');
   document.getElementById('btn-daily-battle')?.classList.add('rh-active');
+  await loadScheduledBattle();
+  startDailyBattleClock();
 }
 
 function switchTab(tab){
@@ -3350,10 +3352,18 @@ async function loadScheduledBattle() {
       console.warn('Daily Battle schedule does not contain exactly 15 prepared questions.');
     }
 
-    syncDailyBattleClock();
+    startDailyBattleClock();
   } catch (err) {
     console.error("loadScheduledBattle failed", err);
   }
+}
+
+function startDailyBattleClock(){
+  if(battleSyncInterval) clearInterval(battleSyncInterval);
+  battleSyncInterval = null;
+  if(!activeScheduledBattle) return;
+  syncDailyBattleClock();
+  battleSyncInterval = setInterval(syncDailyBattleClock, 250);
 }
 
 function syncDailyBattleClock() {
@@ -3390,6 +3400,12 @@ function syncDailyBattleClock() {
   if(countdownEl) countdownEl.innerText = '00:00:00 • LIVE';
   syncLiveDailyQuestion(elapsed);
 }
+
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&user){
+    loadScheduledBattle().catch(e=>console.warn('Daily Battle refresh failed',e));
+  }
+});
 
 function startSynchronizedBattle() {
   if(isBattleLive || !activeScheduledBattle) return;
