@@ -311,7 +311,21 @@ body{overflow-x:hidden!important;overflow-y:visible!important;-webkit-overflow-s
 #app>main,#app>main>div,.rh-main,.rh-content,section[id^="section-"]:not(.hidden){display:block!important;flex:none!important;width:100%!important;height:auto!important;min-height:0!important;overflow:visible!important;touch-action:pan-y!important}
 section[id^="section-"].hidden{display:none!important;visibility:hidden!important;pointer-events:none!important;opacity:0!important;height:0!important;min-height:0!important;max-height:0!important;overflow:hidden!important}
 
-/* Mobile readability hotfix: preserve design while preventing clipping/overflow. */
+</style>
+<link rel="stylesheet" href="rathod-modern-theme.css">
+<style id="rh-final-responsive-overrides">
+/* Final responsive overrides intentionally load after the premium theme. */
+@media (min-width:901px){
+ .rh-mobile-bottom,.rh-android-dock{display:none!important}
+ .rh-main{margin-left:216px!important;width:calc(100% - 216px)!important;max-width:calc(100vw - 216px)!important;min-width:0!important;padding-bottom:0!important;overflow-x:hidden!important}
+ .rh-content{width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:hidden!important;padding-bottom:30px!important}
+ .rh-home-grid,.rh-home-main,.rh-home-rail{min-width:0!important;max-width:100%!important}
+}
+@media (max-width:900px){
+ .rh-mobile-bottom,.rh-android-dock{display:flex!important}
+ .rh-main{margin-left:0!important;width:100%!important;max-width:100vw!important;min-width:0!important}
+ .rh-content{width:100%!important;max-width:100vw!important;min-width:0!important;overflow-x:hidden!important}
+}
 @media (max-width:640px){
  html,body,#app,#app>main,.rh-main,.rh-content{width:100%!important;max-width:100vw!important;min-width:0!important}
  .rh-topbar{overflow:hidden!important}
@@ -327,7 +341,6 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
  input,textarea,select{width:100%;max-width:100%;min-width:0}
 }
 </style>
-<link rel="stylesheet" href="rathod-modern-theme.css">
 </head>
 <body class="doctor-bg min-h-screen font-sans">
 
