@@ -313,7 +313,6 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
 
 </style>
 <link rel="stylesheet" href="rathod-modern-theme.css">
-<link rel="stylesheet" href="rathod-world.css">
 <style id="rh-final-responsive-overrides">
 /* Final responsive overrides intentionally load after the premium theme. */
 @media (min-width:901px){
@@ -1330,23 +1329,17 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 </div></section>
 
 <section id="section-games" class="hidden space-y-5">
-<div id="rh-world-launch" class="rh-world-launch">
-  <span class="rh-world-badge">● REALTIME SOCIAL WORLD</span>
-  <h2>🌍 RATHOD WORLD</h2>
-  <p>Apne avatar ke saath HUB City mein ghumo, online friends se milo, chat karo aur apna personal room design karo.</p>
-  <div class="rh-world-launch-actions"><button class="rh-world-enter" onclick="rhWorldOpen()">Enter RATHOD WORLD →</button><span class="rh-world-live"><i></i><span id="rh-world-launch-count">Live world ready</span></span></div>
+<div id="club-launch" class="rounded-2xl p-5 border border-fuchsia-500/30 bg-gradient-to-br from-slate-900 via-fuchsia-950/20 to-slate-900 shadow-2xl">
+  <span class="text-[9px] font-black tracking-[.16em] text-fuchsia-300">● OPTIONAL REALISTIC 3D WORLD</span>
+  <h2 class="text-2xl font-black mt-2">💞 CLUB</h2>
+  <p class="text-xs text-slate-400 mt-2 max-w-2xl">Realistic original 3D characters, premium avatars, emotes, combat, dates and consent-based couple interactions. Module केवल पहली बार खोलने पर download होगा.</p>
+  <div class="flex flex-wrap items-center gap-2 mt-4"><button id="club-install-btn" onclick="clubRequestOpen()" class="bg-gradient-to-r from-fuchsia-600 to-violet-600 px-5 py-3 rounded-xl text-xs font-black">DOWNLOAD & ENTER →</button><button onclick="clubRemovePack()" class="bg-slate-800 border border-slate-700 px-4 py-3 rounded-xl text-xs font-bold">Remove download</button><span id="club-pack-status" class="text-[10px] text-emerald-300"></span></div>
+  <div id="club-progress" class="hidden mt-3"><div class="h-2 rounded-full bg-slate-800 overflow-hidden"><div id="club-progress-bar" class="h-full w-0 bg-gradient-to-r from-fuchsia-500 to-cyan-400 transition-all"></div></div><div id="club-progress-text" class="text-[9px] text-slate-400 mt-1">Preparing…</div></div>
 </div>
-<div id="rh-world-shell" class="rh-world-shell hidden">
- <div class="rh-world-top"><div class="rh-world-title"><div class="rh-world-logo">🌍</div><div><b>RATHOD WORLD</b><span id="rh-world-place">HUB City</span></div></div><div class="rh-world-actions"><button onclick="rhWorldSetScene('room:'+user.id)">🏠 My Room</button><button onclick="rhWorldClose()">✕ Exit</button></div></div>
- <div class="rh-world-avatar-picker"><span class="text-[9px] text-slate-500 font-black mr-1 self-center">AVATAR</span><button data-rh-avatar="🧑‍⚕️">🧑‍⚕️</button><button data-rh-avatar="👩‍⚕️">👩‍⚕️</button><button data-rh-avatar="🧑‍🚀">🧑‍🚀</button><button data-rh-avatar="🧙">🧙</button><button data-rh-avatar="🥷">🥷</button><button data-rh-avatar="🦸">🦸</button><button data-rh-avatar="🧑‍🎓">🧑‍🎓</button><button data-rh-avatar="🤖">🤖</button></div>
- <div class="rh-world-scene-tabs"><button class="active" data-rh-world-scene="city">🏙️ HUB City</button><button data-rh-world-scene="park">🌙 Moon Park</button><button data-rh-world-scene="cafe">☕ Neon Café</button><button data-rh-world-scene="arcade">🕹️ Game Zone</button><button data-rh-world-scene="room-self">🏠 My Room</button></div>
- <div class="rh-world-layout">
-  <div class="rh-world-stage"><canvas id="rh-world-canvas" class="rh-world-canvas" aria-label="RATHOD WORLD multiplayer map"></canvas><div class="rh-world-hud"><i></i><span id="rh-world-count">1 HERE • 1 ONLINE</span></div><div class="rh-world-tip">Map पर tap करें • PC: WASD / Arrow keys</div><div class="rh-world-dpad"><button class="up" onpointerdown="rhWorldDpad('up',true)" onpointerup="rhWorldDpad('up',false)" onpointercancel="rhWorldDpad('up',false)">▲</button><button class="down" onpointerdown="rhWorldDpad('down',true)" onpointerup="rhWorldDpad('down',false)" onpointercancel="rhWorldDpad('down',false)">▼</button><button class="left" onpointerdown="rhWorldDpad('left',true)" onpointerup="rhWorldDpad('left',false)" onpointercancel="rhWorldDpad('left',false)">◀</button><button class="right" onpointerdown="rhWorldDpad('right',true)" onpointerup="rhWorldDpad('right',false)" onpointercancel="rhWorldDpad('right',false)">▶</button></div></div>
-  <aside class="rh-world-side"><div class="rh-world-side-head"><b>👥 World Players</b><span class="rh-world-count">LIVE</span></div><div id="rh-world-people" class="rh-world-people"></div><div id="rh-world-feed" class="rh-world-feed"></div><div class="rh-world-chat"><input id="rh-world-chat-input" maxlength="80" placeholder="Chat bubble लिखें..."><button onclick="rhWorldSendChat()">➤</button></div><div id="rh-world-room-tools" class="rh-world-room-tools"><p>अपना room सजाएँ—friends live visit कर पाएँगे।</p><div class="rh-world-furniture"><button onclick="rhWorldAddFurniture('bed')">🛏️ Bed</button><button onclick="rhWorldAddFurniture('sofa')">🛋️ Sofa</button><button onclick="rhWorldAddFurniture('plant')">🪴 Plant</button><button onclick="rhWorldAddFurniture('lamp')">💡 Lamp</button><button onclick="rhWorldAddFurniture('game')">🕹️ Game</button><button onclick="rhWorldClearRoom()">🗑️ Clear</button></div></div></aside>
- </div>
-</div>
+<div id="club-age-modal" class="hidden fixed inset-0 z-[99990] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"><div class="w-full max-w-md bg-slate-950 border border-fuchsia-500/30 rounded-3xl p-6 shadow-2xl"><div class="text-4xl">🔞</div><h3 class="text-xl font-black mt-3">Age confirmation</h3><p class="text-sm text-slate-400 mt-2">Club केवल 18 वर्ष या उससे अधिक उम्र के users के लिए है। Couple actions mutual consent पर आधारित और non-explicit हैं.</p><div class="grid grid-cols-2 gap-2 mt-5"><button onclick="clubAgeClose()" class="bg-slate-800 py-3 rounded-xl text-xs font-bold">I am under 18</button><button onclick="clubConfirmAge()" class="bg-fuchsia-600 py-3 rounded-xl text-xs font-black">I am 18+ • Continue</button></div></div></div>
+<div id="club-frame-shell" class="hidden fixed inset-0 z-[99980] bg-black"><button onclick="clubClose()" class="fixed right-3 top-3 z-[99999] bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-black shadow-2xl">✕ EXIT CLUB</button><iframe id="club-frame" title="Club 3D World" class="w-full h-full border-0" allow="fullscreen"></iframe></div>
 <div id="classic-online-games" class="bg-slate-800/95 border border-cyan-500/30 rounded-2xl p-5"><div class="flex justify-between items-center"><div><h3 class="text-cyan-300 font-bold"><i class="fa-solid fa-gamepad mr-2"></i>Online Games</h3><p class="text-xs text-slate-400 mt-1">Online member को invite करके 1-vs-1 खेलो.</p></div><span id="online-count" class="text-[10px] bg-emerald-500/10 text-emerald-300 px-2 py-1 rounded">0 ONLINE</span></div><div id="online-players" class="mt-4 grid sm:grid-cols-2 gap-2"></div><div id="game-invites" class="mt-4 space-y-2"></div></div>
-<div id="game-lobby" class="bg-slate-800/95 rounded-2xl p-5"><div class="grid sm:grid-cols-2 gap-3"><button onclick="startLocalGame()" class="bg-indigo-600 hover:bg-indigo-500 p-4 rounded-xl font-bold text-left"><i class="fa-solid fa-chess-knight text-xl"></i><span class="block mt-2">Chess</span><span class="text-xs text-indigo-200 font-normal">Real legal-move chess</span></button><button onclick="startLocalGame()" class="bg-teal-600 hover:bg-teal-500 p-4 rounded-xl font-bold text-left"><i class="fa-solid fa-table-cells text-xl"></i><span class="block mt-2">Tic Tac Toe</span><span class="text-xs text-teal-100 font-normal">Classic 3×3 — 2 player</span></button></div></div>
+<div id="game-lobby" class="bg-slate-800/95 rounded-2xl p-5"><div class="grid sm:grid-cols-2 gap-3"><button onclick="startLocalGame('chess')" class="bg-indigo-600 hover:bg-indigo-500 p-4 rounded-xl font-bold text-left"><i class="fa-solid fa-chess-knight text-xl"></i><span class="block mt-2">Chess</span><span class="text-xs text-indigo-200 font-normal">Real legal-move chess</span></button><button onclick="startLocalGame('tictactoe')" class="bg-teal-600 hover:bg-teal-500 p-4 rounded-xl font-bold text-left"><i class="fa-solid fa-table-cells text-xl"></i><span class="block mt-2">Tic Tac Toe</span><span class="text-xs text-teal-100 font-normal">Classic 3×3 — 2 player</span></button></div></div>
 <div id="game-board-wrap" class="hidden bg-slate-800/95 border border-slate-700 rounded-2xl p-5"><div class="flex justify-between items-center mb-4"><div><h3 id="game-title" class="font-bold text-lg">Game</h3><p id="game-status" class="text-xs text-slate-400 mt-1"></p></div><button onclick="closeGame()" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-xs font-bold">Back</button></div><div id="chess-board" class="hidden mx-auto max-w-[440px] aspect-square grid grid-cols-8 rounded-xl overflow-hidden border border-slate-600 shadow-2xl"></div><div id="ttt-board" class="hidden mx-auto max-w-[360px] aspect-square grid grid-cols-3 gap-2"></div></div>
 </section>
 
@@ -2709,13 +2702,13 @@ async function receiveMoveRequest(p){
     const result=tttResult(board);
     currentGame.gameOver=!!result;
 
-    await roomSend('state',{
+    if(currentGame.online)await roomSend('state',{
       roomId:currentGame.roomId,type:'tictactoe',
       ttt:board.slice(),gameOver:currentGame.gameOver
     });
     renderTtt();
 
-    if(result)await roomSend('game-end',{roomId:currentGame.roomId,message:result});
+    if(currentGame.online&&result)await roomSend('game-end',{roomId:currentGame.roomId,message:result});
     return;
   }
 
@@ -2725,7 +2718,7 @@ async function receiveMoveRequest(p){
     try{legal=currentGame.chess.move({from:p.from,to:p.to,promotion:'q'})}catch(e){legal=null}
     if(!legal)return;
 
-    currentGame.gameOver=currentGame.chess.isGameOver();
+    currentGame.gameOver=currentGame.chess.game_over();
     currentGame.selected=null;
     renderChess();
 
@@ -2762,8 +2755,9 @@ function receiveGameEnd(p){
   document.getElementById('game-status').textContent=p.message||'Game over';
 }
 
-function startLocalGame(){
-  toast('पहले ONLINE user को invite करें.',false);
+function startLocalGame(type){
+  currentGame={type,online:false,roomId:null,role:'local',chess:type==='chess'?new Chess():null,ttt:type==='tictactoe'?Array(9).fill(''):null,selected:null,gameOver:false,connected:true};
+  document.getElementById('game-lobby').classList.add('hidden');document.getElementById('game-board-wrap').classList.remove('hidden');renderGame();
 }
 
 async function closeGame(){
@@ -2776,7 +2770,7 @@ async function closeGame(){
 function renderGame(){
   document.getElementById('chess-board').classList.toggle('hidden',currentGame.type!=='chess');
   document.getElementById('ttt-board').classList.toggle('hidden',currentGame.type!=='tictactoe');
-  document.getElementById('game-title').textContent=currentGame.type==='chess'?'♟ Chess — Online 2 Player':'⭕ Tic Tac Toe — Online 2 Player';
+  document.getElementById('game-title').textContent=currentGame.type==='chess'?'♟ Chess — '+(currentGame.online?'Online':'Local 2 Player'):'⭕ Tic Tac Toe — '+(currentGame.online?'Online':'Local 2 Player');
   if(currentGame.type==='chess')renderChess();
   if(currentGame.type==='tictactoe')renderTtt();
 }
@@ -2805,26 +2799,26 @@ function renderTtt(){
 }
 
 async function tttMove(i){
-  if(currentGame.type!=='tictactoe'||!currentGame.online||!currentGame.connected||currentGame.gameOver)return;
+  if(currentGame.type!=='tictactoe'||!currentGame.connected||currentGame.gameOver)return;
   const b=currentGame.ttt;
   if(b[i])return;
 
   const count=b.filter(Boolean).length;
   const turn=count%2?'O':'X';
-  const mine=currentGame.role==='host'?'X':'O';
+  const mine=currentGame.online?(currentGame.role==='host'?'X':'O'):turn;
 
-  if(turn!==mine)return toast('Opponent की turn है.',false);
+  if(currentGame.online&&turn!==mine)return toast('Opponent की turn है.',false);
 
-  if(currentGame.role==='host'){
-    b[i]='X';
+  if(!currentGame.online||currentGame.role==='host'){
+    b[i]=currentGame.online?'X':turn;
     const result=tttResult(b);
     currentGame.gameOver=!!result;
-    await roomSend('state',{
+    if(currentGame.online)await roomSend('state',{
       roomId:currentGame.roomId,type:'tictactoe',
       ttt:b.slice(),gameOver:currentGame.gameOver
     });
     renderTtt();
-    if(result)await roomSend('game-end',{roomId:currentGame.roomId,message:result});
+    if(currentGame.online&&result)await roomSend('game-end',{roomId:currentGame.roomId,message:result});
   }else{
     await roomSend('move-request',{
       roomId:currentGame.roomId,fromId:user.id,index:i,mark:'O'
@@ -2846,26 +2840,26 @@ function renderChess(){
   }).join('')).join('');
 
   const turn=currentGame.chess.turn()==='w'?'White':'Black';
-  const mine=currentGame.role==='host'?'White':'Black';
+  const mine=currentGame.online?(currentGame.role==='host'?'White':'Black'):'Both players';
   if(!currentGame.connected){document.getElementById('game-status').textContent='Opponent connect होने का इंतज़ार...';return;}
-  document.getElementById('game-status').textContent=currentGame.chess.isGameOver()?
+  document.getElementById('game-status').textContent=currentGame.chess.game_over()?
     chessResult():
-    `${turn} to move • आप: ${mine} • Online match${currentGame.chess.in_check()?' • CHECK':''}`;
+    `${turn} to move • ${currentGame.online?'आप: '+mine+' • Online match':'Local 2-player'}${currentGame.chess.in_check()?' • CHECK':''}`;
 }
 
 function chessResult(){
-  if(currentGame.chess.isCheckmate())
+  if(currentGame.chess.in_checkmate())
     return`Checkmate — ${currentGame.chess.turn()==='w'?'Black':'White'} wins!`;
-  if(currentGame.chess.isDraw())return'Draw!';
+  if(currentGame.chess.in_draw())return'Draw!';
   return'Game over';
 }
 
 async function chessClick(r,c){
-  if(!currentGame.online||currentGame.type!=='chess'||!currentGame.connected||currentGame.gameOver)return;
+  if(currentGame.type!=='chess'||!currentGame.connected||currentGame.gameOver)return;
 
   const sq='abcdefgh'[c]+(8-r);
   const piece=currentGame.chess.get(sq);
-  const mine=currentGame.role==='host'?'w':'b';
+  const mine=currentGame.online?(currentGame.role==='host'?'w':'b'):currentGame.chess.turn();
 
   if(currentGame.chess.turn()!==mine)
     return toast('Opponent की turn है.',false);
@@ -2903,19 +2897,19 @@ async function chessClick(r,c){
 
     currentGame.selected=null;
 
-    if(currentGame.role==='host'){
+    if(!currentGame.online||currentGame.role==='host'){
       currentGame.chess.move({from,to:sq,promotion:'q'});
-      currentGame.gameOver=currentGame.chess.isGameOver();
+      currentGame.gameOver=currentGame.chess.game_over();
       renderChess();
 
-      await roomSend('state',{
+      if(currentGame.online)await roomSend('state',{
         roomId:currentGame.roomId,
         type:'chess',
         fen:currentGame.chess.fen(),
         gameOver:currentGame.gameOver
       });
 
-      if(currentGame.gameOver){
+      if(currentGame.online&&currentGame.gameOver){
         await roomSend('game-end',{
           roomId:currentGame.roomId,
           message:chessResult()
@@ -5529,7 +5523,7 @@ document.getElementById('admin-test-form')?.addEventListener('submit',createHubT
 
 
 </script>
-<script src="rathod-world.js"></script>
+<script src="club-loader.js"></script>
 <script src="rathod-modern-effects.js"></script>
 </body>
 </html>
