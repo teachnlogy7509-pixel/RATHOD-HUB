@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rathod-hub-v4';
+const CACHE_NAME = 'rathod-hub-v5';
 const APP_SHELL = [
   './',
   './index.html',
@@ -25,6 +25,11 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const request = event.request;
   if (request.method !== 'GET') return;
+  const path = new URL(request.url).pathname;
+  if (path.includes('/models/') || path.endsWith('/club-world.html')) {
+    event.respondWith(fetch(request));
+    return;
+  }
 
   if (request.mode === 'navigate') {
     event.respondWith(
