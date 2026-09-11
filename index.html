@@ -1340,7 +1340,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 <div id="club-frame-shell" class="hidden fixed inset-0 z-[99980] bg-black"><button onclick="clubClose()" class="fixed right-3 top-3 z-[99999] bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-black shadow-2xl">✕ EXIT CLUB</button><iframe id="club-frame" title="Club 3D World" class="w-full h-full border-0" allow="fullscreen"></iframe></div>
 <div id="classic-online-games" class="bg-slate-800/95 border border-cyan-500/30 rounded-2xl p-5"><div class="flex justify-between items-center"><div><h3 class="text-cyan-300 font-bold"><i class="fa-solid fa-gamepad mr-2"></i>Online Games</h3><p class="text-xs text-slate-400 mt-1">Online member को invite करके 1-vs-1 खेलो.</p></div><span id="online-count" class="text-[10px] bg-emerald-500/10 text-emerald-300 px-2 py-1 rounded">0 ONLINE</span></div><div id="online-players" class="mt-4 grid sm:grid-cols-2 gap-2"></div><div id="game-invites" class="mt-4 space-y-2"></div></div>
 <div id="game-lobby" class="bg-slate-800/95 rounded-2xl p-5"><div class="grid sm:grid-cols-2 gap-3"><button onclick="startLocalGame('chess')" class="bg-indigo-600 hover:bg-indigo-500 p-4 rounded-xl font-bold text-left"><i class="fa-solid fa-chess-knight text-xl"></i><span class="block mt-2">Chess</span><span class="text-xs text-indigo-200 font-normal">Real legal-move chess</span></button><button onclick="startLocalGame('tictactoe')" class="bg-teal-600 hover:bg-teal-500 p-4 rounded-xl font-bold text-left"><i class="fa-solid fa-table-cells text-xl"></i><span class="block mt-2">Tic Tac Toe</span><span class="text-xs text-teal-100 font-normal">Classic 3×3 — 2 player</span></button></div></div>
-<div id="game-board-wrap" class="hidden bg-slate-800/95 border border-slate-700 rounded-2xl p-5"><div class="flex justify-between items-center mb-4"><div><h3 id="game-title" class="font-bold text-lg">Game</h3><p id="game-status" class="text-xs text-slate-400 mt-1"></p></div><button onclick="closeGame()" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-xs font-bold">Back</button></div><div id="chess-board" class="hidden mx-auto max-w-[440px] aspect-square grid grid-cols-8 rounded-xl overflow-hidden border border-slate-600 shadow-2xl"></div><div id="ttt-board" class="hidden mx-auto max-w-[360px] aspect-square grid grid-cols-3 gap-2"></div></div>
+<div id="game-board-wrap" class="hidden bg-slate-800/95 border border-slate-700 rounded-2xl p-5"><div class="flex justify-between items-center mb-4"><div><h3 id="game-title" class="font-bold text-lg">Game</h3><p id="game-status" class="text-xs text-slate-400 mt-1"></p></div><div class="flex gap-2"><button onclick="restartCurrentGame()" class="bg-violet-600 hover:bg-violet-500 px-3 py-2 rounded-lg text-xs font-bold">New Game</button><button onclick="closeGame()" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-xs font-bold">Back</button></div></div><div id="chess-board" class="hidden mx-auto max-w-[440px] aspect-square grid grid-cols-8 rounded-xl overflow-hidden border border-slate-600 shadow-2xl"></div><div id="ttt-board" class="hidden mx-auto max-w-[360px] aspect-square grid grid-cols-3 gap-2"></div></div>
 </section>
 
 <section id="section-vault" class="hidden space-y-5"><div class="bg-slate-800/95 border border-violet-500/30 rounded-2xl p-5"><div class="flex justify-between items-center mb-3"><div><h3 class="text-violet-300 font-bold"><i class="fa-solid fa-vault mr-2"></i>My Vault</h3><p class="text-xs text-slate-400 mt-1">आपकी private files.</p></div><span class="text-[10px] bg-violet-500/10 text-violet-300 px-2 py-1 rounded">PRIVATE</span></div><form id="vault-form" class="space-y-3"><input id="vault-title" maxlength="120" required placeholder="File name / title" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm"><input id="vault-file" type="file" required class="w-full text-xs text-slate-400"><button class="w-full bg-violet-600 hover:bg-violet-500 py-3 rounded-xl text-sm font-bold">Save to Vault</button></form></div><div class="bg-slate-800/95 rounded-2xl p-5"><div class="flex justify-between items-center mb-3"><h3 class="font-bold">Saved Files</h3><span id="vault-count" class="text-xs text-slate-400"></span></div><div id="vault-list" class="space-y-2"></div></div></section>
@@ -2756,9 +2756,12 @@ function receiveGameEnd(p){
 }
 
 function startLocalGame(type){
+  if(!['chess','tictactoe'].includes(type))return toast('Game type नहीं मिला.',false);
+  if(type==='chess'&&typeof Chess!=='function')return toast('Chess engine load नहीं हुआ—एक बार Refresh करें.',false);
   currentGame={type,online:false,roomId:null,role:'local',chess:type==='chess'?new Chess():null,ttt:type==='tictactoe'?Array(9).fill(''):null,selected:null,gameOver:false,connected:true};
   document.getElementById('game-lobby').classList.add('hidden');document.getElementById('game-board-wrap').classList.remove('hidden');renderGame();
 }
+function restartCurrentGame(){if(!currentGame.type)return;const t=currentGame.type;if(currentGame.online)return toast('Online game में restart available नहीं है.',false);startLocalGame(t)}
 
 async function closeGame(){
   await cleanupGameRoom();
@@ -2785,7 +2788,7 @@ function tttResult(b){
 function renderTtt(){
   const b=currentGame.ttt||Array(9).fill('');
   document.getElementById('ttt-board').innerHTML=b.map((v,i)=>
-    `<button onclick="tttMove(${i})" ${v||currentGame.gameOver?'disabled':''} class="bg-slate-900 border border-slate-700 hover:bg-slate-700 disabled:opacity-80 rounded-xl text-5xl font-black ${v==='X'?'text-cyan-300':'text-pink-300'}">${v||''}</button>`
+    `<button onclick="tttMove(${i})" ${v||currentGame.gameOver?'disabled':''} class="aspect-square min-h-[82px] bg-slate-900 border border-slate-700 hover:bg-slate-700 disabled:opacity-80 rounded-xl text-5xl font-black ${v==='X'?'text-cyan-300':'text-pink-300'}">${v||''}</button>`
   ).join('');
 
   if(currentGame.gameOver){
@@ -2795,7 +2798,7 @@ function renderTtt(){
   const count=b.filter(Boolean).length;
   const turn=count%2?'O':'X';
   const mine=currentGame.role==='host'?'X':'O';
-  document.getElementById('game-status').textContent=`${turn} की turn • आप: ${mine} • Online match`;
+  document.getElementById('game-status').textContent=currentGame.online?`${turn} की turn • आप: ${mine} • Online match`:`${turn} की turn • Local 2-player`;
 }
 
 async function tttMove(i){
@@ -2828,15 +2831,15 @@ async function tttMove(i){
 
 function renderChess(){
   const board=document.getElementById('chess-board');
-  const u={p:'♟',r:'♜',n:'♞',b:'♝',q:'♛',k:'♚',P:'♙',R:'♖',N:'♘',B:'♗',Q:'♕',K:'♔'};
+  const u={p:'P',r:'R',n:'N',b:'B',q:'Q',k:'K'};
   const arr=currentGame.chess.board(),sel=currentGame.selected;
 
   board.innerHTML=arr.map((row,r)=>row.map((cell,c)=>{
-    const p=cell?u[cell.color==='w'?cell.type.toUpperCase():cell.type]:'';
+    const p=cell?u[cell.type]:'';
     const dark=(r+c)%2;
     const sq='abcdefgh'[c]+(8-r);
     const chosen=sel===sq;
-    return `<button onclick="chessClick(${r},${c})" ${currentGame.gameOver?'disabled':''} title="${sq}" class="flex items-center justify-center text-[clamp(25px,7vw,50px)] ${dark?'bg-slate-600':'bg-slate-300'} ${cell?.color==='w'?'text-white':'text-slate-950'} ${chosen?'ring-4 ring-yellow-400 ring-inset':''} disabled:opacity-90">${p}</button>`;
+    return `<button onclick="chessClick(${r},${c})" ${currentGame.gameOver?'disabled':''} title="${sq}" aria-label="${cell?(cell.color==='w'?'White ':'Black ')+({p:'pawn',r:'rook',n:'knight',b:'bishop',q:'queen',k:'king'})[cell.type]:'Empty'} ${sq}" class="aspect-square flex items-center justify-center font-black font-serif text-[clamp(21px,6vw,42px)] ${dark?'bg-slate-600':'bg-slate-300'} ${cell?.color==='w'?'text-white':'text-slate-950'} ${chosen?'ring-4 ring-yellow-400 ring-inset':''} disabled:opacity-90">${p}</button>`;
   }).join('')).join('');
 
   const turn=currentGame.chess.turn()==='w'?'White':'Black';
