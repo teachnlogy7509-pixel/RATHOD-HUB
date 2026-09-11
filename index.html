@@ -881,7 +881,7 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
    <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('community')"><div class="rh-feature-icon"><i class="fa-solid fa-users text-violet-400"></i></div><b>Community</b><p>Peer discussions</p></div>
    <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('chatroom')"><div class="rh-feature-icon"><i class="fa-solid fa-comments text-sky-400"></i></div><b>Live Chat</b><p>Student doubts</p></div>
    <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('stories')"><div class="rh-feature-icon"><i class="fa-solid fa-circle-play text-pink-400"></i></div><b>Stories</b><p>24h updates</p></div>
-   <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('games')"><div class="rh-feature-icon"><i class="fa-solid fa-gamepad text-fuchsia-400"></i></div><b>Games</b><p>Chess & Tic Tac Toe</p></div>
+   <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('games')"><div class="rh-feature-icon"><i class="fa-solid fa-gamepad text-fuchsia-400"></i></div><b>Games</b><p>Chess & Tic Tac Toe vs Computer</p></div>
    <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('hubevents')"><div class="rh-feature-icon"><i class="fa-solid fa-bolt text-amber-400"></i></div><b>Live Events</b><p>Weekly challenges</p></div>
    <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('leaderboard')"><div class="rh-feature-icon"><i class="fa-solid fa-ranking-star text-amber-400"></i></div><b>Leaderboard</b><p>XP • Level • Rank</p></div>
    <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('tests')"><div class="rh-feature-icon"><i class="fa-solid fa-file-pen text-emerald-400"></i></div><b>45Q Tests</b><p>Physics / Chemistry</p></div>
@@ -1329,17 +1329,8 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 </div></section>
 
 <section id="section-games" class="hidden space-y-5">
-<div id="club-launch" class="rounded-2xl p-5 border border-fuchsia-500/30 bg-gradient-to-br from-slate-900 via-fuchsia-950/20 to-slate-900 shadow-2xl">
-  <span class="text-[9px] font-black tracking-[.16em] text-fuchsia-300">● OPTIONAL REALISTIC 3D WORLD</span>
-  <h2 class="text-2xl font-black mt-2">🌃 RATHOD NIGHTVERSE</h2>
-  <p class="text-xs text-slate-400 mt-2 max-w-2xl">Realistic original 3D characters, premium avatars, emotes, combat, dates and consent-based couple interactions. Module केवल पहली बार खोलने पर download होगा.</p>
-  <div class="flex flex-wrap items-center gap-2 mt-4"><button id="club-install-btn" onclick="clubRequestOpen()" class="bg-gradient-to-r from-fuchsia-600 to-violet-600 px-5 py-3 rounded-xl text-xs font-black">DOWNLOAD & ENTER →</button><button onclick="clubRemovePack()" class="bg-slate-800 border border-slate-700 px-4 py-3 rounded-xl text-xs font-bold">Remove download</button><span id="club-pack-status" class="text-[10px] text-emerald-300"></span></div>
-  <div id="club-progress" class="hidden mt-3"><div class="h-2 rounded-full bg-slate-800 overflow-hidden"><div id="club-progress-bar" class="h-full w-0 bg-gradient-to-r from-fuchsia-500 to-cyan-400 transition-all"></div></div><div id="club-progress-text" class="text-[9px] text-slate-400 mt-1">Preparing…</div></div>
-</div>
-<div id="club-age-modal" class="hidden fixed inset-0 z-[99990] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"><div class="w-full max-w-md bg-slate-950 border border-fuchsia-500/30 rounded-3xl p-6 shadow-2xl"><div class="text-4xl">🔞</div><h3 class="text-xl font-black mt-3">Age confirmation</h3><p class="text-sm text-slate-400 mt-2">RATHOD NIGHTVERSE केवल 18 वर्ष या उससे अधिक उम्र के users के लिए है। Couple actions mutual consent पर आधारित और non-explicit हैं.</p><div class="grid grid-cols-2 gap-2 mt-5"><button onclick="clubAgeClose()" class="bg-slate-800 py-3 rounded-xl text-xs font-bold">I am under 18</button><button onclick="clubConfirmAge()" class="bg-fuchsia-600 py-3 rounded-xl text-xs font-black">I am 18+ • Continue</button></div></div></div>
-<div id="club-frame-shell" class="hidden fixed inset-0 z-[99980] bg-black"><button onclick="clubClose()" class="fixed right-3 top-3 z-[99999] bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-black shadow-2xl">✕ EXIT NIGHTVERSE</button><iframe id="club-frame" title="RATHOD NIGHTVERSE 3D World" class="w-full h-full border-0" allow="fullscreen"></iframe></div>
 <div id="classic-online-games" class="bg-slate-800/95 border border-cyan-500/30 rounded-2xl p-5"><div class="flex justify-between items-center"><div><h3 class="text-cyan-300 font-bold"><i class="fa-solid fa-gamepad mr-2"></i>Online Games</h3><p class="text-xs text-slate-400 mt-1">Online member को invite करके 1-vs-1 खेलो.</p></div><span id="online-count" class="text-[10px] bg-emerald-500/10 text-emerald-300 px-2 py-1 rounded">0 ONLINE</span></div><div id="online-players" class="mt-4 grid sm:grid-cols-2 gap-2"></div><div id="game-invites" class="mt-4 space-y-2"></div></div>
-<div id="game-lobby" class="bg-slate-800/95 rounded-2xl p-5"><div class="grid sm:grid-cols-2 gap-3"><button onclick="startLocalGame('chess')" class="bg-indigo-600 hover:bg-indigo-500 p-4 rounded-xl font-bold text-left"><i class="fa-solid fa-chess-knight text-xl"></i><span class="block mt-2">Chess</span><span class="text-xs text-indigo-200 font-normal">Real legal-move chess</span></button><button onclick="startLocalGame('tictactoe')" class="bg-teal-600 hover:bg-teal-500 p-4 rounded-xl font-bold text-left"><i class="fa-solid fa-table-cells text-xl"></i><span class="block mt-2">Tic Tac Toe</span><span class="text-xs text-teal-100 font-normal">Classic 3×3 — 2 player</span></button></div></div>
+<div id="game-lobby" class="bg-slate-800/95 rounded-2xl p-5"><div class="grid sm:grid-cols-2 gap-3"><button onclick="startLocalGame('chess')" class="bg-indigo-600 hover:bg-indigo-500 p-4 rounded-xl font-bold text-left"><i class="fa-solid fa-chess-knight text-xl"></i><span class="block mt-2">Chess vs Computer</span><span class="text-xs text-indigo-200 font-normal">आप White • Computer Black</span></button><button onclick="startLocalGame('tictactoe')" class="bg-teal-600 hover:bg-teal-500 p-4 rounded-xl font-bold text-left"><i class="fa-solid fa-table-cells text-xl"></i><span class="block mt-2">Tic Tac Toe vs Computer</span><span class="text-xs text-teal-100 font-normal">आप X • Computer O</span></button></div></div>
 <div id="game-board-wrap" class="hidden bg-slate-800/95 border border-slate-700 rounded-2xl p-5"><div class="flex justify-between items-center mb-4"><div><h3 id="game-title" class="font-bold text-lg">Game</h3><p id="game-status" class="text-xs text-slate-400 mt-1"></p></div><div class="flex gap-2"><button onclick="restartCurrentGame()" class="bg-violet-600 hover:bg-violet-500 px-3 py-2 rounded-lg text-xs font-bold">New Game</button><button onclick="closeGame()" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-xs font-bold">Back</button></div></div><div id="chess-board" class="hidden mx-auto max-w-[440px] aspect-square grid grid-cols-8 rounded-xl overflow-hidden border border-slate-600 shadow-2xl"></div><div id="ttt-board" class="hidden mx-auto max-w-[360px] aspect-square grid grid-cols-3 gap-2"></div></div>
 </section>
 
@@ -1995,7 +1986,7 @@ const RH_SECTION_META={
  chatroom:['Live Chat','Live student discussion and doubts','fa-comments','sky'],
  diary:['Study Diary','Track your daily preparation','fa-calendar-check','emerald'],
  stories:['Stories','See what the community is sharing','fa-circle-play','pink'],
- games:['Games','Play Chess and Tic Tac Toe with students','fa-gamepad','fuchsia'],
+ games:['Games','Play vs Computer or invite students','fa-gamepad','fuchsia'],
  vault:['My Vault','Your private saved files','fa-lock','violet'],
  hubevents:['Live Events','Upcoming tests, challenges and events','fa-bolt','amber'],
  studyrooms:['Study Rooms','Join a room and study together','fa-door-open','teal'],
@@ -2758,7 +2749,7 @@ function receiveGameEnd(p){
 function startLocalGame(type){
   if(!['chess','tictactoe'].includes(type))return toast('Game type नहीं मिला.',false);
   if(type==='chess'&&typeof Chess!=='function')return toast('Chess engine load नहीं हुआ—एक बार Refresh करें.',false);
-  currentGame={type,online:false,roomId:null,role:'local',chess:type==='chess'?new Chess():null,ttt:type==='tictactoe'?Array(9).fill(''):null,selected:null,gameOver:false,connected:true};
+  currentGame={type,online:false,vsAI:true,aiThinking:false,roomId:null,role:'human',chess:type==='chess'?new Chess():null,ttt:type==='tictactoe'?Array(9).fill(''):null,selected:null,gameOver:false,connected:true};
   document.getElementById('game-lobby').classList.add('hidden');document.getElementById('game-board-wrap').classList.remove('hidden');renderGame();
 }
 function restartCurrentGame(){if(!currentGame.type)return;const t=currentGame.type;if(currentGame.online)return toast('Online game में restart available नहीं है.',false);startLocalGame(t)}
@@ -2773,7 +2764,7 @@ async function closeGame(){
 function renderGame(){
   document.getElementById('chess-board').classList.toggle('hidden',currentGame.type!=='chess');
   document.getElementById('ttt-board').classList.toggle('hidden',currentGame.type!=='tictactoe');
-  document.getElementById('game-title').textContent=currentGame.type==='chess'?'♟ Chess — '+(currentGame.online?'Online':'Local 2 Player'):'⭕ Tic Tac Toe — '+(currentGame.online?'Online':'Local 2 Player');
+  document.getElementById('game-title').textContent=currentGame.type==='chess'?'♟ Chess — '+(currentGame.online?'Online':'Vs Computer'):'⭕ Tic Tac Toe — '+(currentGame.online?'Online':'Vs Computer');
   if(currentGame.type==='chess')renderChess();
   if(currentGame.type==='tictactoe')renderTtt();
 }
@@ -2788,7 +2779,7 @@ function tttResult(b){
 function renderTtt(){
   const b=currentGame.ttt||Array(9).fill('');
   document.getElementById('ttt-board').innerHTML=b.map((v,i)=>
-    `<button onclick="tttMove(${i})" ${v||currentGame.gameOver?'disabled':''} class="aspect-square min-h-[82px] bg-slate-900 border border-slate-700 hover:bg-slate-700 disabled:opacity-80 rounded-xl text-5xl font-black ${v==='X'?'text-cyan-300':'text-pink-300'}">${v||''}</button>`
+    `<button onclick="tttMove(${i})" ${v||currentGame.gameOver||(!currentGame.online&&(currentGame.aiThinking||b.filter(Boolean).length%2===1))?'disabled':''} class="aspect-square min-h-[82px] bg-slate-900 border border-slate-700 hover:bg-slate-700 disabled:opacity-80 rounded-xl text-5xl font-black ${v==='X'?'text-cyan-300':'text-pink-300'}">${v||''}</button>`
   ).join('');
 
   if(currentGame.gameOver){
@@ -2798,7 +2789,7 @@ function renderTtt(){
   const count=b.filter(Boolean).length;
   const turn=count%2?'O':'X';
   const mine=currentGame.role==='host'?'X':'O';
-  document.getElementById('game-status').textContent=currentGame.online?`${turn} की turn • आप: ${mine} • Online match`:`${turn} की turn • Local 2-player`;
+  document.getElementById('game-status').textContent=currentGame.online?`${turn} की turn • आप: ${mine} • Online match`:(currentGame.aiThinking?'Computer (O) सोच रहा है…':'आपकी turn • आप X हैं');
 }
 
 async function tttMove(i){
@@ -2808,9 +2799,14 @@ async function tttMove(i){
 
   const count=b.filter(Boolean).length;
   const turn=count%2?'O':'X';
-  const mine=currentGame.online?(currentGame.role==='host'?'X':'O'):turn;
-
-  if(currentGame.online&&turn!==mine)return toast('Opponent की turn है.',false);
+  if(!currentGame.online){
+    if(currentGame.aiThinking||turn!=='X')return;
+    b[i]='X';const result=tttResult(b);currentGame.gameOver=!!result;renderTtt();
+    if(!result){currentGame.aiThinking=true;renderTtt();setTimeout(tttComputerMove,380)}
+    return;
+  }
+  const mine=currentGame.role==='host'?'X':'O';
+  if(turn!==mine)return toast('Opponent की turn है.',false);
 
   if(!currentGame.online||currentGame.role==='host'){
     b[i]=currentGame.online?'X':turn;
@@ -2829,6 +2825,15 @@ async function tttMove(i){
   }
 }
 
+function tttComputerMove(){
+ if(currentGame.type!=='tictactoe'||currentGame.online||currentGame.gameOver)return;
+ const b=currentGame.ttt,empty=b.map((v,i)=>v?'':i).filter(v=>v!=='');
+ const winMove=mark=>empty.find(i=>{const c=b.slice();c[i]=mark;return tttResult(c)===`Winner: ${mark}`});
+ let pick=winMove('O');if(pick===undefined)pick=winMove('X');if(pick===undefined&&b[4]==='')pick=4;
+ if(pick===undefined){const corners=[0,2,6,8].filter(i=>!b[i]);pick=corners.length?corners[Math.floor(Math.random()*corners.length)]:empty[Math.floor(Math.random()*empty.length)]}
+ if(pick!==undefined)b[pick]='O';currentGame.aiThinking=false;currentGame.gameOver=!!tttResult(b);renderTtt();
+}
+
 function renderChess(){
   const board=document.getElementById('chess-board');
   const u={p:'P',r:'R',n:'N',b:'B',q:'Q',k:'K'};
@@ -2843,11 +2848,11 @@ function renderChess(){
   }).join('')).join('');
 
   const turn=currentGame.chess.turn()==='w'?'White':'Black';
-  const mine=currentGame.online?(currentGame.role==='host'?'White':'Black'):'Both players';
+  const mine=currentGame.online?(currentGame.role==='host'?'White':'Black'):'White';
   if(!currentGame.connected){document.getElementById('game-status').textContent='Opponent connect होने का इंतज़ार...';return;}
   document.getElementById('game-status').textContent=currentGame.chess.game_over()?
     chessResult():
-    `${turn} to move • ${currentGame.online?'आप: '+mine+' • Online match':'Local 2-player'}${currentGame.chess.in_check()?' • CHECK':''}`;
+    currentGame.online?`${turn} to move • आप: ${mine} • Online match${currentGame.chess.in_check()?' • CHECK':''}`:(currentGame.aiThinking?'Computer (Black) सोच रहा है…':`आपकी turn • आप White हैं${currentGame.chess.in_check()?' • CHECK':''}`);
 }
 
 function chessResult(){
@@ -2862,7 +2867,7 @@ async function chessClick(r,c){
 
   const sq='abcdefgh'[c]+(8-r);
   const piece=currentGame.chess.get(sq);
-  const mine=currentGame.online?(currentGame.role==='host'?'w':'b'):currentGame.chess.turn();
+  const mine=currentGame.online?(currentGame.role==='host'?'w':'b'):'w';
 
   if(currentGame.chess.turn()!==mine)
     return toast('Opponent की turn है.',false);
@@ -2904,6 +2909,7 @@ async function chessClick(r,c){
       currentGame.chess.move({from,to:sq,promotion:'q'});
       currentGame.gameOver=currentGame.chess.game_over();
       renderChess();
+      if(!currentGame.online&&!currentGame.gameOver){currentGame.aiThinking=true;renderChess();setTimeout(chessComputerMove,480)}
 
       if(currentGame.online)await roomSend('state',{
         roomId:currentGame.roomId,
@@ -2931,6 +2937,15 @@ async function chessClick(r,c){
     currentGame.selected=null;
     renderChess();
   }
+}
+
+function chessComputerMove(){
+ if(currentGame.type!=='chess'||currentGame.online||currentGame.gameOver||currentGame.chess.turn()!=='b')return;
+ const value={p:1,n:3,b:3,r:5,q:9,k:100},moves=currentGame.chess.moves({verbose:true});
+ if(!moves.length){currentGame.aiThinking=false;currentGame.gameOver=true;renderChess();return}
+ moves.sort((a,b)=>(value[b.captured]||0)-(value[a.captured]||0));
+ const bestScore=value[moves[0].captured]||0,candidates=moves.filter(m=>(value[m.captured]||0)===bestScore),m=candidates[Math.floor(Math.random()*candidates.length)];
+ currentGame.chess.move({from:m.from,to:m.to,promotion:m.promotion||'q'});currentGame.aiThinking=false;currentGame.selected=null;currentGame.gameOver=currentGame.chess.game_over();renderChess();
 }
 
 /* Vault */
@@ -5526,7 +5541,7 @@ document.getElementById('admin-test-form')?.addEventListener('submit',createHubT
 
 
 </script>
-<script src="club-loader.js"></script>
+
 <script src="rathod-modern-effects.js"></script>
 </body>
 </html>
