@@ -1269,7 +1269,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 <section id="section-community" class="hidden space-y-4">
 <div class="bg-slate-950/95 border border-slate-700 rounded-2xl overflow-hidden">
  <div class="flex items-center justify-between gap-3 px-4 py-4 border-b border-slate-800"><div><h3 class="font-black text-white text-lg">Student Discussion Channel</h3><p class="text-[11px] text-slate-400 mt-1">NEET students ke posts, reactions aur discussions.</p></div><div class="flex items-center gap-2"><button onclick="toggleHubNotifications()" class="rh-icon-btn" title="Community notifications"><i class="fa-regular fa-bell"></i></button><button onclick="toggleCommunityComposer()" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-xl text-xs font-black">+ Create Post</button></div></div>
- <div class="flex items-center border-b border-slate-800 px-3"><button id="community-tab-all" onclick="setCommunityFeed('all')" class="px-4 py-3 text-xs font-black text-indigo-300 border-b-2 border-indigo-400">All Posts</button><button id="community-tab-mine" onclick="setCommunityFeed('mine')" class="px-4 py-3 text-xs font-bold text-slate-500 border-b-2 border-transparent">My Posts</button><span id="post-count" class="ml-auto text-[10px] text-slate-500"></span></div>
+ <div class="flex items-center border-b border-slate-800 px-2 overflow-x-auto"><button id="community-tab-all" onclick="setCommunityFeed('all')" class="px-3 sm:px-4 py-3 text-xs font-black text-indigo-300 border-b-2 border-indigo-400 whitespace-nowrap">All Posts</button><button id="community-tab-mine" onclick="setCommunityFeed('mine')" class="px-3 sm:px-4 py-3 text-xs font-bold text-slate-500 border-b-2 border-transparent whitespace-nowrap">My Posts</button><button id="community-tab-people" onclick="setCommunityFeed('people')" class="px-3 sm:px-4 py-3 text-xs font-bold text-slate-500 border-b-2 border-transparent whitespace-nowrap"><i class="fa-solid fa-user-group mr-1"></i>People</button><span id="post-count" class="ml-auto pl-2 text-[10px] text-slate-500 whitespace-nowrap"></span></div>
 </div>
 <div id="community-composer" class="hidden bg-slate-800/95 border border-teal-500/30 rounded-2xl p-5">
 <h3 class="text-teal-300 font-bold mb-3">Create Community Post</h3>
@@ -1282,7 +1282,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 </form>
 </div>
 <div id="posts-box" class="space-y-4"></div>
-<div class="bg-slate-800/95 border border-indigo-500/30 rounded-2xl p-5">
+<div id="community-people-panel" class="hidden bg-slate-800/95 border border-indigo-500/30 rounded-2xl p-5">
  <div class="flex justify-between items-center mb-3"><div><h3 class="font-bold text-indigo-300">👥 People</h3><p class="text-xs text-slate-400 mt-1">Members ko follow/unfollow karo.</p></div><span class="text-[10px] text-slate-500">Following <b id="my-following-count">0</b> • Followers <b id="my-followers-count">0</b></span></div>
  <input id="people-search" oninput="renderPeople()" placeholder="Search members..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm mb-3"><div id="people-box" class="space-y-2"></div>
 </div>
@@ -2433,21 +2433,43 @@ document.getElementById('post-form').addEventListener('submit',async e=>{
  }catch(err){toast(err.message||'Post failed',false)}finally{btn.disabled=false;btn.textContent='Post'}
 });
 
-let people=[],followingIds=new Set(),followerCount=0;
-async function loadPeople(){if(!user)return;const [{data:pd,error:pe},{data:fd,error:fe},{data:rd,error:re}]=await Promise.all([db.from('profiles').select('id,name,pfp_url,role').order('name',{ascending:true}).limit(200),db.from('hub_follows').select('following_id').eq('follower_id',user.id),db.from('hub_follows').select('follower_id').eq('following_id',user.id)]);if(pe||fe||re){console.warn(pe||fe||re);const b=document.getElementById('people-box');if(b)b.innerHTML='<div class="text-xs text-slate-500 p-3">Follow system ready.</div>';return}people=(pd||[]).filter(p=>p.id!==user.id);followingIds=new Set((fd||[]).map(x=>x.following_id));followerCount=(rd||[]).length;updateFollowCounts();renderPeople()}
-function updateFollowCounts(){document.getElementById('my-following-count')?.replaceChildren(document.createTextNode(followingIds.size));document.getElementById('my-followers-count')?.replaceChildren(document.createTextNode(followerCount))}
-function renderPeople(){const box=document.getElementById('people-box');if(!box)return;const q=(document.getElementById('people-search')?.value||'').toLowerCase().trim();const arr=people.filter(p=>!q||String(p.name||'Member').toLowerCase().includes(q));box.innerHTML=arr.length?arr.map(p=>{const f=followingIds.has(p.id);return `<div class="bg-slate-900/80 border border-slate-700 rounded-xl p-3 flex items-center gap-3"><div class="w-10 h-10 rounded-full overflow-hidden bg-slate-700 flex items-center justify-center">${p.pfp_url?driveImgHtml(p.pfp_url,'w-full h-full object-cover'):'👤'}</div><div class="min-w-0 flex-1"><b class="block truncate text-sm">${esc(p.name||'Member')}</b><span class="text-[10px] text-slate-500">${p.role==='admin'?'ADMIN':'MEMBER'}</span></div><button onclick="toggleFollow('${p.id}')" class="${f?'bg-slate-700':'bg-indigo-600 hover:bg-indigo-500'} px-3 py-2 rounded-lg text-xs font-bold">${f?'Following':'Follow'}</button></div>`}).join(''):'<div class="text-center py-6 text-slate-500 text-sm">Koi member nahi mila.</div>'}
-async function toggleFollow(targetId){if(!user||targetId===user.id)return;const f=followingIds.has(targetId);try{if(f){const {error}=await db.from('hub_follows').delete().eq('follower_id',user.id).eq('following_id',targetId);if(error)throw error;followingIds.delete(targetId);toast('Unfollowed')}else{const {error}=await db.from('hub_follows').insert({follower_id:user.id,following_id:targetId});if(error&&error.code!=='23505')throw error;followingIds.add(targetId);toast('Following ✓')}updateFollowCounts();renderPeople()}catch(e){toast(e.message||'Follow action failed',false)}}
+let people=[],followingIds=new Set(),followerCount=0,peopleFollowerCounts=new Map(),followChannel=null,followReloadTimer=null;
+async function loadPeople(){
+ if(!user)return;
+ const [{data:profilesData,error:profilesError},{data:followingData,error:followingError},{data:followersData,error:followersError},{data:allFollowData,error:allFollowError}]=await Promise.all([
+  db.from('profiles').select('id,name,pfp_url,role').order('name',{ascending:true}).limit(300),
+  db.from('hub_follows').select('following_id').eq('follower_id',user.id),
+  db.from('hub_follows').select('follower_id').eq('following_id',user.id),
+  db.from('hub_follows').select('follower_id,following_id').limit(5000)
+ ]);
+ if(profilesError||followingError||followersError){console.warn(profilesError||followingError||followersError);const box=document.getElementById('people-box');if(box)box.innerHTML='<div class="text-xs text-slate-500 p-3">Follow system load nahi ho saka.</div>';return}
+ people=(profilesData||[]).filter(p=>String(p.id)!==String(user.id));followingIds=new Set((followingData||[]).map(x=>String(x.following_id)));followerCount=(followersData||[]).length;peopleFollowerCounts=new Map();
+ if(!allFollowError)(allFollowData||[]).forEach(row=>{const id=String(row.following_id);peopleFollowerCounts.set(id,(peopleFollowerCounts.get(id)||0)+1)});else console.info('Public follower totals unavailable; personal totals still work.',allFollowError.message);
+ updateFollowCounts();renderPeople();
+ if(!followChannel){followChannel=db.channel('public:hub_follows').on('postgres_changes',{event:'*',schema:'public',table:'hub_follows'},()=>{clearTimeout(followReloadTimer);followReloadTimer=setTimeout(loadPeople,250)}).subscribe()}
+}
+function updateFollowCounts(){document.getElementById('my-following-count')?.replaceChildren(document.createTextNode(followingIds.size));document.getElementById('my-followers-count')?.replaceChildren(document.createTextNode(followerCount));if(communityFeedMode==='people')document.getElementById('post-count').textContent=`${people.length} members`}
+function renderPeople(){
+ const box=document.getElementById('people-box');if(!box)return;const q=(document.getElementById('people-search')?.value||'').toLowerCase().trim();const arr=people.filter(p=>!q||String(p.name||'Member').toLowerCase().includes(q)).sort((a,b)=>(peopleFollowerCounts.get(String(b.id))||0)-(peopleFollowerCounts.get(String(a.id))||0)||String(a.name||'').localeCompare(String(b.name||'')));
+ box.innerHTML=arr.length?arr.map(p=>{const id=String(p.id),following=followingIds.has(id),followers=peopleFollowerCounts.get(id)||0;return`<div class="bg-slate-900/80 border border-slate-700 rounded-xl p-3 flex items-center gap-3"><div class="w-11 h-11 rounded-full overflow-hidden bg-slate-700 flex items-center justify-center shrink-0">${p.pfp_url?driveImgHtml(p.pfp_url,'w-full h-full object-cover'):'👤'}</div><div class="min-w-0 flex-1"><b class="block truncate text-sm">${esc(p.name||'Member')}</b><div class="flex items-center gap-2 mt-1"><span class="text-[9px] text-slate-500">${p.role==='admin'?'ADMIN':'MEMBER'}</span><span class="text-[10px] font-bold text-indigo-300"><i class="fa-solid fa-users mr-1"></i>${followers} follower${followers===1?'':'s'}</span></div></div><button onclick="toggleFollow('${id}')" class="${following?'bg-slate-700 text-slate-200':'bg-indigo-600 hover:bg-indigo-500 text-white'} min-w-[82px] px-3 py-2 rounded-lg text-xs font-black">${following?'Following ✓':'Follow'}</button></div>`}).join(''):'<div class="text-center py-8 text-slate-500 text-sm">Koi member nahi mila.</div>';
+}
+async function toggleFollow(targetId){
+ targetId=String(targetId);if(!user||targetId===String(user.id))return;const wasFollowing=followingIds.has(targetId),target=people.find(p=>String(p.id)===targetId);
+ try{
+  if(wasFollowing){const{error}=await db.from('hub_follows').delete().eq('follower_id',user.id).eq('following_id',targetId);if(error)throw error;followingIds.delete(targetId);peopleFollowerCounts.set(targetId,Math.max(0,(peopleFollowerCounts.get(targetId)||1)-1));toast(`Unfollowed ${target?.name||'member'}`)}
+  else{const{error}=await db.from('hub_follows').insert({follower_id:user.id,following_id:targetId});if(error&&error.code!=='23505')throw error;const isNew=!error;if(isNew){followingIds.add(targetId);const next=(peopleFollowerCounts.get(targetId)||0)+1;peopleFollowerCounts.set(targetId,next);await sendPersonalHubNotification(targetId,`${profile.name||'Someone'} started following you`,`You now have ${next} follower${next===1?'':'s'} on RATHOD HUB.`,'community','community',{community_tab:'people',actor_id:user.id})}else followingIds.add(targetId);toast(`Following ${target?.name||'member'} ✓`)}
+  updateFollowCounts();renderPeople();setTimeout(()=>loadPeople(),300)
+ }catch(e){toast(e.message||'Follow action failed',false);await loadPeople()}
+}
 
 let communityChannel=null,communityFeedMode='all';
 const COMMUNITY_REACTIONS=['❤️','👍','🔥','😂','🎯'];
 const communityOpenComments=new Set(),communityReactionPickers=new Set();
 function toggleCommunityComposer(){document.getElementById('community-composer')?.classList.toggle('hidden')}
 function setCommunityFeed(mode='all'){
- communityFeedMode=mode==='mine'?'mine':'all';
- const all=document.getElementById('community-tab-all'),mine=document.getElementById('community-tab-mine');
- all?.classList.toggle('text-indigo-300',communityFeedMode==='all');all?.classList.toggle('border-indigo-400',communityFeedMode==='all');all?.classList.toggle('text-slate-500',communityFeedMode!=='all');all?.classList.toggle('border-transparent',communityFeedMode!=='all');
- mine?.classList.toggle('text-indigo-300',communityFeedMode==='mine');mine?.classList.toggle('border-indigo-400',communityFeedMode==='mine');mine?.classList.toggle('text-slate-500',communityFeedMode!=='mine');mine?.classList.toggle('border-transparent',communityFeedMode!=='mine');renderPosts();
+ communityFeedMode=['all','mine','people'].includes(mode)?mode:'all';
+ ['all','mine','people'].forEach(tab=>{const el=document.getElementById(`community-tab-${tab}`),active=communityFeedMode===tab;el?.classList.toggle('text-indigo-300',active);el?.classList.toggle('border-indigo-400',active);el?.classList.toggle('font-black',active);el?.classList.toggle('text-slate-500',!active);el?.classList.toggle('border-transparent',!active)});
+ const peopleMode=communityFeedMode==='people';document.getElementById('posts-box')?.classList.toggle('hidden',peopleMode);document.getElementById('community-people-panel')?.classList.toggle('hidden',!peopleMode);if(peopleMode){document.getElementById('community-composer')?.classList.add('hidden');updateFollowCounts();renderPeople()}else renderPosts();
 }
 function toggleCommunityComments(id){id=String(id);communityOpenComments.has(id)?communityOpenComments.delete(id):communityOpenComments.add(id);renderPosts();if(communityOpenComments.has(id))setTimeout(()=>document.getElementById(`comment-${id}`)?.focus(),50)}
 function toggleCommunityReactions(id){id=String(id);communityReactionPickers.has(id)?communityReactionPickers.delete(id):communityReactionPickers.add(id);renderPosts()}
@@ -2460,6 +2482,7 @@ async function loadPosts(){
  if(!communityChannel&&user){communityChannel=db.channel('public:posts').on('postgres_changes',{event:'*',schema:'public',table:'posts'},()=>{loadPosts();loadMaterials()}).subscribe()}
 }
 function renderPosts(){
+ if(communityFeedMode==='people')return;
  const visible=communityFeedMode==='mine'?posts.filter(p=>String(p.author_id)===String(user?.id)):posts;
  document.getElementById('post-count').textContent=`${visible.length} posts`;
  document.getElementById('posts-box').innerHTML=visible.length?visible.map(p=>{
@@ -5266,7 +5289,7 @@ function dismissHubNotification(id){if(!id)return;markHubNotificationsSeen([id])
 function openHubNotification(id){
  const n=hubNotifications.find(x=>String(x.id)===String(id));markHubNotificationsSeen([id]);hubNotifications=hubNotifications.filter(x=>String(x.id)!==String(id));saveHubNotificationStore();document.getElementById('hub-notify-panel')?.classList.add('hidden');closeMobileNotifications();
  if(n?.action==='community'){
-  switchTab('community');const postId=n.metadata?.post_id;if(postId){communityOpenComments.add(String(postId));renderPosts();setTimeout(()=>document.getElementById(`community-post-${postId}`)?.scrollIntoView({behavior:'smooth',block:'center'}),150)}return;
+  switchTab('community');if(n.metadata?.community_tab==='people'){setCommunityFeed('people');return}const postId=n.metadata?.post_id;if(postId){communityOpenComments.add(String(postId));renderPosts();setTimeout(()=>document.getElementById(`community-post-${postId}`)?.scrollIntoView({behavior:'smooth',block:'center'}),150)}return;
  }
  if(['battle','livequiz'].includes(n?.action)&&n.metadata?.room){switchTab('battle');setTimeout(()=>qbJoinRoom(n.metadata.room),250);return}
  const actions={battle:()=>switchTab('battle'),livequiz:()=>switchTab('battle'),dailyquiz:()=>openDailyBattle(),materials:()=>switchTab('materials'),material:()=>switchTab('materials'),studyrooms:()=>switchTab('studyrooms'),event:()=>switchTab('hubevents'),hubevents:()=>switchTab('hubevents'),tests:()=>switchTab('tests'),test:()=>switchTab('tests'),treasure:()=>switchTab('treasure'),peergroups:()=>switchTab('peergroups'),group:()=>switchTab('peergroups'),bounty:()=>switchTab('peergroups'),aicards:()=>switchTab('aicards'),game:()=>switchTab('games'),games:()=>switchTab('games')};actions[n?.action]?.()
