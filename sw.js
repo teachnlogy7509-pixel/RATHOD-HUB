@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rathod-hub-v7';
+const CACHE_NAME = 'rathod-hub-v8';
 const APP_SHELL = [
   './',
   './index.html',
