@@ -1156,7 +1156,17 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
   </div>
 </section>
 
-<section id="section-ai" class="hidden space-y-4"><div class="relative overflow-hidden bg-gradient-to-br from-slate-950 via-indigo-950/80 to-fuchsia-950/60 border border-violet-400/30 rounded-3xl p-5 sm:p-7 shadow-2xl"><div class="absolute -top-20 -right-16 w-56 h-56 bg-fuchsia-500/15 blur-3xl rounded-full"></div><div class="relative flex items-start justify-between gap-4"><div><div class="text-[9px] uppercase tracking-[.24em] text-violet-300 font-black">VIP Intelligence Studio</div><h3 class="text-2xl font-black text-white mt-1">🧠 NEET AI Doubt Lab</h3><p class="text-xs text-slate-400 mt-2">NCERT-focused explanations • Hindi, English या Hinglish</p></div><span class="shrink-0 bg-violet-500/15 border border-violet-400/30 text-violet-200 rounded-full px-3 py-1 text-[9px] font-black">AI SECURE</span></div><div class="relative grid grid-cols-3 gap-2 mt-5"><button onclick="setAIDoubtPrompt('Is concept ko NCERT examples ke saath simple Hindi mein samjhao: ')" class="bg-white/5 border border-white/10 rounded-xl p-2 text-[10px] text-slate-300">📖 Explain</button><button onclick="setAIDoubtPrompt('Is topic ke important NEET traps aur mnemonics batao: ')" class="bg-white/5 border border-white/10 rounded-xl p-2 text-[10px] text-slate-300">🎯 NEET Traps</button><button onclick="setAIDoubtPrompt('Is question ko step-by-step solve karo: ')" class="bg-white/5 border border-white/10 rounded-xl p-2 text-[10px] text-slate-300">⚡ Solve</button></div><div class="relative mt-3 bg-black/25 border border-violet-400/20 rounded-2xl p-2"><textarea id="ai-input" rows="5" class="w-full bg-transparent border-0 outline-none rounded-xl p-3 text-sm resize-none" placeholder="अपना NEET/NCERT doubt यहाँ लिखें..."></textarea><button onclick="askAI()" class="w-full bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600 hover:brightness-110 py-3 rounded-xl text-sm font-black shadow-lg shadow-fuchsia-900/30"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Ask VIP AI</button></div><div id="ai-output" class="hidden relative mt-4 bg-slate-950/80 border border-violet-400/20 p-5 rounded-2xl text-sm whitespace-pre-wrap leading-7 shadow-inner"></div></div></section>
+<section id="section-ai" class="hidden space-y-4">
+ <div class="relative overflow-hidden rounded-3xl border border-cyan-400/25 bg-gradient-to-br from-slate-950 via-indigo-950/80 to-fuchsia-950/60 p-5 sm:p-7 shadow-2xl">
+  <div class="absolute -right-16 -top-20 h-60 w-60 rounded-full bg-cyan-500/10 blur-3xl"></div><div class="absolute -bottom-24 -left-20 h-64 w-64 rounded-full bg-fuchsia-500/10 blur-3xl"></div>
+  <div class="relative flex items-start justify-between gap-4"><div><div class="text-[9px] font-black uppercase tracking-[.24em] text-cyan-300">RATHOD Intelligence Agent</div><h3 class="mt-1 text-2xl font-black text-white">🤖 RATHOD Guide & Doubt Agent</h3><p class="mt-2 text-xs text-slate-400">नए users को app समझाए या NEET/NCERT doubt solve करे</p></div><span id="ai-agent-mode-badge" class="shrink-0 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-[9px] font-black text-cyan-200">APP GUIDE</span></div>
+  <div class="relative mt-5 grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/25 p-1.5"><button id="ai-mode-app" onclick="setAIAgentMode('app')" class="rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-3 py-3 text-xs font-black">🧭 App के बारे में</button><button id="ai-mode-doubt" onclick="setAIAgentMode('doubt')" class="rounded-xl px-3 py-3 text-xs font-black text-slate-400">🧠 Study Doubt</button></div>
+  <div id="ai-agent-welcome" class="relative mt-3 rounded-2xl border border-cyan-400/15 bg-cyan-500/5 p-4"><b class="text-sm text-cyan-200">👋 मैं RATHOD Guide Agent हूँ</b><p class="mt-1 text-[11px] leading-5 text-slate-400">पूछें: quiz कैसे शुरू करें, Mistake Vault कहाँ है, XP कैसे मिलता है, Study Room कैसे join करें या app का कोई feature कैसे use करें।</p></div>
+  <div id="ai-quick-prompts" class="relative mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+  <div class="relative mt-3 rounded-2xl border border-violet-400/20 bg-black/25 p-2"><textarea id="ai-input" rows="4" class="w-full resize-none rounded-xl border-0 bg-transparent p-3 text-sm outline-none" placeholder="RATHOD HUB कैसे use करें?"></textarea><button id="ai-ask-button" onclick="askAI()" class="w-full rounded-xl bg-gradient-to-r from-cyan-600 via-indigo-600 to-fuchsia-600 py-3 text-sm font-black shadow-lg shadow-indigo-900/30 hover:brightness-110"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Ask RATHOD Agent</button></div>
+  <div id="ai-output" class="relative mt-4 hidden rounded-2xl border border-cyan-400/20 bg-slate-950/85 p-5 text-sm leading-7 shadow-inner"><div id="ai-output-label" class="mb-3 text-[9px] font-black uppercase tracking-[.2em] text-cyan-300">Agent answer</div><div id="ai-output-text" class="whitespace-pre-wrap"></div></div>
+ </div>
+</section>
 
 <section id="section-quiz" class="hidden space-y-6">
 <!-- 1. LIVE SYNCHRONIZED TELEGRAM-STYLE QUIZ BATTLE ARENA -->
@@ -1357,11 +1367,8 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 
 
 <section id="section-studyrooms" class="hidden space-y-5">
-<div class="bg-slate-800/95 rounded-2xl p-5">
-<h3 class="font-bold text-slate-200"><i class="fa-solid fa-door-open mr-2 text-teal-400"></i>Study Rooms</h3>
-<p class="text-xs text-slate-400 mt-1">YPT की तरह room join करके Live Cam या Voice के साथ पढ़ें। Camera और microphone permission Allow करें।</p><p class="voice-help mt-2">App या direct HTTPS page इस्तेमाल करें। Camera/Microphone permission Allow करें। आवाज़ न आए तो “आवाज़ चालू करें” button दबाएँ।</p>
-</div>
-<div id="study-rooms-box" class="grid md:grid-cols-3 gap-4"></div>
+<div class="relative overflow-hidden rounded-3xl border border-cyan-400/25 bg-gradient-to-br from-slate-950 via-cyan-950/45 to-indigo-950/60 p-5 sm:p-7 shadow-2xl"><div class="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl"></div><div class="relative flex flex-wrap items-start justify-between gap-4"><div><div class="text-[9px] font-black uppercase tracking-[.24em] text-cyan-300">Live Focus Campus</div><h3 class="mt-1 text-2xl font-black text-white">🎥 Study Rooms 2.0</h3><p class="mt-2 text-xs text-slate-400">Room join करें • Voice या Live Cam चालू करें • साथ में focused study करें</p></div><div class="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-right"><b class="block text-sm text-emerald-300">● REALTIME</b><span class="text-[9px] text-slate-400">Camera manual leave तक चलता रहेगा</span></div></div><div class="relative mt-5 grid grid-cols-3 gap-2 text-center"><div class="rounded-xl bg-black/25 p-3"><b class="text-cyan-300">🎙 Clear Voice</b><span class="block text-[9px] text-slate-500">Echo control</span></div><div class="rounded-xl bg-black/25 p-3"><b class="text-violet-300">🎥 Long Cam</b><span class="block text-[9px] text-slate-500">No auto 6-sec close</span></div><div class="rounded-xl bg-black/25 p-3"><b class="text-emerald-300">⏱ Live Timer</b><span class="block text-[9px] text-slate-500">Study time saved</span></div></div><p class="voice-help relative mt-4">Direct HTTPS page इस्तेमाल करें और Camera/Microphone Allow करें। Browser audio रोके तो “🔊 आवाज़ चालू करें” दबाएँ।</p></div>
+<div id="study-rooms-box" class="grid lg:grid-cols-3 gap-4"></div>
 </section>
 
 <section id="section-studypower" class="hidden space-y-5">
@@ -1924,6 +1931,7 @@ function switchTab(tab){
   if(tab==='leaderboard')loadLeaderboard();
   if(tab==='hubevents')loadHubEvents();
   if(tab==='studyrooms')renderStudyRooms();
+  if(tab==='ai')setAIAgentMode(aiAgentMode||'app');
   if(tab==='community')loadPeople();
   if(tab==='quiz')loadScheduledBattle();
   if(tab==='tests')loadHubTests();
@@ -3174,27 +3182,32 @@ async function sendLeagueLoungeMessage(){const input=document.getElementById('le
 async function shareLeagueCertificate(){const info=leagueRoleInfo(leagueReward?.council_role),text=`🏆 RATHOD HUB Season #${leagueReward?.season_number}: ${profile.name||'Member'} earned ${info.title}, Rank #${leagueReward?.final_rank} and ${leagueReward?.chest}!`;try{if(navigator.share)await navigator.share({title:'RATHOD HUB League Certificate',text,url:location.href});else{await navigator.clipboard.writeText(text+' '+location.href);toast('Certificate text copied ✓')}}catch(e){if(e?.name!=='AbortError')toast('Share failed',false)}}
 function renderLeagueSetupRequired(error){const box=document.getElementById('leaderboard-list');if(box)box.innerHTML=`<div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 text-sm text-amber-200"><b>League backend setup required</b><p class="text-xs mt-2 text-slate-400">Run supabase-league.sql once in Supabase SQL Editor.</p><span class="text-[9px] text-slate-600">${esc(error?.message||'')}</span></div>`}
 
+let aiAgentMode='app';
+const AI_AGENT_QUICK={
+ app:[['🧭 App Tour','RATHOD HUB के सभी main features और उन्हें use करने का आसान तरीका बताओ।'],['⚡ XP Guide','XP कैसे earn और use कर सकते हैं?'],['🎥 Study Room','Study Room में voice और camera कैसे चलाएँ?'],['🧠 Mistake Vault','AI Mistake Vault कैसे काम करता है?']],
+ doubt:[['📖 Explain','इस concept को NCERT examples के साथ simple Hindi में समझाओ: '],['🎯 NEET Traps','इस topic के important NEET traps और mnemonics बताओ: '],['⚡ Solve','इस question को step-by-step solve करो: '],['✅ Verify','इस statement को NCERT के अनुसार verify करो: ']]
+};
+const RATHOD_APP_CONTEXT=`You are RATHOD Guide Agent for RATHOD HUB, a NEET preparation web app. Help new users in friendly Hindi/Hinglish. Only describe features present in the app: Home dashboard, AI Doubt, AI Quiz, Live Quiz, NEET 720, Daily 9 PM battle, Study Material, AI Notes & Formula, Focus Timer, Study Power, Study Rooms with realtime voice/camera, Private Vault, AI Mistake Vault, Self Practice and AI Memory Palace, Community with posts/reactions/follow, Live Chat, Stories, Games, Live Events, 13-day League Leaderboard, 45Q Tests, NEET Treasure Hunt, profile, notifications, XP shop, avatars and badges. Give step-by-step navigation using the visible menu names. Never invent subscription, payment, or unavailable controls. If account-specific data is needed, tell the user where to check instead of guessing.`;
+function setAIAgentMode(mode){
+ aiAgentMode=mode==='doubt'?'doubt':'app';
+ const app=document.getElementById('ai-mode-app'),doubt=document.getElementById('ai-mode-doubt'),badge=document.getElementById('ai-agent-mode-badge'),welcome=document.getElementById('ai-agent-welcome'),input=document.getElementById('ai-input'),button=document.getElementById('ai-ask-button');
+ app?.classList.toggle('bg-gradient-to-r',aiAgentMode==='app');app?.classList.toggle('from-cyan-600',aiAgentMode==='app');app?.classList.toggle('to-blue-600',aiAgentMode==='app');app?.classList.toggle('text-slate-400',aiAgentMode!=='app');
+ doubt?.classList.toggle('bg-gradient-to-r',aiAgentMode==='doubt');doubt?.classList.toggle('from-violet-600',aiAgentMode==='doubt');doubt?.classList.toggle('to-fuchsia-600',aiAgentMode==='doubt');doubt?.classList.toggle('text-slate-400',aiAgentMode!=='doubt');
+ if(badge)badge.textContent=aiAgentMode==='app'?'APP GUIDE':'NEET DOUBT';
+ if(input)input.placeholder=aiAgentMode==='app'?'RATHOD HUB कैसे use करें?':'अपना NEET/NCERT doubt यहाँ लिखें...';
+ if(button)button.innerHTML=aiAgentMode==='app'?'<i class="fa-solid fa-compass mr-2"></i>Ask App Guide':'<i class="fa-solid fa-brain mr-2"></i>Solve Study Doubt';
+ if(welcome)welcome.innerHTML=aiAgentMode==='app'?'<b class="text-sm text-cyan-200">👋 मैं RATHOD Guide Agent हूँ</b><p class="mt-1 text-[11px] leading-5 text-slate-400">Quiz, XP, Study Room, Vault, Community या किसी भी app feature का step-by-step usage पूछें।</p>':'<b class="text-sm text-violet-200">🧠 NEET Doubt Mode</b><p class="mt-1 text-[11px] leading-5 text-slate-400">Biology, Chemistry और Physics के NCERT-focused doubts Hindi, English या Hinglish में पूछें।</p>';
+ const quick=document.getElementById('ai-quick-prompts');if(quick)quick.innerHTML=AI_AGENT_QUICK[aiAgentMode].map(([label],i)=>`<button onclick="useAIQuickPrompt(${i})" class="rounded-xl border border-white/10 bg-white/5 p-2.5 text-[10px] text-slate-300 hover:border-cyan-400/30">${esc(label)}</button>`).join('');
+}
+function useAIQuickPrompt(i){const row=AI_AGENT_QUICK[aiAgentMode]?.[Number(i)];if(row)setAIDoubtPrompt(row[1])}
 function setAIDoubtPrompt(text){const input=document.getElementById('ai-input');if(!input)return;input.value=text;input.focus()}
 async function askAI(){
-  const q=document.getElementById('ai-input').value.trim();
-  const out=document.getElementById('ai-output');
-  if(!q)return;
-
-  out.classList.remove('hidden');
-  out.textContent='AI is thinking...';
-
-  try{
-    const {data,error}=await db.functions.invoke('ai-chat',{
-      body:{question:q}
-    });
-
-    if(error)throw error;
-
-    out.textContent=data?.answer||'No answer returned.';
-  }catch(e){
-    out.textContent='AI request failed. Please try again.\n\n'+(e.message||'Request failed.');
-  }
+ const q=document.getElementById('ai-input')?.value.trim(),out=document.getElementById('ai-output'),text=document.getElementById('ai-output-text'),label=document.getElementById('ai-output-label');if(!q||!out||!text)return;
+ out.classList.remove('hidden');if(label)label.textContent=aiAgentMode==='app'?'🧭 RATHOD APP GUIDE':'🧠 NCERT DOUBT SOLVER';text.textContent=aiAgentMode==='app'?'App guide तैयार कर रहा हूँ…':'NCERT-focused answer तैयार हो रहा है…';out.scrollIntoView({behavior:'smooth',block:'nearest'});
+ const question=aiAgentMode==='app'?`${RATHOD_APP_CONTEXT}\n\nUser question: ${q}`:`You are a careful NEET/NCERT tutor. Reply in the user's language (Hindi/Hinglish/English). Explain step by step, mark the final answer clearly, mention subject/chapter when possible, and say when a claim should be checked in the latest NCERT edition. Do not fabricate citations.\n\nStudent doubt: ${q}`;
+ try{const {data,error}=await db.functions.invoke('ai-chat',{body:{question}});if(error)throw error;text.textContent=data?.answer||data?.message||'No answer returned.'}catch(e){text.textContent='AI request failed. Please try again.\n\n'+(e.message||'Request failed.')}
 }
+
 
 function rhQuizHistoryKey(){
   return `rh_quiz_recent_${user?.id||'guest'}`;
@@ -4594,31 +4607,18 @@ const RTC_CONFIG={iceServers:[
 let roomChannels={},voiceState={};
 
 function studyRoomCardHtml(r){
- return `<div id="room-card-${r.key}" class="bg-slate-800/95 border border-teal-500/20 rounded-2xl p-4">
-  <div class="flex justify-between items-start"><div><h4 class="font-bold">${r.icon} ${r.name}</h4><span id="room-count-${r.key}" class="text-[10px] bg-emerald-500/10 text-emerald-300 px-2 py-1 rounded">0 online</span></div></div>
-  <div id="room-members-${r.key}" class="mt-3 flex flex-wrap gap-1"></div>
-  <div class="mt-4 flex gap-2">
-   <button id="room-join-${r.key}" onclick="joinStudyRoom('${r.key}')" class="flex-1 bg-teal-600 hover:bg-teal-500 py-2 rounded-lg text-xs font-bold">Join</button>
-   <button id="room-leave-${r.key}" onclick="leaveStudyRoom('${r.key}')" class="hidden flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-lg text-xs font-bold">Leave</button>
-  </div>
-  <div id="room-voice-${r.key}" class="hidden mt-3 pt-3 border-t border-slate-700">
-   <div class="flex justify-between items-center"><span class="text-[10px] uppercase text-slate-400">🎥 YPT Live Study • Voice</span><span id="room-voice-count-${r.key}" class="text-[10px] text-fuchsia-300">0/${MAX_VOICE_USERS}</span></div>
-   <div id="room-live-time-${r.key}" class="mt-2 text-xs font-black text-cyan-300">⏱ Study time 00:00:00</div>
-   <div id="room-speakers-${r.key}" class="mt-2 flex flex-wrap gap-1"></div>
-   <div class="mt-2 grid grid-cols-2 gap-2">
-    <button id="voice-join-${r.key}" onclick="joinVoice('${r.key}',false)" class="bg-fuchsia-600 hover:bg-fuchsia-500 py-2.5 rounded-lg text-xs font-bold">🎙 Join Voice</button>
-    <button id="camera-join-${r.key}" onclick="joinVoice('${r.key}',true)" class="bg-cyan-600 hover:bg-cyan-500 py-2.5 rounded-lg text-xs font-bold">🎥 Join Live Cam</button>
-    <button id="voice-mute-${r.key}" onclick="toggleMute('${r.key}')" class="hidden bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-xs font-bold">Mute</button>
-    <button id="camera-toggle-${r.key}" onclick="toggleCamera('${r.key}')" class="hidden bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-xs font-bold">Camera Off</button>
-    <button id="voice-leave-${r.key}" onclick="leaveVoice('${r.key}')" class="hidden bg-red-600 hover:bg-red-500 py-2.5 rounded-lg text-xs font-bold">Leave Live</button>
-    <button type="button" onclick="testVoiceMicrophone('${r.key}')" class="bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-xs font-bold">🎙 Test Mic</button>
-   </div>
-   <button id="enable-audio-${r.key}" type="button" onclick="enableRoomAudio('${r.key}')" class="hidden mt-2 w-full bg-amber-500/15 border border-amber-500/30 text-amber-300 py-2 rounded-lg text-xs font-bold">🔊 आवाज़ चालू करने के लिए टैप करें</button>
-   <div id="room-video-${r.key}" class="rh-live-cam-grid hidden"></div>
-   <div id="room-audio-${r.key}" class="hidden"></div>
-  </div>
- </div>`;
+ const meta={physics:{tag:'NUMERICAL ZONE',color:'cyan',desc:'Physics numericals • silent focus + doubt voice'},biology:{tag:'NCERT REVISION',color:'emerald',desc:'Biology NCERT reading • rapid revision'},general:{tag:'OPEN CAMPUS',color:'violet',desc:'All subjects • pomodoro and group study'}}[r.key];
+ return `<div id="room-card-${r.key}" class="group relative overflow-hidden rounded-3xl border border-${meta.color}-400/25 bg-gradient-to-br from-slate-950 via-slate-900 to-${meta.color}-950/35 p-4 shadow-xl transition hover:-translate-y-1 hover:border-${meta.color}-400/50"><div class="absolute -right-8 -top-10 text-8xl opacity-[.06]">${r.icon}</div>
+  <div class="relative flex items-start justify-between gap-2"><div><span class="text-[8px] font-black tracking-[.18em] text-${meta.color}-300">${meta.tag}</span><h4 class="mt-1 text-lg font-black">${r.icon} ${r.name}</h4><p class="mt-1 text-[10px] text-slate-500">${meta.desc}</p></div><span id="room-count-${r.key}" class="shrink-0 rounded-full bg-emerald-500/10 px-2 py-1 text-[9px] font-black text-emerald-300">0 online</span></div>
+  <div id="room-members-${r.key}" class="relative mt-4 flex min-h-[28px] flex-wrap gap-1"></div>
+  <div class="relative mt-4 flex gap-2"><button id="room-join-${r.key}" onclick="joinStudyRoom('${r.key}')" class="flex-1 rounded-xl bg-gradient-to-r from-${meta.color}-600 to-indigo-600 py-2.5 text-xs font-black">Enter Room</button><button id="room-leave-${r.key}" onclick="leaveStudyRoom('${r.key}')" class="hidden flex-1 rounded-xl bg-slate-700 py-2.5 text-xs font-black">Leave Room</button></div>
+  <div id="room-voice-${r.key}" class="relative mt-4 hidden border-t border-white/10 pt-4"><div class="flex items-center justify-between"><span class="text-[9px] font-black uppercase tracking-wider text-slate-400">Live collaboration deck</span><span id="room-voice-count-${r.key}" class="text-[9px] text-fuchsia-300">0/${MAX_VOICE_USERS}</span></div><div class="mt-2 flex items-center justify-between rounded-xl bg-black/25 px-3 py-2"><div id="room-live-time-${r.key}" class="text-xs font-black text-cyan-300">⏱ 00:00:00</div><div id="room-connection-${r.key}" class="text-[9px] text-emerald-300">● Ready</div></div><div id="room-speakers-${r.key}" class="mt-2 flex flex-wrap gap-1"></div>
+   <div class="mt-3 grid grid-cols-2 gap-2"><button id="voice-join-${r.key}" onclick="joinVoice('${r.key}',false)" class="rounded-xl bg-fuchsia-600 py-2.5 text-xs font-black">🎙 Join Voice</button><button id="camera-join-${r.key}" onclick="joinVoice('${r.key}',true)" class="rounded-xl bg-cyan-600 py-2.5 text-xs font-black">🎥 Join Live Cam</button><button id="voice-mute-${r.key}" onclick="toggleMute('${r.key}')" class="hidden rounded-xl bg-slate-700 py-2.5 text-xs font-black">Mute</button><button id="camera-toggle-${r.key}" onclick="toggleCamera('${r.key}')" class="hidden rounded-xl bg-slate-700 py-2.5 text-xs font-black">Camera Off</button><button id="voice-leave-${r.key}" onclick="leaveVoice('${r.key}')" class="hidden rounded-xl bg-red-600 py-2.5 text-xs font-black">Leave Live</button><button type="button" onclick="testVoiceMicrophone('${r.key}')" class="rounded-xl bg-slate-700 py-2.5 text-xs font-black">🎙 Test Mic</button></div>
+   <button id="enable-audio-${r.key}" type="button" onclick="enableRoomAudio('${r.key}')" class="hidden mt-2 w-full rounded-xl border border-amber-500/30 bg-amber-500/15 py-2.5 text-xs font-black text-amber-300">🔊 आवाज़ चालू करें</button><div id="room-video-${r.key}" class="rh-live-cam-grid hidden"></div><div id="room-audio-${r.key}" class="hidden"></div>
+  </div></div>`;
 }
+
+
 function renderStudyRooms(){
  const box=document.getElementById('study-rooms-box');if(!box||!user)return;
  if(!box.dataset.built){box.innerHTML=STUDY_ROOMS.map(studyRoomCardHtml).join('');box.dataset.built='1'}
@@ -4687,7 +4687,7 @@ async function leaveStudyRoom(key){
  document.getElementById(`room-voice-${key}`).classList.add('hidden');
 }
 function ensureVoiceState(key){
- if(!voiceState[key])voiceState[key]={joined:false,muted:false,camera:false,stream:null,cameraStream:null,peers:{},pendingIce:{},heartbeat:null,joinedAt:0,liveTimer:null};
+ if(!voiceState[key])voiceState[key]={joined:false,muted:false,camera:false,stream:null,cameraStream:null,peers:{},pendingIce:{},heartbeat:null,heartbeatFailures:0,joinedAt:0,liveTimer:null,reannounceTimers:[]};
  return voiceState[key];
 }
 async function reserveVoiceSlot(key){
@@ -4706,14 +4706,16 @@ async function reserveVoiceSlot(key){
 async function releaseVoiceSlot(key){
  try{await db.rpc('leave_hub_voice_room',{p_room:key})}catch(e){console.warn('voice slot release failed',e)}
 }
+function setRoomConnectionStatus(key,text,tone='emerald'){const el=document.getElementById(`room-connection-${key}`);if(el){el.textContent=text;el.className=`text-[9px] text-${tone}-300`}}
 function startVoiceHeartbeat(key){
- const vs=ensureVoiceState(key);clearInterval(vs.heartbeat);
+ const vs=ensureVoiceState(key);clearInterval(vs.heartbeat);vs.heartbeatFailures=0;setRoomConnectionStatus(key,'● Connected');
  vs.heartbeat=setInterval(async()=>{
   if(!vs.joined)return;
-  try{const {data}=await db.rpc('join_hub_voice_room',{p_room:key});if(!data?.ok)await leaveVoice(key)}catch(e){console.warn('voice heartbeat failed',e)}
- },10000);
+  try{const {data,error}=await db.rpc('join_hub_voice_room',{p_room:key});if(error)throw error;if(data?.ok===false)throw new Error(data?.message||'slot refresh pending');vs.heartbeatFailures=0;setRoomConnectionStatus(key,'● Connected');const rc=roomChannels[key];if(rc?.joined)await rc.channel.track({user_id:user.id,name:profile?.name||user.email||'Member',voice:true,camera:vs.camera})}
+  catch(e){vs.heartbeatFailures++;console.warn('voice heartbeat retry',vs.heartbeatFailures,e);setRoomConnectionStatus(key,'● Reconnecting…','amber');/* Never stop a healthy local camera/mic because a presence heartbeat briefly failed. */}
+ },20000);
 }
-function stopVoiceHeartbeat(key){const vs=voiceState[key];if(vs?.heartbeat)clearInterval(vs.heartbeat);if(vs)vs.heartbeat=null}
+function stopVoiceHeartbeat(key){const vs=voiceState[key];if(vs?.heartbeat)clearInterval(vs.heartbeat);if(vs){vs.heartbeat=null;vs.heartbeatFailures=0;(vs.reannounceTimers||[]).forEach(clearTimeout);vs.reannounceTimers=[]}}
 function renderLiveStudyClock(key){
  const vs=ensureVoiceState(key),el=document.getElementById(`room-live-time-${key}`);
  const sec=vs.joinedAt?Math.max(0,Math.floor((Date.now()-vs.joinedAt)/1000)):0;
@@ -4763,7 +4765,9 @@ async function joinVoice(key,withCamera=false){
     await rc.channel.track({user_id:user.id,name:profile?.name||user.email||'Member',voice:true,camera:vs.camera});
     startVoiceHeartbeat(key);
     startLiveStudyClock(key);
-    await rc.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'join',fromId:user.id}});
+    const announce=()=>rc.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'join',fromId:user.id}}).catch(()=>{});
+    await announce();vs.reannounceTimers=[setTimeout(announce,1200),setTimeout(announce,4000)];
+    vs.stream.getTracks().forEach(track=>{track.onended=()=>{if(vs.joined){setRoomConnectionStatus(key,`${track.kind==='video'?'Camera':'Mic'} stopped by device`,'amber');toast(`${track.kind==='video'?'Camera':'Microphone'} device ने बंद कर दिया। Leave Live करके दोबारा join करें।`,false)}}});
     document.getElementById(`voice-join-${key}`)?.classList.add('hidden');
     document.getElementById(`camera-join-${key}`)?.classList.add('hidden');
     document.getElementById(`voice-mute-${key}`)?.classList.remove('hidden');
@@ -4828,13 +4832,14 @@ function createPeer(key,peerId){
    grid.classList.remove('hidden');
   }else{
    let audio=document.getElementById(`voice-audio-${key}-${peerId}`);
-   if(!audio){audio=document.createElement('audio');audio.id=`voice-audio-${key}-${peerId}`;audio.autoplay=true;audio.playsInline=true;audio.controls=false;document.getElementById(`room-audio-${key}`).appendChild(audio)}
-   audio.srcObject=remoteStream;
-   audio.play().catch(()=>document.getElementById(`enable-audio-${key}`)?.classList.remove('hidden'));
+   if(!audio){audio=document.createElement('audio');audio.id=`voice-audio-${key}-${peerId}`;audio.autoplay=true;audio.playsInline=true;audio.controls=false;audio.volume=1;audio.muted=false;document.getElementById(`room-audio-${key}`).appendChild(audio)}
+   audio.srcObject=new MediaStream([e.track]);audio.muted=false;audio.volume=1;
+   const playAudio=()=>audio.play().then(()=>document.getElementById(`enable-audio-${key}`)?.classList.add('hidden')).catch(()=>document.getElementById(`enable-audio-${key}`)?.classList.remove('hidden'));
+   audio.onloadedmetadata=playAudio;playAudio();
   }
  };
- pc.onconnectionstatechange=()=>{if(['failed','closed'].includes(pc.connectionState))closePeer(key,peerId);else if(pc.connectionState==='connected')document.getElementById(`enable-audio-${key}`)?.classList.add('hidden')};
-  pc.oniceconnectionstatechange=()=>{if(pc.iceConnectionState==='failed'){try{pc.restartIce()}catch(e){}}};
+ pc.onconnectionstatechange=()=>{if(pc.connectionState==='closed')closePeer(key,peerId);else if(pc.connectionState==='failed'){setRoomConnectionStatus(key,'● Peer reconnecting…','amber');try{pc.restartIce()}catch(e){}}else if(pc.connectionState==='connected'){setRoomConnectionStatus(key,'● Voice connected');document.getElementById(`enable-audio-${key}`)?.classList.add('hidden')}};
+ pc.oniceconnectionstatechange=()=>{if(['failed','disconnected'].includes(pc.iceConnectionState)){setRoomConnectionStatus(key,'● Network reconnecting…','amber');try{pc.restartIce()}catch(e){}}};
  vs.peers[peerId]=pc;return pc;
 }
 function closePeer(key,peerId){
@@ -4878,7 +4883,7 @@ async function leaveVoice(key){
  const rc=roomChannels[key];if(rc){try{await rc.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'leave',fromId:user.id}})}catch(e){};if(rc.joined)try{await rc.channel.track({user_id:user.id,name:profile?.name||user.email||'Member',voice:false,camera:false})}catch(e){}}
  await releaseVoiceSlot(key);
  const jb=document.getElementById(`voice-join-${key}`),cb=document.getElementById(`camera-join-${key}`),mb=document.getElementById(`voice-mute-${key}`),ct=document.getElementById(`camera-toggle-${key}`),lb=document.getElementById(`voice-leave-${key}`),ab=document.getElementById(`room-audio-${key}`),vg=document.getElementById(`room-video-${key}`);
- if(jb)jb.classList.remove('hidden');if(cb)cb.classList.remove('hidden');if(mb)mb.classList.add('hidden');if(ct)ct.classList.add('hidden');if(lb)lb.classList.add('hidden');if(ab)ab.innerHTML='';if(vg){vg.innerHTML='';vg.classList.add('hidden')}document.getElementById(`enable-audio-${key}`)?.classList.add('hidden');renderRoomMembers(key);
+ if(jb)jb.classList.remove('hidden');if(cb)cb.classList.remove('hidden');if(mb)mb.classList.add('hidden');if(ct)ct.classList.add('hidden');if(lb)lb.classList.add('hidden');if(ab)ab.innerHTML='';if(vg){vg.innerHTML='';vg.classList.add('hidden')}document.getElementById(`enable-audio-${key}`)?.classList.add('hidden');setRoomConnectionStatus(key,'● Ready');renderRoomMembers(key);
 }
 function stopAllVoiceAndRooms(){
  Object.keys(voiceState).forEach(key=>{const vs=voiceState[key];if(!vs)return;stopVoiceHeartbeat(key);clearInterval(vs.liveTimer);Object.keys(vs.peers).forEach(pid=>closePeer(key,pid));if(vs.stream)vs.stream.getTracks().forEach(t=>t.stop());try{releaseVoiceSlot(key)}catch(e){}});
