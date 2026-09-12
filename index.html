@@ -1266,34 +1266,33 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 </div>
 </section>
 
-<section id="section-community" class="hidden space-y-5">
-<div class="bg-slate-800/95 border border-teal-500/30 rounded-2xl p-5">
+<section id="section-community" class="hidden space-y-4">
+<div class="bg-slate-950/95 border border-slate-700 rounded-2xl overflow-hidden">
+ <div class="flex items-center justify-between gap-3 px-4 py-4 border-b border-slate-800"><div><h3 class="font-black text-white text-lg">Student Discussion Channel</h3><p class="text-[11px] text-slate-400 mt-1">NEET students ke posts, reactions aur discussions.</p></div><div class="flex items-center gap-2"><button onclick="toggleHubNotifications()" class="rh-icon-btn" title="Community notifications"><i class="fa-regular fa-bell"></i></button><button onclick="toggleCommunityComposer()" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-xl text-xs font-black">+ Create Post</button></div></div>
+ <div class="flex items-center border-b border-slate-800 px-3"><button id="community-tab-all" onclick="setCommunityFeed('all')" class="px-4 py-3 text-xs font-black text-indigo-300 border-b-2 border-indigo-400">All Posts</button><button id="community-tab-mine" onclick="setCommunityFeed('mine')" class="px-4 py-3 text-xs font-bold text-slate-500 border-b-2 border-transparent">My Posts</button><span id="post-count" class="ml-auto text-[10px] text-slate-500"></span></div>
+</div>
+<div id="community-composer" class="hidden bg-slate-800/95 border border-teal-500/30 rounded-2xl p-5">
 <h3 class="text-teal-300 font-bold mb-3">Create Community Post</h3>
 <form id="post-form" class="space-y-3">
 <input id="post-title" required placeholder="Title" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
 <textarea id="post-desc" required rows="3" placeholder="Write something..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm"></textarea>
 <input id="post-file" type="file" accept="image/*,.pdf,.doc,.docx,.txt" class="text-xs text-slate-400">
-<div class="flex gap-2">
-<button type="button" id="record-btn" onclick="toggleRecording()" class="bg-purple-600 px-3 py-2 rounded-lg text-xs font-bold">🎙 Record Voice</button>
-<span id="rec-status" class="text-xs text-slate-400 self-center"></span>
-</div>
+<div class="flex gap-2"><button type="button" id="record-btn" onclick="toggleRecording()" class="bg-purple-600 px-3 py-2 rounded-lg text-xs font-bold">🎙 Record Voice</button><span id="rec-status" class="text-xs text-slate-400 self-center"></span></div>
 <button id="post-btn" class="w-full bg-teal-600 hover:bg-teal-500 py-3 rounded-lg text-sm font-bold">Post</button>
 </form>
 </div>
-<div class="bg-slate-800/95 rounded-2xl p-5">
-<div class="flex justify-between items-center mb-3"><h3 class="font-bold text-slate-300">Community Feed</h3><span id="post-count" class="text-xs text-slate-400"></span></div>
 <div id="posts-box" class="space-y-4"></div>
-</div>
 <div class="bg-slate-800/95 border border-indigo-500/30 rounded-2xl p-5">
  <div class="flex justify-between items-center mb-3"><div><h3 class="font-bold text-indigo-300">👥 People</h3><p class="text-xs text-slate-400 mt-1">Members ko follow/unfollow karo.</p></div><span class="text-[10px] text-slate-500">Following <b id="my-following-count">0</b> • Followers <b id="my-followers-count">0</b></span></div>
  <input id="people-search" oninput="renderPeople()" placeholder="Search members..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm mb-3"><div id="people-box" class="space-y-2"></div>
 </div>
+
 </section>
 
 <section id="section-chatroom" class="hidden">
 <div class="bg-slate-800/95 border border-cyan-500/30 rounded-2xl p-5">
 <div class="flex justify-between items-center mb-4">
-<div><h3 class="text-cyan-300 font-bold"><i class="fa-solid fa-comments mr-2"></i>Live Chatroom</h3><p class="text-xs text-slate-400 mt-1">Logged-in members ke live study messages.</p></div>
+<div><h3 class="text-cyan-300 font-bold"><i class="fa-solid fa-comments mr-2"></i>Live Chatroom</h3><p class="text-xs text-slate-400 mt-1">Logged-in members ke live study messages • Messages 30 days baad automatically remove hote hain.</p></div>
 <span class="text-[10px] bg-cyan-500/10 text-cyan-300 px-2 py-1 rounded">LIVE</span>
 </div>
 <div id="chat-messages" class="h-96 overflow-y-auto bg-slate-900/80 border border-slate-700 rounded-xl p-3 space-y-3">
@@ -2069,11 +2068,14 @@ function getFocusStreak(){
   return focusStreak(sessions);
 }
 
+function chatRetentionCutoff(){return new Date(Date.now()-30*24*60*60*1000).toISOString()}
+async function cleanupExpiredChatMessages(){if(!user)return;try{const {error}=await db.from('chat_messages').delete().lt('created_at',chatRetentionCutoff());if(error)console.info('Chat cleanup policy did not allow server deletion; old messages remain hidden.',error.message)}catch(e){console.info('Chat cleanup skipped.',e?.message||e)}}
 async function loadChatMessages(){
  if(!user)return;
- const {data,error}=await db.from('chat_messages').select('id,user_id,name,message,created_at').order('created_at',{ascending:false}).limit(50);
+ await cleanupExpiredChatMessages();
+ const {data,error}=await db.from('chat_messages').select('id,user_id,name,message,created_at').gte('created_at',chatRetentionCutoff()).order('created_at',{ascending:false}).limit(100);
  if(error){console.error(error);document.getElementById('chat-messages').innerHTML='<div class="text-center py-10 text-slate-500">Chatroom table setup required.</div>';return}
- chatMessages=(data||[]).reverse();renderChatMessages();
+ chatMessages=(data||[]).filter(m=>new Date(m.created_at).getTime()>=Date.now()-30*24*60*60*1000).reverse();renderChatMessages();
 }
 function renderChatMessages(){
  const box=document.getElementById('chat-messages');
@@ -2086,7 +2088,7 @@ async function subscribeToChat(){
  if(chatChannel){try{await db.removeChannel(chatChannel)}catch(e){}}
  chatChannel=db.channel('public:chat_messages')
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},payload=>{
-    const message=payload.new;if(!message)return;
+    const message=payload.new;if(!message||new Date(message.created_at).getTime()<Date.now()-30*24*60*60*1000)return;
     const idx=chatMessages.findIndex(m=>m.id===message.id||(m.tempId&&m.tempId===message.id));
     if(idx>=0){ chatMessages[idx]=message; }
     else if(!chatMessages.some(m=>m.id===message.id)){
@@ -2425,7 +2427,7 @@ document.getElementById('post-form').addEventListener('submit',async e=>{
    let voiceUrl=null;if(recordedAudioBlob){const voiceFile=new File([recordedAudioBlob],`voice_${crypto.randomUUID()}.webm`,{type:'audio/webm'});const drive=await uploadToGoogleDrive('Community',voiceFile);voiceUrl=driveDownloadUrl(drive.id)}
   const postTitle=document.getElementById('post-title').value.trim(),postDesc=document.getElementById('post-desc').value.trim();
   const {error}=await db.from('posts').insert({author_id:user.id,author:profile.name,pfp_url:profile.pfp_url,title:postTitle,desc:postDesc,file_name:name,file_url:url,file_type:type,voice_url:voiceUrl,is_material:false});
-  if(error)throw error;document.getElementById('post-form').reset();recordedAudioBlob=null;toast('Post published');
+  if(error)throw error;document.getElementById('post-form').reset();recordedAudioBlob=null;document.getElementById('community-composer')?.classList.add('hidden');toast('Post published');
   if(profile?.role==='admin')await sendHubNotification('📣 Admin Update',postTitle||postDesc.slice(0,120)||'RATHOD HUB par naya update','admin','community',{type:'community_post'});
   await loadPosts();
  }catch(err){toast(err.message||'Post failed',false)}finally{btn.disabled=false;btn.textContent='Post'}
@@ -2437,64 +2439,50 @@ function updateFollowCounts(){document.getElementById('my-following-count')?.rep
 function renderPeople(){const box=document.getElementById('people-box');if(!box)return;const q=(document.getElementById('people-search')?.value||'').toLowerCase().trim();const arr=people.filter(p=>!q||String(p.name||'Member').toLowerCase().includes(q));box.innerHTML=arr.length?arr.map(p=>{const f=followingIds.has(p.id);return `<div class="bg-slate-900/80 border border-slate-700 rounded-xl p-3 flex items-center gap-3"><div class="w-10 h-10 rounded-full overflow-hidden bg-slate-700 flex items-center justify-center">${p.pfp_url?driveImgHtml(p.pfp_url,'w-full h-full object-cover'):'👤'}</div><div class="min-w-0 flex-1"><b class="block truncate text-sm">${esc(p.name||'Member')}</b><span class="text-[10px] text-slate-500">${p.role==='admin'?'ADMIN':'MEMBER'}</span></div><button onclick="toggleFollow('${p.id}')" class="${f?'bg-slate-700':'bg-indigo-600 hover:bg-indigo-500'} px-3 py-2 rounded-lg text-xs font-bold">${f?'Following':'Follow'}</button></div>`}).join(''):'<div class="text-center py-6 text-slate-500 text-sm">Koi member nahi mila.</div>'}
 async function toggleFollow(targetId){if(!user||targetId===user.id)return;const f=followingIds.has(targetId);try{if(f){const {error}=await db.from('hub_follows').delete().eq('follower_id',user.id).eq('following_id',targetId);if(error)throw error;followingIds.delete(targetId);toast('Unfollowed')}else{const {error}=await db.from('hub_follows').insert({follower_id:user.id,following_id:targetId});if(error&&error.code!=='23505')throw error;followingIds.add(targetId);toast('Following ✓')}updateFollowCounts();renderPeople()}catch(e){toast(e.message||'Follow action failed',false)}}
 
-let communityChannel=null;
+let communityChannel=null,communityFeedMode='all';
+const COMMUNITY_REACTIONS=['❤️','👍','🔥','😂','🎯'];
+const communityOpenComments=new Set(),communityReactionPickers=new Set();
+function toggleCommunityComposer(){document.getElementById('community-composer')?.classList.toggle('hidden')}
+function setCommunityFeed(mode='all'){
+ communityFeedMode=mode==='mine'?'mine':'all';
+ const all=document.getElementById('community-tab-all'),mine=document.getElementById('community-tab-mine');
+ all?.classList.toggle('text-indigo-300',communityFeedMode==='all');all?.classList.toggle('border-indigo-400',communityFeedMode==='all');all?.classList.toggle('text-slate-500',communityFeedMode!=='all');all?.classList.toggle('border-transparent',communityFeedMode!=='all');
+ mine?.classList.toggle('text-indigo-300',communityFeedMode==='mine');mine?.classList.toggle('border-indigo-400',communityFeedMode==='mine');mine?.classList.toggle('text-slate-500',communityFeedMode!=='mine');mine?.classList.toggle('border-transparent',communityFeedMode!=='mine');renderPosts();
+}
+function toggleCommunityComments(id){id=String(id);communityOpenComments.has(id)?communityOpenComments.delete(id):communityOpenComments.add(id);renderPosts();if(communityOpenComments.has(id))setTimeout(()=>document.getElementById(`comment-${id}`)?.focus(),50)}
+function toggleCommunityReactions(id){id=String(id);communityReactionPickers.has(id)?communityReactionPickers.delete(id):communityReactionPickers.add(id);renderPosts()}
+function communityReactionEntry(value){const raw=String(value||''),split=raw.indexOf('::');return split>0?{reaction:raw.slice(0,split),userId:raw.slice(split+2)}:{reaction:'❤️',userId:raw}}
+function communityReactionState(likes=[]){const entries=(Array.isArray(likes)?likes:[]).map(communityReactionEntry),counts=Object.fromEntries(COMMUNITY_REACTIONS.map(x=>[x,0]));entries.forEach(x=>{if(counts[x.reaction]!==undefined)counts[x.reaction]++});const mine=entries.find(x=>String(x.userId)===String(user?.id));return{entries,counts,mine:mine?.reaction||null,total:entries.length}}
+function communityTime(value){const ms=Date.now()-new Date(value).getTime(),min=Math.max(0,Math.floor(ms/60000));if(min<1)return'just now';if(min<60)return`${min} min ago`;const hr=Math.floor(min/60);if(hr<24)return`${hr}h ago`;const day=Math.floor(hr/24);return day<30?`${day}d ago`:new Date(value).toLocaleDateString()}
+async function shareCommunityPost(id){const url=`${location.origin}${location.pathname}#community-post-${id}`;try{if(navigator.share)await navigator.share({title:'RATHOD HUB Community Post',url});else{await navigator.clipboard.writeText(url);toast('Post link copied ✓')}}catch(e){if(e?.name!=='AbortError')prompt('Copy post link',url)}}
 async function loadPosts(){
-  const {data,error}=await db.from('posts').select('*').eq('is_material',false).order('created_at',{ascending:false});
-  if(error){console.error(error);return}
-  posts=data||[];
-  renderPosts();
-  if(!communityChannel&&user){
-    communityChannel=db.channel('public:posts')
-      .on('postgres_changes',{event:'*',schema:'public',table:'posts'},()=>{loadPosts();loadMaterials()})
-      .subscribe();
-  }
+ const {data,error}=await db.from('posts').select('*').eq('is_material',false).order('created_at',{ascending:false});if(error){console.error(error);return}posts=data||[];renderPosts();
+ if(!communityChannel&&user){communityChannel=db.channel('public:posts').on('postgres_changes',{event:'*',schema:'public',table:'posts'},()=>{loadPosts();loadMaterials()}).subscribe()}
 }
 function renderPosts(){
- document.getElementById('post-count').textContent=`${posts.length} posts`;
- document.getElementById('posts-box').innerHTML=posts.length?posts.map(p=>{
- const likes=Array.isArray(p.likes)?p.likes:[], comments=Array.isArray(p.comments)?p.comments:[],liked=likes.includes(user.id);
- return `<article class="bg-slate-900/80 border border-slate-700 rounded-2xl p-4 space-y-3">
- <div class="flex justify-between"><div class="flex gap-3 items-center"><div class="w-9 h-9 rounded-full overflow-hidden bg-slate-800">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}" class="w-full h-full object-cover">`:'<div class="h-full flex items-center justify-center">👤</div>'}</div><div><b class="text-sm">${esc(p.author)}</b><div class="text-[10px] text-slate-500">${new Date(p.created_at).toLocaleString()}</div></div></div>${profile.role==='admin'||p.author_id===user.id?`<button onclick="deletePost('${p.id}')" class="text-red-400 text-xs">Delete</button>`:''}</div>
- <h4 class="font-bold text-teal-300">${esc(p.title)}</h4><p class="text-sm text-slate-300 whitespace-pre-wrap">${esc(p.desc)}</p>
- ${p.file_url?(p.file_type?.startsWith('image/')?`<img onclick="window.open('${safeUrl(p.file_url)}','_blank')" src="${safeUrl(drivePreviewUrl(p.file_url))}" onerror="this.onerror=null;this.src='${safeUrl(p.file_url)}'" class="max-h-80 max-w-full rounded-xl cursor-pointer" loading="lazy">`:`<a target="_blank" href="${safeUrl(p.file_url)}" class="block bg-slate-800 p-3 rounded-xl text-sm">📎 ${esc(p.file_name||'Attached file')}</a>`):''}
- ${p.voice_url?`<audio controls src="${safeUrl(p.voice_url)}" class="w-full"></audio>`:''}
- <div class="flex justify-between border-t border-slate-800 pt-3"><button onclick="toggleLike('${p.id}')" class="${liked?'text-red-400':''}">♥ ${likes.length}</button><span class="text-xs text-slate-500">${comments.length} comments</span></div>
- <div class="space-y-2">${comments.map(c=>`<div class="bg-slate-800 rounded-lg p-2 text-xs"><b class="text-teal-300">${esc(c.author)}:</b> ${esc(c.text)} ${c.image_url?`<br><img src="${safeUrl(drivePreviewUrl(c.image_url))}" onerror="this.onerror=null;this.src='${safeUrl(c.image_url)}'" class="max-h-32 rounded mt-1" loading="lazy">`:''}</div>`).join('')}</div>
- <div class="flex gap-2"><input id="comment-${p.id}" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs" placeholder="Write a reply..."><input id="replyfile-${p.id}" type="file" accept="image/*" class="w-24 text-[9px]"><button onclick="addComment('${p.id}')" class="bg-teal-600 px-3 rounded-lg text-xs font-bold">Reply</button></div>
- </article>`}).join(''):'<div class="text-center py-10 text-slate-500">No posts yet.</div>';
+ const visible=communityFeedMode==='mine'?posts.filter(p=>String(p.author_id)===String(user?.id)):posts;
+ document.getElementById('post-count').textContent=`${visible.length} posts`;
+ document.getElementById('posts-box').innerHTML=visible.length?visible.map(p=>{
+  const comments=Array.isArray(p.comments)?p.comments:[],state=communityReactionState(p.likes),commentsOpen=communityOpenComments.has(String(p.id)),pickerOpen=communityReactionPickers.has(String(p.id));
+  const reactionSummary=COMMUNITY_REACTIONS.filter(x=>state.counts[x]).map(x=>`<span class="inline-flex items-center gap-1 bg-slate-800 border border-slate-700 rounded-full px-2 py-1 text-[11px]">${x} ${state.counts[x]}</span>`).join('');
+  const picker=pickerOpen?`<div class="flex items-center gap-2 px-4 pb-3">${COMMUNITY_REACTIONS.map(x=>`<button onclick="toggleReaction('${p.id}','${x}')" class="w-10 h-10 rounded-full border ${state.mine===x?'bg-indigo-500/30 border-indigo-400':'bg-slate-800 border-slate-700 hover:bg-slate-700'} text-lg" title="React ${x}">${x}</button>`).join('')}</div>`:'';
+  const commentsPanel=commentsOpen?`<div class="border-t border-slate-800 px-4 py-3 space-y-3"><div class="space-y-2 max-h-72 overflow-y-auto">${comments.length?comments.map(c=>`<div class="flex gap-2"><div class="w-7 h-7 rounded-full bg-slate-700 grid place-items-center shrink-0">👤</div><div class="bg-slate-800 rounded-2xl rounded-tl-sm px-3 py-2 min-w-0"><b class="text-[11px] text-indigo-300">${esc(c.author||'Member')}</b><p class="text-xs text-slate-200 whitespace-pre-wrap break-words">${esc(c.text||'')}</p>${c.image_url?`<img src="${safeUrl(drivePreviewUrl(c.image_url))}" onerror="this.onerror=null;this.src='${safeUrl(c.image_url)}'" class="max-h-40 rounded-lg mt-2" loading="lazy">`:''}<span class="text-[9px] text-slate-500">${c.date?communityTime(c.date):''}</span></div></div>`).join(''):'<div class="text-xs text-slate-500 text-center py-3">No comments yet.</div>'}</div><div class="flex flex-col sm:flex-row gap-2"><input id="comment-${p.id}" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs" placeholder="Write a comment..."><input id="replyfile-${p.id}" type="file" accept="image/*" class="sm:w-28 text-[9px]"><button onclick="addComment('${p.id}')" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-xs font-black">Comment</button></div></div>`:'';
+  return`<article id="community-post-${p.id}" class="bg-slate-950/95 border border-slate-700 rounded-2xl overflow-hidden shadow-xl"><div class="p-4"><div class="flex items-start justify-between gap-3"><div class="flex gap-3 min-w-0"><div class="w-11 h-11 rounded-full overflow-hidden bg-slate-800 border border-slate-700 shrink-0">${p.pfp_url?`<img src="${safeUrl(p.pfp_url)}" class="w-full h-full object-cover">`:'<div class="h-full grid place-items-center">👤</div>'}</div><div class="min-w-0"><b class="text-sm text-white truncate block">${esc(p.author||'Member')}</b><span class="text-[10px] text-slate-500">${communityTime(p.created_at)}</span></div></div>${profile.role==='admin'||String(p.author_id)===String(user.id)?`<button onclick="deletePost('${p.id}')" class="w-8 h-8 rounded-full hover:bg-slate-800 text-slate-400" title="Delete post"><i class="fa-solid fa-ellipsis-vertical"></i></button>`:''}</div><h4 class="font-black text-white mt-4">${esc(p.title||'')}</h4><p class="text-sm text-slate-300 whitespace-pre-wrap mt-2">${esc(p.desc||'')}</p>${p.file_url?(p.file_type?.startsWith('image/')?`<img onclick="window.open('${safeUrl(p.file_url)}','_blank')" src="${safeUrl(drivePreviewUrl(p.file_url))}" onerror="this.onerror=null;this.src='${safeUrl(p.file_url)}'" class="mt-3 max-h-[420px] w-full object-contain rounded-xl bg-black cursor-pointer" loading="lazy">`:`<a target="_blank" href="${safeUrl(p.file_url)}" class="mt-3 block bg-slate-800 p-3 rounded-xl text-sm">📎 ${esc(p.file_name||'Attached file')}</a>`):''}${p.voice_url?`<audio controls src="${safeUrl(p.voice_url)}" class="w-full mt-3"></audio>`:''}<div class="flex justify-between items-center gap-3 mt-4 min-h-7"><div class="flex flex-wrap gap-1">${reactionSummary}</div><button onclick="toggleCommunityComments('${p.id}')" class="text-[11px] text-slate-400">${comments.length} comments</button></div></div><div class="grid grid-cols-3 border-t border-slate-800"><button onclick="toggleCommunityReactions('${p.id}')" class="py-3 text-xs font-bold ${state.mine?'text-indigo-300':'text-slate-400'} hover:bg-slate-900"><i class="fa-regular fa-face-smile mr-2"></i>React</button><button onclick="toggleCommunityComments('${p.id}')" class="py-3 text-xs font-bold text-slate-400 hover:bg-slate-900"><i class="fa-regular fa-comment mr-2"></i>Comment</button><button onclick="shareCommunityPost('${p.id}')" class="py-3 text-xs font-bold text-slate-400 hover:bg-slate-900"><i class="fa-regular fa-paper-plane mr-2"></i>Share</button></div>${picker}${commentsPanel}</article>`
+ }).join(''):'<div class="bg-slate-950/90 border border-slate-800 rounded-2xl text-center py-12 text-slate-500">No posts yet.</div>';
 }
-
-async function toggleLike(id){
- const p = posts.find(x => String(x.id) === String(id));
- if(!p){ toast('Post not found',false); return; }
- let likes = Array.isArray(p.likes) ? [...p.likes] : [];
- if(likes.includes(user.id)){ likes = likes.filter(x => x !== user.id); }else{ likes.push(user.id); }
- const { error } = await db.from('posts').update({ likes }).eq('id', p.id);
- if(error){ console.error(error); toast(error.message,false); return; }
- await loadPosts();
+async function toggleReaction(id,reaction='❤️'){
+ if(!COMMUNITY_REACTIONS.includes(reaction))return;const p=posts.find(x=>String(x.id)===String(id));if(!p)return toast('Post not found',false);
+ let likes=Array.isArray(p.likes)?[...p.likes]:[],entries=likes.map(communityReactionEntry),mine=entries.find(x=>String(x.userId)===String(user.id)),adding=mine?.reaction!==reaction;
+ likes=likes.filter(value=>String(communityReactionEntry(value).userId)!==String(user.id));if(adding)likes.push(`${reaction}::${user.id}`);
+ const {error}=await db.from('posts').update({likes}).eq('id',p.id);if(error)return toast(error.message,false);
+ if(adding&&String(p.author_id)!==String(user.id))await sendPersonalHubNotification(p.author_id,`${profile.name||'Someone'} reacted ${reaction}`,`Your post: ${p.title||'Community post'}`,'reaction','community',{post_id:p.id,actor_id:user.id,reaction});
+ communityReactionPickers.delete(String(id));await loadPosts();
 }
-
+async function toggleLike(id){return toggleReaction(id,'❤️')}
 async function addComment(id){
- const input = document.getElementById('comment-'+id);
- const file = document.getElementById('replyfile-'+id).files[0];
- const text = input.value.trim();
- if(!text && !file) return;
- const p = posts.find(x => String(x.id) === String(id));
- if(!p){ toast('Post not found',false); return; }
- let comments = Array.isArray(p.comments) ? [...p.comments] : [];
- let image_url = null;
- try{
-  if(file){
-    const drive=await uploadToGoogleDrive('Community',file);
-    image_url=driveImageUrl(drive.id);
-   }
-  comments.push({ author: profile.name, text, image_url, user_id: user.id, date: new Date().toISOString() });
-  const { error } = await db.from('posts').update({ comments }).eq('id', p.id);
-  if(error) throw error;
-  input.value = '';
-  document.getElementById('replyfile-'+id).value = '';
-  await loadPosts();
- }catch(err){ console.error(err); toast(err.message,false); }
+ const input=document.getElementById('comment-'+id),file=document.getElementById('replyfile-'+id)?.files?.[0],text=input?.value.trim();if(!text&&!file)return;
+ const p=posts.find(x=>String(x.id)===String(id));if(!p)return toast('Post not found',false);let comments=Array.isArray(p.comments)?[...p.comments]:[],image_url=null;
+ try{if(file){const drive=await uploadToGoogleDrive('Community',file);image_url=driveImageUrl(drive.id)}comments.push({author:profile.name,text,image_url,user_id:user.id,date:new Date().toISOString()});const{error}=await db.from('posts').update({comments}).eq('id',p.id);if(error)throw error;input.value='';document.getElementById('replyfile-'+id).value='';if(String(p.author_id)!==String(user.id))await sendPersonalHubNotification(p.author_id,`${profile.name||'Someone'} commented on your post`,text||'Sent an image','community','community',{post_id:p.id,actor_id:user.id});communityOpenComments.add(String(id));await loadPosts()}catch(err){console.error(err);toast(err.message,false)}
 }
 
 async function deletePost(id){if(!confirm('Delete this post?'))return;const item=posts.find(x=>String(x.id)===String(id));const{error}=await db.from('posts').delete().eq('id',id);if(error)return toast(error.message,false);if(item?.storage_path){try{await deleteFromGoogleDrive(item.storage_path)}catch(e){console.warn('Drive delete failed',e)}}toast('Deleted');await loadPosts();await loadMaterials()}
@@ -3351,7 +3339,7 @@ async function qbRefreshPresenceCount(){if(!qbChannel)return;try{const state=qbC
 async function qbReloadRoomAndSync(){if(!qbRoom)return;const {data}=await db.from('quiz_battle_rooms').select('*').eq('room_code',qbRoom.room_code).maybeSingle();if(data){qbRoom=data;qbRenderRoom();qbSyncCurrentRoom();if(data.status==='finished'){await qbRefreshParticipants();await qbLoadMyFinalStats()}}}
 function qbRenderRoom(){
   document.getElementById('qb-lobby')?.classList.add('hidden');document.getElementById('qb-match')?.classList.remove('hidden');const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};set('qb-match-topic',qbRoom.topic||'Live Quiz');set('qb-match-host',qbRoom.host_name||'Student');const isHost=qbRoom.host_id===user.id;document.getElementById('qb-start-btn')?.classList.toggle('hidden',!isHost||qbRoom.status!=='waiting');document.getElementById('qb-waiting-panel')?.classList.toggle('hidden',qbRoom.status!=='waiting');document.getElementById('qb-question-panel')?.classList.toggle('hidden',qbRoom.status!=='live');document.getElementById('qb-finished-panel')?.classList.toggle('hidden',qbRoom.status!=='finished');set('qb-match-status',qbRoom.status==='live'?'LIVE':qbRoom.status==='finished'?'FINISHED':'WAITING');set('qb-global-status',qbRoom.status==='live'?'● LIVE QUIZ':qbRoom.status==='finished'?'FINISHED':'WAITING');set('qb-waiting-title',qbRoom.mode==='duel'?'Waiting for opponent...':'Waiting for players...');set('qb-waiting-note',qbRoom.mode==='duel'?'1 vs 1 ke liye 2 players required.':'Host quiz start karega to sabka timer same hoga.');const invite=document.getElementById('qb-match-invite-code');if(invite){invite.classList.toggle('hidden',qbRoom.mode!=='private');invite.textContent=qbRoom.mode==='private'?`Invite code: ${qbRoom.room_code}`:''}if(qbRoom.status!=='finished')qbShowLiveLayout();}
-async function qbStartMatch(){if(!qbRoom||qbRoom.host_id!==user.id||qbRoom.status!=='waiting')return;if(qbRoom.mode==='duel'){const {count,error}=await db.from('quiz_battle_participants').select('user_id',{count:'exact',head:true}).eq('room_code',qbRoom.room_code);if(error)return toast(error.message,false);if((count||0)<2)return toast('1 vs 1 start karne ke liye opponent join kare.',false)}const started_at=new Date().toISOString();const {data,error}=await db.from('quiz_battle_rooms').update({status:'live',started_at}).eq('room_code',qbRoom.room_code).eq('host_id',user.id).eq('status','waiting').select('*').single();if(error)return toast(error.message||'Quiz start failed',false);qbRoom=data;qbRenderRoom();qbSyncCurrentRoom();try{await qbChannel?.send({type:'broadcast',event:'battle-event',payload:{type:'started'}})}catch(e){}}
+async function qbStartMatch(){if(!qbRoom||qbRoom.host_id!==user.id||qbRoom.status!=='waiting')return;if(qbRoom.mode==='duel'){const {count,error}=await db.from('quiz_battle_participants').select('user_id',{count:'exact',head:true}).eq('room_code',qbRoom.room_code);if(error)return toast(error.message,false);if((count||0)<2)return toast('1 vs 1 start karne ke liye opponent join kare.',false)}const started_at=new Date().toISOString();const {data,error}=await db.from('quiz_battle_rooms').update({status:'live',started_at}).eq('room_code',qbRoom.room_code).eq('host_id',user.id).eq('status','waiting').select('*').single();if(error)return toast(error.message||'Quiz start failed',false);qbRoom=data;qbRenderRoom();qbSyncCurrentRoom();try{await qbChannel?.send({type:'broadcast',event:'battle-event',payload:{type:'started'}})}catch(e){}if(['public','detective'].includes(qbRoom.mode))await sendHubNotification('⚡ Public Quiz LIVE Now',`${qbRoom.topic} • Host: ${qbRoom.host_name||'Student'}`,'livequiz','battle',{room:qbRoom.room_code,mode:qbRoom.mode,status:'live'})}
 function qbCurrentIndex(){if(!qbRoom?.started_at)return -1;const elapsed=Date.now()-new Date(qbRoom.started_at).getTime();if(elapsed<0)return -1;return Math.floor(elapsed/(QB_QUESTION_SECONDS*1000))}
 function qbSecondsLeft(){if(!qbRoom?.started_at)return 30;const elapsed=Math.max(0,Date.now()-new Date(qbRoom.started_at).getTime());const used=Math.floor((elapsed%(QB_QUESTION_SECONDS*1000))/1000);return QB_QUESTION_SECONDS-used}
 function qbSyncCurrentRoom(){
@@ -5265,7 +5253,8 @@ function hubNotifyKey(){return `rh_hub_notifications_${user?.id||'guest'}`}
 function hubNotifySeenKey(){return `rh_hub_notification_seen_${user?.id||'guest'}`}
 function hubSeenIds(){try{return new Set(JSON.parse(localStorage.getItem(hubNotifySeenKey())||'[]'))}catch{return new Set()}}
 function markHubNotificationsSeen(ids=[]){try{const seen=hubSeenIds();ids.filter(Boolean).forEach(id=>seen.add(String(id)));localStorage.setItem(hubNotifySeenKey(),JSON.stringify([...seen].slice(-500)))}catch{}}
-function hubNotificationIcon(tag){return ({livequiz:'⚡',dailyquiz:'🏆',voice:'🎙️',material:'📚',admin:'📣',event:'📅',test:'📝',bounty:'💰',group:'👥',treasure:'🗺️',game:'🎮'})[tag]||'🔔'}
+function hubNotificationIcon(tag){return ({livequiz:'⚡',dailyquiz:'🏆',voice:'🎙️',material:'📚',admin:'📣',event:'📅',test:'📝',bounty:'💰',group:'👥',treasure:'🗺️',game:'🎮',community:'💬',reaction:'✨'})[tag]||'🔔'}
+function hubNotificationIsForMe(row){const metadata=row?.metadata&&typeof row.metadata==='object'?row.metadata:{};const target=metadata.target_user_id;return !target||String(target)===String(user?.id)}
 function loadHubNotificationStore(){try{const a=JSON.parse(localStorage.getItem(hubNotifyKey())||'[]');hubNotifications=Array.isArray(a)?a.slice(0,HUB_NOTIFICATION_LIMIT):[]}catch{hubNotifications=[]}renderHubNotifications()}
 function saveHubNotificationStore(){try{localStorage.setItem(hubNotifyKey(),JSON.stringify(hubNotifications.slice(0,HUB_NOTIFICATION_LIMIT)))}catch{}renderHubNotifications()}
 function hubNotificationMarkup(){return hubNotifications.length?hubNotifications.map(x=>`<button class="rh-notify-item" onclick="openHubNotification('${esc(String(x.id))}')"><div class="text-xl">${esc(x.icon||hubNotificationIcon(x.tag))}</div><div class="min-w-0 flex-1 text-left"><b>${esc(x.title||'RATHOD HUB')}</b><p>${esc(x.body||'')}</p><span>${new Date(x.created_at||Date.now()).toLocaleString()}</span></div><i class="fa-solid fa-chevron-right rh-notify-arrow"></i></button>`).join(''):'<div class="rh-notify-empty">Koi unread notification nahi hai.<br>Admin update, public quiz, live room ya game invite aayega to yahan dikhega.</div>'}
@@ -5274,12 +5263,25 @@ function closeMobileNotifications(){document.getElementById('rh-mobile-notify-sh
 function toggleHubNotifications(){const mobile=window.matchMedia('(max-width:640px)').matches,el=document.getElementById(mobile?'rh-mobile-notify-sheet':'hub-notify-panel');if(!el)return;el.classList.toggle('hidden');renderHubNotifications();if(!el.classList.contains('hidden')&&'Notification'in window&&Notification.permission==='default')Notification.requestPermission().catch(()=>{})}
 function clearHubNotifications(){markHubNotificationsSeen(hubNotifications.map(x=>x.id));hubNotifications=[];saveHubNotificationStore();toast('Notifications cleared ✓')}
 function dismissHubNotification(id){if(!id)return;markHubNotificationsSeen([id]);hubNotifications=hubNotifications.filter(x=>String(x.id)!==String(id));saveHubNotificationStore()}
-function openHubNotification(id){const n=hubNotifications.find(x=>String(x.id)===String(id));markHubNotificationsSeen([id]);hubNotifications=hubNotifications.filter(x=>String(x.id)!==String(id));saveHubNotificationStore();document.getElementById('hub-notify-panel')?.classList.add('hidden');closeMobileNotifications();const actions={battle:()=>switchTab('battle'),livequiz:()=>switchTab('battle'),dailyquiz:()=>openDailyBattle(),materials:()=>switchTab('materials'),material:()=>switchTab('materials'),studyrooms:()=>switchTab('studyrooms'),event:()=>switchTab('hubevents'),hubevents:()=>switchTab('hubevents'),tests:()=>switchTab('tests'),test:()=>switchTab('tests'),treasure:()=>switchTab('treasure'),peergroups:()=>switchTab('peergroups'),group:()=>switchTab('peergroups'),bounty:()=>switchTab('peergroups'),community:()=>switchTab('community'),aicards:()=>switchTab('aicards'),game:()=>switchTab('games'),games:()=>switchTab('games')};actions[n?.action]?.()}
-function showHubNotification(title,body,tag='rathod-hub',action='',opts={}){const id=String(opts.id||(crypto?.randomUUID?crypto.randomUUID():`n_${Date.now()}_${Math.random()}`));if(hubSeenIds().has(id)||hubNotifications.some(x=>String(x.id)===id))return null;const item={id,title,body,tag,action,metadata:opts.metadata||{},icon:hubNotificationIcon(tag),created_at:opts.created_at||new Date().toISOString()};hubNotifications.unshift(item);hubNotifications=hubNotifications.slice(0,HUB_NOTIFICATION_LIMIT);saveHubNotificationStore();if(!opts.silent)toast(`${item.icon} ${title}`);if(!opts.silent&&'Notification'in window&&Notification.permission==='granted'){try{const nn=new Notification(title,{body,tag});nn.onclick=()=>{window.focus();openHubNotification(item.id)}}catch(e){}}return item}
+function openHubNotification(id){
+ const n=hubNotifications.find(x=>String(x.id)===String(id));markHubNotificationsSeen([id]);hubNotifications=hubNotifications.filter(x=>String(x.id)!==String(id));saveHubNotificationStore();document.getElementById('hub-notify-panel')?.classList.add('hidden');closeMobileNotifications();
+ if(n?.action==='community'){
+  switchTab('community');const postId=n.metadata?.post_id;if(postId){communityOpenComments.add(String(postId));renderPosts();setTimeout(()=>document.getElementById(`community-post-${postId}`)?.scrollIntoView({behavior:'smooth',block:'center'}),150)}return;
+ }
+ if(['battle','livequiz'].includes(n?.action)&&n.metadata?.room){switchTab('battle');setTimeout(()=>qbJoinRoom(n.metadata.room),250);return}
+ const actions={battle:()=>switchTab('battle'),livequiz:()=>switchTab('battle'),dailyquiz:()=>openDailyBattle(),materials:()=>switchTab('materials'),material:()=>switchTab('materials'),studyrooms:()=>switchTab('studyrooms'),event:()=>switchTab('hubevents'),hubevents:()=>switchTab('hubevents'),tests:()=>switchTab('tests'),test:()=>switchTab('tests'),treasure:()=>switchTab('treasure'),peergroups:()=>switchTab('peergroups'),group:()=>switchTab('peergroups'),bounty:()=>switchTab('peergroups'),aicards:()=>switchTab('aicards'),game:()=>switchTab('games'),games:()=>switchTab('games')};actions[n?.action]?.()
+}
+function showHubNotification(title,body,tag='rathod-hub',action='',opts={}){if(!hubNotificationIsForMe({metadata:opts.metadata}))return null;const id=String(opts.id||(crypto?.randomUUID?crypto.randomUUID():`n_${Date.now()}_${Math.random()}`));if(hubSeenIds().has(id)||hubNotifications.some(x=>String(x.id)===id))return null;const item={id,title,body,tag,action,metadata:opts.metadata||{},icon:hubNotificationIcon(tag),created_at:opts.created_at||new Date().toISOString()};hubNotifications.unshift(item);hubNotifications=hubNotifications.slice(0,HUB_NOTIFICATION_LIMIT);saveHubNotificationStore();if(!opts.silent)toast(`${item.icon} ${title}`);if(!opts.silent&&'Notification'in window&&Notification.permission==='granted'){try{const nn=new Notification(title,{body,tag});nn.onclick=()=>{window.focus();openHubNotification(item.id)}}catch(e){}}return item}
 function normalizeHubNotificationRow(row){return {id:row.id,title:row.title||'RATHOD HUB',body:row.body||'',tag:row.tag||'rathod-hub',action:row.action||'',metadata:row.metadata||{},created_at:row.created_at||new Date().toISOString()}}
-async function loadPersistedHubNotifications(){try{const {data,error}=await db.from('hub_notifications').select('id,title,body,tag,action,metadata,created_at,expires_at').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false}).limit(HUB_NOTIFICATION_LIMIT);if(error)throw error;const seen=hubSeenIds();(data||[]).slice().reverse().forEach(row=>{if(!seen.has(String(row.id)))showHubNotification(row.title,row.body,row.tag,row.action,{...row,silent:true})})}catch(e){console.info('Persistent notifications SQL not installed yet; realtime fallback active.',e?.message||e)}}
+async function loadPersistedHubNotifications(){try{const {data,error}=await db.from('hub_notifications').select('id,title,body,tag,action,metadata,created_at,expires_at').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false}).limit(HUB_NOTIFICATION_LIMIT);if(error)throw error;const seen=hubSeenIds();(data||[]).filter(hubNotificationIsForMe).slice().reverse().forEach(row=>{if(!seen.has(String(row.id)))showHubNotification(row.title,row.body,row.tag,row.action,{...row,silent:true})})}catch(e){console.info('Persistent notifications SQL not installed yet; realtime fallback active.',e?.message||e)}}
 async function sendHubNotification(title,body,tag='rathod-hub',action='',metadata={}){try{const {data,error}=await db.rpc('publish_hub_notification',{p_title:String(title||'RATHOD HUB'),p_body:String(body||''),p_tag:String(tag||'rathod-hub'),p_action:String(action||''),p_metadata:metadata||{}});if(error)throw error;const row=Array.isArray(data)?data[0]:data;if(row?.id)return showHubNotification(row.title,row.body,row.tag,row.action,{...row,silent:false})}catch(e){console.info('Persistent notification publish fallback.',e?.message||e)}const local=showHubNotification(title,body,tag,action,{metadata});try{await hubNotifyChannel?.send({type:'broadcast',event:'hub-notification',payload:{title,body,tag,action,metadata,sourceId:user?.id||null,id:local?.id}})}catch(e){}return local}
-async function initHubNotifications(){if(!user)return;loadHubNotificationStore();await loadPersistedHubNotifications();if(hubNotifyChannel)try{db.removeChannel(hubNotifyChannel)}catch(e){};hubNotifyChannel=db.channel('rathod-hub-global-notifications',{config:{broadcast:{self:false}}});hubNotifyChannel.on('postgres_changes',{event:'INSERT',schema:'public',table:'hub_notifications'},({new:row})=>{if(row?.id)showHubNotification(row.title,row.body,row.tag,row.action,{...row,silent:false})}).on('broadcast',{event:'hub-notification'},({payload})=>{if(payload?.sourceId===user.id)return;showHubNotification(payload?.title||'RATHOD HUB',payload?.body||'',payload?.tag||'rathod-hub',payload?.action||'',{id:payload?.id,metadata:payload?.metadata})}).subscribe()}
+async function sendPersonalHubNotification(targetId,title,body,tag='community',action='community',metadata={}){
+ if(!targetId||String(targetId)===String(user?.id))return null;
+ const targeted={...(metadata||{}),target_user_id:String(targetId)};
+ try{const {data,error}=await db.rpc('publish_hub_notification',{p_title:String(title),p_body:String(body||''),p_tag:String(tag),p_action:String(action),p_metadata:targeted});if(error)throw error;return Array.isArray(data)?data[0]:data}catch(e){console.info('Personal notification persistence fallback.',e?.message||e)}
+ const id=`personal_${Date.now()}_${Math.random().toString(36).slice(2)}`;try{await hubNotifyChannel?.send({type:'broadcast',event:'personal-notification',payload:{id,targetId:String(targetId),title,body,tag,action,metadata:targeted}})}catch(e){}return{id}
+}
+async function initHubNotifications(){if(!user)return;loadHubNotificationStore();await loadPersistedHubNotifications();if(hubNotifyChannel)try{db.removeChannel(hubNotifyChannel)}catch(e){};hubNotifyChannel=db.channel('rathod-hub-global-notifications',{config:{broadcast:{self:false}}});hubNotifyChannel.on('postgres_changes',{event:'INSERT',schema:'public',table:'hub_notifications'},({new:row})=>{if(row?.id&&hubNotificationIsForMe(row))showHubNotification(row.title,row.body,row.tag,row.action,{...row,silent:false})}).on('broadcast',{event:'hub-notification'},({payload})=>{if(payload?.sourceId===user.id||!hubNotificationIsForMe(payload))return;showHubNotification(payload?.title||'RATHOD HUB',payload?.body||'',payload?.tag||'rathod-hub',payload?.action||'',{id:payload?.id,metadata:payload?.metadata})}).on('broadcast',{event:'personal-notification'},({payload})=>{if(String(payload?.targetId)!==String(user.id))return;showHubNotification(payload?.title||'Community activity',payload?.body||'',payload?.tag||'community',payload?.action||'community',{id:payload?.id,metadata:payload?.metadata})}).subscribe()}
 function cleanupHubNotifications(){if(hubNotifyChannel){try{db.removeChannel(hubNotifyChannel)}catch(e){}hubNotifyChannel=null}hubNotifications=[]}
 document.addEventListener('click',e=>{const w=document.querySelector('.rh-notify-wrap');if(w&&!w.contains(e.target))document.getElementById('hub-notify-panel')?.classList.add('hidden')});
 
