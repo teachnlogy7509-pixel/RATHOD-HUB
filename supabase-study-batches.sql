@@ -8,8 +8,11 @@ create table if not exists public.study_batches (
   owner_id uuid not null references public.profiles(id) on delete cascade,
   owner_name text not null,
   created_at timestamptz not null default now(),
-  active boolean not null default true
+  active boolean not null default true,
+  is_official boolean not null default false
 );
+alter table public.study_batches add column if not exists is_official boolean not null default false;
+
 create table if not exists public.study_batch_members (
   batch_id uuid not null references public.study_batches(id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
@@ -34,7 +37,7 @@ alter table public.study_batch_messages enable row level security;
 drop policy if exists "public batches read" on public.study_batches;
 create policy "public batches read" on public.study_batches for select to authenticated using(active);
 drop policy if exists "users create batches" on public.study_batches;
-create policy "users create batches" on public.study_batches for insert to authenticated with check(auth.uid()=owner_id);
+create policy "users create batches" on public.study_batches for insert to authenticated with check(auth.uid()=owner_id and (not is_official or exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='admin')));
 drop policy if exists "owners update batches" on public.study_batches;
 create policy "owners update batches" on public.study_batches for update to authenticated using(auth.uid()=owner_id) with check(auth.uid()=owner_id);
 drop policy if exists "batch members read" on public.study_batch_members;
