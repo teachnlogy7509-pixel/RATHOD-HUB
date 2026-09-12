@@ -2689,8 +2689,10 @@ async function startOnlineGame(type,roomId,role){
   });
 }
 async function receiveMoveRequest(p){
-  if(!p||p.roomId!==currentGame.roomId||!currentGame.connected||currentGame.role!=='host'||currentGame.gameOver)return;
+  if(!p||p.roomId!==currentGame.roomId||currentGame.role!=='host')return;
   if(p.fromId===user.id)return;
+  if(p.kind==='restart-request'){await resetOnlineGame();return;}
+  if(!currentGame.connected||currentGame.gameOver)return;
 
   if(currentGame.type==='tictactoe'){
     const board=currentGame.ttt, count=board.filter(Boolean).length;
@@ -2711,7 +2713,17 @@ async function receiveMoveRequest(p){
   }
 
   if(currentGame.type?.startsWith('ludo')&&p.kind==='ludo-roll'){
-    if(currentGame.ludo.turn!==p.player)return;applyLudoRoll(Number(p.dice)||1);await roomSend('state',{roomId:currentGame.roomId,type:currentGame.type,ludo:currentGame.ludo,gameOver:currentGame.gameOver});return;
+    const dice=Math.max(1,Math.min(6,Number(p.dice)||1));
+    if(currentGame.ludo.turn!==p.player||currentGame.ludo.pending)return;
+    beginLudoRoll(dice,false);
+    await roomSend('state',{roomId:currentGame.roomId,type:currentGame.type,ludo:currentGame.ludo,gameOver:currentGame.gameOver});
+    return;
+  }
+  if(currentGame.type?.startsWith('ludo')&&p.kind==='ludo-move'){
+    const pending=currentGame.ludo.pending;
+    if(!pending||pending.player!==p.player||!pending.valid.includes(p.index))return;
+    if(applyLudoMove(p.index,pending.dice))await roomSend('state',{roomId:currentGame.roomId,type:currentGame.type,ludo:currentGame.ludo,gameOver:currentGame.gameOver});
+    return;
   }
 
   if(currentGame.type==='chess'){
@@ -2758,7 +2770,7 @@ function receiveGameEnd(p){
   document.getElementById('game-status').textContent=p.message||'Game over';
 }
 
-function newLudo(players){return{players,turn:0,dice:null,tokens:Array.from({length:players},()=>[-1,-1,-1,-1]),winner:null,last:'Roll the dice'}}
+function newLudo(players){return{players,turn:0,dice:null,pending:null,tokens:Array.from({length:players},()=>[-1,-1,-1,-1]),winner:null,last:'Roll the dice'}}
 function ludoCode(){return Math.random().toString(36).slice(2,8).toUpperCase()}
 function normalizeRoomCode(value){return String(value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8)}
 async function copyText(value,label='Room code'){
@@ -2773,10 +2785,103 @@ function startLudoComputer(players){currentGame={type:players===4?'ludo4':'ludo2
 function createLudoRoom(players){const code=players+ludoCode();document.getElementById('ludo-room-code').value=code;copyText(code,'Ludo room code');startOnlineGame(players===4?'ludo4':'ludo2',code,'host')}
 function joinLudoRoom(){const input=document.getElementById('ludo-room-code'),code=normalizeRoomCode(input.value);input.value=code;if(code.length<5||!['2','4'].includes(code[0]))return toast('Valid Ludo room code डालें.',false);startOnlineGame(code[0]==='4'?'ludo4':'ludo2',code,'guest')}
 function ludoTrack(){const a=[];for(let x=0;x<=5;x++)a.push([x,6]);for(let y=5;y>=0;y--)a.push([6,y]);a.push([7,0]);for(let y=0;y<=5;y++)a.push([8,y]);for(let x=9;x<=14;x++)a.push([x,6]);a.push([14,7]);for(let x=14;x>=9;x--)a.push([x,8]);for(let y=9;y<=14;y++)a.push([8,y]);a.push([7,14]);for(let y=14;y>=9;y--)a.push([6,y]);for(let x=5;x>=0;x--)a.push([x,8]);a.push([0,7]);return a}
-function renderLudo(){const L=currentGame.ludo;if(!L)return;const colors=['#ef1f2d','#16b83e','#ffd20a','#1756d5'],names=['Red','Green','Yellow','Blue'],track=ludoTrack(),homeSpots=[[[2,2],[4,2],[2,4],[4,4]],[[10,2],[12,2],[10,4],[12,4]],[[10,10],[12,10],[10,12],[12,12]],[[2,10],[4,10],[2,12],[4,12]]],safe=[0,8,13,21,26,34,39,47];const pawn=(p,big=false)=>`<span style="position:relative;display:inline-block;width:${big?'clamp(22px,4vw,34px)':'clamp(13px,2.4vw,22px)'};height:${big?'clamp(30px,5vw,46px)':'clamp(18px,3.2vw,30px)'};filter:drop-shadow(0 2px 2px #0008)"><i style="position:absolute;left:25%;top:0;width:50%;aspect-ratio:1;border-radius:50%;background:${colors[p]};border:2px solid white"></i><i style="position:absolute;left:12%;bottom:0;width:76%;height:65%;border-radius:50% 50% 25% 25%;background:${colors[p]};border:2px solid white"></i></span>`;const cells=Array.from({length:225},(_,i)=>{const x=i%15,y=Math.floor(i/15),ti=track.findIndex(q=>q[0]===x&&q[1]===y),pieces=[];L.tokens.forEach((row,p)=>row.forEach((v,t)=>{if(v<0&&homeSpots[p][t][0]===x&&homeSpots[p][t][1]===y)pieces.push(`<b style="display:grid;place-items:center;width:86%;height:86%;border-radius:50%;background:white;box-shadow:inset 0 0 0 2px #cbd5e1,0 3px 6px #0006">${pawn(p,true)}</b>`);else if(v>=0&&v<52&&((v+p*13)%52)===ti)pieces.push(pawn(p))}));let bg='#ffffff';if(x<6&&y<6)bg='#ef1f2d';else if(x>8&&y<6)bg='#16b83e';else if(x>8&&y>8)bg='#ffd20a';else if(x<6&&y>8)bg='#1756d5';if(ti>=0)bg='#fff';if(ti===0)bg=colors[0];if(ti===13)bg=colors[1];if(ti===26)bg=colors[2];if(ti===39)bg=colors[3];if(y===7&&x>=1&&x<=5)bg=colors[0];if(x===7&&y>=1&&y<=5)bg=colors[1];if(y===7&&x>=9&&x<=13)bg=colors[2];if(x===7&&y>=9&&y<=13)bg=colors[3];if(x>=6&&x<=8&&y>=6&&y<=8)bg=x===7&&y===7?'conic-gradient(#16b83e 0 25%,#ffd20a 0 50%,#1756d5 0 75%,#ef1f2d 0)':'#fff';const mark=ti>=0&&safe.includes(ti)&&!pieces.length?'<span style="font-size:clamp(9px,1.5vw,16px);color:#64748b">★</span>':'';return`<div style="aspect-ratio:1;border:1px solid #64748b;background:${bg};display:grid;place-items:center;overflow:visible">${pieces.join('')||mark}</div>`}).join('');const rows=L.tokens.map((r,i)=>`<div class="flex items-center justify-between rounded-xl px-3 py-2" style="background:${colors[i]}18;border:2px solid ${colors[i]}"><b style="color:${colors[i]}">${pawn(i)} ${names[i]} ${i===0&&!currentGame.online?'(YOU)':currentGame.online&&i===currentGame.mySeat?'(YOU)':''}</b><span class="text-xs">${r.map(v=>v<0?'🏠':v>=56?'🏆':v).join(' • ')}</span></div>`).join('');const face=L.dice?String(L.dice):'🎲';document.getElementById('ludo-board').innerHTML=`<div style="background:#fff;padding:8px;border-radius:18px;box-shadow:0 18px 45px #0009"><div class="grid grid-cols-[repeat(15,minmax(0,1fr))] overflow-hidden border-4 border-slate-800 rounded-xl">${cells}</div></div><div class="grid sm:grid-cols-2 gap-2 mt-3">${rows}</div><div class="flex items-center justify-between gap-3 mt-4 p-3 rounded-2xl bg-slate-950 border border-slate-700"><div><b class="text-base block">${L.winner!==null?names[L.winner]+' wins!':L.last}</b><span class="text-xs text-slate-400">${L.dice?'Dice number: '+L.dice:'Dice roll करें'}</span></div><button onclick="rollLudo()" ${currentGame.gameOver||(!currentGame.online&&L.turn!==0)||currentGame.online&&(!currentGame.connected||L.turn!==currentGame.mySeat)?'disabled':''} class="bg-gradient-to-br from-rose-500 to-red-700 disabled:opacity-70 text-white min-w-[104px] min-h-[112px] rounded-2xl font-black shadow-xl p-2"><span style="display:grid;place-items:center;width:64px;height:64px;margin:auto;background:white;color:#111;border-radius:13px;font-size:50px;line-height:1">${face}</span><span style="display:block;font-size:13px;margin-top:8px;color:white">${L.dice?'NUMBER '+L.dice:'ROLL DICE'}</span></button></div>`;document.getElementById('game-status').textContent=currentGame.online?(currentGame.connected?`${names[L.turn]} की turn • आपका color: ${names[currentGame.mySeat]}`:`${L.players} players connect होने का इंतज़ार… Room: ${currentGame.roomId}`):(L.turn===0?'आपकी turn':'Computer सोच रहा है…')}
-function applyLudoRoll(dice){const L=currentGame.ludo,p=L.turn,row=L.tokens[p],valid=row.map((v,i)=>({v,i})).filter(o=>o.v<56&&((o.v<0&&dice===6)||(o.v>=0&&o.v+dice<=56)));L.dice=dice;if(valid.length){valid.sort((a,b)=>b.v-a.v);const pick=valid[0].i;row[pick]=row[pick]<0?0:row[pick]+dice;if(row[pick]<52){const global=(row[pick]+p*13)%52,safe=[0,13,26,39].includes(global);if(!safe)L.tokens.forEach((r,op)=>{if(op!==p)r.forEach((v,i)=>{if(v>=0&&v<52&&(v+op*13)%52===global)r[i]=-1})})}if(row.every(v=>v>=56)){L.winner=p;currentGame.gameOver=true}L.last=`${['Red','Green','Yellow','Blue'][p]} rolled ${dice}`}else L.last=`${['Red','Green','Yellow','Blue'][p]} rolled ${dice} • no move`;if(!currentGame.gameOver&&dice!==6)L.turn=(L.turn+1)%L.players;renderLudo()}
-async function rollLudo(){const L=currentGame.ludo;if(!L||currentGame.gameOver)return;const dice=1+Math.floor(Math.random()*6);if(currentGame.online){if(!currentGame.connected||L.turn!==currentGame.mySeat)return;if(currentGame.role==='host'){applyLudoRoll(dice);await roomSend('state',{roomId:currentGame.roomId,type:currentGame.type,ludo:L,gameOver:currentGame.gameOver})}else await roomSend('move-request',{roomId:currentGame.roomId,fromId:user.id,kind:'ludo-roll',player:currentGame.mySeat,dice})}else{if(L.turn!==0)return;applyLudoRoll(dice);setTimeout(ludoComputerChain,500)}}
-function ludoComputerChain(){const L=currentGame.ludo;if(!L||currentGame.online||currentGame.gameOver||L.turn===0)return;applyLudoRoll(1+Math.floor(Math.random()*6));if(!currentGame.gameOver&&L.turn!==0)setTimeout(ludoComputerChain,500)}
+function ludoValidMoves(L,player,dice){
+  return L.tokens[player].map((value,index)=>({value,index})).filter(x=>x.value<56&&((x.value<0&&dice===6)||(x.value>=0&&x.value+dice<=56))).map(x=>x.index);
+}
+function ludoCanChoose(player,index){
+  const L=currentGame.ludo,pending=L?.pending;
+  if(!pending||pending.player!==player||!pending.valid.includes(index))return false;
+  return currentGame.online?currentGame.mySeat===player:player===0;
+}
+function beginLudoRoll(dice,autoChoose=false){
+  const L=currentGame.ludo;if(!L||L.pending||currentGame.gameOver)return false;
+  const player=L.turn,valid=ludoValidMoves(L,player,dice),names=['Red','Green','Yellow','Blue'];
+  L.dice=dice;
+  if(!valid.length){
+    L.pending=null;L.last=`${names[player]} rolled ${dice} • no valid move`;
+    if(dice!==6)L.turn=(L.turn+1)%L.players;
+    renderLudo();return false;
+  }
+  if(autoChoose){
+    const choice=valid.slice().sort((a,b)=>L.tokens[player][b]-L.tokens[player][a])[0];
+    return applyLudoMove(choice,dice);
+  }
+  L.pending={player,dice,valid};
+  L.last=`${names[player]} rolled ${dice} • highlighted pawn चुनें`;
+  renderLudo();return true;
+}
+function applyLudoMove(index,dice){
+  const L=currentGame.ludo;if(!L||currentGame.gameOver)return false;
+  const player=L.turn,valid=ludoValidMoves(L,player,dice);
+  if(!Number.isInteger(index)||!valid.includes(index))return false;
+  const row=L.tokens[player],names=['Red','Green','Yellow','Blue'];
+  row[index]=row[index]<0?0:row[index]+dice;
+  if(row[index]<52){
+    const global=(row[index]+player*13)%52,safe=[0,13,26,39].includes(global);
+    if(!safe)L.tokens.forEach((other,op)=>{if(op!==player)other.forEach((value,i)=>{if(value>=0&&value<52&&(value+op*13)%52===global)other[i]=-1})});
+  }
+  L.pending=null;L.dice=dice;L.last=`${names[player]} moved pawn ${index+1} with ${dice}`;
+  if(row.every(value=>value>=56)){L.winner=player;currentGame.gameOver=true}
+  else if(dice!==6)L.turn=(L.turn+1)%L.players;
+  renderLudo();return true;
+}
+function renderLudo(){
+  const L=currentGame.ludo;if(!L)return;
+  const colors=['#ef1f2d','#16b83e','#ffd20a','#1756d5'],names=['Red','Green','Yellow','Blue'],track=ludoTrack();
+  const homeSpots=[[[2,2],[4,2],[2,4],[4,4]],[[10,2],[12,2],[10,4],[12,4]],[[10,10],[12,10],[10,12],[12,12]],[[2,10],[4,10],[2,12],[4,12]]],safe=[0,8,13,21,26,34,39,47];
+  const pawn=(player,big=false)=>`<span style="pointer-events:none;position:relative;display:inline-block;width:${big?'clamp(22px,4vw,34px)':'clamp(13px,2.4vw,22px)'};height:${big?'clamp(30px,5vw,46px)':'clamp(18px,3.2vw,30px)'};filter:drop-shadow(0 2px 2px #0008)"><i style="position:absolute;left:25%;top:0;width:50%;aspect-ratio:1;border-radius:50%;background:${colors[player]};border:2px solid white"></i><i style="position:absolute;left:12%;bottom:0;width:76%;height:65%;border-radius:50% 50% 25% 25%;background:${colors[player]};border:2px solid white"></i></span>`;
+  const token=(player,index,big=false)=>ludoCanChoose(player,index)?`<button onclick="moveLudoToken(${player},${index})" aria-label="Move ${names[player]} pawn ${index+1}" style="display:grid;place-items:center;min-width:${big?'34px':'24px'};min-height:${big?'42px':'30px'};border-radius:999px;background:#fde047;box-shadow:0 0 0 4px #fff,0 0 18px 8px #facc15;animation:pulse 1s infinite;cursor:pointer;z-index:5">${pawn(player,big)}</button>`:pawn(player,big);
+  const cells=Array.from({length:225},(_,i)=>{
+    const x=i%15,y=Math.floor(i/15),trackIndex=track.findIndex(q=>q[0]===x&&q[1]===y),pieces=[];
+    L.tokens.forEach((row,player)=>row.forEach((value,index)=>{
+      if(value<0&&homeSpots[player][index][0]===x&&homeSpots[player][index][1]===y)pieces.push(`<b style="display:grid;place-items:center;width:86%;height:86%;border-radius:50%;background:white;box-shadow:inset 0 0 0 2px #cbd5e1,0 3px 6px #0006">${token(player,index,true)}</b>`);
+      else if(value>=0&&value<52&&((value+player*13)%52)===trackIndex)pieces.push(token(player,index));
+    }));
+    let bg='#ffffff';
+    if(x<6&&y<6)bg='#ef1f2d';else if(x>8&&y<6)bg='#16b83e';else if(x>8&&y>8)bg='#ffd20a';else if(x<6&&y>8)bg='#1756d5';
+    if(trackIndex>=0)bg='#fff';if(trackIndex===0)bg=colors[0];if(trackIndex===13)bg=colors[1];if(trackIndex===26)bg=colors[2];if(trackIndex===39)bg=colors[3];
+    if(y===7&&x>=1&&x<=5)bg=colors[0];if(x===7&&y>=1&&y<=5)bg=colors[1];if(y===7&&x>=9&&x<=13)bg=colors[2];if(x===7&&y>=9&&y<=13)bg=colors[3];
+    if(x>=6&&x<=8&&y>=6&&y<=8)bg=x===7&&y===7?'conic-gradient(#16b83e 0 25%,#ffd20a 0 50%,#1756d5 0 75%,#ef1f2d 0)':'#fff';
+    const mark=trackIndex>=0&&safe.includes(trackIndex)&&!pieces.length?'<span style="font-size:clamp(9px,1.5vw,16px);color:#64748b">★</span>':'';
+    return`<div style="aspect-ratio:1;border:1px solid #64748b;background:${bg};display:grid;place-items:center;overflow:visible">${pieces.join('')||mark}</div>`;
+  }).join('');
+  const rows=L.tokens.map((row,i)=>`<div class="flex items-center justify-between rounded-xl px-3 py-2" style="background:${colors[i]}18;border:2px solid ${colors[i]}"><b style="color:${colors[i]}">${pawn(i)} ${names[i]} ${i===0&&!currentGame.online?'(YOU)':currentGame.online&&i===currentGame.mySeat?'(YOU)':''}</b><span class="text-xs">${row.map(value=>value<0?'🏠':value>=56?'🏆':value).join(' • ')}</span></div>`).join('');
+  const face=L.dice?String(L.dice):'🎲',pendingMine=L.pending&&(currentGame.online?L.pending.player===currentGame.mySeat:L.pending.player===0);
+  document.getElementById('ludo-board').innerHTML=`<div style="background:#fff;padding:8px;border-radius:18px;box-shadow:0 18px 45px #0009"><div class="grid grid-cols-[repeat(15,minmax(0,1fr))] overflow-hidden border-4 border-slate-800 rounded-xl">${cells}</div></div><div class="grid sm:grid-cols-2 gap-2 mt-3">${rows}</div><div class="flex items-center justify-between gap-3 mt-4 p-3 rounded-2xl bg-slate-950 border border-slate-700"><div><b class="text-base block">${L.winner!==null?names[L.winner]+' wins!':L.last}</b><span class="text-xs ${pendingMine?'text-yellow-300 font-bold':'text-slate-400'}">${pendingMine?'चमकती हुई goti पर click करें':L.dice?'Dice number: '+L.dice:'Dice roll करें'}</span></div><button onclick="rollLudo()" ${currentGame.gameOver||L.pending||(!currentGame.online&&L.turn!==0)||currentGame.online&&(!currentGame.connected||L.turn!==currentGame.mySeat)?'disabled':''} class="bg-gradient-to-br from-rose-500 to-red-700 disabled:opacity-50 text-white min-w-[104px] min-h-[112px] rounded-2xl font-black shadow-xl p-2"><span style="display:grid;place-items:center;width:64px;height:64px;margin:auto;background:white;color:#111;border-radius:13px;font-size:50px;line-height:1">${face}</span><span style="display:block;font-size:13px;margin-top:8px;color:white">${L.pending?'SELECT PAWN':L.dice?'ROLL AGAIN':'ROLL DICE'}</span></button></div>`;
+  if(pendingMine)document.getElementById('game-status').textContent=`${names[L.pending.player]}: dice ${L.pending.dice} — अपनी चमकती goti चुनें`;
+  else document.getElementById('game-status').textContent=currentGame.online?(currentGame.connected?`${names[L.turn]} की turn • आपका color: ${names[currentGame.mySeat]}`:`${L.players} players connect होने का इंतज़ार… Room: ${currentGame.roomId}`):(L.turn===0?'आपकी turn':'Computer सोच रहा है…');
+}
+async function moveLudoToken(player,index){
+  const L=currentGame.ludo,pending=L?.pending;if(!pending||pending.player!==player||!pending.valid.includes(index)||!ludoCanChoose(player,index))return;
+  if(currentGame.online&&currentGame.role!=='host'){
+    await roomSend('move-request',{roomId:currentGame.roomId,fromId:user.id,kind:'ludo-move',player,index});
+    return;
+  }
+  if(!applyLudoMove(index,pending.dice))return;
+  if(currentGame.online)await roomSend('state',{roomId:currentGame.roomId,type:currentGame.type,ludo:L,gameOver:currentGame.gameOver});
+  else if(!currentGame.gameOver&&L.turn!==0)setTimeout(ludoComputerChain,500);
+}
+function applyLudoRoll(dice){return beginLudoRoll(dice,true)}
+async function rollLudo(){
+  const L=currentGame.ludo;if(!L||L.pending||currentGame.gameOver)return;
+  const dice=1+Math.floor(Math.random()*6);
+  if(currentGame.online){
+    if(!currentGame.connected||L.turn!==currentGame.mySeat)return;
+    if(currentGame.role==='host'){
+      beginLudoRoll(dice,false);
+      await roomSend('state',{roomId:currentGame.roomId,type:currentGame.type,ludo:L,gameOver:currentGame.gameOver});
+    }else await roomSend('move-request',{roomId:currentGame.roomId,fromId:user.id,kind:'ludo-roll',player:currentGame.mySeat,dice});
+  }else{
+    if(L.turn!==0)return;
+    const waitingForChoice=beginLudoRoll(dice,false);
+    if(!waitingForChoice&&!currentGame.gameOver&&L.turn!==0)setTimeout(ludoComputerChain,500);
+  }
+}
+function ludoComputerChain(){
+  const L=currentGame.ludo;if(!L||currentGame.online||currentGame.gameOver||L.turn===0)return;
+  applyLudoRoll(1+Math.floor(Math.random()*6));
+  if(!currentGame.gameOver&&L.turn!==0)setTimeout(ludoComputerChain,500);
+}
 
 function startLocalGame(type){
   if(!['chess','tictactoe'].includes(type))return toast('Game type नहीं मिला.',false);
@@ -2784,7 +2889,26 @@ function startLocalGame(type){
   currentGame={type,online:false,vsAI:true,aiThinking:false,roomId:null,role:'human',chess:type==='chess'?new Chess():null,ttt:type==='tictactoe'?Array(9).fill(''):null,selected:null,gameOver:false,connected:true};
   document.getElementById('game-lobby').classList.add('hidden');document.getElementById('game-board-wrap').classList.remove('hidden');renderGame();
 }
-function restartCurrentGame(){if(!currentGame.type)return;const t=currentGame.type;if(currentGame.online)return toast('Online game में restart available नहीं है.',false);if(t.startsWith('ludo'))return startLudoComputer(currentGame.ludo?.players||2);toast('यह game online room से शुरू करें.',false)}
+async function resetOnlineGame(){
+  if(!currentGame.online)return;
+  if(currentGame.type==='tictactoe')currentGame.ttt=Array(9).fill('');
+  else if(currentGame.type?.startsWith('ludo'))currentGame.ludo=newLudo(currentGame.type==='ludo4'?4:2);
+  currentGame.gameOver=false;currentGame.selected=null;renderGame();
+  await roomSend('state',{roomId:currentGame.roomId,type:currentGame.type,ttt:currentGame.type==='tictactoe'?currentGame.ttt.slice():null,ludo:currentGame.type?.startsWith('ludo')?currentGame.ludo:null,gameOver:false});
+  toast('New game started 🎮');
+}
+async function restartCurrentGame(){
+  if(!currentGame.type)return;
+  const type=currentGame.type;
+  if(currentGame.online){
+    if(!currentGame.connected)return toast('Opponent connect होने का इंतज़ार करें.',false);
+    if(currentGame.role==='host')return resetOnlineGame();
+    await roomSend('move-request',{roomId:currentGame.roomId,fromId:user.id,kind:'restart-request'});
+    return toast('Restart request भेजी गई.');
+  }
+  if(type.startsWith('ludo'))return startLudoComputer(currentGame.ludo?.players||2);
+  toast('यह game online room से शुरू करें.',false);
+}
 
 async function closeGame(){
   await cleanupGameRoom();
