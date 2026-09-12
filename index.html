@@ -525,7 +525,7 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
  <div class="rh-side-title">Learn Online</div>
  <button onclick="switchTab('home')" id="btn-home" class="rh-nav-btn rh-active"><i class="fa-solid fa-house"></i><span>Home</span></button>
  <button onclick="switchTab('ai')" id="btn-ai" class="rh-nav-btn"><i class="fa-solid fa-circle-question"></i><span>AI Doubt</span></button>
- <button onclick="switchTab('quiz')" id="btn-quiz" class="rh-nav-btn"><i class="fa-solid fa-brain"></i><span>AI Quiz</span></button>
+ <button onclick="switchTab('quiz')" id="btn-quiz" class="rh-nav-btn"><i class="fa-solid fa-wand-magic-sparkles text-violet-400"></i><span>AI Learning</span></button>
  <button onclick="switchTab('battle')" id="btn-battle" class="rh-nav-btn"><i class="fa-solid fa-trophy"></i><span>Live Quiz</span></button>
  <button onclick="switchTab('neet720')" id="btn-neet720" class="rh-nav-btn"><i class="fa-solid fa-notes-medical"></i><span>NEET 720</span></button>
  <button onclick="openDailyBattle()" id="btn-daily-battle" class="rh-nav-btn"><i class="fa-solid fa-clock text-red-500"></i><span>Daily 9 PM</span></button>
@@ -549,7 +549,6 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
  <button onclick="switchTab('games')" id="btn-games" class="rh-nav-btn"><i class="fa-solid fa-gamepad"></i><span>Games</span></button>
  <button onclick="switchTab('hubevents')" id="btn-hubevents" class="rh-nav-btn"><i class="fa-solid fa-bolt"></i><span>Live Events</span></button>
  <button onclick="switchTab('leaderboard')" id="btn-leaderboard" class="rh-nav-btn"><i class="fa-solid fa-trophy"></i><span>Leaderboard</span></button>
- <button onclick="switchTab('tests')" id="btn-tests" class="rh-nav-btn"><i class="fa-solid fa-file-pen"></i><span>45Q Tests</span></button>
  <button onclick="switchTab('treasure')" id="btn-treasure" class="rh-nav-btn"><i class="fa-solid fa-map-location-dot"></i><span>NEET Treasure Hunt</span></button>
  <button onclick="switchTab('rathodnew')" id="btn-rathodnew" class="rh-nav-btn"><i class="fa-solid fa-wand-magic-sparkles"></i><span>RATHOD NEW</span></button>
  <button onclick="switchTab('adminpanel')" id="btn-adminpanel" class="rh-nav-btn hidden" style="color:#f87171"><i class="fa-solid fa-shield-halved"></i><span>Admin Panel</span></button>
@@ -711,7 +710,7 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
   <div class="grid sm:grid-cols-3 gap-2 mt-5">
    <button onclick="switchTab('materials')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-folder-open text-amber-400"></i><b class="block text-sm mt-2">Study Material</b><span class="text-[10px] text-slate-500">Open Study Material</span></button>
    <button onclick="switchTab('battle')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-bolt text-red-400"></i><b class="block text-sm mt-2">Live Quiz Battle</b><span class="text-[10px] text-slate-500">Open Live Quiz</span></button>
-   <button onclick="switchTab('tests')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-file-pen text-emerald-400"></i><b class="block text-sm mt-2">45Q Test</b><span class="text-[10px] text-slate-500">Open 45Q Tests</span></button>
+   <button onclick="openLiveQuizSection('live-45q-panel')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-file-pen text-emerald-400"></i><b class="block text-sm mt-2">45Q Test</b><span class="text-[10px] text-slate-500">Open 45Q Tests</span></button>
    <button onclick="document.getElementById('admin-bg-panel')?.classList.toggle('hidden')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-image text-indigo-400"></i><b class="block text-sm mt-2">Background</b><span class="text-[10px] text-slate-500">Toggle background panel</span></button>
    <button onclick="document.getElementById('admin-logo-panel')?.classList.toggle('hidden')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-image text-pink-400"></i><b class="block text-sm mt-2">App Logo</b><span class="text-[10px] text-slate-500">Toggle logo panel</span></button>
    <button onclick="switchTab('hubevents')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-700 rounded-xl p-3 text-left"><i class="fa-solid fa-calendar-plus text-amber-300"></i><b class="block text-sm mt-2">HUB Events</b><span class="text-[10px] text-slate-500">Open Live Events</span></button>
@@ -869,7 +868,7 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
   <div class="rh-section-title mt-5">All Study & Prep Modules</div>
   <div class="rh-feature-grid">
    <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('ai')"><div class="rh-feature-icon"><i class="fa-solid fa-circle-question text-indigo-400"></i></div><b>AI Doubt</b><p>Instant NEET Solver</p></div>
-   <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('quiz')"><div class="rh-feature-icon"><i class="fa-solid fa-brain text-teal-400"></i></div><b>AI Quiz</b><p>Chapter Practice</p></div>
+   <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('quiz')"><div class="rh-feature-icon"><i class="fa-solid fa-wand-magic-sparkles text-violet-400"></i></div><b>AI Learning</b><p>Memory Palace • Adaptive</p></div>
    <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('battle')"><div class="rh-feature-icon"><i class="fa-solid fa-trophy text-red-400"></i></div><b>Live Quiz</b><p>Multiplayer Battle</p></div>
    <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('neet720')"><div class="rh-feature-icon"><i class="fa-solid fa-notes-medical text-emerald-400"></i></div><b>NEET 720</b><p>Full Mock Test</p></div>
    <div class="rh-feature" role="button" tabindex="0" onclick="openDailyBattle()"><div class="rh-feature-icon"><i class="fa-solid fa-clock text-red-500"></i></div><b>Daily 9 PM Battle</b><p>15 Q • 30s • Live</p></div>
@@ -884,7 +883,7 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
    <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('games')"><div class="rh-feature-icon"><i class="fa-solid fa-gamepad text-fuchsia-400"></i></div><b>Games</b><p>Ludo & Tic Tac Toe with Friends</p></div>
    <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('hubevents')"><div class="rh-feature-icon"><i class="fa-solid fa-bolt text-amber-400"></i></div><b>Live Events</b><p>Weekly challenges</p></div>
    <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('leaderboard')"><div class="rh-feature-icon"><i class="fa-solid fa-ranking-star text-amber-400"></i></div><b>Leaderboard</b><p>XP • Level • Rank</p></div>
-   <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('tests')"><div class="rh-feature-icon"><i class="fa-solid fa-file-pen text-emerald-400"></i></div><b>45Q Tests</b><p>Physics / Chemistry</p></div>
+   <div class="rh-feature" role="button" tabindex="0" onclick="openLiveQuizSection('live-45q-panel')"><div class="rh-feature-icon"><i class="fa-solid fa-file-pen text-emerald-400"></i></div><b>45Q Tests</b><p>Physics / Chemistry</p></div>
    <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('treasure')"><div class="rh-feature-icon"><i class="fa-solid fa-map-location-dot text-violet-400"></i></div><b>Treasure Hunt</b><p>Multiplayer Race</p></div>
    <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('studypower')"><div class="rh-feature-icon"><i class="fa-solid fa-bolt text-cyan-400"></i></div><b>Study Power</b><p>Shield & Habits</p></div>
    <div class="rh-feature" role="button" tabindex="0" onclick="switchTab('rathodnew')"><div class="rh-feature-icon">🆕</div><b>RATHOD NEW</b><p>Island • Tree • Rewards</p></div>
@@ -1001,6 +1000,8 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
 
 
 <section id="section-battle" class="hidden space-y-5">
+<div class="relative overflow-hidden rounded-3xl border border-rose-400/30 bg-gradient-to-br from-slate-950 via-rose-950/55 to-violet-950/45 p-5 sm:p-7 shadow-2xl"><div class="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-rose-500/10 blur-3xl"></div><div class="relative flex flex-wrap items-start justify-between gap-4"><div><div class="text-[9px] font-black uppercase tracking-[.24em] text-rose-300">Multiplayer + Practice Campus</div><h2 class="mt-1 text-2xl font-black">🏆 Live Quiz Command Center</h2><p class="mt-2 text-xs text-slate-400">Public/Private battle, Self Practice और 45Q Tests अब एक ही जगह</p></div><span class="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-[9px] font-black text-emerald-300">● LIVE READY</span></div><div class="relative mt-5 grid grid-cols-3 gap-2"><button onclick="scrollLiveQuizTo('qb-lobby')" class="rounded-xl bg-gradient-to-r from-rose-600 to-red-600 p-3 text-[10px] font-black">⚔️ Live Rooms</button><button onclick="scrollLiveQuizTo('self-practice-panel')" class="rounded-xl border border-cyan-400/20 bg-cyan-500/10 p-3 text-[10px] font-black text-cyan-200">🧠 Self Practice</button><button onclick="scrollLiveQuizTo('live-45q-panel')" class="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3 text-[10px] font-black text-emerald-200">📝 45Q Tests</button></div></div>
+
   <div class="qb-shell">
     <div class="flex items-start justify-between gap-3 flex-wrap border-b border-white/10 pb-4 mb-4">
       <div>
@@ -1086,6 +1087,40 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
       <div id="qb-finished-panel" class="hidden qb-card p-5 text-center qb-final-summary-box"><div class="text-4xl">🏆</div><h3 class="text-2xl font-black text-amber-400 mt-2">QUIZ COMPLETE!</h3><p id="qb-final-summary" class="text-sm text-slate-300 mt-2">Aapka quiz submit ho gaya hai.</p><div id="qb-final-stats" class="qb-final-stats"><div class="qb-final-stat"><span class="qb-final-stat-label">Correct</span><span id="qb-final-correct" class="qb-final-stat-value text-emerald-400">0</span></div><div class="qb-final-stat"><span class="qb-final-stat-label">Wrong</span><span id="qb-final-wrong" class="qb-final-stat-value text-red-400">0</span></div><div class="qb-final-stat"><span class="qb-final-stat-label">Skipped</span><span id="qb-final-skipped" class="qb-final-stat-value text-slate-300">0</span></div></div><div class="mt-5 bg-slate-950/90 p-4 rounded-2xl border border-slate-800 text-left"><div class="flex items-center justify-between gap-2 mb-3"><div><h4 class="text-sm font-black text-white">🏆 Final Leaderboard</h4><p class="text-[10px] text-slate-500">Sabhi participants ki final ranking</p></div><span id="qb-final-rank" class="text-[10px] font-black text-amber-400"></span></div><div id="qb-final-leaderboard" class="space-y-2"></div></div><button onclick="qbBackToLobby()" class="mt-5 bg-red-600 hover:bg-red-500 px-5 py-2.5 rounded-xl text-xs font-black">New Live Quiz</button></div>
     </div>
   </div>
+
+<div id="self-practice-panel" class="relative overflow-hidden rounded-3xl border border-cyan-400/25 bg-gradient-to-br from-slate-950 via-cyan-950/35 to-indigo-950/45 p-1"><div class="rounded-[20px] bg-slate-950/55 p-4 sm:p-5"><div class="mb-4 flex items-start justify-between gap-3"><div><div class="text-[9px] font-black uppercase tracking-[.2em] text-cyan-300">Solo Training Zone</div><h3 class="mt-1 text-xl font-black">🧠 AI Self Practice</h3><p class="mt-1 text-[10px] text-slate-400">Live Quiz campus के अंदर personal chapter practice</p></div><span class="text-3xl">🎯</span></div><div class="bg-slate-800/95 border border-teal-500/30 rounded-2xl p-5">
+<h3 class="text-teal-300 font-bold text-base mb-3"><i class="fa-solid fa-book-open-reader mr-2"></i>Self Practice Test Generator</h3>
+<div class="flex gap-2 flex-wrap">
+<select id="quiz-subject" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+<option>Biology</option><option>Chemistry</option><option>Physics</option>
+</select>
+<input id="quiz-topic" type="text" maxlength="120"
+placeholder="Any topic: कोशिका / पादप जगत / Cell Division"
+class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+<select id="quiz-count" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+  <option value="10" selected>10 Questions</option>
+  <option value="15">15 Questions</option>
+  <option value="20">20 Questions</option>
+</select>
+<button onclick="generateQuiz()" class="bg-teal-600 hover:bg-teal-500 px-4 py-2 rounded-lg text-sm font-bold">Generate Quiz</button>
+</div>
+<p class="text-[11px] text-slate-500 mt-2">Topic optional hai. Blank chhodoge to selected subject se questions banenge.</p>
+<div id="quiz-box" class="mt-4 space-y-4"></div>
+</div></div></div>
+<div id="live-45q-panel" class="space-y-5 rounded-3xl border border-emerald-400/25 bg-gradient-to-br from-slate-950 via-emerald-950/25 to-slate-950 p-4 sm:p-5"><div class="mb-1"><div class="text-[9px] font-black uppercase tracking-[.2em] text-emerald-300">Full Test Zone</div><h3 class="mt-1 text-xl font-black">📝 45 Questions Test Center</h3><p class="mt-1 text-[10px] text-slate-400">Live Quiz Command Center के अंदर timed Physics/Chemistry tests</p></div><div class="bg-slate-900/95 border border-emerald-500/20 rounded-2xl p-5">
+    <div class="flex items-center justify-between gap-3">
+      <div><h2 class="text-xl font-black text-emerald-300"><i class="fa-solid fa-file-pen mr-2"></i>45 Questions Test</h2><p class="text-xs text-slate-400 mt-1">Physics / Chemistry • Hindi Medium • Timer ke saath</p></div><div class="text-3xl">⏱️</div>
+    </div>
+    <div id="hub-test-list" class="mt-5 space-y-3"><div class="text-xs text-slate-500 text-center py-8">Tests load ho rahe hain...</div></div>
+  </div>
+  <div id="hub-test-arena" class="hidden bg-slate-900/95 border border-emerald-500/20 rounded-2xl p-5">
+    <div class="flex justify-between items-center gap-3 mb-4"><div><b id="hub-test-title" class="text-lg font-black text-white">Test</b><p id="hub-test-subtitle" class="text-[11px] text-slate-500"></p></div><div id="hub-test-timer" class="font-mono font-black text-2xl text-red-400">45:00</div></div>
+    <div class="h-2 bg-slate-800 rounded-full overflow-hidden mb-5"><div id="hub-test-progress" class="h-full bg-emerald-500" style="width:0%"></div></div>
+    <div id="hub-test-question" class="text-base font-semibold text-slate-100"></div>
+    <div id="hub-test-options" class="grid gap-2.5 mt-4"></div>
+    <div class="flex justify-between gap-2 mt-5"><button onclick="hubTestPrev()" class="bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold">Previous</button><button onclick="hubTestNext()" class="bg-emerald-600 px-4 py-2 rounded-xl text-xs font-bold">Next</button></div>
+  </div>
+  <div id="hub-test-result" class="hidden bg-slate-900/95 border border-amber-500/20 rounded-2xl p-5 text-center"></div></div>
 </section>
 
 <section id="section-neet720" class="hidden space-y-5">
@@ -1162,14 +1197,13 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
   <div class="relative flex items-start justify-between gap-4"><div><div class="text-[9px] font-black uppercase tracking-[.24em] text-cyan-300">RATHOD Intelligence Agent</div><h3 class="mt-1 text-2xl font-black text-white">🤖 RATHOD Guide & Doubt Agent</h3><p class="mt-2 text-xs text-slate-400">नए users को app समझाए या NEET/NCERT doubt solve करे</p></div><span id="ai-agent-mode-badge" class="shrink-0 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-[9px] font-black text-cyan-200">APP GUIDE</span></div>
   <div class="relative mt-5 grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/25 p-1.5"><button id="ai-mode-app" onclick="setAIAgentMode('app')" class="rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-3 py-3 text-xs font-black">🧭 App के बारे में</button><button id="ai-mode-doubt" onclick="setAIAgentMode('doubt')" class="rounded-xl px-3 py-3 text-xs font-black text-slate-400">🧠 Study Doubt</button></div>
   <div id="ai-agent-welcome" class="relative mt-3 rounded-2xl border border-cyan-400/15 bg-cyan-500/5 p-4"><b class="text-sm text-cyan-200">👋 मैं RATHOD Guide Agent हूँ</b><p class="mt-1 text-[11px] leading-5 text-slate-400">पूछें: quiz कैसे शुरू करें, Mistake Vault कहाँ है, XP कैसे मिलता है, Study Room कैसे join करें या app का कोई feature कैसे use करें।</p></div>
-  <div id="ai-quick-prompts" class="relative mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+  <div id="ai-quick-prompts" class="relative mt-3 grid grid-cols-2 sm:grid-cols-5 gap-2"></div>
   <div class="relative mt-3 rounded-2xl border border-violet-400/20 bg-black/25 p-2"><textarea id="ai-input" rows="4" class="w-full resize-none rounded-xl border-0 bg-transparent p-3 text-sm outline-none" placeholder="RATHOD HUB कैसे use करें?"></textarea><button id="ai-ask-button" onclick="askAI()" class="w-full rounded-xl bg-gradient-to-r from-cyan-600 via-indigo-600 to-fuchsia-600 py-3 text-sm font-black shadow-lg shadow-indigo-900/30 hover:brightness-110"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Ask RATHOD Agent</button></div>
-  <div id="ai-output" class="relative mt-4 hidden rounded-2xl border border-cyan-400/20 bg-slate-950/85 p-5 text-sm leading-7 shadow-inner"><div id="ai-output-label" class="mb-3 text-[9px] font-black uppercase tracking-[.2em] text-cyan-300">Agent answer</div><div id="ai-output-text" class="whitespace-pre-wrap"></div></div>
+  <div id="ai-output" class="relative mt-4 hidden rounded-2xl border border-cyan-400/20 bg-slate-950/85 p-4 sm:p-5 shadow-inner"><div class="mb-3 flex items-center justify-between"><div id="ai-output-label" class="text-[9px] font-black uppercase tracking-[.2em] text-cyan-300">Agent conversation</div><button onclick="clearAIAgentChat()" class="rounded-lg bg-white/5 px-2 py-1 text-[9px] text-slate-400">Clear chat</button></div><div id="ai-agent-history" class="space-y-3"></div><div id="ai-output-text" class="hidden"></div></div>
  </div>
 </section>
 
-<section id="section-quiz" class="hidden space-y-6">
-<!-- 1. LIVE SYNCHRONIZED TELEGRAM-STYLE QUIZ BATTLE ARENA -->
+<section id="section-daily-battle" class="hidden space-y-5"><div class="relative overflow-hidden rounded-3xl border border-red-400/30 bg-gradient-to-br from-slate-950 via-red-950/55 to-orange-950/35 p-5"><div class="absolute -right-14 -top-16 text-9xl opacity-[.06]">🕘</div><div class="relative"><div class="text-[9px] font-black uppercase tracking-[.24em] text-red-300">Every Day • 9:00 PM</div><h2 class="mt-1 text-2xl font-black">🕘 Daily 9 PM Arena</h2><p class="mt-1 text-xs text-slate-400">Scheduled synchronized battle • सभी students एक साथ • अलग dedicated screen</p></div></div>
 <div id="battleArenaContainer" class="bg-gradient-to-b from-slate-900 via-slate-900 to-black border border-red-500/40 rounded-3xl p-6 text-white shadow-2xl relative overflow-hidden">
   <div class="absolute -top-10 -right-10 w-36 h-36 bg-red-600/10 rounded-full blur-3xl pointer-events-none"></div>
   
@@ -1233,43 +1267,17 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
     </div>
   </div>
 </div>
+</section>
 
-<!-- 2. REGULAR AI PRACTICE QUIZ -->
-<div class="bg-slate-800/95 border border-teal-500/30 rounded-2xl p-5">
-<h3 class="text-teal-300 font-bold text-base mb-3"><i class="fa-solid fa-book-open-reader mr-2"></i>Self Practice Test Generator</h3>
-<div class="flex gap-2 flex-wrap">
-<select id="quiz-subject" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
-<option>Biology</option><option>Chemistry</option><option>Physics</option>
-</select>
-<input id="quiz-topic" type="text" maxlength="120"
-placeholder="Any topic: कोशिका / पादप जगत / Cell Division"
-class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
-<select id="quiz-count" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
-  <option value="10" selected>10 Questions</option>
-  <option value="15">15 Questions</option>
-  <option value="20">20 Questions</option>
-</select>
-<button onclick="generateQuiz()" class="bg-teal-600 hover:bg-teal-500 px-4 py-2 rounded-lg text-sm font-bold">Generate Quiz</button>
-</div>
-<p class="text-[11px] text-slate-500 mt-2">Topic optional hai. Blank chhodoge to selected subject se questions banenge.</p>
-<div id="quiz-box" class="mt-4 space-y-4"></div>
-</div>
+<section id="section-quiz" class="hidden space-y-6">
+<!-- 1. LIVE SYNCHRONIZED TELEGRAM-STYLE QUIZ BATTLE ARENA -->
+<div class="relative overflow-hidden rounded-3xl border border-indigo-400/25 bg-gradient-to-br from-slate-950 via-indigo-950/65 to-violet-950/45 p-5 sm:p-7"><div class="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-violet-500/10 blur-3xl"></div><div class="relative"><div class="text-[9px] font-black uppercase tracking-[.24em] text-indigo-300">AI Learning Studio</div><h2 class="mt-1 text-2xl font-black">✨ Personal AI Learning</h2><p class="mt-2 text-xs text-slate-400">Memory Palace और leaderboard Top-3 Adaptive Exam — Daily 9 PM से अलग personal AI tools</p></div></div>
 <div class="grid lg:grid-cols-2 gap-4"><div class="relative overflow-hidden bg-gradient-to-br from-indigo-950/70 to-violet-950/50 border border-indigo-400/25 rounded-2xl p-5"><div class="absolute -right-10 -top-10 w-32 h-32 bg-violet-500/10 blur-2xl rounded-full"></div><div class="relative"><span class="text-[9px] uppercase tracking-wider text-indigo-300 font-black">Visual Learning</span><h3 class="text-lg font-black mt-1">🧠 AI Memory Palace</h3><p class="text-xs text-slate-400 mt-1">किसी chapter को rooms, objects और memorable journey में बदलें.</p><input id="memory-palace-topic" maxlength="160" placeholder="Topic e.g. Human Digestion" class="mt-4 w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm"><button onclick="generateMemoryPalace()" class="mt-2 w-full bg-indigo-600 hover:bg-indigo-500 py-2.5 rounded-xl text-xs font-black">Build Memory Palace</button><div id="memory-palace-output" class="hidden mt-3 bg-black/25 border border-indigo-400/15 rounded-xl p-4 text-xs leading-6 whitespace-pre-wrap"></div></div></div><div class="relative overflow-hidden bg-gradient-to-br from-amber-950/50 to-violet-950/60 border border-amber-400/25 rounded-2xl p-5"><div class="flex justify-between gap-3"><div><span class="text-[9px] uppercase tracking-wider text-amber-300 font-black">Leaderboard Top-3</span><h3 class="text-lg font-black mt-1">💎 VIP Adaptive Exam</h3><p class="text-xs text-slate-400 mt-1">Mistakes और weakness के अनुसार intelligent mock test.</p></div><span class="text-2xl">👑</span></div><button onclick="startAdaptiveExam()" class="mt-4 w-full bg-gradient-to-r from-amber-600 to-violet-600 py-2.5 rounded-xl text-xs font-black">Open Adaptive Simulator</button><div id="adaptive-exam-box" class="hidden mt-3"></div></div></div>
 </section>
 
 <section id="section-cardbattle" class="hidden space-y-4"><div class="relative overflow-hidden bg-gradient-to-br from-slate-950 via-rose-950/45 to-violet-950/40 border border-rose-400/25 rounded-3xl p-5 sm:p-6"><div class="flex justify-between gap-3"><div><div class="text-[9px] uppercase tracking-[.2em] text-rose-300 font-black">Knowledge Arena</div><h2 class="text-2xl font-black mt-1">⚔️ NEET Knowledge Card Battle</h2><p class="text-xs text-slate-400 mt-1">Correct answer से attack करें, streak से rare cards unlock करें.</p></div><div class="text-4xl">🃏</div></div><div id="card-battle-lobby" class="mt-5 grid sm:grid-cols-[150px_1fr_auto] gap-2"><select id="card-battle-subject" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm"><option>Biology</option><option>Chemistry</option><option>Physics</option></select><input id="card-battle-topic" maxlength="120" placeholder="Battle topic (optional)" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm"><button onclick="startKnowledgeCardBattle()" class="bg-rose-600 px-5 py-2.5 rounded-xl text-xs font-black">Start Battle</button></div><div id="card-battle-arena" class="hidden mt-5"><div class="grid grid-cols-2 gap-3"><div class="bg-emerald-500/10 border border-emerald-400/20 rounded-xl p-3"><div class="flex justify-between text-xs"><b>🧑 YOU</b><span id="card-player-hp">100 HP</span></div><div class="h-2 bg-slate-800 rounded mt-2 overflow-hidden"><div id="card-player-bar" class="h-full bg-emerald-500" style="width:100%"></div></div></div><div class="bg-rose-500/10 border border-rose-400/20 rounded-xl p-3"><div class="flex justify-between text-xs"><b>🤖 AI RIVAL</b><span id="card-ai-hp">100 HP</span></div><div class="h-2 bg-slate-800 rounded mt-2 overflow-hidden"><div id="card-ai-bar" class="h-full bg-rose-500" style="width:100%"></div></div></div></div><div id="card-battle-card" class="mt-4"></div></div></div></section>
 
-<section id="section-materials" class="hidden">
-<div class="bg-slate-800/95 rounded-2xl p-5">
-<div class="flex gap-2 mb-2 flex-wrap">
- <input id="material-search" oninput="renderMaterials()" placeholder="Search study material..." class="flex-1 min-w-[180px] bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
- <select id="material-filter" onchange="renderMaterials()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm"><option value="">All</option><option>Biology</option><option>Chemistry</option><option>Physics</option><option>PYQ</option><option>Test</option><option>Notes</option><option>Other</option></select>
- <button type="button" onclick="loadMaterials(true)" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-rotate mr-1"></i>Refresh</button>
- </div>
- <p class="text-[10px] text-slate-500 mb-4">Google Drive Materials folder auto-sync hota hai • Refresh every 5 sec • Upload limit: 1 MB–500 MB</p>
-<div id="materials-box" class="space-y-3"></div>
-</div>
-</section>
+<section id="section-materials" class="hidden space-y-5"><div class="relative overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-br from-slate-950 via-amber-950/35 to-indigo-950/35 p-5 sm:p-7 shadow-2xl"><div class="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-amber-400/10 blur-3xl"></div><div class="relative flex flex-wrap items-start justify-between gap-4"><div><div class="text-[9px] font-black uppercase tracking-[.24em] text-amber-300">Google Drive Learning Library</div><h2 class="mt-1 text-2xl font-black">📚 RATHOD Digital Library</h2><p class="mt-2 text-xs text-slate-400">Notes, PDFs, PYQs और tests — fast search और direct download के साथ</p></div><button type="button" onclick="loadMaterials(true)" class="rounded-xl border border-amber-400/25 bg-amber-500/10 px-4 py-2.5 text-xs font-black text-amber-200"><i class="fa-solid fa-rotate mr-1"></i>Sync Drive</button></div><div class="relative mt-5 grid grid-cols-3 gap-2 text-center"><div class="rounded-xl bg-black/25 p-3"><b id="material-total-count" class="text-lg text-amber-300">0</b><span class="block text-[8px] text-slate-500">TOTAL FILES</span></div><div class="rounded-xl bg-black/25 p-3"><b id="material-drive-count" class="text-lg text-sky-300">0</b><span class="block text-[8px] text-slate-500">DRIVE FILES</span></div><div class="rounded-xl bg-black/25 p-3"><b id="material-category-count" class="text-lg text-violet-300">0</b><span class="block text-[8px] text-slate-500">CATEGORIES</span></div></div></div><div class="rounded-3xl border border-slate-800 bg-slate-950/90 p-4 sm:p-5"><div class="grid gap-2 sm:grid-cols-[1fr_180px]"><div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-600"></i><input id="material-search" oninput="renderMaterials()" placeholder="Search notes, chapter, PYQ..." class="w-full rounded-xl border border-slate-700 bg-slate-900 py-3 pl-10 pr-3 text-sm"></div><select id="material-filter" onchange="renderMaterials()" class="rounded-xl border border-slate-700 bg-slate-900 px-3 py-3 text-sm"><option value="">All Categories</option><option>Biology</option><option>Chemistry</option><option>Physics</option><option>PYQ</option><option>Test</option><option>Notes</option><option>Other</option></select></div><p class="mt-3 text-[9px] text-slate-600">Google Drive auto-sync • 15 sec refresh • 1 MB–500 MB files</p><div id="materials-box" class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3"></div></div></section>
 
 <section id="section-community" class="hidden space-y-4">
 <div class="bg-slate-950/95 border border-slate-700 rounded-2xl overflow-hidden">
@@ -1390,22 +1398,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
  <div class="relative overflow-hidden bg-gradient-to-br from-orange-950/70 via-amber-950/45 to-slate-950 border border-amber-400/30 rounded-3xl p-5 sm:p-7 shadow-2xl"><div class="absolute -right-16 -top-20 w-56 h-56 bg-orange-400/10 blur-3xl rounded-full"></div><div class="absolute left-6 top-5 text-7xl opacity-[.06]">ॐ</div><div class="relative flex justify-between items-start gap-4"><div><div class="text-[9px] uppercase tracking-[.24em] text-amber-300 font-black">Daily 4:00 PM • Personal Study Wisdom</div><h3 class="text-2xl font-black text-white mt-1">🪔 आज का अध्ययन संदेश</h3><p class="text-xs text-amber-100/60 mt-1">हर user के चुने हुए मार्ग के अनुसार शांति, प्रेरणा और सकारात्मक ऊर्जा</p></div><div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-400/20 grid place-items-center text-2xl">🙏</div></div><div id="wisdom-choice" class="relative mt-5 hidden bg-black/35 border border-amber-300/25 rounded-2xl p-4"><div class="text-sm font-black text-amber-100">🙏 अपनी Daily 4 PM प्रेरणा चुनें</div><p class="text-[11px] text-amber-100/65 mt-1">यह चुनाव केवल एक बार होगा और फिर lock हो जाएगा। कुछ न चुनने पर Sanatan संदेश चलते रहेंगे।</p><div id="wisdom-choice-buttons" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3"></div></div><div id="wisdom-current" class="relative mt-3 text-[10px] text-amber-200/70"></div><div class="relative mt-3 bg-black/25 border border-amber-300/20 rounded-2xl p-5 sm:p-6 text-center"><div id="divine-message-icon" class="text-3xl">🕉️</div><blockquote id="divine-message-text" class="text-lg sm:text-xl font-bold leading-8 text-amber-50 mt-3">आज का संदेश तैयार हो रहा है…</blockquote><div id="divine-message-source" class="text-[10px] uppercase tracking-wider text-amber-300 mt-3"></div><p id="divine-message-meaning" class="text-xs leading-5 text-slate-300 mt-3"></p></div><div class="relative flex flex-wrap justify-between items-center gap-3 mt-4"><div id="divine-next-time" class="text-[10px] text-amber-100/60">अगला संदेश प्रतिदिन शाम 4:00 बजे</div><div class="flex gap-2"><button onclick="shareDivineMessage()" class="bg-white/5 border border-white/10 px-3 py-2 rounded-xl text-[10px] font-black"><i class="fa-solid fa-share-nodes mr-1"></i>Share</button><button onclick="requestSmartNotifications()" class="bg-gradient-to-r from-orange-600 to-amber-600 px-3 py-2 rounded-xl text-[10px] font-black"><i class="fa-solid fa-bell mr-1"></i>4 PM Alert</button></div></div></div>
 </section>
 
-<section id="section-tests" class="hidden space-y-5">
-  <div class="bg-slate-900/95 border border-emerald-500/20 rounded-2xl p-5">
-    <div class="flex items-center justify-between gap-3">
-      <div><h2 class="text-xl font-black text-emerald-300"><i class="fa-solid fa-file-pen mr-2"></i>45 Questions Test</h2><p class="text-xs text-slate-400 mt-1">Physics / Chemistry • Hindi Medium • Timer ke saath</p></div><div class="text-3xl">⏱️</div>
-    </div>
-    <div id="hub-test-list" class="mt-5 space-y-3"><div class="text-xs text-slate-500 text-center py-8">Tests load ho rahe hain...</div></div>
-  </div>
-  <div id="hub-test-arena" class="hidden bg-slate-900/95 border border-emerald-500/20 rounded-2xl p-5">
-    <div class="flex justify-between items-center gap-3 mb-4"><div><b id="hub-test-title" class="text-lg font-black text-white">Test</b><p id="hub-test-subtitle" class="text-[11px] text-slate-500"></p></div><div id="hub-test-timer" class="font-mono font-black text-2xl text-red-400">45:00</div></div>
-    <div class="h-2 bg-slate-800 rounded-full overflow-hidden mb-5"><div id="hub-test-progress" class="h-full bg-emerald-500" style="width:0%"></div></div>
-    <div id="hub-test-question" class="text-base font-semibold text-slate-100"></div>
-    <div id="hub-test-options" class="grid gap-2.5 mt-4"></div>
-    <div class="flex justify-between gap-2 mt-5"><button onclick="hubTestPrev()" class="bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold">Previous</button><button onclick="hubTestNext()" class="bg-emerald-600 px-4 py-2 rounded-xl text-xs font-bold">Next</button></div>
-  </div>
-  <div id="hub-test-result" class="hidden bg-slate-900/95 border border-amber-500/20 rounded-2xl p-5 text-center"></div>
-</section>
+
 
 <section id="section-treasure" class="hidden space-y-5">
 <div class="bg-gradient-to-br from-violet-950/90 via-slate-900 to-amber-950/70 border border-violet-500/30 rounded-3xl p-5 md:p-6 shadow-2xl overflow-hidden relative">
@@ -1506,7 +1499,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
     </div>
     <div class="grid grid-cols-3 gap-2 text-center text-xs">
       <button onclick="switchTab('ai');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-circle-question text-red-400 text-lg"></i><span>AI Doubt</span></button>
-      <button onclick="switchTab('quiz');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-brain text-teal-400 text-lg"></i><span>AI Quiz</span></button>
+      <button onclick="switchTab('quiz');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-violet-400 text-lg"></i><span>AI Learning</span></button>
       <button onclick="switchTab('battle');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-trophy text-red-400 text-lg"></i><span>Live Quiz</span></button>
       <button onclick="switchTab('neet720');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2 border border-emerald-500/20"><i class="fa-solid fa-notes-medical text-emerald-400 text-lg"></i><span>NEET 720</span></button>
       <button onclick="openDailyBattle();closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2 border border-red-500/30"><i class="fa-solid fa-clock text-red-400 text-lg"></i><span>Daily 9 PM</span></button>
@@ -1524,7 +1517,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
       <button onclick="switchTab('games');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-gamepad text-fuchsia-400 text-lg"></i><span>1v1 Games</span></button>
       <button onclick="switchTab('hubevents');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-bolt text-amber-300 text-lg"></i><span>Live Events</span></button>
       <button onclick="switchTab('leaderboard');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-trophy text-yellow-400 text-lg"></i><span>Leaderboard</span></button>
-      <button onclick="switchTab('tests');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2 border border-emerald-500/20"><i class="fa-solid fa-file-pen text-emerald-400 text-lg"></i><span>45Q Tests</span></button>
+      <button onclick="openLiveQuizSection('live-45q-panel');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2 border border-emerald-500/20"><i class="fa-solid fa-file-pen text-emerald-400 text-lg"></i><span>45Q Tests</span></button>
       <button onclick="switchTab('treasure');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2 border border-violet-500/30"><i class="fa-solid fa-map-location-dot text-violet-400 text-lg"></i><span>Treasure Hunt</span></button>
       <a href="https://ncert.nic.in/textbook.php" target="_blank" rel="noopener noreferrer" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2 border border-blue-500/20"><i class="fa-solid fa-book-open text-blue-400 text-lg"></i><span>NCERT</span></a>
       <button onclick="switchTab('adminpanel');closeMobileMenu()" id="mob-adminpanel" class="hidden bg-red-950/60 border border-red-500/30 p-3 rounded-xl flex flex-col items-center gap-2 text-red-400"><i class="fa-solid fa-shield-halved text-lg"></i><span>Admin Panel</span></button>
@@ -1887,8 +1880,11 @@ db.auth.onAuthStateChange((event,s)=>{
 async function cleanupFocusSystem(){if(focusInterval)clearInterval(focusInterval);focusLiveSessionId=null;focusLastDbSyncAt=0;focusInterval=null;if(focusHeartbeat)clearInterval(focusHeartbeat);focusHeartbeat=null;if(focusChannel){try{await db.removeChannel(focusChannel)}catch(e){}focusChannel=null}focusReady=false}
 async function logout(){await cleanupChatSubscription();if(typeof rhWorldCleanup==='function')await rhWorldCleanup();await cleanupGamePresence();await cleanupFocusSystem();await nthCleanup();stopAllVoiceAndRooms();await db.auth.signOut();setAppScreenVisibility(false);location.reload()}
 
+function scrollLiveQuizTo(id){document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'})}
+function openLiveQuizSection(id='qb-lobby'){switchTab('battle');if(id==='live-45q-panel')loadHubTests();setTimeout(()=>scrollLiveQuizTo(id),120)}
+
 async function openDailyBattle(){
-  switchTab('quiz');
+  switchTab('daily-battle');
   document.getElementById('btn-daily-battle')?.classList.add('rh-active');
   await loadScheduledBattle();
   startDailyBattleClock();
@@ -1933,8 +1929,8 @@ function switchTab(tab){
   if(tab==='studyrooms')renderStudyRooms();
   if(tab==='ai')setAIAgentMode(aiAgentMode||'app');
   if(tab==='community')loadPeople();
-  if(tab==='quiz')loadScheduledBattle();
-  if(tab==='tests')loadHubTests();
+  if(tab==='daily-battle')loadScheduledBattle();
+  
   if(tab==='treasure'){nthLoadRooms();nthStartLobbyPoll();}
   if(tab==='studypower'){initStudyPower();loadDailyTodos();renderSkillShop();}
    if(tab==='battle'){qbShowLiveLayout();qbLoadRooms();if(qbRoom)qbSyncCurrentRoom();}
@@ -1943,7 +1939,9 @@ function switchTab(tab){
 }
 const RH_SECTION_META={
  ai:['AI Doubt','Ask and solve your NEET doubts','fa-circle-question','indigo'],
- quiz:['AI Quiz & Battle','Self Practice • Live Quiz • Daily 9 PM Battle','fa-brain','teal'],
+ quiz:['AI Learning','Memory Palace • VIP Adaptive Exam','fa-wand-magic-sparkles','violet'],
+ 'daily-battle':['Daily 9 PM Arena','Scheduled synchronized NEET battle','fa-clock','red'],
+ battle:['Live Quiz','Live rooms • Self Practice • 45Q Tests','fa-trophy','rose'],
  neet720:['NEET 720','NEET-level MCQ & PYQ practice • 5/15/25 questions • +50 XP/correct','fa-notes-medical','emerald'],
  materials:['Study Material','All notes, PDFs, PYQs and study files','fa-folder-open','amber'],
  community:['Community','Posts, students and discussions','fa-users','violet'],
@@ -2320,37 +2318,14 @@ async function loadMaterials(showDriveSyncToast=false){
   }
 }
 
+function materialVisual(m){const type=String(m.file_type||'').toLowerCase(),name=String(m.file_name||m.title||'').toLowerCase(),cat=String(m.category||'Study');if(type.includes('pdf')||name.endsWith('.pdf'))return{icon:'fa-file-pdf',tone:'rose',label:'PDF'};if(type.startsWith('video/'))return{icon:'fa-circle-play',tone:'violet',label:'VIDEO'};if(type.startsWith('image/'))return{icon:'fa-image',tone:'sky',label:'IMAGE'};if(/doc|word/.test(type)||/\.docx?$/.test(name))return{icon:'fa-file-word',tone:'blue',label:'DOC'};if(/sheet|excel/.test(type)||/\.xlsx?$/.test(name))return{icon:'fa-file-excel',tone:'emerald',label:'SHEET'};if(cat==='PYQ')return{icon:'fa-clock-rotate-left',tone:'amber',label:'PYQ'};if(cat==='Test')return{icon:'fa-file-circle-check',tone:'cyan',label:'TEST'};return{icon:'fa-book-open',tone:'amber',label:cat.toUpperCase()}}
 function renderMaterials(){
-  const q=(document.getElementById('material-search')?.value||'').toLowerCase().trim();
-  const cat=document.getElementById('material-filter')?.value||'';
-  const arr=materials.filter(m=>
-    (!q||`${m.title||''} ${m.desc||''} ${m.category||''} ${m.file_name||''}`.toLowerCase().includes(q)) &&
-    (!cat||m.category===cat)
-  );
-
-  document.getElementById('materials-box').innerHTML=arr.length?arr.map(m=>{
-    const driveOnly=!!m.drive_only;
-    const size=m.file_size?fmtBytes(m.file_size):'';
-    const deleteButton=(profile?.role==='admin'&&!driveOnly&&m.id)
-      ?`<button onclick="deleteMaterial('${m.id}')" class="bg-red-600 hover:bg-red-500 px-3 py-2 rounded-lg text-xs font-bold">Delete</button>`:'';
-    return `<div class="bg-slate-900/80 border border-amber-500/20 p-4 rounded-xl flex justify-between gap-3 items-center">
-      <div class="min-w-0">
-        <div class="flex items-center gap-2 flex-wrap">
-          <span class="text-[10px] bg-amber-500/10 text-amber-300 px-2 py-1 rounded">${esc(m.category||'Study')}</span>
-          ${driveOnly?'<span class="text-[10px] bg-sky-500/10 text-sky-300 px-2 py-1 rounded">DRIVE</span>':''}
-        </div>
-        <h4 class="font-bold text-sm mt-2">${esc(m.title||m.file_name||'Material')}</h4>
-        <p class="text-xs text-slate-400">${esc(m.desc||'')}</p>
-        <p class="text-[10px] text-slate-500 mt-1">${esc(m.file_name||'File')}${size?' • '+esc(size):''}</p>
-      </div>
-      <div class="flex gap-2 shrink-0 flex-wrap justify-end">
-        <a target="_blank" rel="noopener" href="${safeUrl(m.file_url||driveViewUrl(m.storage_path))}" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-3 py-2 rounded-lg text-xs font-bold">Open</a>
-        ${m.storage_path?`<a target="_blank" rel="noopener" href="${safeUrl(driveDownloadUrl(m.storage_path))}" download class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-download mr-1"></i>Download</a>`:''}
-        ${deleteButton}
-      </div>
-    </div>`;
-  }).join(''):'<div class="text-center py-10 text-slate-500">No material found.</div>';
+ const q=(document.getElementById('material-search')?.value||'').toLowerCase().trim(),cat=document.getElementById('material-filter')?.value||'',arr=materials.filter(m=>(!q||`${m.title||''} ${m.desc||''} ${m.category||''} ${m.file_name||''}`.toLowerCase().includes(q))&&(!cat||m.category===cat));
+ const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};set('material-total-count',materials.length);set('material-drive-count',materials.filter(x=>x.drive_only||x.storage_path).length);set('material-category-count',new Set(materials.map(x=>x.category||'Other')).size);
+ const box=document.getElementById('materials-box');if(!box)return;
+ box.innerHTML=arr.length?arr.map(m=>{const driveOnly=!!m.drive_only,size=m.file_size?fmtBytes(m.file_size):'',v=materialVisual(m),deleteButton=(profile?.role==='admin'&&!driveOnly&&m.id)?`<button onclick="deleteMaterial('${m.id}')" class="grid h-9 w-9 place-items-center rounded-xl bg-rose-500/10 text-rose-400" title="Delete"><i class="fa-solid fa-trash"></i></button>`:'';return `<article class="group relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950 p-4 transition hover:-translate-y-1 hover:border-${v.tone}-400/40"><div class="absolute -right-5 -top-7 text-7xl opacity-[.05]"><i class="fa-solid ${v.icon}"></i></div><div class="relative flex items-start gap-3"><div class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-${v.tone}-500/10 text-xl text-${v.tone}-300"><i class="fa-solid ${v.icon}"></i></div><div class="min-w-0 flex-1"><div class="flex flex-wrap gap-1"><span class="rounded-full bg-${v.tone}-500/10 px-2 py-1 text-[8px] font-black text-${v.tone}-300">${esc(v.label)}</span>${driveOnly?'<span class="rounded-full bg-sky-500/10 px-2 py-1 text-[8px] font-black text-sky-300">☁ DRIVE</span>':''}</div><h4 class="mt-2 line-clamp-2 text-sm font-black text-white">${esc(m.title||m.file_name||'Material')}</h4></div></div><p class="relative mt-3 line-clamp-2 min-h-[32px] text-[10px] leading-4 text-slate-400">${esc(m.desc||'RATHOD HUB study resource')}</p><div class="relative mt-3 flex items-center justify-between border-t border-white/5 pt-3 text-[9px] text-slate-600"><span class="truncate">${esc(m.file_name||'File')}</span><span class="shrink-0">${esc(size||'Drive')}</span></div><div class="relative mt-3 grid grid-cols-[1fr_1fr_auto] gap-2"><a target="_blank" rel="noopener" href="${safeUrl(m.file_url||driveViewUrl(m.storage_path))}" class="rounded-xl bg-amber-500 py-2.5 text-center text-[10px] font-black text-slate-950">Open</a>${m.storage_path?`<a target="_blank" rel="noopener" href="${safeUrl(driveDownloadUrl(m.storage_path))}" download class="rounded-xl bg-emerald-600 py-2.5 text-center text-[10px] font-black text-white"><i class="fa-solid fa-download mr-1"></i>Save</a>`:'<span></span>'}${deleteButton}</div></article>`}).join(''):`<div class="md:col-span-2 xl:col-span-3 py-14 text-center text-slate-500"><div class="text-4xl">🔎</div><b class="mt-2 block text-slate-300">No material found</b><p class="mt-1 text-xs">Search या category बदलकर देखें।</p></div>`;
 }
+
 
 async function deleteMaterial(id){
   if(profile?.role!=='admin'||!id)return;
@@ -3182,12 +3157,12 @@ async function sendLeagueLoungeMessage(){const input=document.getElementById('le
 async function shareLeagueCertificate(){const info=leagueRoleInfo(leagueReward?.council_role),text=`🏆 RATHOD HUB Season #${leagueReward?.season_number}: ${profile.name||'Member'} earned ${info.title}, Rank #${leagueReward?.final_rank} and ${leagueReward?.chest}!`;try{if(navigator.share)await navigator.share({title:'RATHOD HUB League Certificate',text,url:location.href});else{await navigator.clipboard.writeText(text+' '+location.href);toast('Certificate text copied ✓')}}catch(e){if(e?.name!=='AbortError')toast('Share failed',false)}}
 function renderLeagueSetupRequired(error){const box=document.getElementById('leaderboard-list');if(box)box.innerHTML=`<div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 text-sm text-amber-200"><b>League backend setup required</b><p class="text-xs mt-2 text-slate-400">Run supabase-league.sql once in Supabase SQL Editor.</p><span class="text-[9px] text-slate-600">${esc(error?.message||'')}</span></div>`}
 
-let aiAgentMode='app';
+let aiAgentMode='app',aiAgentHistory=[];
 const AI_AGENT_QUICK={
- app:[['🧭 App Tour','RATHOD HUB के सभी main features और उन्हें use करने का आसान तरीका बताओ।'],['⚡ XP Guide','XP कैसे earn और use कर सकते हैं?'],['🎥 Study Room','Study Room में voice और camera कैसे चलाएँ?'],['🧠 Mistake Vault','AI Mistake Vault कैसे काम करता है?']],
+ app:[['👨‍💻 Developer','RATHOD HUB के developer कौन हैं? उनका परिचय बताओ।'],['🧭 App Tour','RATHOD HUB के सभी main features और उन्हें use करने का आसान तरीका बताओ।'],['⚡ XP Guide','XP कैसे earn और use कर सकते हैं?'],['🎥 Study Room','Study Room में voice और camera कैसे चलाएँ?'],['🧠 Mistake Vault','AI Mistake Vault कैसे काम करता है?']],
  doubt:[['📖 Explain','इस concept को NCERT examples के साथ simple Hindi में समझाओ: '],['🎯 NEET Traps','इस topic के important NEET traps और mnemonics बताओ: '],['⚡ Solve','इस question को step-by-step solve करो: '],['✅ Verify','इस statement को NCERT के अनुसार verify करो: ']]
 };
-const RATHOD_APP_CONTEXT=`You are RATHOD Guide Agent for RATHOD HUB, a NEET preparation web app. Help new users in friendly Hindi/Hinglish. Only describe features present in the app: Home dashboard, AI Doubt, AI Quiz, Live Quiz, NEET 720, Daily 9 PM battle, Study Material, AI Notes & Formula, Focus Timer, Study Power, Study Rooms with realtime voice/camera, Private Vault, AI Mistake Vault, Self Practice and AI Memory Palace, Community with posts/reactions/follow, Live Chat, Stories, Games, Live Events, 13-day League Leaderboard, 45Q Tests, NEET Treasure Hunt, profile, notifications, XP shop, avatars and badges. Give step-by-step navigation using the visible menu names. Never invent subscription, payment, or unavailable controls. If account-specific data is needed, tell the user where to check instead of guessing.`;
+const RATHOD_APP_CONTEXT=`You are RATHOD Guide Agent, the official in-app assistant for RATHOD HUB, a NEET preparation web app. Developer introduction: RATHOD HUB was created and developed by Ashish Rathod from Madhya Pradesh (MP), a NEET aspirant and PW Yakeen Batch student. State this naturally when asked who made the app or about the developer; do not imply that PW officially owns, endorses, or sponsors the app. Help new users in friendly Hindi/Hinglish and adapt to their language. App navigation: Home dashboard; AI Doubt has App Guide and NEET Doubt modes; AI Learning has Memory Palace and VIP Adaptive Exam; Live Quiz contains Public/Private/Duel rooms, Self Practice, and 45Q Tests; NEET 720; dedicated Daily 9 PM Arena; RATHOD Digital Library; AI Notes & Formula; Focus Timer; Study Power; Study Rooms with realtime voice/camera; Private Vault and AI Mistake Vault; Community with posts/reactions/follow; Live Chat; Stories; Games; Live Events; 13-day League Leaderboard; NEET Treasure Hunt; profile, notifications, XP shop, avatars and badges. Give short step-by-step navigation using exact visible menu names. For greetings, introduce yourself and offer 3 relevant actions. Ask one clarifying question when the request is ambiguous. Remember the supplied conversation. Never invent subscription, payment, scores, user data, buttons, or unavailable controls. If account-specific data is needed, tell the user where to check.`;
 function setAIAgentMode(mode){
  aiAgentMode=mode==='doubt'?'doubt':'app';
  const app=document.getElementById('ai-mode-app'),doubt=document.getElementById('ai-mode-doubt'),badge=document.getElementById('ai-agent-mode-badge'),welcome=document.getElementById('ai-agent-welcome'),input=document.getElementById('ai-input'),button=document.getElementById('ai-ask-button');
@@ -3202,12 +3177,14 @@ function setAIAgentMode(mode){
 function useAIQuickPrompt(i){const row=AI_AGENT_QUICK[aiAgentMode]?.[Number(i)];if(row)setAIDoubtPrompt(row[1])}
 function setAIDoubtPrompt(text){const input=document.getElementById('ai-input');if(!input)return;input.value=text;input.focus()}
 async function askAI(){
- const q=document.getElementById('ai-input')?.value.trim(),out=document.getElementById('ai-output'),text=document.getElementById('ai-output-text'),label=document.getElementById('ai-output-label');if(!q||!out||!text)return;
- out.classList.remove('hidden');if(label)label.textContent=aiAgentMode==='app'?'🧭 RATHOD APP GUIDE':'🧠 NCERT DOUBT SOLVER';text.textContent=aiAgentMode==='app'?'App guide तैयार कर रहा हूँ…':'NCERT-focused answer तैयार हो रहा है…';out.scrollIntoView({behavior:'smooth',block:'nearest'});
- const question=aiAgentMode==='app'?`${RATHOD_APP_CONTEXT}\n\nUser question: ${q}`:`You are a careful NEET/NCERT tutor. Reply in the user's language (Hindi/Hinglish/English). Explain step by step, mark the final answer clearly, mention subject/chapter when possible, and say when a claim should be checked in the latest NCERT edition. Do not fabricate citations.\n\nStudent doubt: ${q}`;
- try{const {data,error}=await db.functions.invoke('ai-chat',{body:{question}});if(error)throw error;text.textContent=data?.answer||data?.message||'No answer returned.'}catch(e){text.textContent='AI request failed. Please try again.\n\n'+(e.message||'Request failed.')}
+ const q=document.getElementById('ai-input')?.value.trim(),out=document.getElementById('ai-output');if(!q||!out)return;
+ out.classList.remove('hidden');aiAgentHistory.push({role:'user',text:q,mode:aiAgentMode});renderAIAgentHistory(true);document.getElementById('ai-input').value='';
+ const recent=aiAgentHistory.slice(-8).map(x=>`${x.role==='user'?'User':'Agent'}: ${x.text}`).join('\n');
+ const question=aiAgentMode==='app'?`${RATHOD_APP_CONTEXT}\n\nConversation so far:\n${recent}\n\nAnswer the latest user message.`:`You are RATHOD HUB's careful NEET/NCERT tutor. Developer: Ashish Rathod from Madhya Pradesh, a NEET aspirant and PW Yakeen Batch student. Reply in the student's language. Explain step by step, mark the final answer clearly, mention subject/chapter when possible, and say when a claim should be checked in the latest NCERT edition. Do not fabricate citations. Use conversation context for follow-ups.\n\nConversation so far:\n${recent}`;
+ try{const {data,error}=await db.functions.invoke('ai-chat',{body:{question}});if(error)throw error;aiAgentHistory.push({role:'assistant',text:String(data?.answer||data?.message||'No answer returned.'),mode:aiAgentMode});renderAIAgentHistory(false)}catch(e){aiAgentHistory.push({role:'assistant',text:'AI request failed. Please try again.\n'+(e.message||'Request failed.'),mode:aiAgentMode,error:true});renderAIAgentHistory(false)}
 }
-
+function renderAIAgentHistory(thinking=false){const box=document.getElementById('ai-agent-history');if(!box)return;const rows=aiAgentHistory.slice(-10);box.innerHTML=rows.map(x=>x.role==='user'?`<div class="ml-auto max-w-[88%] rounded-2xl rounded-br-md bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-3 text-xs leading-5 text-white"><div class="mb-1 text-[8px] font-black uppercase text-indigo-200">You</div>${esc(x.text)}</div>`:`<div class="max-w-[94%] rounded-2xl rounded-bl-md border ${x.error?'border-rose-400/20 bg-rose-500/5':'border-cyan-400/15 bg-cyan-500/5'} px-4 py-3 text-xs leading-6 text-slate-200"><div class="mb-1 text-[8px] font-black uppercase ${x.error?'text-rose-300':'text-cyan-300'}">🤖 RATHOD Agent</div><div class="whitespace-pre-wrap">${esc(x.text)}</div></div>`).join('')+(thinking?'<div class="max-w-[70%] rounded-2xl rounded-bl-md border border-cyan-400/15 bg-cyan-500/5 px-4 py-3 text-xs text-cyan-200"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>सोच रहा हूँ…</div>':'');box.lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'})}
+function clearAIAgentChat(){aiAgentHistory=[];const box=document.getElementById('ai-agent-history');if(box)box.innerHTML='';document.getElementById('ai-output')?.classList.add('hidden');toast('Agent chat cleared')}
 
 function rhQuizHistoryKey(){
   return `rh_quiz_recent_${user?.id||'guest'}`;
@@ -5292,7 +5269,7 @@ function openHubNotification(id){
   switchTab('community');if(n.metadata?.community_tab==='people'){setCommunityFeed('people');return}const postId=n.metadata?.post_id;if(postId){communityOpenComments.add(String(postId));renderPosts();setTimeout(()=>document.getElementById(`community-post-${postId}`)?.scrollIntoView({behavior:'smooth',block:'center'}),150)}return;
  }
  if(['battle','livequiz'].includes(n?.action)&&n.metadata?.room){switchTab('battle');setTimeout(()=>qbJoinRoom(n.metadata.room),250);return}
- const actions={battle:()=>switchTab('battle'),livequiz:()=>switchTab('battle'),dailyquiz:()=>openDailyBattle(),materials:()=>switchTab('materials'),material:()=>switchTab('materials'),studyrooms:()=>switchTab('studyrooms'),event:()=>switchTab('hubevents'),hubevents:()=>switchTab('hubevents'),tests:()=>switchTab('tests'),test:()=>switchTab('tests'),treasure:()=>switchTab('treasure'),group:()=>switchTab('community'),bounty:()=>switchTab('community'),aicards:()=>switchTab('aicards'),leaderboard:()=>switchTab('leaderboard'),game:()=>switchTab('games'),games:()=>switchTab('games')};actions[n?.action]?.()
+ const actions={battle:()=>switchTab('battle'),livequiz:()=>switchTab('battle'),dailyquiz:()=>openDailyBattle(),materials:()=>switchTab('materials'),material:()=>switchTab('materials'),studyrooms:()=>switchTab('studyrooms'),event:()=>switchTab('hubevents'),hubevents:()=>switchTab('hubevents'),tests:()=>openLiveQuizSection('live-45q-panel'),test:()=>openLiveQuizSection('live-45q-panel'),treasure:()=>switchTab('treasure'),group:()=>switchTab('community'),bounty:()=>switchTab('community'),aicards:()=>switchTab('aicards'),leaderboard:()=>switchTab('leaderboard'),game:()=>switchTab('games'),games:()=>switchTab('games')};actions[n?.action]?.()
 }
 async function showSystemHubNotification(item){if(!item||!('Notification'in window)||Notification.permission!=='granted')return;try{if(typeof window.AndroidNotifications!=='undefined'){new Notification(item.title,{body:item.body,tag:item.tag});return}if('serviceWorker'in navigator){const reg=await navigator.serviceWorker.ready;await reg.showNotification(item.title,{body:item.body,tag:item.tag||'rathod-hub',icon:'./icon-192.png',badge:'./icon-192.png',data:{notificationId:item.id,action:item.action,metadata:item.metadata,url:location.href},vibrate:[180,80,180]});return}const n=new Notification(item.title,{body:item.body,tag:item.tag,icon:'./icon-192.png'});n.onclick=()=>{window.focus();openHubNotification(item.id)}}catch(e){console.warn('System notification failed',e)}}
 function showHubNotification(title,body,tag='rathod-hub',action='',opts={}){if(!hubNotificationIsForMe({metadata:opts.metadata}))return null;const id=String(opts.id||(crypto?.randomUUID?crypto.randomUUID():`n_${Date.now()}_${Math.random()}`));if(hubSeenIds().has(id)||hubNotifications.some(x=>String(x.id)===id))return null;const item={id,title,body,tag,action,metadata:opts.metadata||{},icon:hubNotificationIcon(tag),created_at:opts.created_at||new Date().toISOString()};hubNotifications.unshift(item);hubNotifications=hubNotifications.slice(0,HUB_NOTIFICATION_LIMIT);saveHubNotificationStore();if(!opts.silent)toast(`${item.icon} ${title}`);if(!opts.silent)showSystemHubNotification(item);return item}
