@@ -7,3 +7,5 @@ Open this `android/` folder in Android Studio, sync Gradle, and build the debug 
 
 ## First run
 Tap **Focus Mode**, enable the RATHOD HUB accessibility service in Android Settings, then return to the app. Focus Mode currently blocks common social/video packages; this list will be moved to a user-selectable settings screen in the next pass.
+
+The GitHub Actions workflow builds a debug APK automatically when Android files change.
