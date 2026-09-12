@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rathod-hub-v6';
+const CACHE_NAME = 'rathod-hub-v7';
 const APP_SHELL = [
   './',
   './index.html',
@@ -56,4 +56,13 @@ self.addEventListener('fetch', event => {
       return cached || network;
     })
   );
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const target = event.notification.data?.url || './index.html';
+  event.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(list=>{
+    for(const client of list){if('focus'in client){client.postMessage({type:'OPEN_HUB_NOTIFICATION',payload:event.notification.data||{}});return client.focus()}}
+    return clients.openWindow?clients.openWindow(target):null;
+  }));
 });
