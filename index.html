@@ -1372,7 +1372,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
    <button onclick="requestSmartNotifications()" class="mt-2 w-full bg-slate-700 hover:bg-slate-600 rounded-xl py-2.5 text-xs font-bold">🔔 Allow Notifications</button><div id="motivation-status" class="text-[10px] text-slate-500 mt-2"></div>
   </div>
   <div class="bg-slate-800/95 border border-amber-500/20 rounded-2xl p-5">
-   <h3 class="font-black text-lg text-amber-300">🛒 XP Skill Shop</h3><p class="text-xs text-slate-400 mt-1">Sirf virtual XP rewards — koi real money nahi.</p><div id="skill-shop-list" class="grid sm:grid-cols-3 gap-2 mt-4"></div>
+   <h3 class="font-black text-lg text-amber-300">🛒 Premium XP Shop</h3><p class="text-xs text-slate-400 mt-1">Avatar, name badge aur Streak Shield — sirf earned XP se.</p><div id="shop-profile-preview" class="mt-4 rounded-2xl border border-amber-400/20 bg-amber-500/5 p-3"></div><div id="skill-shop-list" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 mt-4"></div>
   </div>
  </div>
  <div class="bg-slate-800/95 border border-emerald-500/20 rounded-2xl p-5">
@@ -1380,7 +1380,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
   <form id="todo-form" class="grid md:grid-cols-[1fr_auto_auto] gap-2 mt-4"><input id="todo-title" required maxlength="120" placeholder="Aaj ka NEET task — Human Physiology revise" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm"><select id="todo-subject" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm"><option>Biology</option><option>Chemistry</option><option>Physics</option><option>Revision</option></select><button class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 rounded-xl text-xs font-black">Add Task</button></form>
   <div class="grid lg:grid-cols-2 gap-4 mt-4"><div id="todo-list" class="space-y-2"></div><div><h4 class="font-bold text-sm text-amber-300">🏆 Today's War</h4><div id="todo-war-list" class="space-y-2 mt-2"></div></div></div>
  </div>
- <div class="relative overflow-hidden bg-gradient-to-br from-orange-950/70 via-amber-950/45 to-slate-950 border border-amber-400/30 rounded-3xl p-5 sm:p-7 shadow-2xl"><div class="absolute -right-16 -top-20 w-56 h-56 bg-orange-400/10 blur-3xl rounded-full"></div><div class="absolute left-6 top-5 text-7xl opacity-[.06]">ॐ</div><div class="relative flex justify-between items-start gap-4"><div><div class="text-[9px] uppercase tracking-[.24em] text-amber-300 font-black">Daily 4:00 PM • दिव्य अध्ययन प्रेरणा</div><h3 class="text-2xl font-black text-white mt-1">🪔 आज का मंत्र एवं उपदेश</h3><p class="text-xs text-amber-100/60 mt-1">पढ़ाई के साथ मन की शांति, श्रद्धा और सकारात्मक ऊर्जा</p></div><div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-400/20 grid place-items-center text-2xl">🙏</div></div><div class="relative mt-5 bg-black/25 border border-amber-300/20 rounded-2xl p-5 sm:p-6 text-center"><div id="divine-message-icon" class="text-3xl">🕉️</div><blockquote id="divine-message-text" class="text-lg sm:text-xl font-bold leading-8 text-amber-50 mt-3">आज का संदेश तैयार हो रहा है…</blockquote><div id="divine-message-source" class="text-[10px] uppercase tracking-wider text-amber-300 mt-3"></div><p id="divine-message-meaning" class="text-xs leading-5 text-slate-300 mt-3"></p></div><div class="relative flex flex-wrap justify-between items-center gap-3 mt-4"><div id="divine-next-time" class="text-[10px] text-amber-100/60">अगला संदेश प्रतिदिन शाम 4:00 बजे</div><div class="flex gap-2"><button onclick="shareDivineMessage()" class="bg-white/5 border border-white/10 px-3 py-2 rounded-xl text-[10px] font-black"><i class="fa-solid fa-share-nodes mr-1"></i>Share</button><button onclick="requestSmartNotifications()" class="bg-gradient-to-r from-orange-600 to-amber-600 px-3 py-2 rounded-xl text-[10px] font-black"><i class="fa-solid fa-bell mr-1"></i>4 PM Alert</button></div></div></div>
+ <div class="relative overflow-hidden bg-gradient-to-br from-orange-950/70 via-amber-950/45 to-slate-950 border border-amber-400/30 rounded-3xl p-5 sm:p-7 shadow-2xl"><div class="absolute -right-16 -top-20 w-56 h-56 bg-orange-400/10 blur-3xl rounded-full"></div><div class="absolute left-6 top-5 text-7xl opacity-[.06]">ॐ</div><div class="relative flex justify-between items-start gap-4"><div><div class="text-[9px] uppercase tracking-[.24em] text-amber-300 font-black">Daily 4:00 PM • Personal Study Wisdom</div><h3 class="text-2xl font-black text-white mt-1">🪔 आज का अध्ययन संदेश</h3><p class="text-xs text-amber-100/60 mt-1">हर user के चुने हुए मार्ग के अनुसार शांति, प्रेरणा और सकारात्मक ऊर्जा</p></div><div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-400/20 grid place-items-center text-2xl">🙏</div></div><div id="wisdom-choice" class="relative mt-5 hidden bg-black/35 border border-amber-300/25 rounded-2xl p-4"><div class="text-sm font-black text-amber-100">🙏 अपनी Daily 4 PM प्रेरणा चुनें</div><p class="text-[11px] text-amber-100/65 mt-1">यह चुनाव केवल एक बार होगा और फिर lock हो जाएगा। कुछ न चुनने पर Sanatan संदेश चलते रहेंगे।</p><div id="wisdom-choice-buttons" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3"></div></div><div id="wisdom-current" class="relative mt-3 text-[10px] text-amber-200/70"></div><div class="relative mt-3 bg-black/25 border border-amber-300/20 rounded-2xl p-5 sm:p-6 text-center"><div id="divine-message-icon" class="text-3xl">🕉️</div><blockquote id="divine-message-text" class="text-lg sm:text-xl font-bold leading-8 text-amber-50 mt-3">आज का संदेश तैयार हो रहा है…</blockquote><div id="divine-message-source" class="text-[10px] uppercase tracking-wider text-amber-300 mt-3"></div><p id="divine-message-meaning" class="text-xs leading-5 text-slate-300 mt-3"></p></div><div class="relative flex flex-wrap justify-between items-center gap-3 mt-4"><div id="divine-next-time" class="text-[10px] text-amber-100/60">अगला संदेश प्रतिदिन शाम 4:00 बजे</div><div class="flex gap-2"><button onclick="shareDivineMessage()" class="bg-white/5 border border-white/10 px-3 py-2 rounded-xl text-[10px] font-black"><i class="fa-solid fa-share-nodes mr-1"></i>Share</button><button onclick="requestSmartNotifications()" class="bg-gradient-to-r from-orange-600 to-amber-600 px-3 py-2 rounded-xl text-[10px] font-black"><i class="fa-solid fa-bell mr-1"></i>4 PM Alert</button></div></div></div>
 </section>
 
 <section id="section-tests" class="hidden space-y-5">
@@ -1862,6 +1862,7 @@ async function boot(providedSession){
   try{ subscribeToChat(); }catch(e){}
   try{ renderStudyRooms(); }catch(e){}
   try{ initHubNotifications(); }catch(e){}
+  try{ await loadProfileExperience(); }catch(e){}
   try{ initStudyPower(); }catch(e){}
   try{ qbInit();qbAutoJoinFromLink();nthAutoJoinFromLink(); }catch(e){}
   if(profile.role==='admin'){ try{ populateBackgroundForm(); }catch(e){} }
@@ -4010,7 +4011,7 @@ document.getElementById('admin-battle-form')?.addEventListener('submit', async (
 
 function openProfile(){document.getElementById('profile-name').value=profile.name||'';document.getElementById('profile-modal').classList.remove('hidden')}
 function closeProfile(){document.getElementById('profile-modal').classList.add('hidden')}
-document.getElementById('profile-form').addEventListener('submit',async e=>{e.preventDefault();try{const name=document.getElementById('profile-name').value.trim(),file=document.getElementById('profile-pfp').files[0];let pfp=profile.pfp_url;if(file)pfp=await uploadProfilePic(user.id,file);const {error}=await db.from('profiles').update({name,pfp_url:pfp}).eq('id',user.id);if(error)throw error;profile={...profile,name,pfp_url:pfp};document.getElementById('nav-name').textContent=name;if(pfp)document.getElementById('nav-pfp').innerHTML=driveImgHtml(pfp,'w-full h-full object-cover');closeProfile();toast('Profile updated')}catch(err){toast(err.message,false)}});
+document.getElementById('profile-form').addEventListener('submit',async e=>{e.preventDefault();try{const name=document.getElementById('profile-name').value.trim(),file=document.getElementById('profile-pfp').files[0];let pfp=profile.pfp_url;if(file)pfp=await uploadProfilePic(user.id,file);const {error}=await db.from('profiles').update({name,pfp_url:pfp}).eq('id',user.id);if(error)throw error;profile={...profile,name,pfp_url:pfp};applyProfileCosmetics();if(pfp)document.getElementById('nav-pfp').innerHTML=driveImgHtml(pfp,'w-full h-full object-cover');closeProfile();toast('Profile updated')}catch(err){toast(err.message,false)}});
 
 showAuth('login');
 try{
@@ -5588,57 +5589,113 @@ function saveAICardImage(){
 /* ==================== STUDY POWER ==================== */
 const SP_MOTIVATIONS=['Aaj ka 1 hour kal ke stress ko kam karta hai. 🔥','NEET ka result daily small wins se banta hai. 📚','Phone ko side, target ko front. You can do this. 💪','Ek chapter aur — phir khud par proud feel hoga. ⭐','Consistency > motivation. Bas start karo. 🚀'];
 let spMotivationTimer=null,spTodoRows=[],divineTimer=null,currentDivineMessage=null;
-const SKILL_ITEMS=[{id:'focus15',name:'⚡ Focus Boost 15m',cost:50,desc:'Virtual boost badge'},{id:'streak',name:'🔥 Streak Shield',cost:100,desc:'One streak-protection token'},{id:'mystery',name:'🎁 Mystery XP Card',cost:150,desc:'Random virtual XP reward'}];
+let wisdomPreference='sanatan',wisdomPreferenceLocked=false,shopItems=[],ownedShopItems=new Set(),profileCosmetics={equipped_avatar:null,equipped_badge:null,streak_shields:0},profileExperienceLoaded=false;
+const WISDOM_LABELS={sanatan:'🕉️ Sanatan',islamic:'☪️ Islamic',sikh:'☬ Sikh',christian:'✝️ Christian',buddhist_jain:'☸️ Buddhist / Jain',universal:'🌍 Universal'};
+const FALLBACK_SHOP_ITEMS=[
+ {item_id:'avatar_scholar',name:'Scholar Avatar',kind:'avatar',emoji:'🎓',price:500,description:'Focused learner look',tier:'Starter'},
+ {item_id:'badge_rising',name:'Rising Scholar',kind:'badge',emoji:'✦',price:800,description:'Name ke peeche Rising Scholar',tier:'Starter'},
+ {item_id:'avatar_medic',name:'Future Doctor',kind:'avatar',emoji:'🩺',price:900,description:'NEET aspirant premium avatar',tier:'Starter'},
+ {item_id:'streak_shield',name:'Streak Shield',kind:'streak',emoji:'🛡️',price:1000,description:'Ek missed day par streak bachaye',tier:'Utility'},
+ {item_id:'avatar_scientist',name:'Bio Scientist',kind:'avatar',emoji:'🧬',price:1400,description:'Biology explorer avatar',tier:'Pro'},
+ {item_id:'badge_ncert',name:'NCERT Master',kind:'badge',emoji:'📚',price:1500,description:'NCERT Master name badge',tier:'Pro'},
+ {item_id:'avatar_warrior',name:'Study Warrior',kind:'avatar',emoji:'⚔️',price:2000,description:'Daily battle champion avatar',tier:'Pro'},
+ {item_id:'badge_focus',name:'Focus Elite',kind:'badge',emoji:'⚡',price:2500,description:'Focus Elite name badge',tier:'Elite'},
+ {item_id:'avatar_phoenix',name:'Phoenix',kind:'avatar',emoji:'🔥',price:2800,description:'Comeback specialist avatar',tier:'Elite'},
+ {item_id:'badge_neet',name:'NEET Pro',kind:'badge',emoji:'💎',price:3500,description:'Premium NEET Pro badge',tier:'Elite'},
+ {item_id:'badge_legend',name:'League Legend',kind:'badge',emoji:'👑',price:5000,description:'Ultimate premium name badge',tier:'Legend'}
+];
+function shopItem(id){return shopItems.find(x=>x.item_id===id)||FALLBACK_SHOP_ITEMS.find(x=>x.item_id===id)}
+function applyProfileCosmetics(){
+ const name=document.getElementById('nav-name');if(!name||!profile)return;
+ const avatar=shopItem(profileCosmetics?.equipped_avatar),badge=shopItem(profileCosmetics?.equipped_badge);
+ name.innerHTML=`${avatar?`<span class="mr-1" title="${esc(avatar.name)}">${esc(avatar.emoji)}</span>`:''}<span>${esc(profile.name||user?.email||'User')}</span>${badge?` <span class="ml-1 rounded-full border border-amber-400/30 bg-amber-500/10 px-1.5 py-0.5 text-[8px] text-amber-300 whitespace-nowrap">${esc(badge.emoji)} ${esc(badge.name)}</span>`:''}`;
+ renderShopPreview();
+}
+async function loadProfileExperience(){
+ if(!user)return;
+ try{
+  const [pref,catalog,purchases,cosmetics]=await Promise.all([
+   db.from('user_wisdom_preferences').select('*').eq('user_id',user.id).maybeSingle(),
+   db.from('rh_shop_items').select('*').eq('active',true).order('price',{ascending:true}),
+   db.from('rh_shop_purchases').select('item_id').eq('user_id',user.id),
+   db.from('profile_cosmetics').select('*').eq('user_id',user.id).maybeSingle()
+  ]);
+  if(pref.data){wisdomPreference=pref.data.preference;wisdomPreferenceLocked=true}else{wisdomPreference='sanatan';wisdomPreferenceLocked=false}
+  shopItems=catalog.data?.length?catalog.data:FALLBACK_SHOP_ITEMS;
+  ownedShopItems=new Set((purchases.data||[]).map(x=>x.item_id));
+  profileCosmetics=cosmetics.data||{equipped_avatar:null,equipped_badge:null,streak_shields:0};
+ }catch(e){shopItems=FALLBACK_SHOP_ITEMS;wisdomPreference='sanatan';wisdomPreferenceLocked=false}
+ profileExperienceLoaded=true;applyProfileCosmetics();renderWisdomChoice();renderSkillShop();
+}
 function requestSmartNotifications(){
-  if(window.AndroidNotifications){
-    try{ window.AndroidNotifications.requestNotificationPermission(); }catch(e){}
-  }
-  if('Notification' in window){
-    Notification.requestPermission().then(p=>{
-      if(p==='granted') toast('🔔 Notifications enabled ✓');
-      else toast('Notification permission allow karo.',false);
-      renderMotivationStatus();
-    }).catch(()=>{});
-  }else if(window.AndroidNotifications){
-    toast('🔔 Notifications enabled ✓');
-  }else{
-    toast('Is device me notifications supported nahi hain.',false);
-  }
+  if(window.AndroidNotifications){try{window.AndroidNotifications.requestNotificationPermission()}catch(e){}}
+  if('Notification' in window){Notification.requestPermission().then(p=>{if(p==='granted')toast('🔔 Notifications enabled ✓');else toast('Notification permission allow karo.',false);renderMotivationStatus()}).catch(()=>{})}
+  else if(window.AndroidNotifications)toast('🔔 Notifications enabled ✓');else toast('Is device me notifications supported nahi hain.',false)
 }
 function saveMotivationReminder(){const t=document.getElementById('motivation-time')?.value;if(!t)return toast('Time select karo.',false);localStorage.setItem('rh_motivation_time',t);localStorage.removeItem('rh_motivation_last');requestSmartNotifications();renderMotivationStatus();toast('Daily motivation reminder saved ✓')}
-function renderMotivationStatus(){
-  const t=localStorage.getItem('rh_motivation_time');
-  const el=document.getElementById('motivation-status');
-  const isGranted = ('Notification' in window && Notification.permission === 'granted') || (window.AndroidNotifications && window.AndroidNotifications.isNotificationPermissionGranted());
-  const permBadge = isGranted ? ' • 🔔 Enabled' : ' • ⚠️ Permission needed';
-  if(el) el.textContent=t?`Daily reminder: ${t}${permBadge}`:`Reminder not set${permBadge}`;
-  const inp=document.getElementById('motivation-time');
-  if(inp&&t) inp.value=t;
-}
+function renderMotivationStatus(){const t=localStorage.getItem('rh_motivation_time'),el=document.getElementById('motivation-status'),isGranted=('Notification'in window&&Notification.permission==='granted')||(window.AndroidNotifications&&window.AndroidNotifications.isNotificationPermissionGranted()),permBadge=isGranted?' • 🔔 Enabled':' • ⚠️ Permission needed';if(el)el.textContent=t?`Daily reminder: ${t}${permBadge}`:`Reminder not set${permBadge}`;const inp=document.getElementById('motivation-time');if(inp&&t)inp.value=t}
 function smartMotivationTick(){if(!user)return;const t=localStorage.getItem('rh_motivation_time');if(!t)return;const now=new Date(),key=localDay(now)+'_'+t;if(now.getHours()===Number(t.slice(0,2))&&now.getMinutes()===Number(t.slice(3))&&localStorage.getItem('rh_motivation_last')!==key){localStorage.setItem('rh_motivation_last',key);const msg=SP_MOTIVATIONS[Math.floor(Math.random()*SP_MOTIVATIONS.length)];showHubNotification('📚 RATHOD HUB Motivation',msg,'motivation','studypower');if('Notification'in window&&Notification.permission==='granted'){try{new Notification('📚 RATHOD HUB Motivation',{body:msg,tag:'rh-motivation'})}catch(e){}}}}
-const DIVINE_MESSAGES=[
- {icon:'🚩',text:'बुद्धिहीन तनु जानिके, सुमिरौं पवन-कुमार। बल बुधि विद्या देहु मोहिं, हरहु कलेस बिकार॥',source:'श्री हनुमान चालीसा',meaning:'हनुमान जी से बल, बुद्धि, विद्या और मन के विकार दूर करने की प्रार्थना।'},
- {icon:'🙏',text:'जय हनुमान ज्ञान गुन सागर। जय कपीस तिहुँ लोक उजागर॥',source:'श्री हनुमान चालीसा',meaning:'ज्ञान और गुणों के सागर हनुमान जी हमें साहस और सही दिशा प्रदान करें।'},
- {icon:'📚',text:'विद्यावान गुनी अति चातुर। राम काज करिबे को आतुर॥',source:'श्री हनुमान चालीसा',meaning:'ज्ञान के साथ गुण, विनम्रता और कर्म के लिए तत्परता भी आवश्यक है।'},
- {icon:'☀️',text:'ॐ भूर् भुवः स्वः। तत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि। धियो यो नः प्रचोदयात्॥',source:'गायत्री मंत्र',meaning:'हम दिव्य प्रकाश का ध्यान करते हैं—वह हमारी बुद्धि को श्रेष्ठ मार्ग पर प्रेरित करे।'},
- {icon:'🏹',text:'श्री राम जय राम जय जय राम।',source:'श्री राम मंत्र',meaning:'मर्यादा, धैर्य और सत्य के साथ अपने कर्तव्य पर आगे बढ़ते रहें।'},
- {icon:'🔱',text:'ॐ नमः शिवाय।',source:'पंचाक्षर शिव मंत्र',meaning:'मन को शांत करके अहंकार छोड़ें और पूरी एकाग्रता से अपने लक्ष्य पर लगें।'},
- {icon:'🕉️',text:'ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम्। उर्वारुकमिव बन्धनान्मृत्योर्मुक्षीय मामृतात्॥',source:'महामृत्युंजय मंत्र',meaning:'भय और बंधनों से मुक्त होकर स्वास्थ्य, शक्ति और सकारात्मकता की ओर बढ़ने की प्रार्थना।'},
- {icon:'🦚',text:'हरे कृष्ण हरे कृष्ण, कृष्ण कृष्ण हरे हरे। हरे राम हरे राम, राम राम हरे हरे॥',source:'महामंत्र',meaning:'नाम-स्मरण से मन को शांत, प्रसन्न और एकाग्र रखें।'},
- {icon:'📖',text:'कर्मण्येवाधिकारस्ते मा फलेषु कदाचन।',source:'श्रीमद्भगवद्गीता 2.47',meaning:'अधिकार अपने कर्म पर है—परिणाम की चिंता छोड़कर आज की पढ़ाई पूरी लगन से करें।'},
- {icon:'⚖️',text:'योगस्थः कुरु कर्माणि सङ्गं त्यक्त्वा धनञ्जय।',source:'श्रीमद्भगवद्गीता 2.48',meaning:'सफलता-असफलता के भय से दूर, संतुलित मन से अपना कर्तव्य करें।'},
- {icon:'🌱',text:'उद्धरेदात्मनात्मानं नात्मानमवसादयेत्।',source:'श्रीमद्भगवद्गीता 6.5',meaning:'मनुष्य स्वयं अपने आपको ऊपर उठाए—निराशा को अपने ऊपर हावी न होने दें।'},
- {icon:'✨',text:'न हि ज्ञानेन सदृशं पवित्रमिह विद्यते।',source:'श्रीमद्भगवद्गीता 4.38',meaning:'इस संसार में ज्ञान के समान पवित्र कुछ नहीं—सीखने की यात्रा स्वयं में साधना है।'}
-];
+const DIVINE_MESSAGE_GROUPS={
+ sanatan:[
+  {icon:'🚩',text:'बुद्धिहीन तनु जानिके, सुमिरौं पवन-कुमार। बल बुधि विद्या देहु मोहिं, हरहु कलेस बिकार॥',source:'श्री हनुमान चालीसा',meaning:'बल, बुद्धि, विद्या और एकाग्रता के लिए प्रार्थना।'},
+  {icon:'☀️',text:'ॐ भूर् भुवः स्वः। तत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि। धियो यो नः प्रचोदयात्॥',source:'गायत्री मंत्र',meaning:'दिव्य प्रकाश हमारी बुद्धि को श्रेष्ठ मार्ग पर प्रेरित करे।'},
+  {icon:'📖',text:'कर्मण्येवाधिकारस्ते मा फलेषु कदाचन।',source:'श्रीमद्भगवद्गीता 2.47',meaning:'परिणाम की चिंता छोड़कर आज की पढ़ाई पूरी लगन से करें।'},
+  {icon:'🔱',text:'ॐ नमः शिवाय।',source:'पंचाक्षर शिव मंत्र',meaning:'मन को शांत करके पूरी एकाग्रता से लक्ष्य पर लगें।'},
+  {icon:'🌱',text:'उद्धरेदात्मनात्मानं नात्मानमवसादयेत्।',source:'श्रीमद्भगवद्गीता 6.5',meaning:'स्वयं को ऊपर उठाएँ और निराशा को हावी न होने दें।'}
+ ],
+ islamic:[
+  {icon:'☪️',text:'निस्संदेह कठिनाई के साथ आसानी है।',source:'कुरआन 94:6',meaning:'कठिन पढ़ाई के दौर में भी उम्मीद और धैर्य बनाए रखें।'},
+  {icon:'📚',text:'ऐ मेरे रब, मेरे ज्ञान में वृद्धि कर।',source:'कुरआन 20:114',meaning:'हर दिन सीखने और बेहतर समझ के लिए प्रयास करें।'},
+  {icon:'🤲',text:'अल्लाह किसी प्राणी पर उसकी क्षमता से अधिक बोझ नहीं डालता।',source:'कुरआन 2:286',meaning:'अपनी क्षमता पर भरोसा रखें और एक कदम करके आगे बढ़ें।'}
+ ],
+ sikh:[
+  {icon:'☬',text:'मन जीतै जग जीत।',source:'गुरु ग्रंथ साहिब',meaning:'मन और ध्यान पर विजय, बड़े लक्ष्य की पहली जीत है।'},
+  {icon:'📚',text:'विदिआ वीचारी तां परउपकारी।',source:'गुरु ग्रंथ साहिब',meaning:'सच्ची शिक्षा वही है जिस पर विचार हो और जो दूसरों के काम आए।'},
+  {icon:'🙏',text:'नानक नाम चढ़दी कला, तेरे भाणे सरबत दा भला।',source:'सिख अरदास',meaning:'उत्साह के साथ आगे बढ़ें और सबके कल्याण की कामना करें।'}
+ ],
+ christian:[
+  {icon:'✝️',text:'जो मुझे सामर्थ देता है, उसमें मैं सब कुछ कर सकता हूँ।',source:'फिलिप्पियों 4:13',meaning:'विश्वास, अनुशासन और मेहनत से कठिन लक्ष्य संभव हैं।'},
+  {icon:'🔎',text:'माँगो, तो तुम्हें दिया जाएगा; खोजो, तो तुम पाओगे।',source:'मत्ती 7:7',meaning:'सीखने के लिए प्रश्न पूछें, खोजें और लगातार प्रयास करें।'},
+  {icon:'❤️',text:'प्रेम धीरजवन्त है और कृपालु है।',source:'1 कुरिन्थियों 13:4',meaning:'अपने और दूसरों के प्रति धैर्य और करुणा बनाए रखें।'}
+ ],
+ buddhist_jain:[
+  {icon:'☸️',text:'मन ही सब अवस्थाओं का अग्रदूत है।',source:'धम्मपद 1',meaning:'शांत और स्पष्ट मन से पढ़ाई अधिक प्रभावी होती है।'},
+  {icon:'🪔',text:'अप्प दीपो भव — अपना दीपक स्वयं बनो।',source:'बौद्ध परंपरा',meaning:'आत्मनिर्भर बनें और अपने विवेक को मार्गदर्शक बनाएँ।'},
+  {icon:'🕊️',text:'अहिंसा परमो धर्मः।',source:'जैन एवं भारतीय परंपरा',meaning:'विचार, वाणी और व्यवहार में करुणा रखें।'}
+ ],
+ universal:[
+  {icon:'🌍',text:'छोटा, लगातार प्रयास बड़ी सफलता का आधार है।',source:'आज की सकारात्मक प्रेरणा',meaning:'आज एक स्पष्ट लक्ष्य चुनें और उसे पूरा करें।'},
+  {icon:'🧠',text:'गलती हार नहीं, सीखने का डेटा है।',source:'Learning Mindset',meaning:'गलतियों को पहचानें, सुधारें और फिर से प्रयास करें।'},
+  {icon:'✨',text:'तुलना कल के अपने आप से करें, किसी और से नहीं।',source:'Daily Growth',meaning:'हर दिन थोड़ा बेहतर होना ही वास्तविक प्रगति है।'}
+ ]
+};
+function renderWisdomChoice(){
+ const box=document.getElementById('wisdom-choice'),buttons=document.getElementById('wisdom-choice-buttons'),status=document.getElementById('wisdom-current');if(!box||!buttons)return;
+ box.classList.toggle('hidden',wisdomPreferenceLocked);
+ buttons.innerHTML=Object.entries(WISDOM_LABELS).map(([id,label])=>`<button onclick="chooseWisdomPreference('${id}')" class="rounded-xl border border-amber-300/20 bg-white/5 px-2 py-2 text-[10px] font-black hover:bg-amber-500/15">${esc(label)}</button>`).join('');
+ if(status)status.textContent=wisdomPreferenceLocked?`Selected: ${WISDOM_LABELS[wisdomPreference]} • 🔒 One-time choice locked`:`Default: ${WISDOM_LABELS.sanatan} • ऊपर से अपना one-time option चुनें`;
+}
+async function chooseWisdomPreference(pref){
+ if(wisdomPreferenceLocked)return toast('Preference पहले से locked है। Admin reset कर सकता है।',false);
+ if(!confirm(`${WISDOM_LABELS[pref]} को permanent Daily 4 PM choice बनाना है? यह केवल एक बार चुना जा सकता है।`))return;
+ try{const {data,error}=await db.rpc('choose_wisdom_preference',{p_preference:pref});if(error)throw error;wisdomPreference=data?.preference||pref;wisdomPreferenceLocked=true;renderWisdomChoice();renderDailyDivineMessage();toast('Daily wisdom preference locked ✓')}catch(e){toast(e.message||'Preference setup SQL run karo.',false)}
+}
 function indiaTimeParts(){const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date()),o={};parts.forEach(x=>{if(x.type!=='literal')o[x.type]=x.value});return{key:`${o.year}-${o.month}-${o.day}`,year:Number(o.year),month:Number(o.month),day:Number(o.day),hour:Number(o.hour),minute:Number(o.minute)}}
-function divineMessageForToday(){const t=indiaTimeParts(),days=Math.floor(Date.UTC(t.year,t.month-1,t.day)/86400000),message=DIVINE_MESSAGES[((days% DIVINE_MESSAGES.length)+DIVINE_MESSAGES.length)%DIVINE_MESSAGES.length];return{...message,dateKey:t.key,time:t}}
-function renderDailyDivineMessage(){const m=divineMessageForToday();currentDivineMessage=m;const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};set('divine-message-icon',m.icon);set('divine-message-text',m.text);set('divine-message-source',m.source);set('divine-message-meaning',m.meaning);set('divine-next-time',m.time.hour<16?'आज शाम 4:00 बजे notification आएगा':'अगला दिव्य संदेश कल शाम 4:00 बजे')}
-function dailyDivineTick(){if(!user)return;renderDailyDivineMessage();const m=currentDivineMessage;if(m.time.hour<16||localStorage.getItem('rh_divine_last')===m.dateKey)return;localStorage.setItem('rh_divine_last',m.dateKey);showHubNotification(`${m.icon} आज का दिव्य अध्ययन संदेश`,`${m.text}\n${m.meaning}`,'motivation','studypower',{divine:true,date:m.dateKey})}
+function divineMessageForToday(){const t=indiaTimeParts(),days=Math.floor(Date.UTC(t.year,t.month-1,t.day)/86400000),group=DIVINE_MESSAGE_GROUPS[wisdomPreference]||DIVINE_MESSAGE_GROUPS.sanatan,message=group[((days%group.length)+group.length)%group.length];return{...message,dateKey:t.key,time:t}}
+function renderDailyDivineMessage(){renderWisdomChoice();const m=divineMessageForToday();currentDivineMessage=m;const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};set('divine-message-icon',m.icon);set('divine-message-text',m.text);set('divine-message-source',m.source);set('divine-message-meaning',m.meaning);set('divine-next-time',m.time.hour<16?'आज शाम 4:00 बजे notification आएगा':'अगला संदेश कल शाम 4:00 बजे')}
+function dailyDivineTick(){if(!user)return;renderDailyDivineMessage();const m=currentDivineMessage,key=`${m.dateKey}_${wisdomPreference}`;if(m.time.hour<16||localStorage.getItem('rh_divine_last')===key)return;localStorage.setItem('rh_divine_last',key);showHubNotification(`${m.icon} आज का अध्ययन संदेश`,`${m.text}\n${m.meaning}`,'motivation','studypower',{divine:true,date:m.dateKey,preference:wisdomPreference})}
 function initDailyDivineMessage(){renderDailyDivineMessage();if(!divineTimer)divineTimer=setInterval(dailyDivineTick,60000);dailyDivineTick()}
-async function shareDivineMessage(){const m=currentDivineMessage||divineMessageForToday(),text=`${m.icon} ${m.text}\n— ${m.source}\n\n${m.meaning}\n\nRATHOD HUB`;try{if(navigator.share)await navigator.share({title:'आज का दिव्य अध्ययन संदेश',text});else{await navigator.clipboard.writeText(text);toast('दिव्य संदेश copied ✓')}}catch(e){if(e?.name!=='AbortError')toast('Share नहीं हुआ.',false)}}
-function initStudyPower(){renderMotivationStatus();renderSkillShop();loadDailyTodos();initDailyDivineMessage();if(!spMotivationTimer)spMotivationTimer=setInterval(smartMotivationTick,15000);smartMotivationTick();}
-function renderSkillShop(){const box=document.getElementById('skill-shop-list');if(!box)return;box.innerHTML=SKILL_ITEMS.map(x=>`<div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3"><b class="block text-xs">${x.name}</b><span class="block text-[10px] text-slate-500 mt-1">${x.desc}</span><button onclick="buySkillItem('${x.id}')" class="mt-3 w-full bg-amber-600 hover:bg-amber-500 py-2 rounded-lg text-[10px] font-black">${x.cost} XP Buy</button></div>`).join('')}
-async function buySkillItem(id){if(!user)return;const item=SKILL_ITEMS.find(x=>x.id===id);if(!item)return;if(Number(profile?.xp||0)<item.cost)return toast(`Need ${item.cost} XP.`,false);try{const {data,error}=await db.from('skill_shop_purchases').insert({user_id:user.id,item_id:item.id,cost_xp:item.cost}).select('*').single();if(error)throw error;const next=Number(profile.xp||0)-item.cost;const {error:ue}=await db.from('profiles').update({xp:next}).eq('id',user.id);if(ue)throw ue;profile.xp=next;toast(`${item.name} purchased ✓`);renderHomeDashboard()}catch(e){toast(e.message||'Skill Shop setup SQL run karo.',false)}}
+async function shareDivineMessage(){const m=currentDivineMessage||divineMessageForToday(),text=`${m.icon} ${m.text}\n— ${m.source}\n\n${m.meaning}\n\nRATHOD HUB`;try{if(navigator.share)await navigator.share({title:'आज का अध्ययन संदेश',text});else{await navigator.clipboard.writeText(text);toast('संदेश copied ✓')}}catch(e){if(e?.name!=='AbortError')toast('Share नहीं हुआ.',false)}}
+function initStudyPower(){renderMotivationStatus();if(!profileExperienceLoaded)loadProfileExperience();else{renderSkillShop();renderDailyDivineMessage()}loadDailyTodos();initDailyDivineMessage();if(!spMotivationTimer)spMotivationTimer=setInterval(smartMotivationTick,15000);smartMotivationTick()}
+function renderShopPreview(){const box=document.getElementById('shop-profile-preview');if(!box||!profile)return;const avatar=shopItem(profileCosmetics?.equipped_avatar),badge=shopItem(profileCosmetics?.equipped_badge);box.innerHTML=`<div class="flex items-center gap-3"><div class="grid h-11 w-11 place-items-center rounded-full bg-slate-900 text-2xl">${avatar?esc(avatar.emoji):'👤'}</div><div class="min-w-0 flex-1"><div class="font-black truncate">${esc(profile.name||'Student')} ${badge?`<span class="text-amber-300 text-[10px]">${esc(badge.emoji)} ${esc(badge.name)}</span>`:''}</div><div class="text-[10px] text-slate-400">${Number(profile.xp||0).toLocaleString()} XP • 🛡️ ${Number(profileCosmetics?.streak_shields||0)} shields</div></div></div>`}
+function renderSkillShop(){
+ const box=document.getElementById('skill-shop-list');if(!box)return;renderShopPreview();const items=shopItems.length?shopItems:FALLBACK_SHOP_ITEMS;
+ box.innerHTML=items.map(x=>{const owned=ownedShopItems.has(x.item_id),equipped=profileCosmetics?.equipped_avatar===x.item_id||profileCosmetics?.equipped_badge===x.item_id,isCosmetic=x.kind!=='streak';let label=`${Number(x.price).toLocaleString()} XP Buy`,action=`buyProfileShopItem('${x.item_id}')`,cls='from-amber-600 to-orange-600';if(isCosmetic&&owned){label=equipped?'✓ Equipped':'Equip';action=equipped?'':`equipProfileShopItem('${x.item_id}')`;cls=equipped?'from-emerald-700 to-emerald-600':'from-indigo-700 to-violet-600'}return `<div class="relative overflow-hidden rounded-2xl border ${equipped?'border-emerald-400/50':'border-slate-700'} bg-slate-950/75 p-4"><div class="absolute -right-4 -top-5 text-6xl opacity-10">${esc(x.emoji)}</div><div class="text-3xl">${esc(x.emoji)}</div><div class="mt-2 flex items-center justify-between gap-2"><b class="text-sm">${esc(x.name)}</b><span class="rounded-full bg-white/5 px-2 py-1 text-[8px] text-amber-300">${esc(x.tier||'Premium')}</span></div><p class="mt-1 min-h-[30px] text-[10px] text-slate-400">${esc(x.description||'Premium cosmetic')}</p><button ${action?`onclick="${action}"`:'disabled'} class="mt-3 w-full rounded-xl bg-gradient-to-r ${cls} py-2.5 text-[10px] font-black disabled:opacity-70">${label}</button></div>`}).join('')
+}
+async function buyProfileShopItem(id){const item=shopItem(id);if(!item||!user)return;if(Number(profile?.xp||0)<Number(item.price))return toast(`Need ${item.price} XP.`,false);try{const {data,error}=await db.rpc('buy_profile_shop_item',{p_item_id:id});if(error)throw error;profile.xp=Number(data?.xp??profile.xp-item.price);if(item.kind!=='streak')ownedShopItems.add(id);await refreshProfileCosmetics();toast(`${item.emoji} ${item.name} purchased ✓`);renderHomeDashboard()}catch(e){toast(e.message||'Premium Shop SQL run karo.',false)}}
+async function equipProfileShopItem(id){try{const {data,error}=await db.rpc('equip_profile_shop_item',{p_item_id:id});if(error)throw error;profileCosmetics=data||profileCosmetics;applyProfileCosmetics();renderSkillShop();toast('Profile style equipped ✓')}catch(e){toast(e.message||'Equip failed.',false)}}
+async function refreshProfileCosmetics(){const {data}=await db.from('profile_cosmetics').select('*').eq('user_id',user.id).maybeSingle();if(data)profileCosmetics=data;applyProfileCosmetics();renderSkillShop()}
+
 async function loadDailyTodos(){const list=document.getElementById('todo-list');if(!list||!user)return;try{const {data,error}=await db.from('daily_todos').select('*').eq('user_id',user.id).eq('todo_date',localDay()).order('created_at',{ascending:false});if(error)throw error;spTodoRows=data||[];renderDailyTodos();loadTodoWar()}catch(e){list.innerHTML='<div class="text-xs text-amber-400">Daily To-Do War ke liye SQL setup run karo.</div>'}}
 function renderDailyTodos(){const box=document.getElementById('todo-list');if(!box)return;box.innerHTML=spTodoRows.length?spTodoRows.map(t=>`<div class="flex items-center gap-2 bg-slate-950/70 border border-slate-800 rounded-xl p-3"><button onclick="toggleDailyTodo('${t.id}',${!t.done})" class="w-7 h-7 rounded-lg ${t.done?'bg-emerald-600':'bg-slate-800'}">${t.done?'✓':'○'}</button><div class="min-w-0 flex-1"><b class="text-xs ${t.done?'line-through text-slate-500':''}">${esc(t.title)}</b><div class="text-[9px] text-slate-500">${esc(t.subject||'Revision')} • ${t.done?'+10 XP':'10 XP on complete'}</div></div></div>`).join(''):'<div class="text-xs text-slate-500 py-4">Aaj ka pehla task add karo.</div>';const score=document.getElementById('todo-war-score');if(score)score.textContent=spTodoRows.filter(x=>x.done).length*10+' XP'}
 document.getElementById('todo-form')?.addEventListener('submit',async e=>{e.preventDefault();if(!user)return;const title=document.getElementById('todo-title').value.trim();if(!title)return;try{const {error}=await db.from('daily_todos').insert({user_id:user.id,todo_date:localDay(),title,subject:document.getElementById('todo-subject').value});if(error)throw error;e.target.reset();await loadDailyTodos();toast('Task added ⚔️')}catch(err){toast(err.message||'To-Do SQL setup run karo.',false)}});
