@@ -331,7 +331,8 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
  .rh-brand{flex:1 1 auto!important;min-width:0!important;gap:7px!important}
  .rh-brand>div:last-child{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
  .rh-top-actions{flex:0 0 auto!important;gap:4px!important}
- .rh-notify-wrap{display:none!important}
+ .rh-notify-wrap{display:block!important;position:relative!important;flex:0 0 auto!important}
+ #hub-notify-btn{display:flex!important}
  .rh-user>div:not(#nav-pfp),.rh-user>button{display:none!important}
  .rh-content *,section[id^="section-"] *{min-width:0;box-sizing:border-box}
  .rh-content h1,.rh-content h2,.rh-content h3,.rh-content h4,.rh-content p,.rh-content b,.rh-content span,.rh-content button{overflow-wrap:anywhere;word-break:break-word}
@@ -1519,7 +1520,7 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
     <span class="rh-dock-label">Chat</span>
   </button>
   <button onclick="openMobileMenu()" id="mob-more" class="rh-dock-item rh-mobile-more-btn">
-    <div class="rh-dock-indicator"><i class="fa-solid fa-grip"></i><span id="mob-notify-badge" class="rh-mobile-notify-badge">0</span></div>
+    <div class="rh-dock-indicator"><i class="fa-solid fa-grip"></i></div>
     <span class="rh-dock-label">Modules</span>
   </button>
 </nav>
@@ -1543,7 +1544,6 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
       <button onclick="closeMobileMenu()" class="text-slate-400 hover:text-white text-lg">✕</button>
     </div>
     <div class="grid grid-cols-3 gap-2 text-center text-xs">
-      <button onclick="closeMobileMenu();toggleHubNotifications()" class="rh-mobile-notify-menu bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2 border border-amber-500/30"><span class="relative"><i class="fa-solid fa-bell text-amber-300 text-lg"></i><span id="drawer-notify-badge" class="rh-drawer-notify-badge">0</span></span><span>Notifications</span></button>
       <button onclick="switchTab('ai');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-circle-question text-red-400 text-lg"></i><span>AI Doubt</span></button>
       <button onclick="switchTab('quiz');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-brain text-teal-400 text-lg"></i><span>AI Quiz</span></button>
       <button onclick="switchTab('battle');closeMobileMenu()" class="bg-slate-800 p-3 rounded-xl flex flex-col items-center gap-2"><i class="fa-solid fa-trophy text-red-400 text-lg"></i><span>Live Quiz</span></button>
@@ -2602,17 +2602,23 @@ async function invitePlayer(targetId,targetName,type){
 
 function receiveInvite(p){
   if(!p||p.targetId!==user.id||!['tictactoe','ludo2','ludo4'].includes(p.game))return;
+  const gameName=p.game==='tictactoe'?'Tic Tac Toe':p.game==='ludo4'?'4 Player Ludo':'Ludo';
+  const notificationId=`game-invite-${p.roomId}`;
+  showHubNotification('New game invite',`${p.fromName||'Friend'} ने आपको ${gameName} खेलने के लिए बुलाया है.`,'game','games',{id:notificationId,metadata:{gameInvite:p}});
   const box=document.getElementById('game-invites');
+  if(!box||document.getElementById(`game-invite-card-${p.roomId}`))return;
   const d=document.createElement('div');
+  d.id=`game-invite-card-${p.roomId}`;
   d.className='bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex justify-between items-center gap-2';
   d.innerHTML=`<span class="text-xs"><b>${esc(p.fromName)}</b> ने ${p.game==='tictactoe'?'Tic Tac Toe':'Ludo'} invite भेजा.</span><span class="flex gap-1"><button class="bg-emerald-600 px-2 py-1 rounded text-[10px] font-bold">Accept</button><button class="bg-slate-700 px-2 py-1 rounded text-[10px]">Decline</button></span>`;
   d.querySelectorAll('button')[0].onclick=async()=>{
     if(currentGame.online)return toast('आप पहले से game में हैं.',false);
     await gameSend('invite-answer',{targetId:p.fromId,fromId:user.id,accepted:true,game:p.game,roomId:p.roomId});
     await startOnlineGame(p.game,p.roomId,'guest');
+    dismissHubNotification(notificationId);
     d.remove();
   };
-  d.querySelectorAll('button')[1].onclick=()=>d.remove();
+  d.querySelectorAll('button')[1].onclick=()=>{dismissHubNotification(notificationId);d.remove()};
   box.prepend(d);
 }
 
@@ -5259,15 +5265,16 @@ function hubNotifyKey(){return `rh_hub_notifications_${user?.id||'guest'}`}
 function hubNotifySeenKey(){return `rh_hub_notification_seen_${user?.id||'guest'}`}
 function hubSeenIds(){try{return new Set(JSON.parse(localStorage.getItem(hubNotifySeenKey())||'[]'))}catch{return new Set()}}
 function markHubNotificationsSeen(ids=[]){try{const seen=hubSeenIds();ids.filter(Boolean).forEach(id=>seen.add(String(id)));localStorage.setItem(hubNotifySeenKey(),JSON.stringify([...seen].slice(-500)))}catch{}}
-function hubNotificationIcon(tag){return ({livequiz:'⚡',dailyquiz:'🏆',voice:'🎙️',material:'📚',admin:'📣',event:'📅',test:'📝',bounty:'💰',group:'👥',treasure:'🗺️'})[tag]||'🔔'}
+function hubNotificationIcon(tag){return ({livequiz:'⚡',dailyquiz:'🏆',voice:'🎙️',material:'📚',admin:'📣',event:'📅',test:'📝',bounty:'💰',group:'👥',treasure:'🗺️',game:'🎮'})[tag]||'🔔'}
 function loadHubNotificationStore(){try{const a=JSON.parse(localStorage.getItem(hubNotifyKey())||'[]');hubNotifications=Array.isArray(a)?a.slice(0,HUB_NOTIFICATION_LIMIT):[]}catch{hubNotifications=[]}renderHubNotifications()}
 function saveHubNotificationStore(){try{localStorage.setItem(hubNotifyKey(),JSON.stringify(hubNotifications.slice(0,HUB_NOTIFICATION_LIMIT)))}catch{}renderHubNotifications()}
-function hubNotificationMarkup(){return hubNotifications.length?hubNotifications.map(x=>`<button class="rh-notify-item" onclick="openHubNotification('${esc(String(x.id))}')"><div class="text-xl">${esc(x.icon||hubNotificationIcon(x.tag))}</div><div class="min-w-0 flex-1 text-left"><b>${esc(x.title||'RATHOD HUB')}</b><p>${esc(x.body||'')}</p><span>${new Date(x.created_at||Date.now()).toLocaleString()}</span></div><i class="fa-solid fa-chevron-right rh-notify-arrow"></i></button>`).join(''):'<div class="rh-notify-empty">Koi unread notification nahi hai.<br>Admin update, public quiz ya live room aayega to yahan dikhega.</div>'}
-function renderHubNotifications(){const n=hubNotifications.length,markup=hubNotificationMarkup();['hub-notify-list','hub-notify-list-mobile'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=markup});['hub-notify-badge','mob-notify-badge','drawer-notify-badge'].forEach(id=>{const badge=document.getElementById(id);if(!badge)return;badge.textContent=n>99?'99+':String(n);badge.style.display=n?'flex':'none'})}
+function hubNotificationMarkup(){return hubNotifications.length?hubNotifications.map(x=>`<button class="rh-notify-item" onclick="openHubNotification('${esc(String(x.id))}')"><div class="text-xl">${esc(x.icon||hubNotificationIcon(x.tag))}</div><div class="min-w-0 flex-1 text-left"><b>${esc(x.title||'RATHOD HUB')}</b><p>${esc(x.body||'')}</p><span>${new Date(x.created_at||Date.now()).toLocaleString()}</span></div><i class="fa-solid fa-chevron-right rh-notify-arrow"></i></button>`).join(''):'<div class="rh-notify-empty">Koi unread notification nahi hai.<br>Admin update, public quiz, live room ya game invite aayega to yahan dikhega.</div>'}
+function renderHubNotifications(){const n=hubNotifications.length,markup=hubNotificationMarkup();['hub-notify-list','hub-notify-list-mobile'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=markup});['hub-notify-badge'].forEach(id=>{const badge=document.getElementById(id);if(!badge)return;badge.textContent=n>99?'99+':String(n);badge.style.display=n?'flex':'none'})}
 function closeMobileNotifications(){document.getElementById('rh-mobile-notify-sheet')?.classList.add('hidden')}
 function toggleHubNotifications(){const mobile=window.matchMedia('(max-width:640px)').matches,el=document.getElementById(mobile?'rh-mobile-notify-sheet':'hub-notify-panel');if(!el)return;el.classList.toggle('hidden');renderHubNotifications();if(!el.classList.contains('hidden')&&'Notification'in window&&Notification.permission==='default')Notification.requestPermission().catch(()=>{})}
 function clearHubNotifications(){markHubNotificationsSeen(hubNotifications.map(x=>x.id));hubNotifications=[];saveHubNotificationStore();toast('Notifications cleared ✓')}
-function openHubNotification(id){const n=hubNotifications.find(x=>String(x.id)===String(id));markHubNotificationsSeen([id]);hubNotifications=hubNotifications.filter(x=>String(x.id)!==String(id));saveHubNotificationStore();document.getElementById('hub-notify-panel')?.classList.add('hidden');closeMobileNotifications();const actions={battle:()=>switchTab('battle'),livequiz:()=>switchTab('battle'),dailyquiz:()=>openDailyBattle(),materials:()=>switchTab('materials'),material:()=>switchTab('materials'),studyrooms:()=>switchTab('studyrooms'),event:()=>switchTab('hubevents'),hubevents:()=>switchTab('hubevents'),tests:()=>switchTab('tests'),test:()=>switchTab('tests'),treasure:()=>switchTab('treasure'),peergroups:()=>switchTab('peergroups'),group:()=>switchTab('peergroups'),bounty:()=>switchTab('peergroups'),community:()=>switchTab('community'),aicards:()=>switchTab('aicards')};actions[n?.action]?.()}
+function dismissHubNotification(id){if(!id)return;markHubNotificationsSeen([id]);hubNotifications=hubNotifications.filter(x=>String(x.id)!==String(id));saveHubNotificationStore()}
+function openHubNotification(id){const n=hubNotifications.find(x=>String(x.id)===String(id));markHubNotificationsSeen([id]);hubNotifications=hubNotifications.filter(x=>String(x.id)!==String(id));saveHubNotificationStore();document.getElementById('hub-notify-panel')?.classList.add('hidden');closeMobileNotifications();const actions={battle:()=>switchTab('battle'),livequiz:()=>switchTab('battle'),dailyquiz:()=>openDailyBattle(),materials:()=>switchTab('materials'),material:()=>switchTab('materials'),studyrooms:()=>switchTab('studyrooms'),event:()=>switchTab('hubevents'),hubevents:()=>switchTab('hubevents'),tests:()=>switchTab('tests'),test:()=>switchTab('tests'),treasure:()=>switchTab('treasure'),peergroups:()=>switchTab('peergroups'),group:()=>switchTab('peergroups'),bounty:()=>switchTab('peergroups'),community:()=>switchTab('community'),aicards:()=>switchTab('aicards'),game:()=>switchTab('games'),games:()=>switchTab('games')};actions[n?.action]?.()}
 function showHubNotification(title,body,tag='rathod-hub',action='',opts={}){const id=String(opts.id||(crypto?.randomUUID?crypto.randomUUID():`n_${Date.now()}_${Math.random()}`));if(hubSeenIds().has(id)||hubNotifications.some(x=>String(x.id)===id))return null;const item={id,title,body,tag,action,metadata:opts.metadata||{},icon:hubNotificationIcon(tag),created_at:opts.created_at||new Date().toISOString()};hubNotifications.unshift(item);hubNotifications=hubNotifications.slice(0,HUB_NOTIFICATION_LIMIT);saveHubNotificationStore();if(!opts.silent)toast(`${item.icon} ${title}`);if(!opts.silent&&'Notification'in window&&Notification.permission==='granted'){try{const nn=new Notification(title,{body,tag});nn.onclick=()=>{window.focus();openHubNotification(item.id)}}catch(e){}}return item}
 function normalizeHubNotificationRow(row){return {id:row.id,title:row.title||'RATHOD HUB',body:row.body||'',tag:row.tag||'rathod-hub',action:row.action||'',metadata:row.metadata||{},created_at:row.created_at||new Date().toISOString()}}
 async function loadPersistedHubNotifications(){try{const {data,error}=await db.from('hub_notifications').select('id,title,body,tag,action,metadata,created_at,expires_at').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false}).limit(HUB_NOTIFICATION_LIMIT);if(error)throw error;const seen=hubSeenIds();(data||[]).slice().reverse().forEach(row=>{if(!seen.has(String(row.id)))showHubNotification(row.title,row.body,row.tag,row.action,{...row,silent:true})})}catch(e){console.info('Persistent notifications SQL not installed yet; realtime fallback active.',e?.message||e)}}
