@@ -38,7 +38,7 @@ declare
   v_role text;
   v_row public.hub_notifications;
   v_admin_tags text[] := array['admin','material','event','test','dailyquiz','announcement'];
-  v_member_tags text[] := array['livequiz','voice','group','bounty','treasure','rathod-hub'];
+  v_member_tags text[] := array['livequiz','voice','group','bounty','treasure','rathod-hub','community','reaction','game','league'];
 begin
   if v_uid is null then raise exception 'Login required'; end if;
   select p.role into v_role from public.profiles p where p.id = v_uid;
