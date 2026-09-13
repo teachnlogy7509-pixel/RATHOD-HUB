@@ -723,6 +723,7 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
   </div>
  </div>
  <div id="admin-controls-host" class="space-y-5"></div>
+  <div class="rounded-2xl border border-cyan-400/25 bg-cyan-500/5 p-4"><div class="flex items-center justify-between gap-3"><div><b class="text-sm text-cyan-200">🎟️ Coupon / Gift Card Access</b><p class="mt-1 text-[10px] text-slate-500">Common code • 3 days redeem expiry • 5 days user access</p></div><span class="text-[9px] font-black text-cyan-300">ADMIN ONLY</span></div><div class="mt-3 flex flex-col gap-2 sm:flex-row"><input id="admin-coupon-code" maxlength="80" placeholder="Optional custom code (blank = auto-generate)" class="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-xs uppercase"><button onclick="createHubCoupon()" class="rounded-xl bg-cyan-600 px-4 py-2.5 text-xs font-black">Generate Coupon</button></div><div id="admin-coupon-result" class="mt-3 hidden rounded-xl bg-slate-950 p-3 text-xs text-cyan-200"></div></div>
  <div class="bg-slate-800/95 border border-slate-700 rounded-2xl p-4">
   <div class="flex items-center justify-between gap-3">
    <div><b class="text-sm">Other admin controls</b><p class="text-[10px] text-slate-500 mt-1">Materials, Community aur Live Events ke existing admin actions wahi available hain.</p></div>
@@ -736,7 +737,11 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
 </section>
 
 <!-- HOME DASHBOARD -->
-<section id="section-home" class="rh-old-section space-y-5"><!-- RATHOD HUB AI STUDY COACH -->
+<section id="section-home" class="rh-old-section space-y-5">
+<div id="coupon-access-card" class="rounded-3xl border border-cyan-400/25 bg-gradient-to-br from-slate-950 via-cyan-950/25 to-violet-950/20 p-4 sm:p-5">
+  <div class="flex items-start justify-between gap-3"><div><div class="text-[9px] uppercase tracking-[.2em] text-cyan-300 font-black">PREMIUM ACCESS</div><h3 class="mt-1 text-xl font-black text-white">🎟️ Unlock RATHOD HUB Features</h3><p id="coupon-access-status" class="mt-1 text-xs text-slate-400">Coupon redeem करके Material, Community, Stories, AI Learning और NEET Planner unlock करें।</p></div><span id="coupon-access-badge" class="rounded-full bg-rose-500/10 px-3 py-1.5 text-[9px] font-black text-rose-300">LOCKED</span></div>
+  <div id="coupon-redeem-area" class="mt-4 flex flex-col gap-2 sm:flex-row"><input id="coupon-code-input" maxlength="80" placeholder="Coupon / Gift Card code" class="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm uppercase"><button onclick="redeemHubCoupon()" class="rounded-xl bg-gradient-to-r from-cyan-600 to-violet-600 px-5 py-3 text-xs font-black">Redeem Code</button></div>
+</div><!-- RATHOD HUB AI STUDY COACH -->
 <section id="rh-ai-coach-card" class="mt-5 rounded-3xl border border-indigo-100 bg-gradient-to-br from-white via-indigo-50/60 to-violet-50 p-5 shadow-sm">
   <div class="flex items-start justify-between gap-3">
     <div>
@@ -1928,7 +1933,15 @@ async function openDailyBattle(){
   startDailyBattleClock();
 }
 
+const COUPON_LOCKED_TABS=new Set(['materials','community','stories','quiz','aicards']);
+let hubCouponAccess=null;
+function hasHubCouponAccess(){return profile?.role==='admin'||!!(hubCouponAccess?.expires_at&&new Date(hubCouponAccess.expires_at)>new Date())}
+function renderCouponAccess(){const active=hasHubCouponAccess(),status=document.getElementById('coupon-access-status'),badge=document.getElementById('coupon-access-badge'),area=document.getElementById('coupon-redeem-area');if(status)status.textContent=active?`Premium features unlocked till ${new Date(hubCouponAccess.expires_at).toLocaleDateString()} — Material, Community, Stories, AI Learning और NEET Planner available.`:'Coupon redeem करके Material, Community, Stories, AI Learning और NEET Planner unlock करें।';if(badge){badge.textContent=active?'UNLOCKED':'LOCKED';badge.className=`rounded-full px-3 py-1.5 text-[9px] font-black ${active?'bg-emerald-500/10 text-emerald-300':'bg-rose-500/10 text-rose-300'}`}if(area)area.classList.toggle('hidden',active)}
+async function loadHubCouponAccess(){if(!user)return;try{const{data,error}=await db.rpc('get_hub_coupon_access');if(error)throw error;hubCouponAccess=data?.active?data:null}catch(e){console.warn('Coupon access load failed',e)}renderCouponAccess()}
+async function redeemHubCoupon(){if(!user)return toast('Pehle login karein.',false);const input=document.getElementById('coupon-code-input'),code=input?.value.trim().toUpperCase();if(!code)return toast('Coupon code likhein.',false);try{const{data,error}=await db.rpc('redeem_hub_coupon',{p_code:code});if(error)throw error;if(!data?.success)throw new Error(data?.error||'Coupon invalid ya expire ho gaya.');hubCouponAccess={expires_at:data.expires_at,code:data.code};renderCouponAccess();toast('✅ Premium features 5 din ke liye unlock ho gaye')}catch(e){toast(e.message||'Coupon redeem failed',false)}}
+async function createHubCoupon(){if(profile?.role!=='admin')return toast('Admin only',false);const input=document.getElementById('admin-coupon-code'),code=input?.value.trim().toUpperCase()||null;try{const{data,error}=await db.rpc('create_hub_coupon',{p_code:code});if(error)throw error;const out=document.getElementById('admin-coupon-result');if(out){out.classList.remove('hidden');out.innerHTML=`<b>New Coupon:</b> <code class="text-white">${esc(data.code)}</code><br><span class="text-[10px] text-slate-400">Redeem before ${new Date(data.expires_at).toLocaleString()} • User access 5 days</span>`}if(input)input.value='';toast('Coupon generated ✓')}catch(e){toast(e.message||'Coupon create failed',false)}}
 function switchTab(tab){
+  if(COUPON_LOCKED_TABS.has(tab)&&!hasHubCouponAccess()){toast('🎟️ Pehle valid Coupon/Gift Card redeem karein.',false);setTimeout(()=>document.getElementById('coupon-code-input')?.focus(),50);tab='home'}
   try{
     window.scrollTo({top:0,left:0,behavior:'instant'});
     if(document.documentElement)document.documentElement.scrollTop=0;
@@ -1955,7 +1968,7 @@ function switchTab(tab){
   if(tab==='aicards')document.getElementById('ai-card-topic')?.focus();
   ['mob-home','mob-materials','mob-focus','mob-chat','mob-more'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('rh-active')});
   const mobMap={home:'mob-home',materials:'mob-materials',focus:'mob-focus',chatroom:'mob-chat'};if(mobMap[tab])document.getElementById(mobMap[tab])?.classList.add('rh-active');
-  if(tab==='home'){renderHomeDashboard();loadHomeDailyQuizLeaderboard();}
+  if(tab==='home'){renderHomeDashboard();loadHomeDailyQuizLeaderboard();if(user)loadHubCouponAccess();}
   if(tab==='focus')renderFocusDashboard();
   if(tab==='chatroom')scrollChatToBottom();
   if(tab==='stories')loadStories();
