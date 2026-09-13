@@ -5824,10 +5824,14 @@ async function createHubTest(e){
   const btn=document.getElementById('admin-test-btn'); btn.disabled=true; btn.textContent='45 Questions generate ho rahe hain...';
   try{
     const subject=document.getElementById('admin-test-subject').value, topic=document.getElementById('admin-test-topic').value.trim(), duration=Number(document.getElementById('admin-test-duration').value||45);
-    const promptTopic=`${topic} — Hindi Medium NEET Test. Exactly 45 MCQs. Subject: ${subject}. NCERT/NEET aligned. Questions Hindi mein hon, technical terms zarurat par English mein brackets ke saath. Har question ke exactly 4 options, ek correct_index (0-3). No explanations, no markdown, no duplicate questions, no ambiguous questions.`;
-    const generated=await rhGenerateFreshQuiz({count:45,subject,type:'MCQ',topic:promptTopic,storage:true});
-    const questions=generated.questions.map(q=>({question:String(q.question||''),options:Array.isArray(q.options)?q.options.slice(0,4):[],correct_index:Number(q.correct_index??0)}));
-    if(questions.length!==45||questions.some(q=>q.options.length!==4))throw new Error('AI ne valid 45 questions nahi diye.');
+    const batches=subject==='Mixed NEET'?[ ['Biology',20],['Physics',13],['Chemistry',12] ]:[[subject,15],[subject,15],[subject,15]];
+    const questions=[];
+    for(const [batchSubject,count] of batches){
+      const promptTopic=`${topic} — Hindi Medium high-level NEET Test. Generate exactly ${count} original ${batchSubject} MCQs. NCERT/NEET aligned, long conceptual stems, no simple questions, no duplicate questions, no explanations. Exactly 4 options and correct_index 0-3.`;
+      const generated=await rhGenerateFreshQuiz({count,subject:batchSubject,type:'NEET PRO TEST',topic:promptTopic,storage:false});
+      questions.push(...(generated.questions||[]).map(q=>({subject:batchSubject,question:String(q.question||''),options:Array.isArray(q.options)?q.options.slice(0,4):[],correct_index:Number(q.correct_index??0)})));
+    }
+    if(questions.length!==45||questions.some(q=>q.options.length!==4))throw new Error(`AI ne ${questions.length} questions diye. Exactly 45 required.`);
     const {data,error}=await db.from('admin_tests').insert({subject,topic,duration_minutes:duration,questions,active:true,created_by:user.id}).select('*').single(); if(error)throw error;
     e.target.reset(); document.getElementById('admin-test-duration').value='45'; toast('✅ 45Q Test publish ho gaya'); await loadHubTests(); await sendHubNotification('New 45Q Test',`${subject} • ${topic}`,'test','tests');
   }catch(err){toast(err.message||'Test create failed. SQL setup check karo.',false)}finally{btn.disabled=false;btn.textContent='Create & Publish 45Q Test'}
