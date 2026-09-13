@@ -57,25 +57,40 @@ function renderTop15(container){
     const wrong=+r.wrong_count||0;
     const answered=+r.answer_count||0;
 
+    const isChampion = (rank===1 || rank==='1');
+
     // Medal for top 3
-    const medal=(rank===1||rank==='1')?'🥇':(rank===2||rank==='2')?'🥈':(rank===3||rank==='3')?'🥉':'';
+    const medal=isChampion?'🥇':(rank===2||rank==='2')?'🥈':(rank===3||rank==='3')?'🥉':'';
+
+    const championBadge = isChampion
+      ? `<span class="inline-flex items-center gap-1 rounded-2xl bg-amber-500/15 px-2 py-1 text-[10px] font-black tracking-widest text-amber-300 border border-amber-500/25">👑 CHAMPION</span>`
+      : ``;
+
+    const cardClass = isChampion
+      ? `group rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-950/35 via-slate-950 to-indigo-950/40 p-4 sm:p-5`
+      : `group rounded-3xl border border-slate-800/70 bg-gradient-to-br from-slate-950 via-slate-950 to-indigo-950/40 p-4 sm:p-5`;
+
+    const glowStyle = isChampion
+      ? `box-shadow: 0 0 0 1px rgba(245,158,11,.12), 0 10px 30px rgba(245,158,11,.18), 0 0 40px rgba(56,189,248,.08);`
+      : ``;
 
     return `
-      <div class="group rounded-3xl border border-slate-800/70 bg-gradient-to-br from-slate-950 via-slate-950 to-indigo-950/40 p-4 sm:p-5">
+      <div class="${cardClass}" style="${glowStyle}">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
             <div class="flex items-center gap-2">
-              <span class="inline-flex h-7 min-w-[2.25rem] items-center justify-center rounded-2xl bg-sky-500/15 px-2 text-xs font-black text-sky-300">#${rank}</span>
+              <span class="inline-flex h-7 min-w-[2.25rem] items-center justify-center rounded-2xl ${isChampion?'bg-amber-500/15 text-amber-300 border border-amber-500/25':'bg-sky-500/15 text-sky-300'} px-2 text-xs font-black">#${rank}</span>
               ${medal?`<span class="text-lg">${medal}</span>`:''}
               <div class="min-w-0">
                 <div class="truncate font-black text-slate-100">${E(name)}</div>
                 <div class="truncate text-[11px] text-slate-500">${uname||`ID ${r.telegram_user_id||''}`}</div>
               </div>
             </div>
+            <div class="mt-2">${championBadge}</div>
           </div>
 
           <div class="shrink-0 text-right">
-            <div class="text-lg font-black text-sky-300">${xp} XP</div>
+            <div class="text-lg font-black ${isChampion?'text-amber-300':'text-sky-300'}">${xp} XP</div>
             <div class="text-[11px] text-slate-500">Top 15</div>
           </div>
         </div>
