@@ -12,8 +12,102 @@ function _ensureMobileNavButton(){
   btn.onclick=()=>openTelegramScore();
   btn.innerHTML='<i class="fa-brands fa-telegram" style="color:#38bdf8"></i><span>Telegram</span>';
 
-  // Insert before last item to keep layout stable.
   bar.appendChild(btn);
+}
+
+function _applyRequestedHomeCleanup(){
+  // 1) Daily formula: remove/hide + show "Upcoming Version"
+  const dailyBtn=document.getElementById('btn-dailyformula');
+  if(dailyBtn){
+    dailyBtn.onclick=()=>toast('⏳ Upcoming Version — Coupon required');
+    const label=dailyBtn.querySelector('span');
+    if(label) label.textContent='Upcoming Version';
+    dailyBtn.classList.add('opacity-70');
+  }
+  const dailySection=document.getElementById('section-dailyformula');
+  if(dailySection){
+    dailySection.innerHTML=`
+      <div class="rounded-3xl border border-amber-400/20 bg-amber-500/5 p-5 sm:p-7">
+        <div class="text-[10px] font-black tracking-widest text-amber-300">DAILY FORMULA</div>
+        <h2 class="mt-2 text-2xl font-black">Upcoming Version</h2>
+        <p class="mt-2 text-xs text-slate-400">Ye feature next update me aayega. Access coupon redeem ke baad enable hoga.</p>
+      </div>
+    `;
+  }
+
+  // 2) Coupon redeem: remove from home screen (too crowded)
+  const couponCard=document.getElementById('coupon-access-card');
+  if(couponCard) couponCard.classList.add('hidden');
+
+  // 3) AI Coach: remove from home (user asked to move it into AI knowledge)
+  // (We hide it here; moving into another section can be done later once final section is chosen.)
+  const coach=document.getElementById('rh-ai-coach-card');
+  if(coach) coach.classList.add('hidden');
+}
+
+function _randomShayari(){
+  const shayari=[
+    'मेहनत इतनी करो कि किस्मत भी बोले — ले भाई, अब तू ही जीत।',
+    'आज का दर्द ही कल की ताकत बनेगा।',
+    'सपने वही सच होते हैं, जिनके लिए आप सोते नहीं।',
+    'कम बोलो, ज्यादा कर दिखाओ।',
+    'हर दिन थोड़ा बेहतर — यही असली जीत है।'
+  ];
+  return shayari[Math.floor(Math.random()*shayari.length)];
+}
+
+function _renderHomeWidgets(){
+  const home=document.getElementById('section-home');
+  if(!home) return;
+  if(document.getElementById('rh-home-telegram-widgets')) return;
+
+  const box=document.createElement('div');
+  box.id='rh-home-telegram-widgets';
+  box.className='space-y-3';
+
+  // Insert near the top of home
+  home.prepend(box);
+
+  const champion=Array.isArray(top15)&&top15.length?top15[0]:null;
+  const champName=champion?.telegram_name||champion?.telegram_username||'Top player';
+  const champXp=+champion?.total_xp||0;
+  const champAcc=(champion?.accuracy ?? (champion?.answer_count?Math.round((+champion.correct_count||0)/(+champion.answer_count||1)*100):0));
+
+  box.innerHTML=`
+    <div class="grid gap-3 sm:grid-cols-2">
+      <div class="rounded-3xl border border-amber-400/20 bg-gradient-to-br from-amber-950/25 via-slate-950 to-indigo-950/30 p-4 sm:p-5" style="box-shadow:0 10px 30px rgba(245,158,11,.10)">
+        <div class="text-[10px] font-black tracking-widest text-amber-300">TOP 1 — TELEGRAM QUIZ</div>
+        <div class="mt-2 flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="truncate text-lg font-black text-slate-100">👑 ${E(champName)}</div>
+            <div class="mt-1 text-[11px] text-slate-500">Accuracy: <b class="text-violet-300">${champAcc}%</b></div>
+          </div>
+          <div class="shrink-0 text-right">
+            <div class="text-xl font-black text-amber-300">${champXp} XP</div>
+            <div class="text-[10px] text-slate-500">Telegram XP</div>
+          </div>
+        </div>
+        <button class="mt-3 w-full rounded-2xl bg-amber-500/15 border border-amber-500/25 px-4 py-2.5 text-xs font-black text-amber-200" onclick="openTelegramScore()">Open Telegram Leaderboard</button>
+      </div>
+
+      <div class="rounded-3xl border border-slate-800 bg-slate-950/80 p-4 sm:p-5">
+        <div class="text-[10px] font-black tracking-widest text-sky-300">DAILY SHAYARI</div>
+        <div class="mt-2 text-sm font-black text-slate-100">${E(_randomShayari())}</div>
+        <div class="mt-2 text-[11px] text-slate-500">Sabko dikhega • Positive vibe</div>
+      </div>
+    </div>
+  `;
+}
+
+async function _loadTop15ForHomeWidgets(){
+  try{
+    const res=await db.rpc('get_telegram_top15');
+    if(res.error) throw res.error;
+    top15=res.data||[];
+    _renderHomeWidgets();
+  }catch(_e){
+    // ignore
+  }
 }
 
 function inject(){
@@ -29,6 +123,12 @@ function inject(){
 
   // Mobile bottom nav button
   _ensureMobileNavButton();
+
+  // Apply requested cleanup (hide crowded cards, etc.)
+  _applyRequestedHomeCleanup();
+
+  // Home widgets (Top 1 telegram + shayari)
+  _loadTop15ForHomeWidgets();
 
   // Page section
   if(document.getElementById('section-telegramscore')) return;
@@ -226,6 +326,9 @@ window.loadTelegramScore=async()=>{
     const res=await db.rpc('get_telegram_top15');
     if(res.error) throw res.error;
     top15=res.data||[];
+
+    // keep home widgets synced
+    _renderHomeWidgets();
 
     try{ if(user) await db.rpc('claim_telegram_quiz_xp') }catch(_e){}
 
