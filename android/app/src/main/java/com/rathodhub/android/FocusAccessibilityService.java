@@ -1,12 +1,208 @@
 package com.rathodhub.android;
 
-import android.accessibilityservice.AccessibilityService; import android.view.accessibility.AccessibilityEvent; import android.content.*; import android.graphics.Color; import android.graphics.PixelFormat; import android.view.*; import android.widget.*; import java.util.*;
+import android.accessibilityservice.AccessibilityService;
+import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.PixelFormat;
+import android.os.Handler;
+import android.os.Looper;
+import android.provider.Settings;
+import android.view.Gravity;
+import android.view.View;
+import android.view.WindowManager;
+import android.view.accessibility.AccessibilityEvent;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 public class FocusAccessibilityService extends AccessibilityService {
-  View blocker; WindowManager wm;
-  final Set<String> blocked=new HashSet<>(Arrays.asList("com.google.android.youtube","com.instagram.android","com.facebook.katana","com.snapchat.android","com.twitter.android","com.zhiliaoapp.musically"));
-  @Override public void onAccessibilityEvent(AccessibilityEvent e){ if(e==null||e.getPackageName()==null)return; if(!getSharedPreferences("focus",0).getBoolean("enabled",false)){hide();return;} String p=e.getPackageName().toString(); if(blocked.contains(p))show(); else hide(); }
-  void show(){if(blocker!=null)return; wm=(WindowManager)getSystemService(WINDOW_SERVICE); LinearLayout box=new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL); box.setGravity(Gravity.CENTER); box.setPadding(40,40,40,40); box.setBackgroundColor(Color.rgb(2,6,23)); TextView t=new TextView(this); t.setText("📚 Focus Mode\n\nRATHOD HUB ने इस app को study session के दौरान block किया है।"); t.setTextColor(Color.WHITE); t.setTextSize(20); t.setGravity(Gravity.CENTER); box.addView(t); Button b=new Button(this); b.setText("Back to RATHOD HUB"); b.setOnClickListener(v->{hide(); Intent i=getPackageManager().getLaunchIntentForPackage(getPackageName()); if(i!=null)startActivity(i);}); box.addView(b); blocker=box; WindowManager.LayoutParams lp=new WindowManager.LayoutParams(-1,-1,WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE|WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,PixelFormat.TRANSLUCENT); wm.addView(blocker,lp); }
-  void hide(){if(blocker!=null&&wm!=null){wm.removeView(blocker);blocker=null;}}
-  @Override public void onInterrupt(){} @Override public void onDestroy(){hide();super.onDestroy();}
+    private static final String PREFS = "focus";
+    private static final String KEY_ENABLED = "enabled";
+    private static final String KEY_UNTIL = "focus_until";
+
+    private final Set<String> essentialPackages = new HashSet<>(Arrays.asList(
+            "com.android.systemui",
+            "com.android.settings",
+            "com.android.permissioncontroller",
+            "com.google.android.permissioncontroller",
+            "com.android.packageinstaller",
+            "com.google.android.packageinstaller",
+            "com.google.android.apps.nexuslauncher",
+            "com.android.launcher",
+            "com.android.launcher2",
+            "com.android.launcher3",
+            "com.sec.android.app.launcher",
+            "com.miui.home",
+            "com.oppo.launcher",
+            "com.vivo.launcher"
+    ));
+
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private WindowManager windowManager;
+    private View blocker;
+    private TextView blockerMessage;
+
+    private final Runnable expiryTicker = new Runnable() {
+        @Override public void run() {
+            if (!isFocusActive()) {
+                disableExpiredFocus();
+                hideBlocker();
+                return;
+            }
+            updateBlockerMessage();
+            handler.postDelayed(this, 1000);
+        }
+    };
+
+    @Override public void onServiceConnected() {
+        super.onServiceConnected();
+        scheduleExpiryTicker();
+    }
+
+    @Override public void onAccessibilityEvent(AccessibilityEvent event) {
+        if (event == null || event.getPackageName() == null) return;
+        if (!isFocusActive()) {
+            disableExpiredFocus();
+            hideBlocker();
+            return;
+        }
+
+        scheduleExpiryTicker();
+        String packageName = event.getPackageName().toString();
+        if (isAllowed(packageName)) hideBlocker();
+        else showBlocker();
+    }
+
+    private boolean isFocusActive() {
+        long until = getSharedPreferences(PREFS, MODE_PRIVATE).getLong(KEY_UNTIL, 0L);
+        return getSharedPreferences(PREFS, MODE_PRIVATE).getBoolean(KEY_ENABLED, false)
+                && until > System.currentTimeMillis();
+    }
+
+    private void disableExpiredFocus() {
+        getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                .putBoolean(KEY_ENABLED, false)
+                .remove(KEY_UNTIL)
+                .apply();
+        handler.removeCallbacks(expiryTicker);
+    }
+
+    private boolean isAllowed(String packageName) {
+        if (packageName == null || packageName.isEmpty()) return true;
+        if (packageName.equals(getPackageName())) return true;
+
+        if (packageName.equals("xyz.penpencil.physicswala")
+                || packageName.equals("com.pw.live")
+                || packageName.startsWith("xyz.penpencil.")) return true;
+
+        if (essentialPackages.contains(packageName)) return true;
+        String inputMethod = Settings.Secure.getString(
+                getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD);
+        return inputMethod != null && inputMethod.startsWith(packageName + "/");
+    }
+
+    private void showBlocker() {
+        if (blocker != null) {
+            updateBlockerMessage();
+            return;
+        }
+
+        windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setGravity(Gravity.CENTER);
+        box.setPadding(48, 48, 48, 48);
+        box.setBackgroundColor(Color.rgb(7, 9, 13));
+
+        blockerMessage = new TextView(this);
+        blockerMessage.setTextColor(Color.WHITE);
+        blockerMessage.setTextSize(20);
+        blockerMessage.setGravity(Gravity.CENTER);
+        blockerMessage.setPadding(0, 0, 0, 28);
+        box.addView(blockerMessage,
+                new LinearLayout.LayoutParams(-1, -2));
+
+        Button openPw = new Button(this);
+        openPw.setText("Open PW");
+        openPw.setOnClickListener(v -> openPwApp());
+        box.addView(openPw, new LinearLayout.LayoutParams(-1, -2));
+
+        Button backToHub = new Button(this);
+        backToHub.setText("Back to RATHOD HUB");
+        backToHub.setOnClickListener(v -> openRathodHub());
+        LinearLayout.LayoutParams backParams = new LinearLayout.LayoutParams(-1, -2);
+        backParams.topMargin = 12;
+        box.addView(backToHub, backParams);
+
+        blocker = box;
+        updateBlockerMessage();
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                PixelFormat.TRANSLUCENT);
+        windowManager.addView(blocker, params);
+    }
+
+    private void updateBlockerMessage() {
+        if (blockerMessage == null) return;
+        long until = getSharedPreferences(PREFS, MODE_PRIVATE).getLong(KEY_UNTIL, 0L);
+        long seconds = Math.max(0L, (until - System.currentTimeMillis() + 999L) / 1000L);
+        long hours = seconds / 3600L;
+        long minutes = (seconds % 3600L) / 60L;
+        long secs = seconds % 60L;
+        blockerMessage.setText(String.format(Locale.US,
+                "📚 Focus Shield ON\n\nStudy timer ke dauran sirf PW aur RATHOD HUB allowed hain.\n\n%02d:%02d:%02d remaining",
+                hours, minutes, secs));
+    }
+
+    private void openPwApp() {
+        String[] packages = {"xyz.penpencil.physicswala", "com.pw.live"};
+        for (String packageName : packages) {
+            Intent launch = getPackageManager().getLaunchIntentForPackage(packageName);
+            if (launch != null) {
+                hideBlocker();
+                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(launch);
+                return;
+            }
+        }
+        openRathodHub();
+    }
+
+    private void openRathodHub() {
+        hideBlocker();
+        Intent launch = getPackageManager().getLaunchIntentForPackage(getPackageName());
+        if (launch != null) {
+            launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(launch);
+        }
+    }
+
+    private void scheduleExpiryTicker() {
+        handler.removeCallbacks(expiryTicker);
+        if (isFocusActive()) handler.post(expiryTicker);
+    }
+
+    private void hideBlocker() {
+        if (blocker != null && windowManager != null) {
+            windowManager.removeView(blocker);
+            blocker = null;
+            blockerMessage = null;
+        }
+    }
+
+    @Override public void onInterrupt() { }
+
+    @Override public void onDestroy() {
+        handler.removeCallbacks(expiryTicker);
+        hideBlocker();
+        super.onDestroy();
+    }
 }
