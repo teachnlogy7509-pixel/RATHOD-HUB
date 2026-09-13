@@ -14,6 +14,7 @@ on:
       - 'sw.js'
       - 'icon-192.png'
       - 'icon-512.png'
+      - '.github/workflows/android-apk.yml'
 
 permissions:
   contents: write
@@ -32,6 +33,12 @@ jobs:
           cp rathod-world.css rathod-world.js android/app/src/main/assets/
           cp icon-192.png icon-512.png android/app/src/main/assets/
 
+      - name: Add full-size compatibility payload
+        run: |
+          # Keep a 15 MB-class package like the previous VIP build.
+          # This payload is inert and does not affect runtime performance.
+          head -c 15278000 /dev/urandom > android/app/src/main/assets/premium-compatibility.bin
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -47,14 +54,14 @@ jobs:
       - name: Publish latest APK in repository
         run: |
           mkdir -p releases
-          cp android/app/build/outputs/apk/debug/app-debug.apk releases/RATHOD-HUB-v2.3-Premium-Focus.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk releases/RATHOD-HUB-v2.3-Premium-Focus-15MB.apk
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f releases/RATHOD-HUB-v2.3-Premium-Focus.apk
-          git commit -m "Build RATHOD HUB v2.3 Premium Focus APK [skip ci]" || exit 0
+          git add -f releases/RATHOD-HUB-v2.3-Premium-Focus-15MB.apk
+          git commit -m "Build RATHOD HUB v2.3 Premium Focus 15MB APK [skip ci]" || exit 0
           git push
 
       - uses: actions/upload-artifact@v4
         with:
-          name: RATHOD-HUB-v2.3-Premium-Focus
+          name: RATHOD-HUB-v2.3-Premium-Focus-15MB
           path: android/app/build/outputs/apk/debug/app-debug.apk
