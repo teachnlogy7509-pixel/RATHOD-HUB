@@ -1,5 +1,31 @@
 plugins { id 'com.android.application' }
 
-android { namespace 'com.rathodhub.android'; compileSdk 35
-    defaultConfig { applicationId 'com.rathodhub.android'; minSdk 23; targetSdk 35; versionCode 1; versionName '1.0' }
+android {
+    namespace 'com.rathodhub.android'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.rathodhub.android'
+        minSdk 23
+        targetSdk 35
+        versionCode 23
+        versionName '2.3-premium-focus'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
+        }
+    }
 }
