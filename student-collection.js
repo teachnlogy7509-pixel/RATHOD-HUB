@@ -98,18 +98,19 @@
     const grid=$('rh-student-collection-grid');
     if(grid)grid.innerHTML='<div class="col-span-full py-8 text-center text-xs text-slate-500">Collection load ho raha hai…</div>';
     try{
-      if(!window.db)throw new Error('Database not ready');
+      const _db=(typeof db!=='undefined'&&db)?db:(window.db||null);
+      if(!_db)throw new Error('Database not ready');
       let profiles=[], members=[], badges=[], cosmetics=[], rewards=[];
       const now=new Date().toISOString();
-      const a=await db.from('profiles').select('id,name,pfp_url,role,xp,level').order('name',{ascending:true}).limit(250);
+      const a=await _db.from('profiles').select('id,name,pfp_url,role,xp,level').order('name',{ascending:true}).limit(250);
       if(a.error)throw a.error; profiles=a.data||[];
       const ids=profiles.map(x=>x.id).filter(Boolean);
       if(ids.length){
         const [m,b,c,r]=await Promise.all([
-          db.from('league_members').select('user_id,league_level,group_no,season_xp,season_number,updated_at').in('user_id',ids),
-          db.from('user_badges').select('user_id,badge_id,equipped,earned_at').in('user_id',ids),
-          db.from('profile_cosmetics').select('user_id,equipped_avatar,equipped_badge').in('user_id',ids),
-          db.from('league_rewards').select('user_id,council_role,badge,name_color,access_expires_at').in('user_id',ids).gt('access_expires_at',now).order('created_at',{ascending:false})
+          _db.from('league_members').select('user_id,league_level,group_no,season_xp,season_number,updated_at').in('user_id',ids),
+          _db.from('user_badges').select('user_id,badge_id,equipped,earned_at').in('user_id',ids),
+          _db.from('profile_cosmetics').select('user_id,equipped_avatar,equipped_badge').in('user_id',ids),
+          _db.from('league_rewards').select('user_id,council_role,badge,name_color,access_expires_at').in('user_id',ids).gt('access_expires_at',now).order('created_at',{ascending:false})
         ]);
         members=m.data||[]; badges=b.data||[]; cosmetics=c.data||[]; rewards=r.data||[];
       }
@@ -137,7 +138,7 @@
 
   function enhanceLeaderboardNow(){
     try{
-      const rows=window.leagueRows||[];
+      const rows=(typeof leagueRows!=='undefined'&&leagueRows)?leagueRows:(window.leagueRows||[]);
       document.querySelectorAll('#leaderboard-list .min-w-0.flex-1 b').forEach((el,idx)=>{const row=rows[idx]; if(row)el.innerHTML=nameWithBadges(row);});
     }catch(e){}
   }
