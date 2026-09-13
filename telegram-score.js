@@ -1,7 +1,6 @@
 (()=>{let link=null,score=null,top15=[];const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 function _ensureMobileNavButton(){
-  // On mobile, the left sidebar is hidden; add an entry to the bottom nav.
   const bar=document.querySelector('.rh-mobile-bottom');
   if(!bar) return;
   if(document.getElementById('btn-telegramscore-mobile')) return;
@@ -15,8 +14,43 @@ function _ensureMobileNavButton(){
   bar.appendChild(btn);
 }
 
+function _todayKey(){
+  try{
+    const d=new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }catch(_e){
+    return 'today';
+  }
+}
+
+function _pickDailyShayari(){
+  const shayari=[
+    'मेहनत इतनी करो कि किस्मत भी बोले — ले भाई, अब तू ही जीत।',
+    'आज का दर्द ही कल की ताकत बनेगा।',
+    'सपने वही सच होते हैं, जिनके लिए आप सोते नहीं।',
+    'कम बोलो, ज्यादा कर दिखाओ।',
+    'हर दिन थोड़ा बेहतर — यही असली जीत है।',
+    'पढ़ाई का एक दिन भी बेकार नहीं जाता।',
+    'जीतने वाले अलग नहीं होते, बस हार मानना नहीं जानते।'
+  ];
+
+  const key='rh_daily_shayari_'+_todayKey();
+  try{
+    const saved=localStorage.getItem(key);
+    if(saved) return saved;
+
+    // stable-ish daily pick
+    let seed=0; for(const ch of key) seed=(seed*31 + ch.charCodeAt(0))>>>0;
+    const text=shayari[seed % shayari.length];
+    localStorage.setItem(key,text);
+    return text;
+  }catch(_e){
+    return shayari[Math.floor(Math.random()*shayari.length)];
+  }
+}
+
 function _applyRequestedHomeCleanup(){
-  // 1) Daily formula: remove/hide + show "Upcoming Version"
+  // 1) Daily formula: upcoming + coupon-only
   const dailyBtn=document.getElementById('btn-dailyformula');
   if(dailyBtn){
     dailyBtn.onclick=()=>toast('⏳ Upcoming Version — Coupon required');
@@ -24,36 +58,85 @@ function _applyRequestedHomeCleanup(){
     if(label) label.textContent='Upcoming Version';
     dailyBtn.classList.add('opacity-70');
   }
+
   const dailySection=document.getElementById('section-dailyformula');
   if(dailySection){
     dailySection.innerHTML=`
       <div class="rounded-3xl border border-amber-400/20 bg-amber-500/5 p-5 sm:p-7">
         <div class="text-[10px] font-black tracking-widest text-amber-300">DAILY FORMULA</div>
         <h2 class="mt-2 text-2xl font-black">Upcoming Version</h2>
-        <p class="mt-2 text-xs text-slate-400">Ye feature next update me aayega. Access coupon redeem ke baad enable hoga.</p>
+        <p class="mt-2 text-xs text-slate-400">Ye feature next update me aayega. Access <b class="text-cyan-300">coupon</b> redeem ke baad enable hoga.</p>
+
+        <div id="rh-upcoming-admin-coupon" class="mt-5 hidden rounded-3xl border border-cyan-400/25 bg-slate-950/70 p-4">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <div class="text-[10px] font-black tracking-widest text-cyan-300">ADMIN</div>
+              <div class="text-sm font-black text-slate-100">Generate Coupon Code</div>
+              <div class="text-[10px] text-slate-500 mt-1">Code ko users ko share karo (Redeem screen home se hide hai).</div>
+            </div>
+            <button id="rh-upcoming-gen" class="rounded-2xl bg-cyan-600 px-4 py-2 text-xs font-black">Generate</button>
+          </div>
+          <div id="rh-upcoming-code" class="mt-3 hidden rounded-2xl bg-black/30 p-3 text-xs text-cyan-200"></div>
+        </div>
       </div>
     `;
+
+    // show admin coupon generator if admin
+    try{
+      if(window.profile?.role==='admin'){
+        const box=document.getElementById('rh-upcoming-admin-coupon');
+        box?.classList.remove('hidden');
+        const btn=document.getElementById('rh-upcoming-gen');
+        if(btn && !btn.dataset.bound){
+          btn.dataset.bound='1';
+          btn.onclick=async()=>{
+            try{
+              btn.disabled=true; btn.textContent='Generating…';
+              if(typeof window.createHubCoupon!=='function') throw new Error('createHubCoupon() not found');
+
+              // createHubCoupon writes into #admin-coupon-result normally.
+              // We call it and then mirror the result from that element.
+              await window.createHubCoupon();
+              const src=document.getElementById('admin-coupon-result');
+              const out=document.getElementById('rh-upcoming-code');
+              if(out){
+                out.classList.remove('hidden');
+                out.innerHTML = src?.innerHTML || (src?.textContent ? `<b>${E(src.textContent)}</b>` : '<b>Coupon generated.</b>');
+              }
+            }catch(e){
+              toast(e.message||'Coupon generate failed',false);
+            }finally{
+              btn.disabled=false; btn.textContent='Generate';
+            }
+          };
+        }
+      }
+    }catch(_e){}
   }
 
   // 2) Coupon redeem: remove from home screen (too crowded)
   const couponCard=document.getElementById('coupon-access-card');
   if(couponCard) couponCard.classList.add('hidden');
 
-  // 3) AI Coach: remove from home (user asked to move it into AI knowledge)
-  // (We hide it here; moving into another section can be done later once final section is chosen.)
-  const coach=document.getElementById('rh-ai-coach-card');
-  if(coach) coach.classList.add('hidden');
+  // 3) Move AI Coach into Knowledge Card Battle
+  _moveCoachToCardBattle();
 }
 
-function _randomShayari(){
-  const shayari=[
-    'मेहनत इतनी करो कि किस्मत भी बोले — ले भाई, अब तू ही जीत।',
-    'आज का दर्द ही कल की ताकत बनेगा।',
-    'सपने वही सच होते हैं, जिनके लिए आप सोते नहीं।',
-    'कम बोलो, ज्यादा कर दिखाओ।',
-    'हर दिन थोड़ा बेहतर — यही असली जीत है।'
-  ];
-  return shayari[Math.floor(Math.random()*shayari.length)];
+function _moveCoachToCardBattle(){
+  const coach=document.getElementById('rh-ai-coach-card');
+  const target=document.getElementById('section-cardbattle');
+  if(!coach || !target) return;
+
+  // If it was hidden by older cleanup, unhide.
+  coach.classList.remove('hidden');
+
+  // If already moved, do nothing
+  if(target.contains(coach)) return;
+
+  // Put it at the top of Knowledge Card Battle page.
+  try{
+    target.prepend(coach);
+  }catch(_e){}
 }
 
 function _renderHomeWidgets(){
@@ -68,34 +151,90 @@ function _renderHomeWidgets(){
   // Insert near the top of home
   home.prepend(box);
 
+  box.innerHTML=`
+    <div class="grid gap-3 sm:grid-cols-3">
+      <div id="rh-home-tg-top1" class="rounded-3xl border border-amber-400/20 bg-gradient-to-br from-amber-950/25 via-slate-950 to-indigo-950/30 p-4 sm:p-5" style="box-shadow:0 10px 30px rgba(245,158,11,.10)">
+        <div class="text-[10px] font-black tracking-widest text-amber-300">TOP 1 — TELEGRAM QUIZ</div>
+        <div class="mt-2 text-sm text-slate-400">Loading…</div>
+      </div>
+
+      <div id="rh-home-9pm-topper" class="rounded-3xl border border-rose-400/20 bg-gradient-to-br from-rose-950/20 via-slate-950 to-indigo-950/30 p-4 sm:p-5">
+        <div class="text-[10px] font-black tracking-widest text-rose-300">TOPPER — DAILY 9 PM</div>
+        <div class="mt-2 text-sm text-slate-400">Loading…</div>
+      </div>
+
+      <div class="rounded-3xl border border-slate-800 bg-slate-950/80 p-4 sm:p-5">
+        <div class="text-[10px] font-black tracking-widest text-sky-300">DAILY SHAYARI</div>
+        <div id="rh-home-shayari" class="mt-2 text-sm font-black text-slate-100"></div>
+        <div class="mt-2 text-[11px] text-slate-500">24 hrs same • Daily update</div>
+      </div>
+    </div>
+  `;
+
+  const s=document.getElementById('rh-home-shayari');
+  if(s) s.textContent=_pickDailyShayari();
+
+  _renderTelegramTop1Card();
+  _renderDaily9pmTopperCard();
+}
+
+function _renderTelegramTop1Card(){
+  const host=document.getElementById('rh-home-tg-top1');
+  if(!host) return;
+
   const champion=Array.isArray(top15)&&top15.length?top15[0]:null;
   const champName=champion?.telegram_name||champion?.telegram_username||'Top player';
   const champXp=+champion?.total_xp||0;
   const champAcc=(champion?.accuracy ?? (champion?.answer_count?Math.round((+champion.correct_count||0)/(+champion.answer_count||1)*100):0));
 
-  box.innerHTML=`
-    <div class="grid gap-3 sm:grid-cols-2">
-      <div class="rounded-3xl border border-amber-400/20 bg-gradient-to-br from-amber-950/25 via-slate-950 to-indigo-950/30 p-4 sm:p-5" style="box-shadow:0 10px 30px rgba(245,158,11,.10)">
-        <div class="text-[10px] font-black tracking-widest text-amber-300">TOP 1 — TELEGRAM QUIZ</div>
-        <div class="mt-2 flex items-start justify-between gap-3">
-          <div class="min-w-0">
-            <div class="truncate text-lg font-black text-slate-100">👑 ${E(champName)}</div>
-            <div class="mt-1 text-[11px] text-slate-500">Accuracy: <b class="text-violet-300">${champAcc}%</b></div>
-          </div>
-          <div class="shrink-0 text-right">
-            <div class="text-xl font-black text-amber-300">${champXp} XP</div>
-            <div class="text-[10px] text-slate-500">Telegram XP</div>
-          </div>
-        </div>
-        <button class="mt-3 w-full rounded-2xl bg-amber-500/15 border border-amber-500/25 px-4 py-2.5 text-xs font-black text-amber-200" onclick="openTelegramScore()">Open Telegram Leaderboard</button>
+  host.innerHTML=`
+    <div class="text-[10px] font-black tracking-widest text-amber-300">TOP 1 — TELEGRAM QUIZ</div>
+    <div class="mt-2 flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <div class="truncate text-lg font-black text-slate-100">👑 ${E(champName)}</div>
+        <div class="mt-1 text-[11px] text-slate-500">Accuracy: <b class="text-violet-300">${champAcc}%</b></div>
       </div>
-
-      <div class="rounded-3xl border border-slate-800 bg-slate-950/80 p-4 sm:p-5">
-        <div class="text-[10px] font-black tracking-widest text-sky-300">DAILY SHAYARI</div>
-        <div class="mt-2 text-sm font-black text-slate-100">${E(_randomShayari())}</div>
-        <div class="mt-2 text-[11px] text-slate-500">Sabko dikhega • Positive vibe</div>
+      <div class="shrink-0 text-right">
+        <div class="text-xl font-black text-amber-300">${champXp} XP</div>
+        <div class="text-[10px] text-slate-500">Telegram XP</div>
       </div>
     </div>
+    <button class="mt-3 w-full rounded-2xl bg-amber-500/15 border border-amber-500/25 px-4 py-2.5 text-xs font-black text-amber-200" onclick="openTelegramScore()">Open Telegram Leaderboard</button>
+  `;
+}
+
+function _renderDaily9pmTopperCard(){
+  const host=document.getElementById('rh-home-9pm-topper');
+  if(!host) return;
+
+  // The app already renders Daily Quiz Top 5 into #rh-home-leaderboard.
+  // We read its first row as the topper (best-effort).
+  const box=document.getElementById('rh-home-leaderboard');
+  const first=box?.querySelector('.rh-mini-row') || box?.querySelector('div');
+
+  let name='',xp='';
+  if(first){
+    // Try common patterns
+    const b=first.querySelector('b');
+    if(b) name=b.textContent||'';
+    const xpEl=first.querySelector('.rh-mini-xp');
+    if(xpEl) xp=xpEl.textContent||'';
+  }
+  name=(name||'Topper will appear after 9 PM battle').trim();
+
+  host.innerHTML=`
+    <div class="text-[10px] font-black tracking-widest text-rose-300">TOPPER — DAILY 9 PM</div>
+    <div class="mt-2 flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <div class="truncate text-lg font-black text-slate-100">🏆 ${E(name)}</div>
+        <div class="mt-1 text-[11px] text-slate-500">Daily battle result (auto)</div>
+      </div>
+      <div class="shrink-0 text-right">
+        <div class="text-xl font-black text-rose-300">${E(xp||'')}</div>
+        <div class="text-[10px] text-slate-500">XP</div>
+      </div>
+    </div>
+    <button class="mt-3 w-full rounded-2xl bg-rose-500/10 border border-rose-400/20 px-4 py-2.5 text-xs font-black text-rose-200" onclick="openDailyBattle();return false">Open Daily 9 PM</button>
   `;
 }
 
@@ -110,8 +249,19 @@ async function _loadTop15ForHomeWidgets(){
   }
 }
 
+function _watchDaily9pmTopper(){
+  // Re-render the topper card a few times after load, because #rh-home-leaderboard
+  // may load async.
+  let tries=0;
+  const tick=()=>{
+    tries++;
+    _renderDaily9pmTopperCard();
+    if(tries<10) setTimeout(tick, 1500);
+  };
+  setTimeout(tick, 800);
+}
+
 function inject(){
-  // Desktop/sidebar nav button (works when sidebar is visible)
   if(!document.getElementById('btn-telegramscore')){
     let b=document.createElement('button');
     b.id='btn-telegramscore';
@@ -121,23 +271,17 @@ function inject(){
     (document.getElementById('btn-leaderboard')||document.querySelector('.rh-nav-btn:last-of-type'))?.before(b);
   }
 
-  // Mobile bottom nav button
   _ensureMobileNavButton();
-
-  // Apply requested cleanup (hide crowded cards, etc.)
   _applyRequestedHomeCleanup();
-
-  // Home widgets (Top 1 telegram + shayari)
   _loadTop15ForHomeWidgets();
+  _watchDaily9pmTopper();
 
-  // Page section
   if(document.getElementById('section-telegramscore')) return;
 
   let s=document.createElement('section');
   s.id='section-telegramscore';
   s.className='hidden space-y-5';
 
-  // VIP leaderboard UI: modern, mobile-first, no extra CSS file needed.
   s.innerHTML=`
     <div class="rounded-3xl border border-sky-400/30 bg-gradient-to-br from-slate-950 via-sky-950/60 to-indigo-950/40 p-5 sm:p-7">
       <div class="flex items-start justify-between gap-3">
@@ -171,7 +315,6 @@ window.openTelegramScore=()=>{
   document.getElementById('section-telegramscore')?.classList.remove('hidden');
   document.getElementById('btn-telegramscore')?.classList.add('active');
 
-  // Mobile bottom nav active state
   document.querySelectorAll('.rh-mobile-bottom button').forEach(x=>x.classList.remove('rh-active'));
   document.getElementById('btn-telegramscore-mobile')?.classList.add('rh-active');
 
@@ -199,7 +342,6 @@ function renderTop15(container){
 
     const isChampion = (rank===1 || rank==='1');
 
-    // Medal for top 3
     const medal=isChampion?'🥇':(rank===2||rank==='2')?'🥈':(rank===3||rank==='3')?'🥉':'';
 
     const championBadge = isChampion
@@ -327,8 +469,7 @@ window.loadTelegramScore=async()=>{
     if(res.error) throw res.error;
     top15=res.data||[];
 
-    // keep home widgets synced
-    _renderHomeWidgets();
+    _renderTelegramTop1Card();
 
     try{ if(user) await db.rpc('claim_telegram_quiz_xp') }catch(_e){}
 
