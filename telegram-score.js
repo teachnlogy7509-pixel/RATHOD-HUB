@@ -1,40 +1,80 @@
 (()=>{let link=null,score=null,top15=[];const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function inject(){if(document.getElementById('btn-telegramscore'))return;let b=document.createElement('button');b.id='btn-telegramscore';b.className='rh-nav-btn';b.onclick=openTelegramScore;b.innerHTML='<i class="fa-brands fa-telegram" style="color:#38bdf8"></i><span>Telegram Score</span>';(document.getElementById('btn-leaderboard')||document.querySelector('.rh-nav-btn:last-of-type'))?.before(b);
 
-let s=document.createElement('section');s.id='section-telegramscore';s.className='hidden space-y-5';
+function _ensureMobileNavButton(){
+  // On mobile, the left sidebar is hidden; add an entry to the bottom nav.
+  const bar=document.querySelector('.rh-mobile-bottom');
+  if(!bar) return;
+  if(document.getElementById('btn-telegramscore-mobile')) return;
 
-// VIP leaderboard UI: modern, mobile-first, no extra CSS file needed.
-s.innerHTML=`
-  <div class="rounded-3xl border border-sky-400/30 bg-gradient-to-br from-slate-950 via-sky-950/60 to-indigo-950/40 p-5 sm:p-7">
-    <div class="flex items-start justify-between gap-3">
-      <div>
-        <div class="text-[10px] font-black tracking-widest text-sky-300">TELEGRAM PYQ QUIZ</div>
-        <h2 class="text-2xl font-black">Telegram Leaderboard</h2>
-        <p class="mt-2 text-xs text-slate-400">सही उत्तर <b class="text-emerald-300">+20 XP</b> • गलत उत्तर <b class="text-rose-300">−10 XP</b> • <b class="text-sky-300">Top 15</b></p>
+  const btn=document.createElement('button');
+  btn.id='btn-telegramscore-mobile';
+  btn.type='button';
+  btn.onclick=()=>openTelegramScore();
+  btn.innerHTML='<i class="fa-brands fa-telegram" style="color:#38bdf8"></i><span>Telegram</span>';
+
+  // Insert before last item to keep layout stable.
+  bar.appendChild(btn);
+}
+
+function inject(){
+  // Desktop/sidebar nav button (works when sidebar is visible)
+  if(!document.getElementById('btn-telegramscore')){
+    let b=document.createElement('button');
+    b.id='btn-telegramscore';
+    b.className='rh-nav-btn';
+    b.onclick=openTelegramScore;
+    b.innerHTML='<i class="fa-brands fa-telegram" style="color:#38bdf8"></i><span>Telegram Score</span>';
+    (document.getElementById('btn-leaderboard')||document.querySelector('.rh-nav-btn:last-of-type'))?.before(b);
+  }
+
+  // Mobile bottom nav button
+  _ensureMobileNavButton();
+
+  // Page section
+  if(document.getElementById('section-telegramscore')) return;
+
+  let s=document.createElement('section');
+  s.id='section-telegramscore';
+  s.className='hidden space-y-5';
+
+  // VIP leaderboard UI: modern, mobile-first, no extra CSS file needed.
+  s.innerHTML=`
+    <div class="rounded-3xl border border-sky-400/30 bg-gradient-to-br from-slate-950 via-sky-950/60 to-indigo-950/40 p-5 sm:p-7">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <div class="text-[10px] font-black tracking-widest text-sky-300">TELEGRAM PYQ QUIZ</div>
+          <h2 class="text-2xl font-black">Telegram Leaderboard</h2>
+          <p class="mt-2 text-xs text-slate-400">सही उत्तर <b class="text-emerald-300">+20 XP</b> • गलत उत्तर <b class="text-rose-300">−10 XP</b> • <b class="text-sky-300">Top 15</b></p>
+        </div>
+        <button onclick="loadTelegramScore()" class="rh-icon-btn" aria-label="Refresh">
+          <i class="fa-solid fa-rotate"></i>
+        </button>
       </div>
-      <button onclick="loadTelegramScore()" class="rh-icon-btn" aria-label="Refresh">
-        <i class="fa-solid fa-rotate"></i>
-      </button>
+
+      <div class="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+        <div class="rounded-2xl bg-black/25 p-3"><b id="tg-xp" class="text-2xl text-sky-300">0</b><small class="block text-slate-500">XP</small></div>
+        <div class="rounded-2xl bg-black/25 p-3"><b id="tg-ok" class="text-2xl text-emerald-300">0</b><small class="block text-slate-500">CORRECT</small></div>
+        <div class="rounded-2xl bg-black/25 p-3"><b id="tg-bad" class="text-2xl text-rose-300">0</b><small class="block text-slate-500">WRONG</small></div>
+        <div class="rounded-2xl bg-black/25 p-3"><b id="tg-acc" class="text-2xl text-violet-300">0%</b><small class="block text-slate-500">ACCURACY</small></div>
+      </div>
     </div>
 
-    <div class="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-      <div class="rounded-2xl bg-black/25 p-3"><b id="tg-xp" class="text-2xl text-sky-300">0</b><small class="block text-slate-500">XP</small></div>
-      <div class="rounded-2xl bg-black/25 p-3"><b id="tg-ok" class="text-2xl text-emerald-300">0</b><small class="block text-slate-500">CORRECT</small></div>
-      <div class="rounded-2xl bg-black/25 p-3"><b id="tg-bad" class="text-2xl text-rose-300">0</b><small class="block text-slate-500">WRONG</small></div>
-      <div class="rounded-2xl bg-black/25 p-3"><b id="tg-acc" class="text-2xl text-violet-300">0%</b><small class="block text-slate-500">ACCURACY</small></div>
-    </div>
-  </div>
+    <div id="tg-panel" class="rounded-3xl border border-slate-800 bg-slate-950/90 p-5">Loading…</div>
+  `;
 
-  <div id="tg-panel" class="rounded-3xl border border-slate-800 bg-slate-950/90 p-5">Loading…</div>
-`;
-
-(document.getElementById('section-leaderboard')||document.querySelector('main'))?.before(s)}
+  (document.getElementById('section-leaderboard')||document.querySelector('main'))?.before(s)
+}
 
 window.openTelegramScore=()=>{
   document.querySelectorAll('main section[id^="section-"]').forEach(x=>x.classList.add('hidden'));
   document.querySelectorAll('.rh-nav-btn').forEach(x=>x.classList.remove('active'));
   document.getElementById('section-telegramscore')?.classList.remove('hidden');
   document.getElementById('btn-telegramscore')?.classList.add('active');
+
+  // Mobile bottom nav active state
+  document.querySelectorAll('.rh-mobile-bottom button').forEach(x=>x.classList.remove('rh-active'));
+  document.getElementById('btn-telegramscore-mobile')?.classList.add('rh-active');
+
   loadTelegramScore();
   clearInterval(window.__tgLbTimer);
   window.__tgLbTimer=setInterval(loadTelegramScore,10000)
@@ -140,7 +180,6 @@ function renderTop15(container){
 }
 
 function render(){
-  // Stat cards (top row)
   const a=+score?.answer_count||0,c=+score?.correct_count||0;
   for(const [id,v] of [['tg-xp',+score?.total_xp||0],['tg-ok',c],['tg-bad',+score?.wrong_count||0],['tg-acc',(a?Math.round(c/a*100):0)+'%']]){
     const n=document.getElementById(id); if(n) n.textContent=v
@@ -148,14 +187,11 @@ function render(){
 
   const p=document.getElementById('tg-panel');
   if(!p) return;
-
-  // Always show Top 15 first (VIP look)
   renderTop15(p);
 
   const box=document.getElementById('tg-link-box');
   if(!box) return;
 
-  // If linked, show badge; otherwise show link flow CTA.
   if(link?.telegram_user_id){
     box.innerHTML=`
       <div class="flex items-center justify-between gap-3">
@@ -187,15 +223,12 @@ window.createTelegramLinkCode=async()=>{try{let{data,error}=await db.rpc('create
 
 window.loadTelegramScore=async()=>{
   try{
-    // Load Top 15 first so the panel never looks empty.
     const res=await db.rpc('get_telegram_top15');
     if(res.error) throw res.error;
     top15=res.data||[];
 
-    // Claim XP is optional; do not block UI.
     try{ if(user) await db.rpc('claim_telegram_quiz_xp') }catch(_e){}
 
-    // Load current user's link + stats if logged in.
     if(user){
       const [a,b]=await Promise.all([
         db.from('telegram_account_links').select('*').eq('app_user_id',user.id).maybeSingle(),
@@ -214,4 +247,7 @@ window.loadTelegramScore=async()=>{
   }
 };
 
-document.readyState==='loading'?document.addEventListener('DOMContentLoaded',inject):inject();})();
+document.readyState==='loading'
+  ? document.addEventListener('DOMContentLoaded',()=>{inject(); _ensureMobileNavButton();})
+  : (inject(), _ensureMobileNavButton());
+})();
