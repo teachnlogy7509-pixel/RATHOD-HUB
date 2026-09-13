@@ -1,0 +1,27 @@
+name: Apply Telegram Score UI
+on:
+  workflow_dispatch:
+  push:
+    paths: ['app-integration.tgz.b64','.github/workflows/apply-telegram-score.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack and apply
+        run: |
+          base64 -d app-integration.tgz.b64 > /tmp/app-integration.tgz
+          tar -xzf /tmp/app-integration.tgz
+          python patch_app.py
+          grep -q 'section-telegramscore' index.html
+          grep -q 'claim_telegram_quiz_xp' index.html
+      - name: Commit integration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html supabase-telegram-score.sql patch_app.py
+          git diff --cached --quiet && exit 0
+          git commit -m "Add Telegram Score dashboard and league sync"
+          git push
