@@ -49,6 +49,72 @@ function _pickDailyShayari(){
   }
 }
 
+function _getPwBatchLink(){
+  try{return localStorage.getItem('rh_pw_batch_link')||''}catch(_e){return ''}
+}
+function _setPwBatchLink(url){
+  try{localStorage.setItem('rh_pw_batch_link',String(url||'').trim())}catch(_e){}
+}
+
+function _applyPwBatchLinkUI(){
+  const userBox=document.getElementById('rh-pw-user');
+  const adminBox=document.getElementById('rh-pw-admin');
+  if(!userBox || !adminBox) return;
+
+  const url=_getPwBatchLink();
+
+  userBox.innerHTML = url
+    ? `<button class="w-full rounded-2xl bg-violet-600 px-4 py-3 text-xs font-black" onclick="window.open('${E(url)}','_blank')">Open PW Batch</button>
+       <div class="mt-2 text-[10px] text-slate-500 truncate">${E(url)}</div>`
+    : `<div class="rounded-2xl bg-black/20 p-3 text-xs text-slate-400">PW batch link abhi set nahi hai.</div>`;
+
+  const isAdmin = (window.profile?.role==='admin');
+  adminBox.classList.toggle('hidden', !isAdmin);
+  if(!isAdmin) return;
+
+  if(adminBox.dataset.bound==='1') return;
+  adminBox.dataset.bound='1';
+
+  adminBox.innerHTML=`
+    <div class="mt-2 grid gap-2 sm:grid-cols-[1fr_auto]">
+      <input id="rh-pw-link-input" placeholder="Paste PW batch link" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-xs" value="${E(url)}" />
+      <button id="rh-pw-link-save" class="rounded-xl bg-violet-600 px-4 py-3 text-xs font-black">Save</button>
+    </div>
+    <div class="mt-2 text-[10px] text-slate-500">Admin link set karega. Users ko Upcoming page me direct Open button milega.</div>
+  `;
+
+  const btn=document.getElementById('rh-pw-link-save');
+  btn.onclick=()=>{
+    const v=document.getElementById('rh-pw-link-input')?.value||'';
+    _setPwBatchLink(v);
+    toast('PW batch link saved ✓');
+    _applyPwBatchLinkUI();
+  };
+}
+
+function _moveStudyBatchesToUpcoming(){
+  const upcoming=document.getElementById('section-dailyformula');
+  const rnew=document.getElementById('section-rathodnew');
+  if(!upcoming || !rnew) return;
+
+  const card=[...rnew.querySelectorAll('div')].find(d=>/Study Batches Live/i.test(d.textContent||'') && /Public Learning Network/i.test(d.textContent||''));
+  if(!card) return;
+
+  // If already moved, do nothing
+  if(upcoming.contains(card)) return;
+
+  const wrap=document.getElementById('rh-upcoming-study-batches-wrap');
+  if(wrap){
+    wrap.appendChild(card);
+  }else{
+    const w=document.createElement('div');
+    w.id='rh-upcoming-study-batches-wrap';
+    w.className='mt-4';
+    w.appendChild(card);
+    upcoming.appendChild(w);
+  }
+}
+
 function _applyRequestedHomeCleanup(){
   // 1) Daily formula: upcoming + coupon-only
   const dailyBtn=document.getElementById('btn-dailyformula');
@@ -78,6 +144,16 @@ function _applyRequestedHomeCleanup(){
           </div>
           <div id="rh-upcoming-code" class="mt-3 hidden rounded-2xl bg-black/30 p-3 text-xs text-cyan-200"></div>
         </div>
+
+        <div id="rh-upcoming-pw" class="mt-4 rounded-3xl border border-violet-400/20 bg-violet-500/5 p-4">
+          <div class="text-[10px] font-black tracking-widest text-violet-300">PW BATCH</div>
+          <div class="mt-1 text-sm font-black text-slate-100">Open PW batch directly</div>
+          <div class="mt-1 text-[10px] text-slate-500">Admin isme link set karega. Users direct wahi batch open karenge.</div>
+          <div id="rh-pw-user" class="mt-3"></div>
+          <div id="rh-pw-admin" class="mt-3 hidden"></div>
+        </div>
+
+        <div id="rh-upcoming-study-batches-wrap" class="mt-4"></div>
       </div>
     `;
 
@@ -93,9 +169,6 @@ function _applyRequestedHomeCleanup(){
             try{
               btn.disabled=true; btn.textContent='Generating…';
               if(typeof window.createHubCoupon!=='function') throw new Error('createHubCoupon() not found');
-
-              // createHubCoupon writes into #admin-coupon-result normally.
-              // We call it and then mirror the result from that element.
               await window.createHubCoupon();
               const src=document.getElementById('admin-coupon-result');
               const out=document.getElementById('rh-upcoming-code');
@@ -112,6 +185,8 @@ function _applyRequestedHomeCleanup(){
         }
       }
     }catch(_e){}
+
+    _applyPwBatchLinkUI();
   }
 
   // 2) Coupon redeem: remove from home screen (too crowded)
@@ -120,23 +195,18 @@ function _applyRequestedHomeCleanup(){
 
   // 3) Move AI Coach into Knowledge Card Battle
   _moveCoachToCardBattle();
+
+  // 4) Move Study Batches card from Rathod New -> Upcoming
+  _moveStudyBatchesToUpcoming();
 }
 
 function _moveCoachToCardBattle(){
   const coach=document.getElementById('rh-ai-coach-card');
   const target=document.getElementById('section-cardbattle');
   if(!coach || !target) return;
-
-  // If it was hidden by older cleanup, unhide.
   coach.classList.remove('hidden');
-
-  // If already moved, do nothing
   if(target.contains(coach)) return;
-
-  // Put it at the top of Knowledge Card Battle page.
-  try{
-    target.prepend(coach);
-  }catch(_e){}
+  try{ target.prepend(coach); }catch(_e){}
 }
 
 function _renderHomeWidgets(){
@@ -147,8 +217,6 @@ function _renderHomeWidgets(){
   const box=document.createElement('div');
   box.id='rh-home-telegram-widgets';
   box.className='space-y-3';
-
-  // Insert near the top of home
   home.prepend(box);
 
   box.innerHTML=`
@@ -207,14 +275,11 @@ function _renderDaily9pmTopperCard(){
   const host=document.getElementById('rh-home-9pm-topper');
   if(!host) return;
 
-  // The app already renders Daily Quiz Top 5 into #rh-home-leaderboard.
-  // We read its first row as the topper (best-effort).
   const box=document.getElementById('rh-home-leaderboard');
   const first=box?.querySelector('.rh-mini-row') || box?.querySelector('div');
 
   let name='',xp='';
   if(first){
-    // Try common patterns
     const b=first.querySelector('b');
     if(b) name=b.textContent||'';
     const xpEl=first.querySelector('.rh-mini-xp');
@@ -250,8 +315,6 @@ async function _loadTop15ForHomeWidgets(){
 }
 
 function _watchDaily9pmTopper(){
-  // Re-render the topper card a few times after load, because #rh-home-leaderboard
-  // may load async.
   let tries=0;
   const tick=()=>{
     tries++;
