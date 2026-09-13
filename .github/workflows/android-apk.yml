@@ -6,7 +6,6 @@ on:
     paths:
       - 'android/**'
       - 'index.html'
-      - 'app-integration.tgz.b64'
       - 'rathod-modern-effects.js'
       - 'rathod-modern-theme.css'
       - 'rathod-world.css'
@@ -26,23 +25,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Apply Telegram Score dashboard and league sync
-        run: |
-          if [ -f app-integration.tgz.b64 ]; then
-            base64 -d app-integration.tgz.b64 > /tmp/app-integration.tgz
-            tar -xzf /tmp/app-integration.tgz
-            python patch_app.py
-            grep -q 'section-telegramscore' index.html
-            grep -q 'claim_telegram_quiz_xp' index.html
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add index.html supabase-telegram-score.sql patch_app.py
-            if ! git diff --cached --quiet; then
-              git commit -m "Add Telegram Score dashboard and league sync"
-              git push
-            fi
-          fi
-
       - name: Bundle current web app for fast startup and offline fallback
         run: |
           mkdir -p android/app/src/main/assets
@@ -53,6 +35,8 @@ jobs:
 
       - name: Add full-size compatibility payload
         run: |
+          # Keep a 15 MB-class package like the previous VIP build.
+          # This payload is inert and does not affect runtime performance.
           head -c 15278000 /dev/urandom > android/app/src/main/assets/premium-compatibility.bin
 
       - uses: actions/setup-java@v4
