@@ -7,7 +7,8 @@ const SUBJECTS=[
  {name:'Physics',icon:'⚛️',detail:'Concepts • Practice',color:'from-blue-600 to-cyan-600'},
  {name:'Chemistry',icon:'🧪',detail:'Physical • Organic • Inorganic',color:'from-violet-600 to-fuchsia-600'}
 ];
-function loadVipAgent(){if(document.getElementById('rh-agent-vip-script'))return;const s=document.createElement('script');s.id='rh-agent-vip-script';s.src='rathod-agent-vip.js?v=1';s.defer=true;document.head.appendChild(s)}
+function loadAddon(id,src){if(document.getElementById(id))return;const s=document.createElement('script');s.id=id;s.src=src;s.defer=true;document.head.appendChild(s)}
+function loadFixes(){loadAddon('rh-agent-vip-script','rathod-agent-vip.js?v=1');loadAddon('rh-study-room-fix-script','rathod-study-room-fix.js?v=1')}
 function valid(url){try{const u=new URL(url);return u.protocol==='https:'&&(u.hostname==='pw.live'||u.hostname.endsWith('.pw.live'))}catch(e){return false}}
 function openPW(url){
  if(!valid(url))return;
@@ -30,7 +31,7 @@ function enhance(){
  });
 }
 window.rhOpenPWNative=openPW;
-function run(){loadVipAgent();window.rhOpenPW=openPW;enhance()}
+function run(){loadFixes();window.rhOpenPW=openPW;enhance()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
 new MutationObserver(()=>{clearTimeout(window.__rhPwSubjectTimer);window.__rhPwSubjectTimer=setTimeout(run,80)}).observe(document.documentElement,{childList:true,subtree:true});
 setInterval(run,1200);
