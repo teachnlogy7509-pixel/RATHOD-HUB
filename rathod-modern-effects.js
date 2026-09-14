@@ -1,115 +1,38 @@
-/* RATHOD HUB COUPON NOTIFICATION FIX v8
-   Main requested fix: whenever admin generates a coupon, send it to all users via notifications.
-   Keeps app startup safe and does not delete any feature. */
-(function () {
-  'use strict';
-  if (window.__RH_COUPON_NOTIFY_FIX_V8__) return;
-  window.__RH_COUPON_NOTIFY_FIX_V8__ = true;
+/* RATHOD HUB requested UI and coupon broadcast fix v9 */
+(function(){
+'use strict';
+if(window.__RH_FIX_V9__)return;window.__RH_FIX_V9__=1;
+var channel=null;
+function $(id){return document.getElementById(id)}
+function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn):fn()}
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function globals(){try{if(typeof db!=='undefined')window.db=db}catch(e){}try{if(typeof profile!=='undefined')window.profile=profile}catch(e){}try{if(typeof user!=='undefined')window.user=user}catch(e){}}
+function admin(){globals();return window.profile?.role==='admin'}
+function note(text,ok){if(typeof window.toast==='function')window.toast(text,ok)}
+function splash(){var e=$('rh-splash-screen');if(!e)return;e.style.opacity='0';e.style.pointerEvents='none';setTimeout(()=>e.remove(),250)}
+window.triggerRhCelebration=window.triggerRhCelebration||function(){};
 
-  function ready(fn){ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', fn); else fn(); }
-  function $(id){ return document.getElementById(id); }
-  function esc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]; }); }
-  function isAdmin(){ return !!(window.profile && window.profile.role === 'admin'); }
-  function removeSplash(){ var s=$('rh-splash-screen'); if(!s)return; s.style.opacity='0'; s.style.pointerEvents='none'; setTimeout(function(){ if(s&&s.parentNode)s.parentNode.removeChild(s); },250); }
-  window.triggerRhCelebration = window.triggerRhCelebration || function(){};
+function requestedUI(){
+ var ai=$('section-ai'),tutor=$('section-aitutor')||$('ai-tutor-embedded');
+ if(ai&&tutor&&tutor.id!=='ai-tutor-embedded'){tutor.id='ai-tutor-embedded';tutor.classList.remove('hidden');tutor.removeAttribute('hidden');tutor.classList.add('mt-5');ai.appendChild(tutor)}
+ var tutorBtn=$('btn-aitutor');if(tutorBtn&&!tutorBtn.dataset.merged){tutorBtn.dataset.merged='1';tutorBtn.onclick=function(){window.switchTab?.('ai');$('btn-ai')?.classList.remove('rh-active');tutorBtn.classList.add('rh-active');window.initAITutorView?.();setTimeout(()=>$('ai-tutor-embedded')?.scrollIntoView({behavior:'smooth',block:'start'}),100)}}
+ var power=$('section-studypower');power?.querySelectorAll('h3').forEach(h=>{if((h.textContent||'').includes('Smart Daily Motivation'))h.parentElement?.remove()});
+ $('btn-rathodnew')?.remove();$('section-rathodnew')?.remove();document.querySelectorAll('.rh-feature').forEach(c=>{if(/RATHOD\s+NEW/i.test(c.textContent||'')||/rathodnew/i.test(c.getAttribute('onclick')||''))c.remove()});
+}
 
-  function extractCodeFromResult(data){
-    if(data && data.code) return String(data.code).trim();
-    var out=$('admin-coupon-result');
-    var txt=out ? String(out.textContent||'') : '';
-    var m=txt.match(/RATHOD-[A-Z0-9_-]+/i) || txt.match(/Coupon:\s*([A-Z0-9_-]+)/i);
-    return m ? String(m[0]).replace(/^Coupon:\s*/i,'').trim().toUpperCase() : '';
-  }
+function couponFrom(row){var m=row?.metadata||{},code=row?.code||m.coupon_code,exp=row?.coupon_expires_at||m.coupon_expires_at||m.expires_at||row?.expires_at;if(!code||(exp&&new Date(exp)<=new Date()))return null;return{code:String(code).toUpperCase(),expires_at:exp||null,access_days:Number(row?.access_days||m.access_days||5)}}
+async function coupons(){globals();var out=[];if(!window.db)return out;try{var r=await db.rpc('get_active_hub_coupons');if(!r.error&&Array.isArray(r.data))out=r.data.map(couponFrom).filter(Boolean)}catch(e){}if(!out.length)try{var n=await db.from('hub_notifications').select('metadata,created_at,expires_at').eq('tag','announcement').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false}).limit(30);if(!n.error)out=(n.data||[]).map(couponFrom).filter(Boolean)}catch(e){}var seen={};return out.filter(x=>seen[x.code]?false:(seen[x.code]=true))}
+function card(){var vault=$('section-vault'),c=$('vault-coupon-display');if(!vault)return null;if(c)return c;c=document.createElement('div');c.id='vault-coupon-display';c.className='rounded-3xl border border-cyan-400/30 bg-gradient-to-br from-slate-950 via-cyan-950/35 to-violet-950/35 p-5 sm:p-6 shadow-2xl';c.innerHTML='<div class="flex items-start justify-between gap-3"><div><div class="text-[9px] font-black uppercase tracking-[.22em] text-cyan-300">AVAILABLE TO ALL USERS</div><h3 class="mt-1 text-xl font-black text-white">🎟️ Active Coupon Codes</h3><p class="mt-1 text-xs text-slate-400">Admin ka active coupon yahan sabhi users ko dikhega.</p></div><button id="vault-coupon-refresh" type="button" class="rounded-xl bg-cyan-600 px-3 py-2 text-xs font-black">Refresh</button></div><div id="vault-coupon-code" class="mt-4 grid gap-2"><div class="rounded-2xl bg-black/25 p-4 text-xs text-slate-500">Checking coupon…</div></div>';vault.insertBefore(c,vault.firstChild);$('vault-coupon-refresh').onclick=show;return c}
+async function redeem(code){try{var r=await db.rpc('redeem_hub_coupon',{p_code:code});if(r.error)throw r.error;if(!r.data?.success)throw Error(r.data?.error||'Coupon invalid');await window.loadHubCouponAccess?.();note('✅ Premium access unlock ho gaya');show()}catch(e){note(e.message||'Coupon redeem failed',false)}}
+async function copy(code){try{await navigator.clipboard.writeText(code);note('Coupon copied ✓')}catch(e){prompt('Copy coupon',code)}}
+async function show(){card();var box=$('vault-coupon-code');if(!box||!window.db)return;box.innerHTML='<div class="rounded-2xl bg-black/25 p-4 text-xs text-slate-500">Checking coupon…</div>';var rows=await coupons();box.innerHTML=rows.length?rows.map(x=>'<div class="flex flex-col gap-3 rounded-2xl border border-cyan-400/20 bg-cyan-500/5 p-4 sm:flex-row sm:items-center"><div class="min-w-0 flex-1"><div class="text-[9px] font-black text-cyan-300">ACTIVE COUPON</div><code class="mt-1 block break-all text-lg font-black text-white">'+esc(x.code)+'</code><div class="mt-1 text-[10px] text-slate-500">'+(x.expires_at?'Redeem before '+esc(new Date(x.expires_at).toLocaleString())+' • ':'')+x.access_days+' days access</div></div><div class="flex gap-2"><button data-copy="'+esc(x.code)+'" class="rounded-xl bg-slate-800 px-3 py-2 text-xs font-black">Copy</button><button data-redeem="'+esc(x.code)+'" class="rounded-xl bg-gradient-to-r from-cyan-600 to-violet-600 px-4 py-2 text-xs font-black">Redeem</button></div></div>').join(''):'<div class="rounded-2xl border border-dashed border-slate-700 p-5 text-center text-xs text-slate-500">Abhi koi active coupon available nahi hai.</div>';box.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copy(b.dataset.copy));box.querySelectorAll('[data-redeem]').forEach(b=>b.onclick=()=>redeem(b.dataset.redeem))}
+window.showVaultCoupon=show;
 
-  async function notifyCouponToAll(code, expiresAt){
-    if(!code) return;
-    var title='🎟️ New RATHOD HUB Coupon';
-    var body='New coupon code: '+code+(expiresAt?' • Redeem before '+new Date(expiresAt).toLocaleString():'');
-    var meta={coupon_code:code,expires_at:expiresAt||null,type:'coupon'};
-    try{
-      if(typeof window.sendHubNotification === 'function'){
-        await window.sendHubNotification(title, body, 'coupon', 'vault', meta);
-        return;
-      }
-    }catch(e){ console.warn('sendHubNotification coupon failed', e&&e.message?e.message:e); }
-    try{
-      if(window.db){
-        await db.rpc('publish_hub_notification',{p_title:title,p_body:body,p_tag:'coupon',p_action:'vault',p_metadata:meta});
-      }
-    }catch(e2){ console.warn('coupon rpc notification failed', e2&&e2.message?e2.message:e2); }
-  }
-
-  function patchCreateCoupon(){
-    if(window.__RH_CREATE_COUPON_NOTIFY_PATCHED__) return true;
-    if(typeof window.createHubCoupon !== 'function') return false;
-    var original=window.createHubCoupon;
-    window.__RH_CREATE_COUPON_NOTIFY_PATCHED__=true;
-    window.createHubCoupon=async function(){
-      if(!isAdmin()) return original.apply(this, arguments);
-      var before=Date.now();
-      var result=await original.apply(this, arguments);
-      setTimeout(async function(){
-        try{
-          var code='', expiresAt=null;
-          // Best source: latest active coupon in Supabase after generation.
-          if(window.db){
-            try{
-              var r=await db.from('hub_access_coupons').select('code,expires_at,created_at,active').eq('active',true).gte('created_at',new Date(before-10000).toISOString()).order('created_at',{ascending:false}).limit(1).maybeSingle();
-              if(r && r.data){ code=r.data.code; expiresAt=r.data.expires_at; }
-            }catch(_e){}
-          }
-          if(!code) code=extractCodeFromResult(result);
-          await notifyCouponToAll(code, expiresAt);
-          if(code && typeof window.toast==='function') window.toast('Coupon notification sabko bhej diya ✓');
-        }catch(e){ console.warn('coupon notify wrapper failed', e&&e.message?e.message:e); }
-      },500);
-      return result;
-    };
-    return true;
-  }
-
-  function addManualNotifyButton(){
-    var out=$('admin-coupon-result');
-    if(!out || $('rh-send-coupon-notify-btn')) return;
-    var btn=document.createElement('button');
-    btn.id='rh-send-coupon-notify-btn';
-    btn.type='button';
-    btn.className='mt-2 rounded-xl bg-amber-600 px-3 py-2 text-xs font-black text-white';
-    btn.textContent='Send coupon notification to all';
-    btn.onclick=async function(){
-      var code=extractCodeFromResult();
-      if(!code && window.db){
-        try{ var r=await db.from('hub_access_coupons').select('code,expires_at,created_at,active').eq('active',true).order('created_at',{ascending:false}).limit(1).maybeSingle(); if(r&&r.data) code=r.data.code; }catch(e){}
-      }
-      await notifyCouponToAll(code,null);
-      if(typeof window.toast==='function') window.toast(code?'Notification sent ✓':'Coupon code nahi mila', !!code);
-    };
-    out.appendChild(btn);
-  }
-
-  function showVaultCoupon(){
-    var vault=$('section-vault'); if(!vault||!window.db)return;
-    var card=$('vault-coupon-display');
-    if(!card){
-      card=document.createElement('div'); card.id='vault-coupon-display'; card.className='rounded-2xl border border-cyan-400/25 bg-cyan-500/5 p-4 mb-4';
-      card.innerHTML='<div class="flex items-center justify-between gap-3"><div><b class="text-cyan-200">🎟️ Latest Coupon Code</b><p class="mt-1 text-xs text-slate-400">Admin generate karega to notification aur vault me code dikhega.</p></div><button type="button" id="vault-coupon-refresh" class="rounded-xl bg-cyan-600 px-3 py-2 text-xs font-black">Refresh</button></div><div id="vault-coupon-code" class="mt-3 rounded-xl bg-slate-950 p-3 text-sm font-black text-cyan-300">Loading...</div>';
-      vault.insertBefore(card,vault.firstChild); var ref=$('vault-coupon-refresh'); if(ref) ref.onclick=showVaultCoupon;
-    }
-    var out=$('vault-coupon-code'); if(!out)return;
-    db.from('hub_access_coupons').select('code,expires_at,created_at,active').eq('active',true).order('created_at',{ascending:false}).limit(1).maybeSingle().then(function(r){
-      if(r&&r.data&&r.data.code) out.innerHTML='<span class="select-all">'+esc(r.data.code)+'</span><div class="mt-1 text-[10px] text-slate-500">Expires: '+esc(new Date(r.data.expires_at).toLocaleString())+'</div>';
-      else out.textContent='Abhi koi coupon generate nahi hua / Supabase RLS read policy check required';
-    }).catch(function(){ out.textContent='Coupon RLS policy required'; });
-  }
-
-  function tick(){
-    patchCreateCoupon();
-    addManualNotifyButton();
-    showVaultCoupon();
-  }
-
-  ready(function(){
-    setTimeout(removeSplash,300); setTimeout(removeSplash,1800);
-    tick(); setInterval(tick,1500);
-  });
+function live(){globals();if(channel||!window.db)return;channel=db.channel('rathod-hub-coupon-global-v9',{config:{broadcast:{self:false}}});channel.on('broadcast',{event:'coupon'},({payload:p})=>{if(p?.sourceId&&String(p.sourceId)===String(window.user?.id))return;window.showHubNotification?.(p?.title||'🎟️ New Coupon',p?.body||'','announcement','vault',{id:p?.id,metadata:p?.metadata||{}});show()}).subscribe()}
+async function notifyAll(code,exp,days=5){if(!code)return;var title='🎟️ New RATHOD HUB Coupon',body='Coupon code: '+code+' • My Vault mein jaakar redeem karein',metadata={coupon_code:code,coupon_expires_at:exp||null,access_days:Number(days||5),type:'coupon'},item=null;try{if(typeof window.sendHubNotification==='function')item=await window.sendHubNotification(title,body,'announcement','vault',metadata);else{var r=await db.rpc('publish_hub_notification',{p_title:title,p_body:body,p_tag:'announcement',p_action:'vault',p_metadata:metadata});item=Array.isArray(r.data)?r.data[0]:r.data}}catch(e){console.warn('Coupon persist failed',e)}live();try{await channel?.send({type:'broadcast',event:'coupon',payload:{id:item?.id||'coupon_'+Date.now(),title,body,metadata,sourceId:window.user?.id||null}})}catch(e){console.warn('Coupon broadcast failed',e)}show()}
+function resultCode(data){if(data?.code)return String(data.code).toUpperCase();var text=$('admin-coupon-result')?.textContent||'',m=text.match(/RATHOD-[A-Z0-9_-]+/i)||text.match(/Coupon:\s*([A-Z0-9_-]+)/i);return m?m[0].replace(/^Coupon:\s*/i,'').toUpperCase():''}
+function patch(){if(window.__RH_COUPON_PATCH_V9__||typeof window.createHubCoupon!=='function')return;var original=window.createHubCoupon;window.__RH_COUPON_PATCH_V9__=1;window.createHubCoupon=async function(){if(!admin())return original.apply(this,arguments);var since=Date.now(),result=await original.apply(this,arguments);setTimeout(async()=>{var code=resultCode(result),exp=null,days=5;try{var r=await db.from('hub_access_coupons').select('code,expires_at,access_days,created_at').eq('active',true).gte('created_at',new Date(since-10000).toISOString()).order('created_at',{ascending:false}).limit(1).maybeSingle();if(r.data){code=r.data.code;exp=r.data.expires_at;days=r.data.access_days||5}}catch(e){}await notifyAll(String(code||'').toUpperCase(),exp,days);if(code)note('Coupon sabhi users ko notify kiya ✓')},500);return result}}
+function manual(){var out=$('admin-coupon-result');if(!out||$('rh-send-coupon-notify-btn'))return;var b=document.createElement('button');b.id='rh-send-coupon-notify-btn';b.type='button';b.className='mt-2 rounded-xl bg-amber-600 px-3 py-2 text-xs font-black text-white';b.textContent='Send coupon notification to all';b.onclick=async()=>{var code=resultCode(),exp=null,days=5;try{var r=await db.from('hub_access_coupons').select('code,expires_at,access_days').eq('active',true).order('created_at',{ascending:false}).limit(1).maybeSingle();if(r.data){code=r.data.code;exp=r.data.expires_at;days=r.data.access_days||5}}catch(e){}await notifyAll(String(code||'').toUpperCase(),exp,days);note(code?'Notification sent to all ✓':'Coupon code nahi mila',!!code)};out.appendChild(b)}
+function tick(){globals();requestedUI();card();patch();manual();live()}
+ready(()=>{setTimeout(splash,300);setTimeout(splash,1800);tick();setTimeout(()=>{window.initAITutorView?.();show()},700);setInterval(tick,2000)});
 })();
