@@ -1,4 +1,4 @@
-name: Build RATHOD HUB v2.5 PW Launcher APK
+name: Build RATHOD HUB v2.6 VIP Fixed APK
 
 on:
   workflow_dispatch:
@@ -20,6 +20,7 @@ on:
       - 'rathod-pw-subject-launcher.js'
       - 'rathod-agent-vip.js'
       - 'rathod-study-room-fix.js'
+      - 'rathod-branding-fix.js'
       - 'manifest.webmanifest'
       - 'sw.js'
       - 'icon-192.png'
@@ -36,13 +37,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: Bundle current web app and hybrid offline modules
         run: |
-          mkdir -p android/app/src/main/assets
+          mkdir -p android/app/src/main/assets android/app/src/main/res/drawable
           cp index.html manifest.webmanifest sw.js android/app/src/main/assets/
           cp rathod-modern-effects.js rathod-modern-theme.css android/app/src/main/assets/
           cp rathod-world.css rathod-world.js telegram-score.js android/app/src/main/assets/
           cp profile-card-update.js rathod-admin-layout.js rathod-social-ui.js android/app/src/main/assets/
-          cp rathod-study-ecosystem.js rathod-offline.js rathod-pw-batches.js rathod-pw-subject-launcher.js rathod-agent-vip.js rathod-study-room-fix.js android/app/src/main/assets/
+          cp rathod-study-ecosystem.js rathod-offline.js rathod-pw-batches.js rathod-pw-subject-launcher.js rathod-agent-vip.js rathod-study-room-fix.js rathod-branding-fix.js android/app/src/main/assets/
           cp icon-192.png icon-512.png android/app/src/main/assets/
+          cp icon-512.png android/app/src/main/res/drawable/rathod_hub_icon.png
       - name: Enable native PW App launcher bridge
         run: |
           python3 - <<'PY'
@@ -68,18 +70,18 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
-      - name: Build v2.5 PW Launcher APK
+      - name: Build v2.6 VIP Fixed APK
         run: gradle -p android assembleDebug
       - name: Publish latest APK in repository
         run: |
           mkdir -p releases
-          cp android/app/build/outputs/apk/debug/app-debug.apk releases/RATHOD-HUB-v2.5-PW-Launcher.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk releases/RATHOD-HUB-v2.6-VIP-Fixed.apk
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f releases/RATHOD-HUB-v2.5-PW-Launcher.apk
-          git commit -m "Build RATHOD HUB v2.5 PW Launcher APK [skip ci]" || exit 0
+          git add -f releases/RATHOD-HUB-v2.6-VIP-Fixed.apk
+          git commit -m "Build RATHOD HUB v2.6 VIP Fixed APK [skip ci]" || exit 0
           git push
       - uses: actions/upload-artifact@v4
         with:
-          name: RATHOD-HUB-v2.5-PW-Launcher
+          name: RATHOD-HUB-v2.6-VIP-Fixed
           path: android/app/build/outputs/apk/debug/app-debug.apk

@@ -8,31 +8,10 @@ const SUBJECTS=[
  {name:'Chemistry',icon:'🧪',detail:'Physical • Organic • Inorganic',color:'from-violet-600 to-fuchsia-600'}
 ];
 function loadAddon(id,src){if(document.getElementById(id))return;const s=document.createElement('script');s.id=id;s.src=src;s.defer=true;document.head.appendChild(s)}
-function loadFixes(){loadAddon('rh-agent-vip-script','rathod-agent-vip.js?v=1');loadAddon('rh-study-room-fix-script','rathod-study-room-fix.js?v=1')}
+function loadFixes(){loadAddon('rh-agent-vip-script','rathod-agent-vip.js?v=1');loadAddon('rh-study-room-fix-script','rathod-study-room-fix.js?v=1');loadAddon('rh-branding-fix-script','rathod-branding-fix.js?v=1')}
 function valid(url){try{const u=new URL(url);return u.protocol==='https:'&&(u.hostname==='pw.live'||u.hostname.endsWith('.pw.live'))}catch(e){return false}}
-function openPW(url){
- if(!valid(url))return;
- try{if(window.AndroidPW&&typeof window.AndroidPW.open==='function'){window.AndroidPW.open(url);return}}catch(e){}
- let opened=null;try{opened=window.open(url,'_blank')}catch(e){}
- if(opened){try{opened.opener=null}catch(e){};return}
- location.assign(url);
-}
+function openPW(url){if(!valid(url))return;try{if(window.AndroidPW&&typeof window.AndroidPW.open==='function'){window.AndroidPW.open(url);return}}catch(e){}let opened=null;try{opened=window.open(url,'_blank')}catch(e){}if(opened){try{opened.opener=null}catch(e){};return}location.assign(url)}
 function batchUrl(card){const button=card.querySelector('button[onclick*="rhOpenPW"]');if(!button)return'';const code=button.getAttribute('onclick')||'';const match=code.match(/rhOpenPW\(['"]([^'"]+)['"]\)/);return match?match[1]:''}
-function enhance(){
- document.querySelectorAll('#rh-pw-cards > div').forEach(card=>{
-  if(card.querySelector('.rh-pw-subjects'))return;
-  const url=batchUrl(card);if(!valid(url))return;
-  const block=document.createElement('div');block.className='rh-pw-subjects mt-4 rounded-2xl border border-white/10 bg-slate-950/55 p-3';
-  const title=document.createElement('div');title.className='mb-2 flex items-center justify-between gap-2';title.innerHTML='<b class="text-[10px] font-black text-red-300">CHOOSE SUBJECT</b><span class="text-[8px] text-slate-500">Opens in PW App</span>';block.appendChild(title);
-  const grid=document.createElement('div');grid.className='grid gap-2 sm:grid-cols-3';
-  SUBJECTS.forEach(subject=>{const b=document.createElement('button');b.type='button';b.className='rounded-xl border border-white/10 bg-gradient-to-br '+subject.color+' p-3 text-left text-white shadow-lg';b.innerHTML='<span class="text-xl">'+subject.icon+'</span><b class="mt-1 block text-xs">'+subject.name+'</b><span class="block text-[8px] text-white/75">'+subject.detail+'</span>';b.addEventListener('click',()=>openPW(url));grid.appendChild(b)});
-  block.appendChild(grid);const note=document.createElement('p');note.className='mt-2 text-[8px] text-slate-500';note.textContent='PW App में आपका खरीदा हुआ batch खुलेगा; वहाँ यह subject चुनें। Access और login PW द्वारा verify होगा।';block.appendChild(note);
-  const actions=card.querySelector('.mt-4.grid.grid-cols-2');card.insertBefore(block,actions||null);
- });
-}
-window.rhOpenPWNative=openPW;
-function run(){loadFixes();window.rhOpenPW=openPW;enhance()}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
-new MutationObserver(()=>{clearTimeout(window.__rhPwSubjectTimer);window.__rhPwSubjectTimer=setTimeout(run,80)}).observe(document.documentElement,{childList:true,subtree:true});
-setInterval(run,1200);
+function enhance(){document.querySelectorAll('#rh-pw-cards > div').forEach(card=>{if(card.querySelector('.rh-pw-subjects'))return;const url=batchUrl(card);if(!valid(url))return;const block=document.createElement('div');block.className='rh-pw-subjects mt-4 rounded-2xl border border-white/10 bg-slate-950/55 p-3';const title=document.createElement('div');title.className='mb-2 flex items-center justify-between gap-2';title.innerHTML='<b class="text-[10px] font-black text-red-300">CHOOSE SUBJECT</b><span class="text-[8px] text-slate-500">Opens in PW App</span>';block.appendChild(title);const grid=document.createElement('div');grid.className='grid gap-2 sm:grid-cols-3';SUBJECTS.forEach(subject=>{const b=document.createElement('button');b.type='button';b.className='rounded-xl border border-white/10 bg-gradient-to-br '+subject.color+' p-3 text-left text-white shadow-lg';b.innerHTML='<span class="text-xl">'+subject.icon+'</span><b class="mt-1 block text-xs">'+subject.name+'</b><span class="block text-[8px] text-white/75">'+subject.detail+'</span>';b.addEventListener('click',()=>openPW(url));grid.appendChild(b)});block.appendChild(grid);const note=document.createElement('p');note.className='mt-2 text-[8px] text-slate-500';note.textContent='PW App में आपका खरीदा हुआ batch खुलेगा; वहाँ यह subject चुनें। Access और login PW द्वारा verify होगा।';block.appendChild(note);const actions=card.querySelector('.mt-4.grid.grid-cols-2');card.insertBefore(block,actions||null)})}
+window.rhOpenPWNative=openPW;function run(){loadFixes();window.rhOpenPW=openPW;enhance()}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();new MutationObserver(()=>{clearTimeout(window.__rhPwSubjectTimer);window.__rhPwSubjectTimer=setTimeout(run,80)}).observe(document.documentElement,{childList:true,subtree:true});setInterval(run,1200);
 })();

@@ -20,6 +20,8 @@
     <application
         android:theme="@style/AppTheme"
         android:label="RATHOD HUB"
+        android:icon="@drawable/rathod_hub_icon"
+        android:roundIcon="@drawable/rathod_hub_icon"
         android:hardwareAccelerated="true"
         android:usesCleartextTraffic="true">
         <activity
