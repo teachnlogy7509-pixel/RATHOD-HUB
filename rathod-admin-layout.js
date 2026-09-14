@@ -5,7 +5,7 @@ if(window.__RH_ADMIN_LAYOUT__)return;window.__RH_ADMIN_LAYOUT__=1;
 const $=id=>document.getElementById(id);
 function role(){return window.profile?.role||''}
 function notify(text,ok=true){if(typeof window.toast==='function')window.toast(text,ok)}
-function loadAddons(){[['rh-social-ui-script','rathod-social-ui.js?v=1'],['rh-study-ecosystem-script','rathod-study-ecosystem.js?v=1']].forEach(([id,src])=>{if($(id))return;const s=document.createElement('script');s.id=id;s.src=src;s.defer=true;document.head.appendChild(s)})}
+function loadAddons(){[['rh-social-ui-script','rathod-social-ui.js?v=1'],['rh-study-ecosystem-script','rathod-study-ecosystem.js?v=1'],['rh-offline-script','rathod-offline.js?v=1']].forEach(([id,src])=>{if($(id))return;const s=document.createElement('script');s.id=id;s.src=src;s.defer=true;document.head.appendChild(s)})}
 function removeNavAndRedirect(){
  $('btn-aitutor')?.remove();$('btn-quiz')?.remove();
  document.querySelectorAll('[onclick]').forEach(el=>{let v=el.getAttribute('onclick')||'';if(v.includes("switchTab('aitutor')"))el.setAttribute('onclick',v.replaceAll("switchTab('aitutor')","switchTab('ai')"));if(v.includes("switchTab('quiz')"))el.setAttribute('onclick',v.replaceAll("switchTab('quiz')","switchTab('neet720')"))});
