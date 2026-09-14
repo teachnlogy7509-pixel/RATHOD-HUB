@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rathod-hub-v15';
+const CACHE_NAME = 'rathod-hub-v16';
 const APP_SHELL = [
   './',
   './index.html',
@@ -6,8 +6,7 @@ const APP_SHELL = [
   './icon-192.png',
   './icon-512.png',
   './rathod-modern-theme.css',
-  './rathod-modern-effects.js',
-  './student-collection.js'
+  './rathod-modern-effects.js'
 ];
 
 self.addEventListener('install', event => {
