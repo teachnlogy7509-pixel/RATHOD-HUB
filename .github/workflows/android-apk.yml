@@ -18,6 +18,7 @@ on:
       - 'rathod-offline.js'
       - 'rathod-pw-batches.js'
       - 'rathod-pw-subject-launcher.js'
+      - 'rathod-agent-vip.js'
       - 'manifest.webmanifest'
       - 'sw.js'
       - 'icon-192.png'
@@ -39,7 +40,7 @@ jobs:
           cp rathod-modern-effects.js rathod-modern-theme.css android/app/src/main/assets/
           cp rathod-world.css rathod-world.js telegram-score.js android/app/src/main/assets/
           cp profile-card-update.js rathod-admin-layout.js rathod-social-ui.js android/app/src/main/assets/
-          cp rathod-study-ecosystem.js rathod-offline.js rathod-pw-batches.js rathod-pw-subject-launcher.js android/app/src/main/assets/
+          cp rathod-study-ecosystem.js rathod-offline.js rathod-pw-batches.js rathod-pw-subject-launcher.js rathod-agent-vip.js android/app/src/main/assets/
           cp icon-192.png icon-512.png android/app/src/main/assets/
       - name: Enable native PW App launcher bridge
         run: |
