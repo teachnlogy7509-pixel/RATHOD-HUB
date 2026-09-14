@@ -5,6 +5,7 @@ if(window.__RH_ADMIN_LAYOUT__)return;window.__RH_ADMIN_LAYOUT__=1;
 const $=id=>document.getElementById(id);
 function role(){return window.profile?.role||''}
 function notify(text,ok=true){if(typeof window.toast==='function')window.toast(text,ok)}
+function loadSocialUI(){if($('rh-social-ui-script'))return;const s=document.createElement('script');s.id='rh-social-ui-script';s.src='rathod-social-ui.js?v=1';s.defer=true;document.head.appendChild(s)}
 function removeNavAndRedirect(){
  $('btn-aitutor')?.remove();$('btn-quiz')?.remove();
  document.querySelectorAll('[onclick]').forEach(el=>{let v=el.getAttribute('onclick')||'';if(v.includes("switchTab('aitutor')"))el.setAttribute('onclick',v.replaceAll("switchTab('aitutor')","switchTab('ai')"));if(v.includes("switchTab('quiz')"))el.setAttribute('onclick',v.replaceAll("switchTab('quiz')","switchTab('neet720')"))});
@@ -28,7 +29,7 @@ function cleanCouponList(){
  const box=$('vault-coupon-code');if(!box)return;const rows=[...box.children].filter(x=>/ACTIVE COUPON/i.test(x.textContent||''));if(!rows.length)return;
  rows.slice(1).forEach(x=>x.remove());const row=rows[0],code=(row.querySelector('code')?.textContent||'').trim();if(role()==='admin'&&code){keepNewestCouponOnly(code);if(!row.querySelector('.rh-delete-coupon')){const actions=row.lastElementChild||row,b=document.createElement('button');b.type='button';b.className='rh-delete-coupon rounded-xl bg-red-600 px-3 py-2 text-xs font-black text-white';b.textContent='Delete';b.onclick=()=>deleteCoupon(code,row);actions.appendChild(b)}}
 }
-function run(){try{removeNavAndRedirect();movePdfToAdmin();protectPdfUpload();cleanCouponList()}catch(e){console.warn('RATHOD layout update',e)}}
+function run(){try{loadSocialUI();removeNavAndRedirect();movePdfToAdmin();protectPdfUpload();cleanCouponList()}catch(e){console.warn('RATHOD layout update',e)}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
 new MutationObserver(()=>{clearTimeout(window.__rhLayoutTimer);window.__rhLayoutTimer=setTimeout(run,60)}).observe(document.documentElement,{childList:true,subtree:true});setInterval(run,1500);
 })();
