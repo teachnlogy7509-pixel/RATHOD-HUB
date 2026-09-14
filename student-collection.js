@@ -36,8 +36,8 @@
     {item_id:'avatar_brain',emoji:'🧠',name:'Brain'},
     {item_id:'avatar_atom',emoji:'⚛️',name:'Atom'}
   ];
-  function shopItem(id){return (window.shopItems||[]).find(x=>x.item_id===id) || SHOP_BADGES.concat(SHOP_AVATARS).find(x=>x.item_id===id) || null;}
-  function catalog(){return Array.isArray(window.badgeCatalog)&&window.badgeCatalog.length?window.badgeCatalog:FALLBACK_BADGES;}
+  function shopItem(id){const list=(typeof shopItems!=='undefined'&&Array.isArray(shopItems)&&shopItems.length)?shopItems:(window.shopItems||[]); return list.find(x=>x.item_id===id) || SHOP_BADGES.concat(SHOP_AVATARS).find(x=>x.item_id===id) || null;}
+  function catalog(){const c=(typeof badgeCatalog!=='undefined'&&badgeCatalog)?badgeCatalog:window.badgeCatalog; return Array.isArray(c)&&c.length?c:FALLBACK_BADGES;}
   function badgeById(id){return catalog().find(b=>String(b.badge_id)===String(id)) || FALLBACK_BADGES.find(b=>String(b.badge_id)===String(id)) || {badge_id:id,name:id,icon:'🏅',tier:'Badge'};}
 
   function ensureCollectionUI(){
