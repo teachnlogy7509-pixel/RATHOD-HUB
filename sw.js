@@ -1,73 +1,14 @@
-const CACHE_NAME = 'rathod-hub-v20-ui-fix';
-const APP_SHELL = [
-  './',
-  './index.html',
-  './manifest.webmanifest',
-  './icon-192.png',
-  './icon-512.png',
-  './rathod-modern-theme.css',
-  './rathod-modern-effects.js'
-];
-
-self.addEventListener('install', event => {
-  self.skipWaiting();
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).catch(() => null));
-});
-
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.map(key => caches.delete(key))))
-      .then(() => self.clients.claim())
-      .then(() => self.clients.matchAll({ type: 'window', includeUncontrolled: true }))
-      .then(clients => clients.forEach(client => client.postMessage({ type: 'RH_CACHE_REFRESHED' })))
-  );
-});
-
-self.addEventListener('fetch', event => {
-  const request = event.request;
-  if (request.method !== 'GET') return;
-  const url = new URL(request.url);
-  const path = url.pathname;
-
-  // Always fetch latest HTML/JS/CSS so GitHub Pages updates appear immediately.
-  if (request.mode === 'navigate' || path.endsWith('/index.html') || path.endsWith('/rathod-modern-effects.js') || path.endsWith('/rathod-modern-theme.css') || path.endsWith('/student-collection.js')) {
-    event.respondWith(
-      fetch(request, { cache: 'no-store' })
-        .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request.mode === 'navigate' ? './index.html' : request, copy));
-          return response;
-        })
-        .catch(() => caches.match(request).then(hit => hit || caches.match('./index.html') || caches.match('./')))
-    );
-    return;
-  }
-
-  if (path.includes('/models/') || path.endsWith('/club-world.html')) {
-    event.respondWith(fetch(request, { cache: 'no-store' }));
-    return;
-  }
-
-  event.respondWith(
-    caches.match(request).then(cached => {
-      const network = fetch(request).then(response => {
-        if (response && response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-        }
-        return response;
-      }).catch(() => cached);
-      return network || cached;
-    })
-  );
-});
-
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
-  const target = event.notification.data?.url || './index.html';
-  event.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(list=>{
-    for(const client of list){if('focus'in client){client.postMessage({type:'OPEN_HUB_NOTIFICATION',payload:event.notification.data||{}});return client.focus()}}
-    return clients.openWindow?clients.openWindow(target):null;
-  }));
-});
+const CACHE_NAME='rathod-hub-v21-hybrid-offline';
+const APP_SHELL=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./rathod-modern-theme.css','./rathod-modern-effects.js','./rathod-world.css','./rathod-world.js','./telegram-score.js','./profile-card-update.js','./rathod-admin-layout.js','./rathod-social-ui.js','./rathod-study-ecosystem.js','./rathod-offline.js'];
+self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE_NAME).then(cache=>Promise.all(APP_SHELL.map(url=>cache.add(url).catch(()=>null))))) });
+self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim()).then(()=>self.clients.matchAll({type:'window',includeUncontrolled:true})).then(clients=>clients.forEach(c=>c.postMessage({type:'RH_OFFLINE_READY'}))))});
+function offlineResponse(){return caches.match('./index.html').then(r=>r||caches.match('./'))}
+self.addEventListener('fetch',event=>{const req=event.request;if(req.method!=='GET')return;const url=new URL(req.url),same=url.origin===self.location.origin,path=url.pathname;
+ if(req.mode==='navigate'){event.respondWith(fetch(req,{cache:'no-store'}).then(res=>{const copy=res.clone();caches.open(CACHE_NAME).then(c=>c.put('./index.html',copy));return res}).catch(offlineResponse));return}
+ if(!same){event.respondWith(fetch(req).catch(()=>caches.match(req)));return}
+ const isCode=/\.(?:js|css|html|webmanifest)$/i.test(path),isMedia=/\.(?:png|jpg|jpeg|webp|gif|svg|ico)$/i.test(path);
+ if(isCode){event.respondWith(fetch(req,{cache:'no-store'}).then(res=>{if(res.ok)caches.open(CACHE_NAME).then(c=>c.put(req,res.clone()));return res}).catch(()=>caches.match(req).then(r=>r||offlineResponse())));return}
+ if(isMedia){event.respondWith(caches.match(req).then(hit=>hit||fetch(req).then(res=>{if(res.ok)caches.open(CACHE_NAME).then(c=>c.put(req,res.clone()));return res})));return}
+ event.respondWith(fetch(req).then(res=>{if(res.ok)caches.open(CACHE_NAME).then(c=>c.put(req,res.clone()));return res}).catch(()=>caches.match(req)))});
+self.addEventListener('message',event=>{if(event.data?.type==='RH_CACHE_NOW')event.waitUntil(caches.open(CACHE_NAME).then(c=>Promise.all(APP_SHELL.map(u=>c.add(u).catch(()=>null)))));if(event.data?.type==='RH_SKIP_WAITING')self.skipWaiting()});
+self.addEventListener('notificationclick',event=>{event.notification.close();const target=event.notification.data?.url||'./index.html';event.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(list=>{for(const client of list){if('focus'in client){client.postMessage({type:'OPEN_HUB_NOTIFICATION',payload:event.notification.data||{}});return client.focus()}}return clients.openWindow?clients.openWindow(target):null}))});
