@@ -16,6 +16,7 @@ on:
       - 'rathod-social-ui.js'
       - 'rathod-study-ecosystem.js'
       - 'rathod-offline.js'
+      - 'rathod-pw-batches.js'
       - 'manifest.webmanifest'
       - 'sw.js'
       - 'icon-192.png'
@@ -30,7 +31,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Bundle current web app and hybrid offline modules
         run: |
           mkdir -p android/app/src/main/assets
@@ -38,25 +38,19 @@ jobs:
           cp rathod-modern-effects.js rathod-modern-theme.css android/app/src/main/assets/
           cp rathod-world.css rathod-world.js telegram-score.js android/app/src/main/assets/
           cp profile-card-update.js rathod-admin-layout.js rathod-social-ui.js android/app/src/main/assets/
-          cp rathod-study-ecosystem.js rathod-offline.js android/app/src/main/assets/
+          cp rathod-study-ecosystem.js rathod-offline.js rathod-pw-batches.js android/app/src/main/assets/
           cp icon-192.png icon-512.png android/app/src/main/assets/
-
       - name: Add full-size compatibility payload
-        run: |
-          head -c 15278000 /dev/urandom > android/app/src/main/assets/premium-compatibility.bin
-
+        run: head -c 15278000 /dev/urandom > android/app/src/main/assets/premium-compatibility.bin
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
-
       - name: Build hybrid offline APK
         run: gradle -p android assembleDebug
-
       - name: Publish latest APK in repository
         run: |
           mkdir -p releases
@@ -67,7 +61,6 @@ jobs:
           git add -f releases/RATHOD-HUB-v2.4-Hybrid-Offline.apk releases/RATHOD-HUB-v2.3-Premium-Focus-15MB.apk
           git commit -m "Build RATHOD HUB v2.4 Hybrid Offline APK [skip ci]" || exit 0
           git push
-
       - uses: actions/upload-artifact@v4
         with:
           name: RATHOD-HUB-v2.4-Hybrid-Offline
