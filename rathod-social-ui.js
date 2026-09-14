@@ -1,0 +1,27 @@
+/* RATHOD HUB social UI: Telegram isolation, badges, PFP, Stories in Live Chat */
+(function(){
+'use strict';
+if(window.__RH_SOCIAL_UI__)return;window.__RH_SOCIAL_UI__=1;
+const $=id=>document.getElementById(id),cache=new Map();
+const uid=v=>String(v||'');
+const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function db(){return window.db||null}
+function driveImage(url){if(!url)return '';try{if(typeof window.driveImgHtml==='function')return window.driveImgHtml(url,'w-full h-full object-cover')}catch(e){}return `<img src="${esc(url)}" class="w-full h-full object-cover" alt="Profile">`}
+async function socialProfile(id){id=uid(id);if(!id)return null;if(cache.has(id))return cache.get(id);const client=db();if(!client)return null;let out={id,name:'Member',pfp_url:null,badges:[]};try{const [p,b]=await Promise.all([client.from('profiles').select('id,name,pfp_url').eq('id',id).maybeSingle(),client.from('user_badges').select('badge_id,equipped,badge_catalog(name,icon,tier)').eq('user_id',id).eq('equipped',true).limit(5)]);if(p.data)out={...out,...p.data};out.badges=(b.data||[]).map(x=>({name:x.badge_catalog?.name||x.badge_id,icon:x.badge_catalog?.icon||'🏅'}))}catch(e){console.info('Social profile load skipped',e?.message||e)}cache.set(id,out);return out}
+function badgeWrap(p){return p?.badges?.length?`<span class="rh-social-badges" style="display:inline-flex;gap:3px;margin-left:5px;vertical-align:middle">${p.badges.slice(0,5).map(b=>`<span title="${esc(b.name)}" style="display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 3px;border-radius:999px;background:rgba(245,158,11,.13);border:1px solid rgba(245,158,11,.35);font-size:11px">${esc(b.icon)}</span>`).join('')}</span>`:''}
+async function decorateName(el,id,withPfp){if(!el||!id||el.dataset.rhSocialDone)return;el.dataset.rhSocialDone='1';const p=await socialProfile(id);if(!p)return;if(!el.querySelector('.rh-social-badges'))el.insertAdjacentHTML('beforeend',badgeWrap(p));el.style.cursor='pointer';el.addEventListener('click',e=>{e.stopPropagation();window.openRHUserProfile?.(id)});if(withPfp&&p.pfp_url){withPfp.innerHTML=driveImage(p.pfp_url);withPfp.style.cursor='pointer';withPfp.onclick=e=>{e.stopPropagation();window.openRHUserProfile?.(id)}}}
+function peopleRows(){const box=$('people-box');if(!box)return;box.querySelectorAll('button[onclick*="toggleFollow"]').forEach(btn=>{const m=(btn.getAttribute('onclick')||'').match(/toggleFollow\(['"]([^'"]+)/);if(!m)return;const card=btn.closest('.rounded-xl')||btn.parentElement;decorateName(card?.querySelector('b'),m[1],card?.querySelector('.rounded-full'))})}
+function leagueRowsDecorate(){const list=$('leaderboard-list');if(!list)return;let rows=[];try{rows=typeof leagueRows!=='undefined'?leagueRows:[]}catch(e){};[...list.children].forEach((card,i)=>{const row=rows[i];if(!row)return;decorateName(card.querySelector('.min-w-0.flex-1 b, b.block'),row.user_id||row.id,card.querySelector('.w-10.h-10'))})}
+function communityDecorate(){let rows=[];try{rows=typeof posts!=='undefined'?posts:[]}catch(e){};document.querySelectorAll('article[id^="community-post-"]').forEach(article=>{const id=article.id.replace('community-post-',''),post=rows.find(x=>uid(x.id)===uid(id));if(!post?.author_id)return;const head=article.querySelector('.p-4 .flex.items-start .min-w-0 b'),avatar=article.querySelector('.p-4 .flex.items-start .w-11.h-11');decorateName(head,post.author_id,avatar)})}
+function chatDecorate(){const box=$('chat-messages');if(!box)return;let rows=[];try{rows=typeof chatMessages!=='undefined'?chatMessages:[]}catch(e){};[...box.children].forEach((row,i)=>{const msg=rows[i];if(!msg?.user_id)return;const avatar=row.querySelector('.w-8.h-8'),name=row.querySelector('b');decorateName(name,msg.user_id,avatar)})}
+function mergeStories(){
+ $('btn-stories')?.remove();document.querySelectorAll('[onclick*="switchTab(\'stories\')"]').forEach(el=>el.remove());
+ const chat=$('section-chatroom'),stories=$('section-stories')||$('stories-embedded');if(chat&&stories&&stories.parentElement!==chat){stories.id='stories-embedded';stories.classList.remove('hidden');stories.removeAttribute('hidden');stories.classList.add('mt-5');const label=document.createElement('div');label.className='mt-5 mb-2 text-sm font-black text-pink-300';label.textContent='● Stories • Live Chat';chat.appendChild(label);chat.appendChild(stories)}
+}
+function fixTelegram(){
+ if(!window.__RH_TELEGRAM_TAB_PATCHED__&&typeof window.switchTab==='function'){window.__RH_TELEGRAM_TAB_PATCHED__=1;const original=window.switchTab;window.switchTab=function(){const tg=$('section-telegramscore');if(tg){tg.classList.add('hidden');tg.style.removeProperty('display')}return original.apply(this,arguments)}}
+ const tg=$('section-telegramscore');if(tg&&!tg.classList.contains('hidden')){document.querySelectorAll('.rh-content > section[id^="section-"]').forEach(s=>{if(s!==tg)s.classList.add('hidden')})}
+}
+function run(){try{fixTelegram();mergeStories();peopleRows();leagueRowsDecorate();communityDecorate();chatDecorate()}catch(e){console.warn('Social UI update',e)}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();new MutationObserver(()=>{clearTimeout(window.__rhSocialTimer);window.__rhSocialTimer=setTimeout(run,90)}).observe(document.documentElement,{childList:true,subtree:true});setInterval(run,1600);
+})();
