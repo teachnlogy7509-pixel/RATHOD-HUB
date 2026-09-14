@@ -1,11 +1,11 @@
-/* RATHOD HUB requested UI and coupon broadcast fix v9 */
+/* RATHOD HUB requested UI and coupon broadcast fix v10 */
 (function(){
 'use strict';
-if(window.__RH_FIX_V9__)return;window.__RH_FIX_V9__=1;
+if(window.__RH_FIX_V10__)return;window.__RH_FIX_V10__=1;
 var channel=null;
 function $(id){return document.getElementById(id)}
 function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn):fn()}
-function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[m]))}
 function globals(){try{if(typeof db!=='undefined')window.db=db}catch(e){}try{if(typeof profile!=='undefined')window.profile=profile}catch(e){}try{if(typeof user!=='undefined')window.user=user}catch(e){}}
 function admin(){globals();return window.profile?.role==='admin'}
 function note(text,ok){if(typeof window.toast==='function')window.toast(text,ok)}
@@ -18,6 +18,9 @@ function requestedUI(){
  var tutorBtn=$('btn-aitutor');if(tutorBtn&&!tutorBtn.dataset.merged){tutorBtn.dataset.merged='1';tutorBtn.onclick=function(){window.switchTab?.('ai');$('btn-ai')?.classList.remove('rh-active');tutorBtn.classList.add('rh-active');window.initAITutorView?.();setTimeout(()=>$('ai-tutor-embedded')?.scrollIntoView({behavior:'smooth',block:'start'}),100)}}
  var power=$('section-studypower');power?.querySelectorAll('h3').forEach(h=>{if((h.textContent||'').includes('Smart Daily Motivation'))h.parentElement?.remove()});
  $('btn-rathodnew')?.remove();$('section-rathodnew')?.remove();document.querySelectorAll('.rh-feature').forEach(c=>{if(/RATHOD\s+NEW/i.test(c.textContent||'')||/rathodnew/i.test(c.getAttribute('onclick')||''))c.remove()});
+ $('btn-dailyformula')?.remove();
+ $('section-dailyformula')?.remove();
+ document.querySelectorAll('[onclick*="dailyformula"]').forEach(el=>el.remove());
 }
 
 function couponFrom(row){var m=row?.metadata||{},code=row?.code||m.coupon_code,exp=row?.coupon_expires_at||m.coupon_expires_at||m.expires_at||row?.expires_at;if(!code||(exp&&new Date(exp)<=new Date()))return null;return{code:String(code).toUpperCase(),expires_at:exp||null,access_days:Number(row?.access_days||m.access_days||5)}}
