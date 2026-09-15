@@ -5,7 +5,7 @@ if(window.__RH_FIX_V12__)return;window.__RH_FIX_V12__=1;
 var channel=null;
 function $(id){return document.getElementById(id)}
 function ready(fn){document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn):fn()}
-function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])}
 function globals(){try{if(typeof db!=='undefined')window.db=db}catch(e){}try{if(typeof profile!=='undefined')window.profile=profile}catch(e){}try{if(typeof user!=='undefined')window.user=user}catch(e){}}
 function admin(){globals();return window.profile?.role==='admin'}
 function note(text,ok){if(typeof window.toast==='function')window.toast(text,ok)}
@@ -36,4 +36,57 @@ function patch(){if(window.__RH_COUPON_PATCH_V12__||typeof window.createHubCoupo
 function manual(){var out=$('admin-coupon-result');if(!out||$('rh-send-coupon-notify-btn'))return;var b=document.createElement('button');b.id='rh-send-coupon-notify-btn';b.type='button';b.className='mt-2 rounded-xl bg-amber-600 px-3 py-2 text-xs font-black text-white';b.textContent='Send coupon notification to all';b.onclick=async()=>{var code=resultCode(),exp=null,days=5;try{var r=await db.from('hub_access_coupons').select('code,expires_at,access_days').eq('active',true).order('created_at',{ascending:false}).limit(1).maybeSingle();if(r.data){code=r.data.code;exp=r.data.expires_at;days=r.data.access_days||5}}catch(e){}await notifyAll(String(code||'').toUpperCase(),exp,days);note(code?'Notification sent to all ✓':'Coupon code nahi mila',!!code)};out.appendChild(b)}
 function tick(){globals();requestedUI();loadAddons();card();patch();manual();live()}
 ready(()=>{setTimeout(splash,300);setTimeout(splash,1800);tick();setTimeout(()=>{window.initAITutorView?.();show()},700);setInterval(tick,2000)});
+})();
+
+/* Email + mobile-number OTP authentication. The existing email/password flow is preserved. */
+(function(){
+'use strict';
+function byId(id){return document.getElementById(id)}
+function toastAuth(msg,ok){if(typeof window.toast==='function')window.toast(msg,ok!==false)}
+function normalizePhone(raw){
+  var s=String(raw||'').trim().replace(/[()\s-]/g,'');
+  if(/^0\d{10}$/.test(s))s='+91'+s.slice(1);
+  else if(/^\d{10}$/.test(s))s='+91'+s;
+  else if(/^91\d{10}$/.test(s))s='+'+s;
+  if(!/^\+[1-9]\d{7,14}$/.test(s))throw new Error('Valid mobile number डालें, जैसे +91 9876543210');
+  return s;
+}
+function addPhoneAuth(){
+  if(byId('rh-phone-auth')||!byId('auth-form'))return true;
+  var anchor=byId('forgot-wrap')||byId('auth-form').nextElementSibling;
+  var wrap=document.createElement('div');wrap.id='rh-phone-auth';wrap.className='mt-4';
+  wrap.innerHTML='<div class="flex items-center gap-2 my-3"><div class="h-px flex-1 bg-white/10"></div><span class="text-[10px] text-slate-500 font-bold">OR</span><div class="h-px flex-1 bg-white/10"></div></div><button id="rh-phone-start" type="button" class="w-full rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-4 py-3 text-sm font-black text-cyan-200 hover:bg-cyan-500/20">📱 Continue with Mobile OTP</button><div id="rh-phone-panel" class="hidden mt-3 rounded-2xl border border-cyan-400/20 bg-slate-950/60 p-3"><p class="text-[11px] text-slate-400 mb-2">Mobile number डालें. India number 10 digits भी चलेगा.</p><div class="flex gap-2"><input id="rh-phone-input" type="tel" inputmode="tel" autocomplete="tel" placeholder="+91 9876543210" class="rh-mobile-input min-w-0 flex-1"><button id="rh-phone-send" type="button" class="shrink-0 rounded-xl bg-cyan-600 px-3 py-2 text-xs font-black">Send OTP</button></div><div id="rh-phone-verify" class="hidden mt-2"><div class="flex gap-2"><input id="rh-phone-otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit OTP" class="rh-mobile-input min-w-0 flex-1 text-center tracking-[.3em]"><button id="rh-phone-check" type="button" class="shrink-0 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-black">Verify</button></div><button id="rh-phone-resend" type="button" class="mt-2 text-[10px] text-cyan-300 underline">Resend OTP</button><p id="rh-phone-status" class="mt-2 text-[10px] text-slate-500"></p></div></div>';
+  if(anchor&&anchor.parentNode)anchor.parentNode.insertBefore(wrap,anchor);else byId('auth-form').appendChild(wrap);
+  var pending='';
+  function panel(open){byId('rh-phone-panel')?.classList.toggle('hidden',!open)}
+  async function send(){
+    try{
+      if(!window.db)throw new Error('Supabase अभी load नहीं हुआ. Page refresh करके फिर try करें.');
+      pending=normalizePhone(byId('rh-phone-input').value);
+      var name='';try{name=byId('auth-name')?.value.trim()||''}catch(e){}
+      var options={shouldCreateUser:true};if(name)options.data={name:name};
+      var r=await window.db.auth.signInWithOtp({phone:pending,options:options});
+      if(r.error)throw r.error;
+      panel(true);byId('rh-phone-verify').classList.remove('hidden');byId('rh-phone-status').textContent='OTP sent to '+pending+'. Resend 60 seconds बाद करें.';byId('rh-phone-otp').focus();toastAuth('📱 OTP भेज दिया गया है');
+    }catch(e){toastAuth(e.message||'Mobile OTP भेजा नहीं जा सका',false)}
+  }
+  async function verify(){
+    try{
+      if(!pending)pending=normalizePhone(byId('rh-phone-input').value);
+      var token=String(byId('rh-phone-otp').value||'').trim();if(!/^\d{4,8}$/.test(token))throw new Error('OTP code सही डालें.');
+      var r=await window.db.auth.verifyOtp({phone:pending,token:token,type:'sms'});if(r.error)throw r.error;
+      if(r.data?.session){
+        window.session=r.data.session;window.user=r.data.user;
+        if(typeof window.setAppScreenVisibility==='function')window.setAppScreenVisibility(true);
+        if(typeof window.boot==='function')await window.boot(r.data.session);
+      }
+      toastAuth('✅ Mobile verified. RATHOD HUB खुल रहा है.');
+    }catch(e){toastAuth(e.message||'OTP verify नहीं हुआ',false)}
+  }
+  byId('rh-phone-start').onclick=function(){panel(true);byId('rh-phone-input').focus()};
+  byId('rh-phone-send').onclick=send;byId('rh-phone-check').onclick=verify;byId('rh-phone-resend').onclick=send;
+  return true;
+}
+function init(){if(addPhoneAuth())return;setTimeout(init,700)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,0);
 })();
