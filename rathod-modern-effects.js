@@ -58,3 +58,24 @@ function addGoogleAuth(){
 function init(){if(addGoogleAuth())return;setTimeout(init,700)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,0);
 })();
+
+/* Public-safe app events for the female-persona VIP Bridge Bot. */
+(function(){
+'use strict';
+var emitted={};
+function currentName(){try{return String(window.profile?.name||window.user?.user_metadata?.name||'RATHOD Aspirant').slice(0,60)}catch(e){return 'RATHOD Aspirant'}}
+async function emit(type,payload,mode){try{if(!window.db||!window.user)return;var key=type+'|'+JSON.stringify(payload||{});if(emitted[key]&&Date.now()-emitted[key]<5000)return;emitted[key]=Date.now();var r=await window.db.from('rh_bridge_events').insert({event_type:String(type).slice(0,60),delivery_mode:mode||'digest',user_id:window.user.id,display_name:currentName(),payload:payload||{}});if(r.error)console.info('Bridge event SQL pending.',r.error.message)}catch(e){console.info('Bridge event skipped.',e?.message||e)}}
+function wrap(name,after){var fn=window[name];if(typeof fn!=='function'||fn.__rhBridgeWrapped)return;if(fn.__rhBridgeOriginal)fn=fn.__rhBridgeOriginal;var wrapped=async function(){var args=arguments,result=await fn.apply(this,args);try{await after(args,result)}catch(e){}return result};wrapped.__rhBridgeWrapped=true;wrapped.__rhBridgeOriginal=fn;window[name]=wrapped}
+function patch(){
+ wrap('sendHubNotification',async(args)=>{await emit('app_notification',{title:String(args[0]||'RATHOD HUB Update'),body:String(args[1]||''),tag:String(args[2]||'event'),action:String(args[3]||''),metadata:args[4]||{}},'immediate')});
+ wrap('awardQuizXP',async(args)=>{var ok=!!args[0];await emit('question_solved',{mode:'App Practice',is_correct:ok,xp_delta:ok?10:0},'digest')});
+ wrap('qbAnswer',async()=>{await emit('question_solved',{mode:'Live Quiz'},'digest')});
+ wrap('n720Answer',async()=>{await emit('question_solved',{mode:'NEET 720'},'digest')});
+ wrap('qbFinishRoom',async()=>{await emit('quiz_completed',{mode:'Live Quiz'},'immediate')});
+ wrap('n720FinishRoom',async()=>{await emit('quiz_completed',{mode:'NEET 720'},'immediate')});
+ wrap('joinStudyRoom',async(args)=>{await emit('study_room_joined',{room:String(args[0]||'Study Room')},'immediate')});
+ wrap('joinStudyBatch',async(args)=>{await emit('study_batch_joined',{batch_id:String(args[0]||'')},'immediate')});
+}
+function init(){patch();setInterval(patch,2500)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,500);
+})();
