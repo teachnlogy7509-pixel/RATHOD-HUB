@@ -1,5 +1,5 @@
 /* Loader keeps the existing Telegram Score module intact and guarantees the
-   archive/icon and central master-control modules are present on the live app. */
+   archive/icon, central master-control and Song Library modules are present. */
 (()=>{
 'use strict';
 if(window.__RH_TG_SCORE_LOADER__)return;
@@ -11,6 +11,7 @@ const add=(id,src)=>{
 const extras=()=>{
   add('rh-archive-icon-fix-script','rathod-archive-icon-fix.js?v=1');
   add('rh-master-control-script','rathod-master-control.js?v=2');
+  add('rh-song-library-script','rathod-song-library.js?v=1');
 };
 const core=document.createElement('script');
 core.id='rh-telegram-score-core';
