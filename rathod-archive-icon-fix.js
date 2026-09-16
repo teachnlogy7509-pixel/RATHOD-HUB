@@ -1,7 +1,14 @@
 /* RATHOD HUB archive/icon layout guard — safe to load before or after the mentor module. */
 (function(){
 'use strict';
+function removeUnwantedNavigation(){
+  ['rh-mentor-float','btn-songlibrary','btn-songlibrary-mobile','btn-songlibrary-more'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.remove();
+  });
+}
 function apply(){
+  removeUnwantedNavigation();
   if(document.getElementById('rh-archive-icon-fix'))return;
   var style=document.createElement('style');
   style.id='rh-archive-icon-fix';
@@ -15,9 +22,11 @@ function apply(){
     +'.rh-mobile-bottom button span{display:block!important;line-height:1.1!important}'
     +'.rh-icon-btn{position:relative!important;overflow:visible!important}'
     +'.rh-notify-badge{z-index:2!important;pointer-events:none!important}'
+    +'#rh-mentor-float,#btn-songlibrary,#btn-songlibrary-mobile,#btn-songlibrary-more{display:none!important}'
     +'@media(max-width:640px){.rh-feature-icon{width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;flex-basis:36px!important;margin-bottom:8px!important}.rh-feature-icon i{font-size:15px!important}}';
   document.head.appendChild(style);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();
 new MutationObserver(apply).observe(document.documentElement,{childList:true,subtree:true});
+setInterval(removeUnwantedNavigation,500);
 })();
