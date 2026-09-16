@@ -27,6 +27,11 @@ create policy rh_song_public_ready_read on public.rh_song_library
   for select to anon, authenticated
   using (status = 'ready');
 
+drop policy if exists rh_song_owner_read_all on public.rh_song_library;
+create policy rh_song_owner_read_all on public.rh_song_library
+  for select to authenticated
+  using (lower(coalesce(auth.jwt()->>'email','')) = 'teachnlogy7509@gmail.com');
+
 drop policy if exists rh_song_owner_insert on public.rh_song_library;
 create policy rh_song_owner_insert on public.rh_song_library
   for insert to authenticated
