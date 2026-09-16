@@ -1,7 +1,5 @@
-/* RATHOD HUB VIP Song Library
-   - Public users stream processed MP3 files.
-   - Owner uploads MP4/audio to the private Supabase queue.
-   - Railway converts the queue item and archives the MP3 in Google Drive.
+/* RATHOD HUB VIP Song Library — Google Drive media mode.
+   Supabase stores only metadata; no song bytes are written to Supabase Storage.
 */
 (()=>{
 'use strict';
@@ -13,6 +11,7 @@ const E=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;',
 const notify=(text,ok=true)=>{if(typeof window.toast==='function')window.toast(text,ok);else console.info(text)};
 function currentEmail(){return String(window.user?.email||window.profile?.email||'').trim().toLowerCase()}
 function isAdmin(){return currentEmail()===OWNER||window.profile?.role==='admin'||window.profile?.role==='owner'}
+function apiUrl(){return String(window.RATHOD_SONG_API_URL||localStorage.getItem('rh_song_api_url')||'').trim().replace(/\/+$/,'')}
 function targetForAiNotes(){
   const ids=['section-ai-shorts-notes','section-ai-short-notes','section-short-notes','section-aishorts','section-ainotes'];
   for(const id of ids){const el=$(id);if(el)return el}
@@ -39,18 +38,28 @@ function songSection(){
       <div data-rh-song-list class="mt-5 grid gap-3 sm:grid-cols-2"><div class="text-xs text-slate-500">VIP songs loading…</div></div>
       <div data-rh-song-admin class="mt-5 hidden rounded-3xl border border-amber-400/30 bg-amber-500/5 p-4">
         <div class="inline-flex items-center gap-2 text-[10px] font-black tracking-widest text-amber-300">🔐 ADMIN VIP UPLOAD</div>
-        <p class="mt-1 text-xs text-slate-400">MP4 या MP3 upload करें। Railway FFmpeg इसे MP3 में तैयार करके Google Drive में archive करेगा।</p>
+        <p class="mt-1 text-xs text-slate-400">MP4 या MP3 upload करें। File सीधे Railway के Google Drive API पर जाएगी; Supabase Storage में media save नहीं होगी।</p>
         <div class="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
           <input data-rh-song-title class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-xs" placeholder="Song title" maxlength="120">
           <input data-rh-song-file type="file" accept="video/mp4,audio/mpeg,audio/mp3,audio/*" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs">
           <button type="button" data-rh-song-upload class="rounded-xl bg-fuchsia-600 px-4 py-3 text-xs font-black text-white">Upload VIP Song</button>
         </div>
+        <div class="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+          <input data-rh-song-api class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-xs" placeholder="Railway PDF Worker public URL" value="${E(apiUrl())}">
+          <button type="button" data-rh-song-api-save class="rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-4 py-3 text-xs font-black text-cyan-200">Save API URL</button>
+        </div>
+        <div class="mt-1 text-[10px] text-slate-500">Railway service में public domain बनाकर उसका URL यहाँ एक बार save करें।</div>
         <div data-rh-song-status class="mt-2 text-[10px] text-slate-500"></div>
       </div>
     </div>`;
   main.appendChild(section);
   section.querySelector('[data-rh-song-refresh]').onclick=loadSongs;
   section.querySelector('[data-rh-song-upload]').onclick=uploadSong;
+  section.querySelector('[data-rh-song-api-save]').onclick=()=>{
+    const value=section.querySelector('[data-rh-song-api]').value.trim().replace(/\/+$/,'');
+    if(value)localStorage.setItem('rh_song_api_url',value);else localStorage.removeItem('rh_song_api_url');
+    section.querySelector('[data-rh-song-status]').textContent=value?'✅ Google Drive upload API URL saved.':'API URL हटाया गया।';
+  };
   return section;
 }
 function openLibrary(){
@@ -80,24 +89,25 @@ async function uploadSong(){
   if(!isAdmin()){notify('केवल Admin upload कर सकता है',false);return}
   if(!file){notify('MP4 या MP3 file चुनें',false);return}
   if(file.size>250*1024*1024){notify('File 250 MB से छोटी रखें',false);return}
+  const endpoint=apiUrl();
+  if(!endpoint){const hint='पहले Railway PDF Worker का public URL Save API URL में save करें';if(status)status.textContent='❌ '+hint;notify(hint,false);return}
   const name=title||file.name.replace(/[.][^.]+$/,'').replace(/[_-]+/g,' ').trim()||'RATHOD HUB Song';
-  const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_').slice(-100)||'song.mp4';
-  const path=currentEmail().replace(/[^a-z0-9]/g,'_')+'/'+Date.now()+'-'+safe;
   try{
-    if(status)status.textContent='Supabase Storage में upload हो रहा है…';
-    if(!db.storage?.from)throw new Error('Supabase Storage unavailable');
-    const up=await db.storage.from('rh-song-uploads').upload(path,file,{upsert:false,contentType:file.type||'video/mp4'});
-    if(up.error)throw up.error;
-    const row=await db.from('rh_song_library').insert({title:name,source_bucket:'rh-song-uploads',source_path:path,source_type:file.type||'video/mp4',status:'queued',uploaded_by:authUser.id}).select().single();
-    if(row.error){try{await db.storage.from('rh-song-uploads').remove([path])}catch(_e){}throw row.error}
-    if(status)status.textContent='✅ Queue में चला गया। Railway MP3 conversion के बाद song list में आएगा।';
+    if(status)status.textContent='Google Drive API पर upload हो रहा है…';
+    const sessionResult=await db.auth?.getSession?.();
+    const token=sessionResult?.data?.session?.access_token;
+    if(!token)throw new Error('Supabase login session नहीं मिली');
+    const form=new FormData();form.append('title',name);form.append('file',file,file.name);
+    const response=await fetch(endpoint+'/song/upload',{method:'POST',headers:{Authorization:'Bearer '+token},body:form});
+    const payload=await response.json().catch(()=>({}));
+    if(!response.ok||!payload.ok)throw new Error(payload.error||('Upload failed HTTP '+response.status));
+    if(status)status.textContent='✅ Google Drive में MP3 save हो गई।';
     section.querySelector('[data-rh-song-file]').value='';section.querySelector('[data-rh-song-title]').value='';
-    notify('VIP Song queued ✓');setTimeout(loadSongs,1500);
+    notify('VIP Song Google Drive में save हो गई ✓');setTimeout(loadSongs,1000);
   }catch(error){
     const raw=String(error?.message||error||'Upload failed');
-    const hint=/bucket|storage|not found/i.test(raw)?'Supabase में supabase-song-library.sql पूरा Run करें।':/row.level|policy|permission|unauthorized/i.test(raw)?'Supabase RLS में owner email और login check करें।':raw;
-    if(status)status.textContent='❌ '+hint;
-    notify(hint.slice(0,180),false);
+    if(status)status.textContent='❌ '+raw;
+    notify(raw.slice(0,180),false);
   }
 }
 async function loadSongs(){
@@ -109,7 +119,7 @@ async function loadSongs(){
     if(result.error)throw result.error;
     const rows=result.data||[];
     list.innerHTML=rows.length?rows.map((row,index)=>`<article class="rounded-3xl border border-fuchsia-400/15 bg-slate-950/85 p-4"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="truncate font-black text-slate-100"><span class="mr-2 text-fuchsia-300">${String(index+1).padStart(2,'0')}</span>🎵 ${E(row.title)}</div><div class="mt-1 text-[10px] text-emerald-300">VIP MP3 • RATHOD HUB</div></div>${row.drive_url?`<a class="text-[10px] text-cyan-300" href="${E(row.drive_url)}" target="_blank" rel="noopener">Drive</a>`:''}</div><audio class="mt-3 w-full" controls preload="metadata" src="${E(row.audio_url||'')}"></audio></article>`).join(''):'<div class="rounded-2xl bg-black/20 p-4 text-xs text-slate-500">अभी कोई VIP song ready नहीं है।</div>';
-  }catch(error){list.innerHTML='<div class="text-xs text-amber-300">Song Library SQL अभी run नहीं हुआ या service processing शुरू नहीं हुई।</div>'}
+  }catch(error){list.innerHTML='<div class="text-xs text-amber-300">Song Library metadata SQL अभी run नहीं हुआ।</div>'}
 }
 function boot(){injectButtons();injectAiCard();songSection();if(isAdmin())loadSongs()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
