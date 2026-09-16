@@ -1,6 +1,11 @@
 from pathlib import Path
-p=Path('index.html');s=p.read_text();tag='<script defer src="telegram-score.js?v=1"></script>'
-if tag not in s:
- if '</body>' not in s: raise SystemExit('body closing tag missing')
- s=s.replace('</body>',tag+'\n</body>',1);p.write_text(s)
-print('web-only Telegram Score loader added')
+
+p=Path('index.html')
+s=p.read_text()
+tags=['<script defer src="telegram-score.js?v=1"></script>','<script defer src="rathod-referral.js?v=1"></script>']
+missing=[tag for tag in tags if tag not in s]
+if missing:
+    if '</body>' not in s: raise SystemExit('body closing tag missing')
+    s=s.replace('</body>','\n'.join(missing)+'\n</body>',1)
+    p.write_text(s)
+print('Telegram Score and Referral loaders ready')
