@@ -16,7 +16,7 @@ function isAdmin(){return currentEmail()===OWNER||window.profile?.role==='admin'
 function targetForAiNotes(){
   const ids=['section-ai-shorts-notes','section-ai-short-notes','section-short-notes','section-aishorts','section-ainotes'];
   for(const id of ids){const el=$(id);if(el)return el}
-  return [...document.querySelectorAll('main section,section')].find(el=>/(AI\\s*Shorts|Short\\s*Notes|Notes\\s*AI|AI\\s*Notes)/i.test(String(el.innerText||'').slice(0,5000)))||null;
+  return [...document.querySelectorAll('main section,section')].find(el=>/(AI[ ]*Shorts|Short[ ]*Notes|Notes[ ]*AI|AI[ ]*Notes)/i.test(String(el.innerText||'').slice(0,5000)))||null;
 }
 function songSection(){
   let section=$('section-songlibrary');
@@ -89,7 +89,7 @@ async function uploadSong(){
   if(!isAdmin()){notify('केवल Admin upload कर सकता है',false);return}
   if(!file){notify('MP4 file चुनें',false);return}
   if(file.size>250*1024*1024){notify('File 250 MB से छोटी रखें',false);return}
-  const name=title||file.name.replace(/\\.[^.]+$/,'').replace(/[_-]+/g,' ').trim()||'RATHOD HUB Song';
+  const name=title||file.name.replace(/[.][^.]+$/,'').replace(/[_-]+/g,' ').trim()||'RATHOD HUB Song';
   const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_').slice(-100)||'song.mp4';
   const path=currentEmail().replace(/[^a-z0-9]/g,'_')+'/'+Date.now()+'-'+safe;
   try{
