@@ -4,7 +4,7 @@
 if(window.__RH_ADMIN_LOADER__)return;window.__RH_ADMIN_LOADER__=1;
 function loadMaster(){
  if(document.getElementById('rh-master-control-script'))return;
- var m=document.createElement('script');m.id='rh-master-control-script';m.src='rathod-master-control.js?v=1';m.defer=true;document.head.appendChild(m);
+ var m=document.createElement('script');m.id='rh-master-control-script';m.src='rathod-master-control.js?v=2';m.defer=true;document.head.appendChild(m);
 }
 var core=document.createElement('script');
 core.id='rh-admin-layout-core';
