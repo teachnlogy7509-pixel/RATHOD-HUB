@@ -1,7 +1,8 @@
-/* RATHOD HUB • Study Room permission, media fallback and Listen Only fix */
+/* RATHOD HUB • Study Room free 1-to-1 calling and Listen Only fix */
 (function(){
 'use strict';
 if(window.__RH_STUDY_ROOM_FIX__)return;window.__RH_STUDY_ROOM_FIX__=1;
+const FREE_CALL_LIMIT=2;
 let patched=false;
 function mediaError(e){
  if(e?.name==='NotAllowedError'||e?.name==='SecurityError')return 'Camera/Microphone blocked है। Browser/App permission settings में Allow करें।';
@@ -9,19 +10,36 @@ function mediaError(e){
  if(e?.name==='NotReadableError'||e?.name==='AbortError')return 'Camera/Microphone किसी दूसरे app में busy है। उसे बंद करके फिर try करें।';
  return e?.message||'Live media start नहीं हुआ।';
 }
+function callParticipantCount(key){
+ const ids=new Set();
+ try{
+  if(typeof getVoicePeople==='function'){
+   getVoicePeople(key).forEach(p=>{if(p?.user_id)ids.add(String(p.user_id))});
+  }
+  const rc=roomChannels[key];
+  const state=rc?.channel?.presenceState?.()||{};
+  Object.values(state).flat().forEach(p=>{
+   if(p?.user_id&&(p.voice||p.camera||p.listening))ids.add(String(p.user_id));
+  });
+ }catch(e){console.info('Free call participant check skipped',e)}
+ return ids.size;
+}
+function callFull(key){return callParticipantCount(key)>=FREE_CALL_LIMIT}
 function injectButtons(){
  document.querySelectorAll('[id^="room-voice-"]').forEach(deck=>{
   const key=deck.id.replace('room-voice-','');if(document.getElementById('listen-join-'+key))return;
   const grid=deck.querySelector('.grid.grid-cols-2');if(!grid)return;
   const b=document.createElement('button');b.id='listen-join-'+key;b.type='button';b.className='rounded-xl border border-emerald-400/25 bg-emerald-600 py-2.5 text-xs font-black';b.textContent='👂 Listen Only';b.onclick=()=>window.joinListenOnly(key);grid.insertBefore(b,grid.lastElementChild||null);
-  const help=document.createElement('p');help.className='mt-2 text-[9px] leading-4 text-slate-500';help.textContent='PC में mic/camera न हो तब भी Listen Only से room में दिखेंगे और दूसरे students को सुन सकेंगे।';grid.after(help);
+  const help=document.createElement('p');help.className='mt-2 text-[9px] leading-4 text-slate-500';help.textContent='Free 1-to-1 call: PC में mic/camera न हो तब भी Listen Only से आवाज़ सुनें। अधिकतम 2 लोग।';grid.after(help);
  });
 }
 async function joinListenOnly(key){
  const vs=ensureVoiceState(key);if(vs.joined)return;
  const rc=roomChannels[key];if(!rc||!rc.joined)return toast('पहले Enter Room दबाएँ।',false);
  try{
-  await rc.ready;vs.joined=true;vs.listener=true;vs.muted=true;vs.camera=false;vs.stream=null;
+  await rc.ready;
+  if(callFull(key))return toast('यह free call पहले से 2 लोगों से जुड़ी है।',false);
+  vs.joined=true;vs.listener=true;vs.muted=true;vs.camera=false;vs.stream=null;
   await rc.channel.track({user_id:user.id,name:profile?.name||user.email||'Member',voice:false,camera:false,listening:true});
   startLiveStudyClock(key);setRoomConnectionStatus(key,'● Listening','emerald');
   const announce=()=>rc.channel.send({type:'broadcast',event:'voice-signal',payload:{type:'join',fromId:user.id,listener:true}}).catch(()=>{});
@@ -47,7 +65,8 @@ function patch(){
   if(!navigator.mediaDevices?.getUserMedia)return toast('इस device में media support नहीं है—Listen Only use करें।',false);
   let stream=null,reserved=false;
   try{
-   await rc.ready;const active=getVoicePeople(key);if(active.length>=MAX_VOICE_USERS)return toast('Live Voice full है—Listen Only से join करें।',false);
+   await rc.ready;
+   if(callFull(key))return toast('यह free call केवल 2 लोगों के लिए है।',false);
    if(withCamera){
     try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:{facingMode:'user',width:{ideal:640},height:{ideal:480}}})}
     catch(first){if(['NotFoundError','OverconstrainedError'].includes(first?.name)){try{stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:'user',width:{ideal:640},height:{ideal:480}}});toast('Microphone नहीं मिला—Camera Only mode चालू है।')}catch(second){throw second}}else throw first}
@@ -62,6 +81,7 @@ function patch(){
  };
  const originalLeave=window.leaveVoice;
  window.leaveVoice=async function(key){await originalLeave(key);const b=document.getElementById('listen-join-'+key);if(b)b.classList.remove('hidden')};
+ window.RH_FREE_CALL_LIMIT=FREE_CALL_LIMIT;
 }
 function run(){patch();injectButtons()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();new MutationObserver(()=>{clearTimeout(window.__rhRoomFixTimer);window.__rhRoomFixTimer=setTimeout(run,80)}).observe(document.documentElement,{childList:true,subtree:true});setInterval(run,1200);
