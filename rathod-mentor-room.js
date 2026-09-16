@@ -29,6 +29,21 @@ function findStudyHost(){
   const candidates=[...document.querySelectorAll('section,main,[role="main"]')].filter(el=>/study\s*rooms?/i.test(String(el.innerText||'').slice(0,2500)));
   return candidates.sort((a,b)=>a.innerText.length-b.innerText.length)[0]||null;
 }
+function installIconFix(){
+  if(document.getElementById('rh-archive-icon-fix'))return;
+  const style=document.createElement('style');style.id='rh-archive-icon-fix';style.textContent=`
+    .rh-feature-icon{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:42px!important;height:42px!important;min-width:42px!important;min-height:42px!important;flex:0 0 42px!important;line-height:1!important;margin:0 0 10px!important;overflow:hidden!important;vertical-align:top!important;box-sizing:border-box!important}
+    .rh-feature-icon i{display:inline-flex!important;align-items:center!important;justify-content:center!important;position:static!important;width:auto!important;height:auto!important;line-height:1!important;margin:0!important;transform:none!important}
+    .rh-feature-icon+b{display:block!important;clear:both!important;line-height:1.25!important}
+    .rh-feature-icon+b+p{display:block!important;clear:both!important;line-height:1.3!important;margin-top:4px!important}
+    .rh-mobile-bottom button{line-height:1.1!important;white-space:nowrap!important}
+    .rh-mobile-bottom button i{display:block!important;position:static!important;line-height:1!important;margin:0 0 3px!important}
+    .rh-mobile-bottom button span{display:block!important;line-height:1.1!important}
+    .rh-icon-btn{position:relative!important;overflow:visible!important}
+    .rh-notify-badge{z-index:2!important;pointer-events:none!important}
+    @media(max-width:640px){.rh-feature-icon{width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;flex-basis:36px!important;margin-bottom:8px!important}.rh-feature-icon i{font-size:15px!important}}
+  `;document.head.appendChild(style);
+}
 function createMentorCard(){
   if($('rh-mentor-card'))return;
   const card=document.createElement('div');card.id='rh-mentor-card';card.className='mb-4 rounded-3xl border border-cyan-400/30 bg-gradient-to-br from-cyan-950/70 via-slate-950 to-violet-950/70 p-5 shadow-2xl';
@@ -61,7 +76,7 @@ function open(){
   meeting.addEventListener('readyToClose',close);
  }).catch(error=>{const status=$('rh-mentor-status');if(status){status.textContent='Calling service connect नहीं हुआ। HTTPS और internet check करें।';status.className='px-4 py-2 text-[10px] text-red-300'}console.error('1.1 Mentor failed',error)})
 }
-function run(){createMentorCard();createFloatingIcon()}
+function run(){installIconFix();createMentorCard();createFloatingIcon()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();new MutationObserver(()=>{clearTimeout(window.__rhMentorTimer);window.__rhMentorTimer=setTimeout(run,180)}).observe(document.documentElement,{childList:true,subtree:true});setInterval(run,2500);
 window.rhMentorOpen=open;window.rhMentorClose=close;
 })();
