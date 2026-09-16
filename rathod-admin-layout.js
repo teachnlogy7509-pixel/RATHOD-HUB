@@ -2,9 +2,13 @@
 (function(){
 'use strict';
 if(window.__RH_ADMIN_LOADER__)return;window.__RH_ADMIN_LOADER__=1;
+function addScript(id,src){
+ if(document.getElementById(id))return;
+ var s=document.createElement('script');s.id=id;s.src=src;s.defer=true;document.head.appendChild(s);
+}
 function loadMaster(){
- if(document.getElementById('rh-master-control-script'))return;
- var m=document.createElement('script');m.id='rh-master-control-script';m.src='rathod-master-control.js?v=2';m.defer=true;document.head.appendChild(m);
+ addScript('rh-archive-icon-fix-script','rathod-archive-icon-fix.js?v=1');
+ addScript('rh-master-control-script','rathod-master-control.js?v=2');
 }
 var core=document.createElement('script');
 core.id='rh-admin-layout-core';
