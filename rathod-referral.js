@@ -29,7 +29,7 @@
     showToast('Referral link copied ✓');
   }
   async function shareLink(url){
-    if(navigator.share){try{await navigator.share({title:'RATHOD HUB Premium',text:'RATHOD HUB join karo — referral se 7 din premium access milega.',url});return}catch(_e){}}
+    if(navigator.share){try{await navigator.share({title:'RATHOD HUB Premium',text:'RATHOD HUB join karo — referral se aap dono ko 7 din premium access milega.',url});return}catch(_e){}}
     await copyLink(url);
   }
 
@@ -40,9 +40,9 @@
     if(!card){card=document.createElement('div');card.id='rh-referral-card';card.className='mb-4 rounded-3xl border border-emerald-400/25 bg-gradient-to-br from-emerald-950/40 via-slate-950 to-cyan-950/35 p-5 shadow-xl';home.prepend(card)}
     const url=referralLink(code),count=Number(dashboard?.successful_referrals||0),xp=Number(dashboard?.xp_earned||0),active=Boolean(access?.active),expiry=active?formatDate(access.expires_at):'';
     card.innerHTML=`
-      <div class="flex flex-wrap items-start justify-between gap-3"><div><div class="text-[10px] font-black tracking-[.2em] text-emerald-300">REFER &amp; EARN</div><h3 class="mt-1 text-xl font-black text-slate-100">दोस्त लाओ, Premium पाओ</h3><p class="mt-2 max-w-2xl text-xs leading-5 text-slate-300">आपके referral link से नया user sign up करेगा तो उसे <b class="text-emerald-300">7 दिन Premium access</b> मिलेगा। हर successful referral पर आपको <b class="text-amber-300">5,000 XP</b> मिलेंगे।</p></div><div class="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-right text-[10px] font-black text-emerald-200">${active?`Premium active till ${esc(expiry)}`:'Referral ready'}</div></div>
+      <div class="flex flex-wrap items-start justify-between gap-3"><div><div class="text-[10px] font-black tracking-[.2em] text-emerald-300">REFER &amp; EARN</div><h3 class="mt-1 text-xl font-black text-slate-100">दोस्त लाओ, दोनों Premium पाओ</h3><p class="mt-2 max-w-2xl text-xs leading-5 text-slate-300">आपके referral link से नया user sign up करेगा तो <b class="text-emerald-300">आप दोनों को 7 दिन Premium access</b> मिलेगा। हर successful referral पर आपको <b class="text-amber-300">5,000 XP</b> भी मिलेंगे।</p></div><div class="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-right text-[10px] font-black text-emerald-200">${active?`Premium active till ${esc(expiry)}`:'Referral ready'}</div></div>
       <div class="mt-4 grid gap-2 sm:grid-cols-[1fr_auto_auto]"><input id="rh-referral-link" readonly value="${esc(url)}" class="min-w-0 rounded-2xl border border-slate-700 bg-black/30 px-3 py-3 text-[11px] text-slate-300" /><button id="rh-referral-copy" class="rounded-2xl bg-emerald-600 px-4 py-3 text-xs font-black text-white">Copy link</button><button id="rh-referral-share" class="rounded-2xl bg-cyan-600 px-4 py-3 text-xs font-black text-white">Share</button></div>
-      <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3"><div class="rounded-2xl bg-black/25 p-3"><b class="block text-lg text-emerald-300">${count}</b><span class="text-[10px] text-slate-500">Successful referrals</span></div><div class="rounded-2xl bg-black/25 p-3"><b class="block text-lg text-amber-300">${xp} XP</b><span class="text-[10px] text-slate-500">Referral XP earned</span></div><div class="rounded-2xl bg-black/25 p-3"><b class="block text-lg text-cyan-300">7 days</b><span class="text-[10px] text-slate-500">New-user Premium</span></div></div>`;
+      <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3"><div class="rounded-2xl bg-black/25 p-3"><b class="block text-lg text-emerald-300">${count}</b><span class="text-[10px] text-slate-500">Successful referrals</span></div><div class="rounded-2xl bg-black/25 p-3"><b class="block text-lg text-amber-300">${xp} XP</b><span class="text-[10px] text-slate-500">Referral XP earned</span></div><div class="rounded-2xl bg-black/25 p-3"><b class="block text-lg text-cyan-300">7 days</b><span class="text-[10px] text-slate-500">दोनों को Premium</span></div></div>`;
     $('rh-referral-copy').onclick=()=>copyLink(url);
     $('rh-referral-share').onclick=()=>shareLink(url);
   }
@@ -56,7 +56,7 @@
       if(data.success){
         forgetPending();
         if(data.already_claimed)showToast('Referral पहले से claimed है ✓');
-        else{showToast('Referral accepted — 7 दिन Premium active ✓');setTimeout(()=>window.location.reload(),900);return true}
+        else{showToast('आप दोनों को 7 दिन Premium मिल गया ✓');setTimeout(()=>window.location.reload(),900);return true}
       }else if(data.error){forgetPending();showToast(data.error,false)}
     }catch(_e){}
     return false;
