@@ -1,0 +1,63 @@
+name: Create Complete Project Backup
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/create-safe-backup.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout RATHOD HUB
+        uses: actions/checkout@v4
+        with:
+          repository: teachnlogy7509-pixel/RATHOD-HUB
+          ref: main
+          path: RATHOD-HUB
+
+      - name: Checkout Telegram Quiz Bot
+        uses: actions/checkout@v4
+        with:
+          repository: teachnlogy7509-pixel/telegram-quiz-bot
+          ref: main
+          path: telegram-quiz-bot
+
+      - name: Build recovery package
+        run: |
+          rm -rf RATHOD-HUB/.git telegram-quiz-bot/.git
+          cat > BACKUP-README.txt <<'EOF'
+          RATHOD COMPLETE PROJECT RECOVERY BACKUP
+
+          Included folders:
+          1. RATHOD-HUB
+          2. telegram-quiz-bot
+
+          No passwords, API tokens, Railway variables, Google OAuth secrets, Telegram bot tokens, or Supabase service-role secrets are stored in this ZIP.
+
+          Recovery:
+          - Create two new GitHub repositories.
+          - Upload each folder into its matching repository.
+          - Deploy RATHOD-HUB using GitHub Pages/static hosting.
+          - Deploy telegram-quiz-bot services on Railway.
+          - Re-add environment variables from your private Railway/Supabase records.
+          - Run RATHOD-HUB/supabase-master-control.sql in Supabase SQL Editor.
+          EOF
+          zip -r RATHOD-COMPLETE-BACKUP-2026-09-16.zip BACKUP-README.txt RATHOD-HUB telegram-quiz-bot
+          sha256sum RATHOD-COMPLETE-BACKUP-2026-09-16.zip > RATHOD-COMPLETE-BACKUP-2026-09-16.sha256
+
+      - name: Publish backup release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create safe-backup-2026-09-16 \
+            RATHOD-COMPLETE-BACKUP-2026-09-16.zip \
+            RATHOD-COMPLETE-BACKUP-2026-09-16.sha256 \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "RATHOD Complete Recovery Backup — 16 Sep 2026" \
+            --notes "Complete backup containing separate RATHOD-HUB and telegram-quiz-bot folders. Secrets are intentionally excluded."
