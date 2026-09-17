@@ -5,12 +5,12 @@
 'use strict';
 if(window.__RH_SONG_LIBRARY__)return;
 window.__RH_SONG_LIBRARY__=1;
-const OWNER='teachnlogy7509@gmail.com';
+const OWNER_EMAILS=new Set(['ashisharmy1982@gmail.com','teachnlogy7509@gmail.com']);
 const $=id=>document.getElementById(id);
-const E=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const E=value=>String(value??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));
 const notify=(text,ok=true)=>{if(typeof window.toast==='function')window.toast(text,ok);else console.info(text)};
 function currentEmail(){return String(window.user?.email||window.profile?.email||'').trim().toLowerCase()}
-function isAdmin(){return currentEmail()===OWNER||window.profile?.role==='admin'||window.profile?.role==='owner'}
+function isAdmin(){return OWNER_EMAILS.has(currentEmail())||window.profile?.role==='admin'||window.profile?.role==='owner'}
 function apiUrl(){return String(window.RATHOD_SONG_API_URL||localStorage.getItem('rh_song_api_url')||'').trim().replace(/\/+$/,'')}
 function targetForAiNotes(){
   const ids=['section-ai-shorts-notes','section-ai-short-notes','section-short-notes','section-aishorts','section-ainotes'];
