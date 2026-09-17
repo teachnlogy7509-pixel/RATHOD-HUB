@@ -9,10 +9,10 @@ const add=(id,src)=>{
   const s=document.createElement('script');s.id=id;s.src=src;s.defer=true;document.head.appendChild(s);
 };
 const extras=()=>{
-  add('rh-archive-icon-fix-script','rathod-archive-icon-fix.js?v=1');
-  add('rh-master-control-script','rathod-master-control.js?v=2');
-  add('rh-song-library-script','rathod-song-library.js?v=2');
-  add('rh-song-layout-fix-script','rathod-song-layout-fix.js?v=2');
+  add('rh-archive-icon-fix-script','rathod-archive-icon-fix.js?v=2');
+  add('rh-master-control-script','rathod-master-control.js?v=4');
+  add('rh-song-library-script','rathod-song-library.js?v=4');
+  add('rh-song-layout-fix-script','rathod-song-layout-fix.js?v=3');
 };
 const core=document.createElement('script');
 core.id='rh-telegram-score-core';
