@@ -5,8 +5,8 @@ if(window.__RH_TG_SCORE_LOADER__)return;
 window.__RH_TG_SCORE_LOADER__=1;
 const add=(id,src)=>{if(document.getElementById(id))return;const script=document.createElement('script');script.id=id;script.src=src;script.defer=true;document.head.appendChild(script)};
 const extras=()=>{
-  add('rh-auth-recovery-fix-script','rathod-auth-recovery-fix.js?v=1');
-  add('rh-mobile-polish-script','rathod-mobile-polish.js?v=1');
+  add('rh-auth-recovery-fix-script','rathod-auth-recovery-fix.js?v=2');
+  add('rh-mobile-polish-script','rathod-mobile-polish.js?v=2');
   add('rh-archive-icon-fix-script','rathod-archive-icon-fix.js?v=6');
   add('rh-master-control-script','rathod-master-control.js?v=8');
   add('rh-song-library-script','rathod-song-library.js?v=8');
