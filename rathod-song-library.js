@@ -4,6 +4,8 @@
 if(window.__RH_SONG_LIBRARY__)return;
 window.__RH_SONG_LIBRARY__=1;
 const OWNER_EMAILS=new Set(['ashisharmy1982@gmail.com','teachnlogy7509@gmail.com']);
+const DEFAULT_API='https://rathod-question-archive-production.up.railway.app';
+let canManageSongs=false;
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 function dbRef(){try{if(window.db)return window.db;if(typeof db!=='undefined')return db}catch(_e){}return null}
@@ -22,7 +24,8 @@ async function authContext(){
   }catch(_e){}
   return{d,u,p};
 }
-function apiUrl(){return String(window.RATHOD_SONG_API_URL||localStorage.getItem('rh_song_api_url')||'').trim().replace(/\/+$/,'')}
+function apiUrl(){return String(window.RATHOD_SONG_API_URL||localStorage.getItem('rh_song_api_url')||DEFAULT_API).trim().replace(/\/+$/,'')}
+function audioSource(row){const id=String(row?.drive_file_id||'').trim(),base=apiUrl();return id&&base?base+'/song/audio/'+encodeURIComponent(id):String(row?.audio_url||'')}
 function notify(text,ok=true){if(typeof window.toast==='function')window.toast(text,ok);else console.info(text)}
 function aiHost(){
   for(const id of ['section-aicards','section-ai-shorts-notes','section-ai-short-notes','section-short-notes','section-aishorts','section-ainotes']){const node=$(id);if(node)return node}
@@ -30,7 +33,16 @@ function aiHost(){
 }
 function songRows(rows){
   if(!rows.length)return '<div class="rounded-2xl bg-black/20 p-4 text-xs text-slate-500">अभी कोई VIP song ready नहीं है।</div>';
-  return rows.map((row,index)=>`<article class="rh-song-row rounded-3xl border border-fuchsia-400/15 bg-slate-950/85 p-4"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="font-black text-slate-100" style="overflow-wrap:anywhere"><span class="mr-2 text-fuchsia-300">${String(index+1).padStart(2,'0')}</span>🎵 ${esc(row.title)}</div><div class="mt-1 text-[10px] text-emerald-300">VIP MP3 • RATHOD HUB</div></div>${row.drive_url?`<a class="shrink-0 text-[10px] text-cyan-300" href="${esc(row.drive_url)}" target="_blank" rel="noopener">Drive</a>`:''}</div><audio class="mt-3 block w-full" controls preload="metadata" src="${esc(row.audio_url||'')}"></audio></article>`).join('');
+  return rows.map((row,index)=>{
+    const src=audioSource(row),fallback=String(row.audio_url||'').trim()&&String(row.audio_url||'').trim()!==src?` data-fallback="${esc(row.audio_url)}"`:'';
+    const remove=canManageSongs&&row.id?`<button type="button" data-rh-song-delete="${esc(row.id)}" data-rh-song-title="${esc(row.title)}" class="shrink-0 rounded-lg border border-red-400/30 bg-red-500/10 px-2 py-1 text-[10px] font-black text-red-200">Delete</button>`:'';
+    return `<article class="rh-song-row rounded-3xl border border-fuchsia-400/15 bg-slate-950/85 p-4"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="font-black text-slate-100" style="overflow-wrap:anywhere"><span class="mr-2 text-fuchsia-300">${String(index+1).padStart(2,'0')}</span>🎵 ${esc(row.title)}</div><div class="mt-1 text-[10px] text-emerald-300">VIP MP3 • RATHOD HUB</div></div><div class="flex shrink-0 items-center gap-2">${row.drive_url?`<a class="text-[10px] text-cyan-300" href="${esc(row.drive_url)}" target="_blank" rel="noopener">Drive</a>`:''}${remove}</div></div><audio data-rh-song-audio class="mt-3 block w-full" controls preload="metadata" src="${esc(src)}"${fallback}></audio></article>`;
+  }).join('');
+}
+function wireRows(root){
+  if(!root)return;
+  root.querySelectorAll('audio[data-rh-song-audio]').forEach(audio=>audio.addEventListener('error',()=>{const fallback=audio.dataset.fallback;if(fallback&&!audio.dataset.fallbackTried){audio.dataset.fallbackTried='1';audio.src=fallback;audio.load()}},{once:true}));
+  root.querySelectorAll('[data-rh-song-delete]').forEach(button=>button.addEventListener('click',()=>deleteSong(button.dataset.rhSongDelete||'',button.dataset.rhSongTitle||'RATHOD HUB Song')));
 }
 function ensureLibrarySection(){
   let section=$('section-songlibrary');if(section)return section;
@@ -49,8 +61,16 @@ function ensureInlineCard(){
   card.querySelector('[data-rh-song-api-save]').onclick=()=>{const input=card.querySelector('[data-rh-song-api]');const value=String(input?.value||'').trim().replace(/\/+$/,'');if(value)localStorage.setItem('rh_song_api_url',value);else localStorage.removeItem('rh_song_api_url');card.querySelector('[data-rh-song-status]').textContent=value?'✅ Google Drive API URL saved.':'API URL हटाया गया।'};
   return card;
 }
-function renderRows(rows){const card=$('rh-song-library-card'),section=ensureLibrarySection(),inline=card?.querySelector('[data-rh-song-inline-list]'),list=section?.querySelector('[data-rh-song-list]');if(inline)inline.innerHTML=songRows(rows);if(list)list.innerHTML=songRows(rows)}
-async function loadSongs(){const d=dbRef();if(!d)return;ensureInlineCard();ensureLibrarySection();const result=await d.from('rh_song_library').select('id,title,audio_url,drive_url,status,created_at').eq('status','ready').order('created_at',{ascending:false});if(result.error){console.info('Song Library query pending',result.error.message);return}renderRows(result.data||[])}
+function renderRows(rows){const card=$('rh-song-library-card'),section=ensureLibrarySection(),inline=card?.querySelector('[data-rh-song-inline-list]'),list=section?.querySelector('[data-rh-song-list]');if(inline){inline.innerHTML=songRows(rows);wireRows(inline)}if(list){list.innerHTML=songRows(rows);wireRows(list)}}
+async function loadSongs(){const d=dbRef();if(!d)return;const ctx=await authContext();canManageSongs=staticAdmin(ctx.u,ctx.p);ensureInlineCard();ensureLibrarySection();const result=await d.from('rh_song_library').select('id,title,audio_url,drive_url,drive_file_id,status,created_at').eq('status','ready').order('created_at',{ascending:false});if(result.error){console.info('Song Library query pending',result.error.message);return}renderRows(result.data||[])}
+async function deleteSong(id,title){
+  if(!id)return;
+  const ctx=await authContext();if(!staticAdmin(ctx.u,ctx.p))return notify('केवल Admin song delete कर सकता है',false);
+  if(!confirm('"'+title+'" को Google Drive और app से delete करें?'))return;
+  const session=(await ctx.d?.auth?.getSession?.())?.data?.session;const endpoint=apiUrl();
+  if(!session?.access_token)return notify('Login session नहीं मिली',false);
+  try{const response=await fetch(endpoint+'/song/'+encodeURIComponent(id),{method:'DELETE',headers:{Authorization:'Bearer '+session.access_token}});const payload=await response.json().catch(()=>({}));if(!response.ok||!payload.ok)throw new Error(payload.error||('Delete failed HTTP '+response.status));notify('Song delete हो गया ✓');loadSongs()}catch(error){notify(error.message||'Delete failed',false)}
+}
 async function uploadSong(){
   const {d,u,p}=await authContext(),card=$('rh-song-library-card'),file=card?.querySelector('[data-rh-song-file]')?.files?.[0],title=String(card?.querySelector('[data-rh-song-title]')?.value||'').trim(),status=card?.querySelector('[data-rh-song-status]');
   if(!d||!u)return notify('पहले app में login करें',false);
@@ -60,7 +80,7 @@ async function uploadSong(){
   try{if(status)status.textContent='Google Drive पर upload हो रहा है…';const session=(await d.auth.getSession()).data.session;if(!session?.access_token)throw new Error('Login session नहीं मिली');const form=new FormData();form.append('title',title||file.name.replace(/\.[^.]+$/,'')||'RATHOD HUB Song');form.append('file',file,file.name);const response=await fetch(endpoint+'/song/upload',{method:'POST',headers:{Authorization:'Bearer '+session.access_token},body:form});const payload=await response.json().catch(()=>({}));if(!response.ok||!payload.ok)throw new Error(payload.error||('Upload failed HTTP '+response.status));if(status)status.textContent='✅ Google Drive में MP3 save हो गई।';card.querySelector('[data-rh-song-file]').value='';card.querySelector('[data-rh-song-title]').value='';notify('VIP Song save हो गई ✓');loadSongs()}catch(error){if(status)status.textContent='❌ '+(error.message||error);notify(error.message||'Upload failed',false)}
 }
 function openLibrary(){const section=ensureLibrarySection();if(!section)return;document.querySelectorAll('main section[id^="section-"]').forEach(node=>node.classList.add('hidden'));section.classList.remove('hidden');loadSongs()}
-async function boot(){const card=ensureInlineCard();ensureLibrarySection();if(card){const ctx=await authContext();card.querySelector('[data-rh-song-admin-wrap]')?.classList.toggle('hidden',!staticAdmin(ctx.u,ctx.p));loadSongs()}}
+async function boot(){const card=ensureInlineCard();ensureLibrarySection();if(card){const ctx=await authContext();canManageSongs=staticAdmin(ctx.u,ctx.p);card.querySelector('[data-rh-song-admin-wrap]')?.classList.toggle('hidden',!canManageSongs);loadSongs()}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 new MutationObserver(()=>{clearTimeout(window.__rhSongTimer);window.__rhSongTimer=setTimeout(boot,300)}).observe(document.documentElement,{childList:true,subtree:true});
 window.openSongLibrary=openLibrary;window.loadSongLibrary=loadSongs;
