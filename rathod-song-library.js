@@ -82,6 +82,7 @@ async function uploadSong(){
 function openLibrary(){const section=ensureLibrarySection();if(!section)return;document.querySelectorAll('main section[id^="section-"]').forEach(node=>node.classList.add('hidden'));section.classList.remove('hidden');loadSongs()}
 async function boot(){const card=ensureInlineCard();ensureLibrarySection();if(card){const ctx=await authContext();canManageSongs=staticAdmin(ctx.u,ctx.p);card.querySelector('[data-rh-song-admin-wrap]')?.classList.toggle('hidden',!canManageSongs);loadSongs()}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-new MutationObserver(()=>{clearTimeout(window.__rhSongTimer);window.__rhSongTimer=setTimeout(boot,300)}).observe(document.documentElement,{childList:true,subtree:true});
+let bootTimer=0;
+new MutationObserver(()=>{if($('rh-song-library-card'))return;clearTimeout(bootTimer);bootTimer=setTimeout(boot,300)}).observe(document.documentElement,{childList:true,subtree:true});
 window.openSongLibrary=openLibrary;window.loadSongLibrary=loadSongs;
 })();
