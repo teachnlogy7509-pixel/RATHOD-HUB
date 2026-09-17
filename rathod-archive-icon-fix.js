@@ -1,8 +1,10 @@
-/* RATHOD HUB archive/icon layout guard — safe to load before or after the mentor module. */
+/* RATHOD HUB layout guard — preserves Song Library and 1.1 Mentor. */
 (function(){
 'use strict';
 function removeUnwantedNavigation(){
-  ['rh-mentor-float','btn-songlibrary','btn-songlibrary-mobile','btn-songlibrary-more'].forEach(function(id){
+  // Remove only legacy duplicate navigation buttons. Do not remove the
+  // in-content VIP Song Library card or the 1.1 Mentor button.
+  ['btn-songlibrary','btn-songlibrary-mobile','btn-songlibrary-more'].forEach(function(id){
     var el=document.getElementById(id);
     if(el)el.remove();
   });
@@ -22,7 +24,11 @@ function apply(){
     +'.rh-mobile-bottom button span{display:block!important;line-height:1.1!important}'
     +'.rh-icon-btn{position:relative!important;overflow:visible!important}'
     +'.rh-notify-badge{z-index:2!important;pointer-events:none!important}'
-    +'#rh-mentor-float,#btn-songlibrary,#btn-songlibrary-mobile,#btn-songlibrary-more{display:none!important}'
+    +'.rh-content>section{position:relative!important;display:block!important;clear:both!important;box-sizing:border-box!important;max-width:100%!important;min-width:0!important}'
+    +'.rh-content>section+section{margin-top:18px!important}'
+    +'#rh-song-library-card,#rh-mentor-card{position:relative!important;display:block!important;clear:both!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;z-index:2!important}'
+    +'#rh-song-library-card{margin-top:18px!important}'
+    +'#rh-mentor-float{z-index:10000!important}'
     +'@media(max-width:640px){.rh-feature-icon{width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;flex-basis:36px!important;margin-bottom:8px!important}.rh-feature-icon i{font-size:15px!important}}';
   document.head.appendChild(style);
 }
