@@ -4,7 +4,6 @@
 if(window.__RH_MOBILE_POLISH__)return;
 window.__RH_MOBILE_POLISH__=1;
 const $=id=>document.getElementById(id);
-let featureTimer=0;
 function notify(text,ok=true){try{window.toast?.(text,ok)}catch(_e){console.info(text)}}
 function closeMenu(){try{window.closeMobileMenu?.()}catch(_e){}}
 function openSongs(){
@@ -59,8 +58,6 @@ async function forceRathodUpdate(){
   notify('Latest update check हो रहा है…');
   const stamp=Date.now();
   try{
-    // Same-origin no-store requests work in normal browser and Android WebView,
-    // even when service-worker update() is unavailable.
     const checks=await Promise.allSettled([
       fetch(`./index.html?rh_update_check=${stamp}`,{cache:'no-store'}),
       fetch(`./sw.js?rh_update_check=${stamp}`,{cache:'no-store'}),
@@ -89,7 +86,7 @@ async function forceRathodUpdate(){
   }
 }
 window.forceRathodUpdate=forceRathodUpdate;
-function schedule(){clearTimeout(featureTimer);featureTimer=setTimeout(()=>{featureTimer=0;addStyle();addDrawerLinks();addHomeQuickFeatures()},260)}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule,{once:true});else schedule();
-new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true});
+function install(){addStyle();addDrawerLinks();addHomeQuickFeatures()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
+setTimeout(install,900);
 })();
