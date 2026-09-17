@@ -1,18 +1,19 @@
-/* Loader keeps the existing Telegram Score module intact and guarantees the
-   archive/icon, central master-control, VIP Song Library and desktop layout modules are present. */
+/* Loader keeps the existing Telegram Score module intact and loads the layout, songs and 1.1 Mentor fixes. */
 (()=>{
 'use strict';
 if(window.__RH_TG_SCORE_LOADER__)return;
 window.__RH_TG_SCORE_LOADER__=1;
 const add=(id,src)=>{
   if(document.getElementById(id))return;
-  const s=document.createElement('script');s.id=id;s.src=src;s.defer=true;document.head.appendChild(s);
+  const script=document.createElement('script');script.id=id;script.src=src;script.defer=true;document.head.appendChild(script);
 };
 const extras=()=>{
-  add('rh-archive-icon-fix-script','rathod-archive-icon-fix.js?v=2');
-  add('rh-master-control-script','rathod-master-control.js?v=4');
-  add('rh-song-library-script','rathod-song-library.js?v=4');
-  add('rh-song-layout-fix-script','rathod-song-layout-fix.js?v=3');
+  add('rh-archive-icon-fix-script','rathod-archive-icon-fix.js?v=3');
+  add('rh-master-control-script','rathod-master-control.js?v=5');
+  add('rh-song-library-script','rathod-song-library.js?v=5');
+  add('rh-song-layout-fix-script','rathod-song-layout-fix.js?v=4');
+  add('rh-mentor-room-script','rathod-mentor-room.js?v=3');
+  add('rh-study-room-fix-script','rathod-study-room-fix.js?v=3');
 };
 const core=document.createElement('script');
 core.id='rh-telegram-score-core';
