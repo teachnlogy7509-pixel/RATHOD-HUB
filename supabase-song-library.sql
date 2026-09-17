@@ -33,21 +33,21 @@ create policy rh_song_public_ready_read on public.rh_song_library
 drop policy if exists rh_song_owner_read_all on public.rh_song_library;
 create policy rh_song_owner_read_all on public.rh_song_library
   for select to authenticated
-  using (lower(coalesce(auth.jwt()->>'email','')) = 'teachnlogy7509@gmail.com');
+  using (lower(coalesce(auth.jwt()->>'email','')) in ('ashisharmy1982@gmail.com','teachnlogy7509@gmail.com'));
 
 drop policy if exists rh_song_owner_insert on public.rh_song_library;
 create policy rh_song_owner_insert on public.rh_song_library
   for insert to authenticated
   with check (
     uploaded_by = auth.uid()
-    and lower(coalesce(auth.jwt()->>'email','')) = 'teachnlogy7509@gmail.com'
+    and lower(coalesce(auth.jwt()->>'email','')) in ('ashisharmy1982@gmail.com','teachnlogy7509@gmail.com')
   );
 
 drop policy if exists rh_song_owner_update on public.rh_song_library;
 create policy rh_song_owner_update on public.rh_song_library
   for update to authenticated
-  using (lower(coalesce(auth.jwt()->>'email','')) = 'teachnlogy7509@gmail.com')
-  with check (lower(coalesce(auth.jwt()->>'email','')) = 'teachnlogy7509@gmail.com');
+  using (lower(coalesce(auth.jwt()->>'email','')) in ('ashisharmy1982@gmail.com','teachnlogy7509@gmail.com'))
+  with check (lower(coalesce(auth.jwt()->>'email','')) in ('ashisharmy1982@gmail.com','teachnlogy7509@gmail.com'));
 
 -- Existing private buckets can remain private. The new upload API does not
 -- write any media bytes to Supabase Storage, so Storage usage will not grow.
