@@ -1,7 +1,19 @@
 /* Keep VIP Song Library inside the real content column on desktop. */
 (()=>{
 'use strict';
+function normalizeApiUrl(){
+  try{
+    let value=String(localStorage.getItem('rh_song_api_url')||'').trim();
+    if(value&&!/^https?:\\/\\//i.test(value)){
+      value='https://'+value;
+      localStorage.setItem('rh_song_api_url',value);
+    }
+    const input=document.querySelector('[data-rh-song-api]');
+    if(input&&value)input.value=value;
+  }catch(_e){}
+}
 function fix(){
+  normalizeApiUrl();
   const section=document.getElementById('section-songlibrary');
   const content=document.querySelector('main .rh-content,.rh-content');
   if(section&&content&&section.parentElement!==content)content.appendChild(section);
