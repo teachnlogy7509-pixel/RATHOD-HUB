@@ -4,7 +4,7 @@
 function normalizeApiUrl(){
   try{
     let value=String(localStorage.getItem('rh_song_api_url')||'').trim();
-    if(value&&!/^https?:\\/\\//i.test(value)){
+    if(value&&!/^https?:\/\//i.test(value)){
       value='https://'+value;
       localStorage.setItem('rh_song_api_url',value);
     }
@@ -12,10 +12,15 @@ function normalizeApiUrl(){
     if(input&&value)input.value=value;
   }catch(_e){}
 }
+function contentHost(){
+  const ai=[...document.querySelectorAll('main section,section')].find(el=>/(AI[ ]*Shorts|Short[ ]*Notes|Notes[ ]*AI|AI[ ]*Notes)/i.test(String(el.innerText||'').slice(0,5000)));
+  if(ai?.parentElement&&ai.parentElement!==document.querySelector('main'))return ai.parentElement;
+  return document.querySelector('main .rh-content,.rh-content,.rh-main,main > div:not(.rh-sidebar)')||document.querySelector('main');
+}
 function fix(){
   normalizeApiUrl();
   const section=document.getElementById('section-songlibrary');
-  const content=document.querySelector('main .rh-content,.rh-content');
+  const content=contentHost();
   if(section&&content&&section.parentElement!==content)content.appendChild(section);
   if(section){
     section.style.width='100%';
