@@ -15,6 +15,8 @@ on:
       - 'rathod-admin-layout.js'
       - 'rathod-social-ui.js'
       - 'rathod-study-ecosystem.js'
+      - 'rathod-ypt-focus.js'
+      - 'rathod-archive-layout-fix.js'
       - 'rathod-offline.js'
       - 'rathod-pw-batches.js'
       - 'rathod-pw-subject-launcher.js'
@@ -42,9 +44,26 @@ jobs:
           cp rathod-modern-effects.js rathod-modern-theme.css android/app/src/main/assets/
           cp rathod-world.css rathod-world.js telegram-score.js android/app/src/main/assets/
           cp profile-card-update.js rathod-admin-layout.js rathod-social-ui.js android/app/src/main/assets/
-          cp rathod-study-ecosystem.js rathod-offline.js rathod-pw-batches.js rathod-pw-subject-launcher.js rathod-agent-vip.js rathod-study-room-fix.js rathod-branding-fix.js android/app/src/main/assets/
+          cp rathod-study-ecosystem.js rathod-ypt-focus.js rathod-archive-layout-fix.js rathod-offline.js rathod-pw-batches.js rathod-pw-subject-launcher.js rathod-agent-vip.js rathod-study-room-fix.js rathod-branding-fix.js android/app/src/main/assets/
           cp icon-192.png icon-512.png android/app/src/main/assets/
           cp icon-512.png android/app/src/main/res/drawable/rathod_hub_icon.png
+      - name: Inject YPT Focus and archive layout modules into APK
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('android/app/src/main/assets/index.html')
+          s = p.read_text()
+          tags = [
+              '<script defer src="rathod-ypt-focus.js?v=1"></script>',
+              '<script defer src="rathod-archive-layout-fix.js?v=1"></script>',
+          ]
+          missing = [tag for tag in tags if tag not in s]
+          if missing:
+              if '</body>' not in s:
+                  raise SystemExit('body closing tag missing')
+              s = s.replace('</body>', '\\n'.join(missing) + '\\n</body>', 1)
+              p.write_text(s)
+          PY
       - name: Enable native PW App launcher bridge
         run: |
           python3 - <<'PY'
@@ -52,11 +71,11 @@ jobs:
           p = Path('android/app/src/main/java/com/rathodhub/android/MainActivity.java')
           s = p.read_text()
           anchor = 'webView.addJavascriptInterface(new FocusBridge(), "AndroidFocus");'
-          addition = anchor + '\n        webView.addJavascriptInterface(new PwLauncherBridge(this), "AndroidPW");'
+          addition = anchor + '\\n        webView.addJavascriptInterface(new PwLauncherBridge(this), "AndroidPW");'
           if '"AndroidPW"' not in s:
               s = s.replace(anchor, addition)
           remove_anchor = 'webView.removeJavascriptInterface("AndroidFocus");'
-          remove_addition = remove_anchor + '\n            webView.removeJavascriptInterface("AndroidPW");'
+          remove_addition = remove_anchor + '\\n            webView.removeJavascriptInterface("AndroidPW");'
           if 'removeJavascriptInterface("AndroidPW")' not in s:
               s = s.replace(remove_anchor, remove_addition)
           p.write_text(s)
