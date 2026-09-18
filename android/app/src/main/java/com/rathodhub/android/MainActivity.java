@@ -2,6 +2,7 @@ package com.rathodhub.android;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -11,6 +12,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
@@ -30,18 +32,24 @@ import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends Activity {
     private static final String START_URL = "file:///android_asset/index.html";
     private static final String PREFS = "focus";
     private static final String KEY_ENABLED = "enabled";
     private static final String KEY_UNTIL = "focus_until";
+    private static final String KEY_ALLOWED_PACKAGE = "allowed_study_package";
+    private static final String KEY_ALLOWED_LABEL = "allowed_study_label";
     private static final String NOTIFICATION_CHANNEL = "rathod_hub_updates";
     private static final int REQUEST_WEB_PERMISSIONS = 201;
     private static final int REQUEST_NOTIFICATIONS = 202;
     private static final int REQUEST_FILE = 203;
 
+    private final String[] studyPackagePrefixes = {"xyz.penpencil.", "com.pw.live"};
     private SharedPreferences prefs;
     private WebView webView;
     private ValueCallback<Uri[]> fileCallback;
@@ -206,6 +214,93 @@ public class MainActivity extends Activity {
         }
     }
 
+    private static final class StudyApp {
+        final String packageName;
+        final String label;
+        StudyApp(String packageName, String label) {
+            this.packageName = packageName;
+            this.label = label;
+        }
+    }
+
+    private List<StudyApp> getStudyApps() {
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        List<ResolveInfo> infos = getPackageManager().queryIntentActivities(intent, 0);
+        List<StudyApp> apps = new ArrayList<>();
+        for (ResolveInfo info : infos) {
+            String packageName = info.activityInfo == null ? "" : info.activityInfo.packageName;
+            if (packageName.isEmpty() || packageName.equals(getPackageName())) continue;
+            String label = String.valueOf(info.loadLabel(getPackageManager()));
+            String lower = label.toLowerCase(Locale.US);
+            boolean knownPackage = false;
+            for (String prefix : studyPackagePrefixes) {
+                if (packageName.startsWith(prefix)) {
+                    knownPackage = true;
+                    break;
+                }
+            }
+            boolean studyLabel = lower.contains("physics") || lower.contains("pw")
+                    || lower.contains("study") || lower.contains("academy")
+                    || lower.contains("education") || lower.contains("learning");
+            if (knownPackage || studyLabel) apps.add(new StudyApp(packageName, label));
+        }
+        Collections.sort(apps, Comparator.comparing(a -> a.label.toLowerCase(Locale.US)));
+        return apps;
+    }
+
+    private String jsonEscape(String value) {
+        return String.valueOf(value == null ? "" : value)
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r");
+    }
+
+    private String selectedStudyAppJson() {
+        String packageName = prefs.getString(KEY_ALLOWED_PACKAGE, "");
+        String label = prefs.getString(KEY_ALLOWED_LABEL, "");
+        if (packageName.isEmpty()) {
+            List<StudyApp> apps = getStudyApps();
+            if (!apps.isEmpty()) {
+                packageName = apps.get(0).packageName;
+                label = apps.get(0).label;
+                prefs.edit().putString(KEY_ALLOWED_PACKAGE, packageName)
+                        .putString(KEY_ALLOWED_LABEL, label).apply();
+            }
+        }
+        return "{\"packageName\":\"" + jsonEscape(packageName)
+                + "\",\"label\":\"" + jsonEscape(label) + "\"}";
+    }
+
+    private void chooseStudyApp() {
+        List<StudyApp> apps = getStudyApps();
+        if (apps.isEmpty()) {
+            Toast.makeText(this,
+                    "Koi PW/study app install nahi mila.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        String current = prefs.getString(KEY_ALLOWED_PACKAGE, "");
+        String[] labels = new String[apps.size()];
+        int checked = -1;
+        for (int i = 0; i < apps.size(); i++) {
+            labels[i] = apps.get(i).label;
+            if (apps.get(i).packageName.equals(current)) checked = i;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("Focus mein kaunsa app chale?")
+                .setSingleChoiceItems(labels, checked, (dialog, which) -> {
+                    StudyApp app = apps.get(which);
+                    prefs.edit().putString(KEY_ALLOWED_PACKAGE, app.packageName)
+                            .putString(KEY_ALLOWED_LABEL, app.label).apply();
+                    dialog.dismiss();
+                    injectFocusBridge();
+                    Toast.makeText(this, app.label + " ab allowed hai.", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
     private void injectFocusBridge() {
         String script = "(function(){"
                 + "if(window.__rhNativeFocusHooked)return;window.__rhNativeFocusHooked=true;"
@@ -215,6 +310,10 @@ public class MainActivity extends Activity {
                 + "else AndroidFocus.stopFocus();}catch(e){console.warn('Focus bridge',e)}};"
                 + "['startFocusTimer'].forEach(function(n){var f=window[n];if(typeof f==='function')window[n]=function(){var r=f.apply(this,arguments);setTimeout(window.__rhSyncNativeFocus,0);return r;}});"
                 + "['pauseFocusTimer','stopFocusTimer','resetFocusTimer','completeFocusTimer'].forEach(function(n){var f=window[n];if(typeof f==='function')window[n]=function(){AndroidFocus.stopFocus();return f.apply(this,arguments);}});"
+                + "function rhStudyApp(){try{return JSON.parse(AndroidFocus.getSelectedStudyApp())}catch(e){return {label:'No app selected'}}}"
+                + "function rhRefreshStudyApp(){var el=document.getElementById('rh-native-study-app-name');if(!el)return;var a=rhStudyApp();el.textContent=a.label||'No app selected';}"
+                + "function rhMountStudyPicker(){var host=document.getElementById('section-studypower')||document.querySelector('main')||document.body;if(!host||document.getElementById('rh-native-study-picker'))return;var box=document.createElement('div');box.id='rh-native-study-picker';box.style.cssText='margin:16px 0;padding:16px;border:1px solid rgba(34,211,238,.35);border-radius:20px;background:linear-gradient(135deg,rgba(8,47,73,.8),rgba(49,46,129,.5));color:white';box.innerHTML='<b style=\"display:block;font-size:15px\">🎯 Focus App Shield</b><span style=\"display:block;margin-top:6px;font-size:12px;color:#cbd5e1\">Focus ke dauran sirf ye selected app aur RATHOD HUB chalega:</span><strong id=\"rh-native-study-app-name\" style=\"display:block;margin-top:8px;color:#67e8f9\">Loading…</strong><button id=\"rh-native-study-app-btn\" type=\"button\" style=\"margin-top:12px;padding:10px 14px;border:0;border-radius:12px;background:#0891b2;color:white;font-weight:800\">Choose allowed app</button>';host.insertBefore(box,host.firstChild);document.getElementById('rh-native-study-app-btn').onclick=function(){AndroidFocus.chooseStudyApp()};rhRefreshStudyApp();}"
+                + "rhMountStudyPicker();setInterval(function(){rhMountStudyPicker();rhRefreshStudyApp()},1500);"
                 + "setTimeout(window.__rhSyncNativeFocus,700);"
                 + "})();";
         webView.evaluateJavascript(script, value -> { });
@@ -339,6 +438,14 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface public boolean isFocusActive() {
             return MainActivity.this.isFocusActive();
+        }
+
+        @JavascriptInterface public String getSelectedStudyApp() {
+            return selectedStudyAppJson();
+        }
+
+        @JavascriptInterface public void chooseStudyApp() {
+            runOnUiThread(MainActivity.this::chooseStudyApp);
         }
     }
 
