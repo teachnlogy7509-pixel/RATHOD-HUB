@@ -1,0 +1,38 @@
+name: Add AdSense verification to web index
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'adsense-verify.js'
+      - '.github/workflows/adsense-index-inject.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  inject:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Insert AdSense code in index head
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text()
+          marker = 'ca-pub-7515533774374052'
+          snippet = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7515533774374052" crossorigin="anonymous"></script>'
+          if marker not in s:
+              if '</head>' not in s:
+                  raise SystemExit('index.html has no closing head tag')
+              s = s.replace('</head>', snippet + '\\n</head>', 1)
+              p.write_text(s)
+          PY
+      - name: Commit direct index verification code
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Add AdSense verification code to web index [skip ci]"
+          git push
