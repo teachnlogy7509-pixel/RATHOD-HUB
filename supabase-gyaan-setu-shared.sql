@@ -1,0 +1,17 @@
+-- Shared data contract for RATHOD-HUB and GyaanSetu.
+-- Applied to Supabase project oicluhfdvaroqvhwfwyp.
+-- Only leaderboard, score/XP, study materials, and coupon access are shared.
+-- Community posts, doubts, todos, notes, and batch access remain app-scoped.
+-- Canonical migration source: teachnlogy7509-pixel/gyaan-setu/supabase/rathod-hub-gyaan-setu-shared.sql
+
+-- The live migration creates:
+--   profiles.xp
+--   league_state / league_members
+--   hub_access_coupons / hub_coupon_redemptions
+-- and the RPCs:
+--   get_shared_leaderboard
+--   ensure_shared_league_member
+--   grant_league_xp
+--   create_hub_coupon
+--   redeem_hub_coupon
+--   get_hub_coupon_access
