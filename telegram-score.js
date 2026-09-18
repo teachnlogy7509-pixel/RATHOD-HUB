@@ -1,4 +1,4 @@
-/* Loader keeps the existing Telegram Score module intact and loads the latest layout, songs and 1.1 Mentor fixes. */
+/* Loader keeps the existing Telegram Score module intact and loads the latest layout, songs and study modules. */
 (()=>{
 'use strict';
 if(window.__RH_TG_SCORE_LOADER__)return;
@@ -13,6 +13,10 @@ const extras=()=>{
   add('rh-song-layout-fix-script','rathod-song-layout-fix.js?v=8');
   add('rh-mentor-room-script','rathod-mentor-room.js?v=8');
   add('rh-study-room-fix-script','rathod-study-room-fix.js?v=6');
+  // These were missing from the hosted web page, so Focus Timer never loaded the public board.
+  add('rh-study-ecosystem-script','rathod-study-ecosystem.js?v=3');
+  add('rh-ypt-focus-script','rathod-ypt-focus.js?v=2');
+  add('rh-archive-layout-fix-script','rathod-archive-layout-fix.js?v=2');
 };
 const core=document.createElement('script');core.id='rh-telegram-score-core';core.src='https://cdn.jsdelivr.net/gh/teachnlogy7509-pixel/RATHOD-HUB@ec7e12a007ff5409dca377912113c3abd38ab676/telegram-score.js';core.onload=extras;core.onerror=extras;core.defer=true;document.head.appendChild(core);
 })();
