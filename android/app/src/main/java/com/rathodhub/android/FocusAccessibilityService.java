@@ -24,6 +24,8 @@ public class FocusAccessibilityService extends AccessibilityService {
     private static final String PREFS = "focus";
     private static final String KEY_ENABLED = "enabled";
     private static final String KEY_UNTIL = "focus_until";
+    private static final String KEY_ALLOWED_PACKAGE = "allowed_study_package";
+    private static final String KEY_ALLOWED_LABEL = "allowed_study_label";
 
     private final Set<String> essentialPackages = new HashSet<>(Arrays.asList(
             "com.android.systemui",
@@ -46,6 +48,7 @@ public class FocusAccessibilityService extends AccessibilityService {
     private WindowManager windowManager;
     private View blocker;
     private TextView blockerMessage;
+    private String blockedAppLabel = "This app";
 
     private final Runnable expiryTicker = new Runnable() {
         @Override public void run() {
@@ -74,8 +77,12 @@ public class FocusAccessibilityService extends AccessibilityService {
 
         scheduleExpiryTicker();
         String packageName = event.getPackageName().toString();
-        if (isAllowed(packageName)) hideBlocker();
-        else showBlocker();
+        if (isAllowed(packageName)) {
+            hideBlocker();
+        } else {
+            blockedAppLabel = getApplicationLabel(packageName);
+            showBlocker();
+        }
     }
 
     private boolean isFocusActive() {
@@ -92,14 +99,27 @@ public class FocusAccessibilityService extends AccessibilityService {
         handler.removeCallbacks(expiryTicker);
     }
 
+    private String selectedPackage() {
+        String selected = getSharedPreferences(PREFS, MODE_PRIVATE)
+                .getString(KEY_ALLOWED_PACKAGE, "");
+        if (!selected.isEmpty()) return selected;
+        if (isPackageInstalled("xyz.penpencil.physicswala")) return "xyz.penpencil.physicswala";
+        if (isPackageInstalled("com.pw.live")) return "com.pw.live";
+        return "";
+    }
+
+    private String selectedLabel() {
+        String label = getSharedPreferences(PREFS, MODE_PRIVATE)
+                .getString(KEY_ALLOWED_LABEL, "");
+        if (!label.isEmpty()) return label;
+        String packageName = selectedPackage();
+        return packageName.isEmpty() ? "No study app selected" : getApplicationLabel(packageName);
+    }
+
     private boolean isAllowed(String packageName) {
         if (packageName == null || packageName.isEmpty()) return true;
         if (packageName.equals(getPackageName())) return true;
-
-        if (packageName.equals("xyz.penpencil.physicswala")
-                || packageName.equals("com.pw.live")
-                || packageName.startsWith("xyz.penpencil.")) return true;
-
+        if (packageName.equals(selectedPackage())) return true;
         if (essentialPackages.contains(packageName)) return true;
         String inputMethod = Settings.Secure.getString(
                 getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD);
@@ -124,13 +144,12 @@ public class FocusAccessibilityService extends AccessibilityService {
         blockerMessage.setTextSize(20);
         blockerMessage.setGravity(Gravity.CENTER);
         blockerMessage.setPadding(0, 0, 0, 28);
-        box.addView(blockerMessage,
-                new LinearLayout.LayoutParams(-1, -2));
+        box.addView(blockerMessage, new LinearLayout.LayoutParams(-1, -2));
 
-        Button openPw = new Button(this);
-        openPw.setText("Open PW");
-        openPw.setOnClickListener(v -> openPwApp());
-        box.addView(openPw, new LinearLayout.LayoutParams(-1, -2));
+        Button openStudy = new Button(this);
+        openStudy.setText("Open selected study app");
+        openStudy.setOnClickListener(v -> openSelectedStudyApp());
+        box.addView(openStudy, new LinearLayout.LayoutParams(-1, -2));
 
         Button backToHub = new Button(this);
         backToHub.setText("Back to RATHOD HUB");
@@ -158,13 +177,13 @@ public class FocusAccessibilityService extends AccessibilityService {
         long minutes = (seconds % 3600L) / 60L;
         long secs = seconds % 60L;
         blockerMessage.setText(String.format(Locale.US,
-                "📚 Focus Shield ON\n\nStudy timer ke dauran sirf PW aur RATHOD HUB allowed hain.\n\n%02d:%02d:%02d remaining",
-                hours, minutes, secs));
+                "🚫 %s blocked\n\nFocus Shield ON\n\nSirf %s aur RATHOD HUB allowed hain.\n\n%02d:%02d:%02d remaining",
+                blockedAppLabel, selectedLabel(), hours, minutes, secs));
     }
 
-    private void openPwApp() {
-        String[] packages = {"xyz.penpencil.physicswala", "com.pw.live"};
-        for (String packageName : packages) {
+    private void openSelectedStudyApp() {
+        String packageName = selectedPackage();
+        if (!packageName.isEmpty()) {
             Intent launch = getPackageManager().getLaunchIntentForPackage(packageName);
             if (launch != null) {
                 hideBlocker();
@@ -182,6 +201,24 @@ public class FocusAccessibilityService extends AccessibilityService {
         if (launch != null) {
             launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(launch);
+        }
+    }
+
+    private boolean isPackageInstalled(String packageName) {
+        try {
+            getPackageManager().getPackageInfo(packageName, 0);
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    private String getApplicationLabel(String packageName) {
+        try {
+            return getPackageManager().getApplicationLabel(
+                    getPackageManager().getApplicationInfo(packageName, 0)).toString();
+        } catch (Exception ignored) {
+            return packageName;
         }
     }
 
