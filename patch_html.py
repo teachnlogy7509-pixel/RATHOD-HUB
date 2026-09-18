@@ -10,6 +10,8 @@ tags=[
     '<script defer src="rathod-study-room-fix.js?v=2"></script>',
     '<script defer src="rathod-mentor-room.js?v=2"></script>',
     '<script defer src="rathod-archive-icon-fix.js?v=1"></script>',
+    '<script defer src="rathod-ypt-focus.js?v=1"></script>',
+    '<script defer src="rathod-archive-layout-fix.js?v=1"></script>',
 ]
 missing=[tag for tag in tags if tag not in s]
 if missing:
@@ -17,4 +19,4 @@ if missing:
         raise SystemExit('body closing tag missing')
     s=s.replace('</body>','\n'.join(missing)+'\n</body>',1)
     p.write_text(s)
-print('Telegram Score, Referral, Study Room, Mentor and archive icon loaders ready')
+print('Telegram Score, Referral, Study Room, Mentor, YPT Focus and archive loaders ready')
