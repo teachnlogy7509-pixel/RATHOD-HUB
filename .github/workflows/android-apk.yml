@@ -61,7 +61,7 @@ jobs:
           if missing:
               if '</body>' not in s:
                   raise SystemExit('body closing tag missing')
-              s = s.replace('</body>', '\\n'.join(missing) + '\\n</body>', 1)
+              s = s.replace('</body>', chr(10).join(missing) + chr(10) + '</body>', 1)
               p.write_text(s)
           PY
       - name: Enable native PW App launcher bridge
@@ -71,11 +71,11 @@ jobs:
           p = Path('android/app/src/main/java/com/rathodhub/android/MainActivity.java')
           s = p.read_text()
           anchor = 'webView.addJavascriptInterface(new FocusBridge(), "AndroidFocus");'
-          addition = anchor + '\\n        webView.addJavascriptInterface(new PwLauncherBridge(this), "AndroidPW");'
+          addition = anchor + chr(10) + '        webView.addJavascriptInterface(new PwLauncherBridge(this), "AndroidPW");'
           if '"AndroidPW"' not in s:
               s = s.replace(anchor, addition)
           remove_anchor = 'webView.removeJavascriptInterface("AndroidFocus");'
-          remove_addition = remove_anchor + '\\n            webView.removeJavascriptInterface("AndroidPW");'
+          remove_addition = remove_anchor + chr(10) + '            webView.removeJavascriptInterface("AndroidPW");'
           if 'removeJavascriptInterface("AndroidPW")' not in s:
               s = s.replace(remove_anchor, remove_addition)
           p.write_text(s)
