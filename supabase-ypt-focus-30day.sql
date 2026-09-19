@@ -1,6 +1,5 @@
--- RATHOD HUB: YPT-style 30-day public study leaderboard
--- Run once in Supabase SQL Editor after focus_sessions and profiles exist.
--- Sessions are never deleted; the visible leaderboard rolls to zero every 30 days.
+-- RATHOD HUB: YPT-style 30-day public study leaderboard + earned avatars
+-- Run once in Supabase SQL Editor after focus_sessions, profiles, rh_shop_items and profile_cosmetics exist.
 
 create table if not exists public.ypt_focus_cycle (
   cycle_id boolean primary key default true check (cycle_id = true),
@@ -44,7 +43,7 @@ begin
        set cycle_start = v_start,
            cycle_end = v_end,
            updated_at = now()
-     where cycle_id = true;
+     where c.cycle_id = true;
   end if;
 
   return query select v_start, v_end;
@@ -69,7 +68,8 @@ begin
 end;
 $$;
 
-create or replace function public.get_ypt_focus_leaderboard(p_limit integer default 100)
+drop function if exists public.get_ypt_focus_leaderboard(integer);
+create function public.get_ypt_focus_leaderboard(p_limit integer default 100)
 returns table(
   rank bigint,
   user_id uuid,
@@ -151,7 +151,199 @@ begin
 end;
 $$;
 
+drop function if exists public.ensure_focus_avatar_rewards();
+create function public.ensure_focus_avatar_rewards()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_user uuid := auth.uid();
+  v_total bigint := 0;
+  v_equipped text;
+  v_default_avatar text;
+  v_unlocked text[] := '{}'::text[];
+  rec record;
+begin
+  if v_user is null then
+    raise exception 'Login required';
+  end if;
+
+  select coalesce(sum(greatest(coalesce(fs.seconds, 0), 0)), 0)::bigint
+    into v_total
+    from public.focus_sessions fs
+   where fs.user_id = v_user
+     and fs.date >= current_date - 2
+     and fs.date < current_date + 1;
+
+  for rec in
+    select *
+      from (values
+        ('avatar_scholar', 86400),
+        ('avatar_medic', 129600),
+        ('avatar_scientist', 172800),
+        ('avatar_warrior', 216000),
+        ('avatar_phoenix', 259200)
+      ) as milestone(item_id, target_seconds)
+     order by target_seconds
+  loop
+    if v_total >= rec.target_seconds then
+      insert into public.rh_shop_purchases(user_id, item_id, paid_xp)
+      values (v_user, rec.item_id, 0)
+      on conflict do nothing;
+      v_unlocked := array_append(v_unlocked, rec.item_id);
+    end if;
+  end loop;
+
+  insert into public.profile_cosmetics(user_id)
+  values (v_user)
+  on conflict (user_id) do nothing;
+
+  select pc.equipped_avatar
+    into v_equipped
+    from public.profile_cosmetics pc
+   where pc.user_id = v_user;
+
+  if coalesce(array_length(v_unlocked, 1), 0) > 0 and (v_equipped is null or array_position(v_unlocked, v_equipped) is null) then
+    v_default_avatar := v_unlocked[array_length(v_unlocked, 1)];
+    update public.profile_cosmetics
+       set equipped_avatar = v_default_avatar,
+           updated_at = now()
+     where user_id = v_user;
+    v_equipped := v_default_avatar;
+  end if;
+
+  return jsonb_build_object(
+    'total_seconds', v_total,
+    'equipped_avatar', v_equipped,
+    'unlocked_item_ids', to_jsonb(v_unlocked)
+  );
+end;
+$$;
+
+
+drop function if exists public.get_focus_avatar_status();
+create function public.get_focus_avatar_status()
+returns table(
+  total_seconds bigint,
+  unlocked_count integer,
+  equipped_avatar text,
+  avatars jsonb
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_state jsonb;
+  v_total bigint := 0;
+  v_equipped text;
+begin
+  if auth.uid() is null then
+    raise exception 'Login required';
+  end if;
+
+  v_state := public.ensure_focus_avatar_rewards();
+  v_total := coalesce((v_state->>'total_seconds')::bigint, 0);
+  v_equipped := nullif(v_state->>'equipped_avatar', '');
+
+  return query
+  with config(item_id, target_seconds, tier_label, rule_text) as (
+    values
+      ('avatar_scholar', 86400, '24h', '3 days me 24+ hours focus'),
+      ('avatar_medic', 129600, '36h', '3 days me 36+ hours focus'),
+      ('avatar_scientist', 172800, '48h', '3 days me 48+ hours focus'),
+      ('avatar_warrior', 216000, '60h', '3 days me 60+ hours focus'),
+      ('avatar_phoenix', 259200, '72h', '3 days me 72+ hours focus')
+  ), items as (
+    select
+      c.item_id,
+      c.target_seconds,
+      c.tier_label,
+      c.rule_text,
+      s.name,
+      s.emoji,
+      s.description
+    from config c
+    join public.rh_shop_items s on s.item_id = c.item_id
+  )
+  select
+    v_total,
+    jsonb_array_length(coalesce(v_state->'unlocked_item_ids', '[]'::jsonb))::integer,
+    v_equipped,
+    jsonb_agg(
+      jsonb_build_object(
+        'item_id', items.item_id,
+        'name', items.name,
+        'emoji', items.emoji,
+        'description', items.description,
+        'target_seconds', items.target_seconds,
+        'target_hours', round((items.target_seconds / 3600.0)::numeric, 1),
+        'tier_label', items.tier_label,
+        'rule_text', items.rule_text,
+        'unlocked', coalesce((v_state->'unlocked_item_ids') ? items.item_id, false),
+        'equipped', items.item_id = v_equipped,
+        'remaining_seconds', greatest(items.target_seconds - v_total, 0)
+      )
+      order by items.target_seconds
+    )
+  from items;
+end;
+$$;
+
+drop function if exists public.equip_focus_avatar(text);
+create function public.equip_focus_avatar(p_item_id text)
+returns public.profile_cosmetics
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  out_row public.profile_cosmetics;
+begin
+  if auth.uid() is null then
+    raise exception 'Login required';
+  end if;
+
+  perform public.ensure_focus_avatar_rewards();
+
+  if not exists (
+    select 1
+      from public.rh_shop_items s
+     where s.item_id = p_item_id
+       and s.kind = 'avatar'
+       and s.active = true
+  ) then
+    raise exception 'Avatar not found';
+  end if;
+
+  if not exists (
+    select 1
+      from public.rh_shop_purchases p
+     where p.user_id = auth.uid()
+       and p.item_id = p_item_id
+  ) then
+    raise exception 'Avatar abhi unlock nahi hua';
+  end if;
+
+  insert into public.profile_cosmetics(user_id, equipped_avatar)
+  values (auth.uid(), p_item_id)
+  on conflict (user_id) do update set
+    equipped_avatar = excluded.equipped_avatar,
+    updated_at = now()
+  returning * into out_row;
+
+  return out_row;
+end;
+$$;
+
 revoke all on function public.ensure_ypt_focus_cycle() from public;
 revoke all on function public.get_ypt_focus_cycle() from public;
 revoke all on function public.get_ypt_focus_leaderboard(integer) from public;
+revoke all on function public.ensure_focus_avatar_rewards() from public;
+revoke all on function public.get_focus_avatar_status() from public;
+revoke all on function public.equip_focus_avatar(text) from public;
+
 grant execute on function public.ensure_ypt_focus_cycle(), public.get_ypt_focus_cycle(), public.get_ypt_focus_leaderboard(integer) to authenticated;
+grant execute on function public.ensure_focus_avatar_rewards(), public.get_focus_avatar_status(), public.equip_focus_avatar(text) to authenticated;
