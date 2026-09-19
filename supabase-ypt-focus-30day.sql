@@ -1,155 +1,34 @@
--- RATHOD HUB: YPT-style 30-day public study leaderboard + earned anime avatars
--- Avatar unlocks are based on total focus in the LAST 3 DAYS.
+-- RATHOD HUB: YPT-style 30-day public study leaderboard + colorful anime avatars
+-- 18 avatars total: 10 girls + 8 boys, unlocked by study done in the last 3 days.
 
-create table if not exists public.ypt_focus_cycle (
-  cycle_id boolean primary key default true check (cycle_id = true),
-  cycle_start date not null,
-  cycle_end date not null,
-  updated_at timestamptz not null default now(),
-  check (cycle_end > cycle_start)
-);
-
-insert into public.ypt_focus_cycle(cycle_id, cycle_start, cycle_end)
-values (true, current_date, current_date + 30)
-on conflict (cycle_id) do nothing;
-
-create or replace function public.ensure_ypt_focus_cycle()
-returns table(cycle_start date, cycle_end date)
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  v_start date;
-  v_end date;
-  v_shift integer;
-begin
-  select c.cycle_start, c.cycle_end
-    into v_start, v_end
-    from public.ypt_focus_cycle c
-   where c.cycle_id = true
-   for update;
-
-  if not found then
-    v_start := current_date;
-    v_end := current_date + 30;
-    insert into public.ypt_focus_cycle(cycle_id, cycle_start, cycle_end)
-    values (true, v_start, v_end);
-  elsif current_date >= v_end then
-    v_shift := greatest(1, (current_date - v_start) / 30);
-    v_start := v_start + (v_shift * 30);
-    v_end := v_start + 30;
-    update public.ypt_focus_cycle
-       set cycle_start = v_start,
-           cycle_end = v_end,
-           updated_at = now()
-     where cycle_id = true;
-  end if;
-
-  return query select v_start, v_end;
-end;
-$$;
-
-create or replace function public.get_ypt_focus_cycle()
-returns table(cycle_start date, cycle_end date, days_left integer)
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  v_start date;
-  v_end date;
-begin
-  select c.cycle_start, c.cycle_end
-    into v_start, v_end
-    from public.ensure_ypt_focus_cycle() c;
-  return query
-  select v_start, v_end, greatest(0, (v_end - current_date))::integer;
-end;
-$$;
-
-drop function if exists public.get_ypt_focus_leaderboard(integer);
-create function public.get_ypt_focus_leaderboard(p_limit integer default 100)
-returns table(
-  rank bigint,
-  user_id uuid,
-  name text,
-  pfp_url text,
-  avatar_item_id text,
-  avatar_emoji text,
-  total_seconds bigint,
-  session_count bigint,
-  subjects jsonb
-)
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  return query
-  with cycle as (
-    select * from public.ensure_ypt_focus_cycle()
-  ), session_rows as (
-    select
-      fs.user_id,
-      coalesce(nullif(trim(fs.subject), ''), 'Other') as subject,
-      greatest(coalesce(fs.seconds, 0), 0)::bigint as seconds
-    from public.focus_sessions fs
-    cross join cycle c
-    where fs.date >= c.cycle_start
-      and fs.date < c.cycle_end
-  ), user_totals as (
-    select
-      s.user_id,
-      sum(s.seconds)::bigint as total_seconds,
-      count(*)::bigint as session_count
-    from session_rows s
-    group by s.user_id
-  ), subject_totals as (
-    select s.user_id, s.subject, sum(s.seconds)::bigint as subject_seconds
-    from session_rows s
-    group by s.user_id, s.subject
-  ), subject_lists as (
-    select
-      st.user_id,
-      jsonb_agg(
-        jsonb_build_object('subject', st.subject, 'seconds', st.subject_seconds)
-        order by st.subject_seconds desc, st.subject
-      ) as subjects
-    from subject_totals st
-    group by st.user_id
-  ), ranked as (
-    select
-      dense_rank() over (order by ut.total_seconds desc)::bigint as user_rank,
-      ut.user_id,
-      coalesce(nullif(trim(p.name), ''), 'Aspirant')::text as display_name,
-      p.pfp_url::text,
-      avatar.item_id::text as equipped_avatar_item_id,
-      avatar.emoji::text as equipped_avatar_emoji,
-      ut.total_seconds,
-      ut.session_count,
-      coalesce(sl.subjects, '[]'::jsonb) as subject_list
-    from user_totals ut
-    left join public.profiles p on p.id = ut.user_id
-    left join public.profile_cosmetics pc on pc.user_id = ut.user_id
-    left join public.rh_shop_items avatar on avatar.item_id = pc.equipped_avatar and avatar.kind = 'avatar' and avatar.active = true
-    left join subject_lists sl on sl.user_id = ut.user_id
-  )
-  select
-    r.user_rank,
-    r.user_id,
-    r.display_name,
-    r.pfp_url,
-    r.equipped_avatar_item_id,
-    r.equipped_avatar_emoji,
-    r.total_seconds,
-    r.session_count,
-    r.subject_list
-  from ranked r
-  where r.user_rank <= greatest(1, least(coalesce(p_limit, 100), 500))
-  order by r.user_rank, r.total_seconds desc, r.display_name;
-end;
-$$;
+insert into public.rh_shop_items (item_id, name, kind, emoji, price, description, tier, active)
+values
+  ('avatar_scholar','Haru Scholar','avatar','📘',2400,'Focused study boy avatar','24h',true),
+  ('avatar_medic','Aiko Medic','avatar','🩺',2400,'Bright anime girl medic avatar','24h',true),
+  ('avatar_girl_muse','Yuna Muse','avatar','🌸',2400,'Colorful anime girl muse avatar','24h',true),
+  ('avatar_scientist','Luna Scientist','avatar','🧪',2700,'Curious anime girl scientist avatar','27h',true),
+  ('avatar_warrior','Ren Warrior','avatar','⚡',2700,'Sharp anime boy warrior avatar','27h',true),
+  ('avatar_boy_ace','Leo Ace','avatar','🍀',2700,'Fresh anime boy ace avatar','27h',true),
+  ('avatar_phoenix','Sakura Phoenix','avatar','🔥',3000,'Colorful anime girl phoenix avatar','30h',true),
+  ('avatar_rare_doctor_f','Kiara Care','avatar','💖',3000,'Premium anime girl doctor avatar','30h',true),
+  ('avatar_boy_focus','Arjun Focus','avatar','🎯',3000,'Focused anime boy avatar','30h',true),
+  ('avatar_rare_scientist_f','Mira Quantum','avatar','🌙',3300,'Premium anime girl scientist avatar','33h',true),
+  ('avatar_boy_blaze','Kian Blaze','avatar','✨',3300,'Stylish anime boy blaze avatar','33h',true),
+  ('avatar_girl_mint','Hina Mint','avatar','💎',3300,'Mint anime girl avatar','33h',true),
+  ('avatar_rare_queen_f','Tara Crown','avatar','👑',3600,'Royal anime girl queen avatar','36h',true),
+  ('avatar_boy_noir','Zayn Noir','avatar','♦️',3600,'Dark anime boy noir avatar','36h',true),
+  ('avatar_girl_rose','Riya Rose','avatar','🌹',3600,'Rose anime girl avatar','36h',true),
+  ('avatar_boy_sky','Dev Sky','avatar','🪽',4000,'Sky-themed anime boy avatar','40h',true),
+  ('avatar_boy_storm','Max Storm','avatar','⛈️',4000,'Storm anime boy avatar','40h',true),
+  ('avatar_girl_neon','Naina Neon','avatar','🎵',4000,'Neon anime girl avatar','40h',true)
+on conflict (item_id) do update set
+  name = excluded.name,
+  kind = excluded.kind,
+  emoji = excluded.emoji,
+  price = excluded.price,
+  description = excluded.description,
+  tier = excluded.tier,
+  active = excluded.active;
 
 drop function if exists public.ensure_focus_avatar_rewards();
 create function public.ensure_focus_avatar_rewards()
@@ -181,12 +60,25 @@ begin
     select *
       from (values
         ('avatar_scholar', 86400),
-        ('avatar_medic', 108000),
-        ('avatar_scientist', 129600),
-        ('avatar_warrior', 151200),
-        ('avatar_phoenix', 172800)
+        ('avatar_medic', 86400),
+        ('avatar_girl_muse', 86400),
+        ('avatar_scientist', 97200),
+        ('avatar_warrior', 97200),
+        ('avatar_boy_ace', 97200),
+        ('avatar_phoenix', 108000),
+        ('avatar_rare_doctor_f', 108000),
+        ('avatar_boy_focus', 108000),
+        ('avatar_rare_scientist_f', 118800),
+        ('avatar_boy_blaze', 118800),
+        ('avatar_girl_mint', 118800),
+        ('avatar_rare_queen_f', 129600),
+        ('avatar_boy_noir', 129600),
+        ('avatar_girl_rose', 129600),
+        ('avatar_boy_sky', 144000),
+        ('avatar_boy_storm', 144000),
+        ('avatar_girl_neon', 144000)
       ) as milestone(item_id, target_seconds)
-     order by target_seconds
+     order by target_seconds, item_id
   loop
     if v_total >= rec.target_seconds then
       insert into public.rh_shop_purchases(user_id, item_id, paid_xp)
@@ -248,15 +140,28 @@ begin
   v_equipped := nullif(v_state->>'equipped_avatar', '');
 
   return query
-  with config(item_id, target_seconds, tier_label, rule_text) as (
+  with config(item_id, target_seconds, tier_label, rule_text, sort_order) as (
     values
-      ('avatar_scholar', 86400, '24h', '3 days me 24+ hours focus'),
-      ('avatar_medic', 108000, '30h', '3 days me 30+ hours focus'),
-      ('avatar_scientist', 129600, '36h', '3 days me 36+ hours focus'),
-      ('avatar_warrior', 151200, '42h', '3 days me 42+ hours focus'),
-      ('avatar_phoenix', 172800, '48h', '3 days me 48+ hours focus')
+      ('avatar_scholar', 86400, '24h', '3 days me 24+ hours focus', 1),
+      ('avatar_medic', 86400, '24h', '3 days me 24+ hours focus', 2),
+      ('avatar_girl_muse', 86400, '24h', '3 days me 24+ hours focus', 3),
+      ('avatar_scientist', 97200, '27h', '3 days me 27+ hours focus', 4),
+      ('avatar_warrior', 97200, '27h', '3 days me 27+ hours focus', 5),
+      ('avatar_boy_ace', 97200, '27h', '3 days me 27+ hours focus', 6),
+      ('avatar_phoenix', 108000, '30h', '3 days me 30+ hours focus', 7),
+      ('avatar_rare_doctor_f', 108000, '30h', '3 days me 30+ hours focus', 8),
+      ('avatar_boy_focus', 108000, '30h', '3 days me 30+ hours focus', 9),
+      ('avatar_rare_scientist_f', 118800, '33h', '3 days me 33+ hours focus', 10),
+      ('avatar_boy_blaze', 118800, '33h', '3 days me 33+ hours focus', 11),
+      ('avatar_girl_mint', 118800, '33h', '3 days me 33+ hours focus', 12),
+      ('avatar_rare_queen_f', 129600, '36h', '3 days me 36+ hours focus', 13),
+      ('avatar_boy_noir', 129600, '36h', '3 days me 36+ hours focus', 14),
+      ('avatar_girl_rose', 129600, '36h', '3 days me 36+ hours focus', 15),
+      ('avatar_boy_sky', 144000, '40h', '3 days me 40+ hours focus', 16),
+      ('avatar_boy_storm', 144000, '40h', '3 days me 40+ hours focus', 17),
+      ('avatar_girl_neon', 144000, '40h', '3 days me 40+ hours focus', 18)
   ), items as (
-    select c.item_id, c.target_seconds, c.tier_label, c.rule_text, s.name, s.emoji, s.description
+    select c.item_id, c.target_seconds, c.tier_label, c.rule_text, c.sort_order, s.name, s.emoji, s.description
     from config c
     join public.rh_shop_items s on s.item_id = c.item_id
   )
@@ -276,61 +181,15 @@ begin
         'rule_text', items.rule_text,
         'unlocked', coalesce((v_state->'unlocked_item_ids') ? items.item_id, false),
         'equipped', items.item_id = v_equipped,
-        'remaining_seconds', greatest(items.target_seconds - v_total, 0)
+        'remaining_seconds', greatest(items.target_seconds - v_total, 0),
+        'progress_percent', least(100, greatest(0, round((v_total::numeric / nullif(items.target_seconds, 0)::numeric) * 100, 1)))
       )
-      order by items.target_seconds
+      order by items.sort_order
     )
   from items;
 end;
 $$;
 
-drop function if exists public.equip_focus_avatar(text);
-create function public.equip_focus_avatar(p_item_id text)
-returns public.profile_cosmetics
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  out_row public.profile_cosmetics;
-begin
-  if auth.uid() is null then
-    raise exception 'Login required';
-  end if;
-
-  perform public.ensure_focus_avatar_rewards();
-
-  if not exists (
-    select 1 from public.rh_shop_items s
-    where s.item_id = p_item_id and s.kind = 'avatar' and s.active = true
-  ) then
-    raise exception 'Avatar not found';
-  end if;
-
-  if not exists (
-    select 1 from public.rh_shop_purchases p
-    where p.user_id = auth.uid() and p.item_id = p_item_id
-  ) then
-    raise exception 'Avatar abhi unlock nahi hua';
-  end if;
-
-  insert into public.profile_cosmetics(user_id, equipped_avatar)
-  values (auth.uid(), p_item_id)
-  on conflict (user_id) do update set
-    equipped_avatar = excluded.equipped_avatar,
-    updated_at = now()
-  returning * into out_row;
-
-  return out_row;
-end;
-$$;
-
-revoke all on function public.ensure_ypt_focus_cycle() from public;
-revoke all on function public.get_ypt_focus_cycle() from public;
-revoke all on function public.get_ypt_focus_leaderboard(integer) from public;
 revoke all on function public.ensure_focus_avatar_rewards() from public;
 revoke all on function public.get_focus_avatar_status() from public;
-revoke all on function public.equip_focus_avatar(text) from public;
-
-grant execute on function public.ensure_ypt_focus_cycle(), public.get_ypt_focus_cycle(), public.get_ypt_focus_leaderboard(integer) to authenticated;
-grant execute on function public.ensure_focus_avatar_rewards(), public.get_focus_avatar_status(), public.equip_focus_avatar(text) to authenticated;
+grant execute on function public.ensure_focus_avatar_rewards(), public.get_focus_avatar_status() to authenticated;
