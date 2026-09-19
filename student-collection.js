@@ -31,7 +31,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 if(window.__RH_YPT_FOCUS_LOADER__)return;
 window.__RH_YPT_FOCUS_LOADER__=1;
 function loadOne(src,key){if(document.querySelector(`script[${key}]`))return;const s=document.createElement('script');s.defer=true;s.src=src;s.setAttribute(key,'1');document.head.appendChild(s)}
-function load(){loadOne('rathod-ypt-focus.js?v=5','data-rh-ypt-focus');loadOne('rathod-focus-premium-timer.js?v=6','data-rh-focus-premium-timer')}
+function load(){loadOne('rathod-ypt-focus.js?v=5','data-rh-ypt-focus');loadOne('rathod-focus-premium-timer.js?v=7','data-rh-focus-premium-timer')}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load,{once:true});else setTimeout(load,0);
 })();
 

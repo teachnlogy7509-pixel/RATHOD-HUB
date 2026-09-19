@@ -6,16 +6,13 @@ window.__RH_FOCUS_TIMER_PREMIUM__ = 1;
 
 const db = () => { try { return window.db || null; } catch (e) { return null; } };
 const uid = () => { try { return String(window.user?.id || ''); } catch (e) { return ''; } };
-const SUBJECT_TODOS = {
-  Biology:['Revise diagrams for 20 min','Solve 15 MCQs','Make one quick note summary'],
-  Physics:['Numericals practice 30 min','Formula revision','Wrong questions recheck'],
-  Chemistry:['NCERT reading 25 min','Reaction list revise','20 PYQ questions'],
-  Math:['Solve 10 calculus problems','Revision of weak topic','Speed test 20 min'],
-  English:['Read one passage','Vocabulary revision','Writing practice 15 min'],
-  History:['Read one chapter','Important dates revise','Short answer notes'],
-  Science:['Topic recap 20 min','Concept mapping','Practice worksheet']
-};
-const SUBJECT_MINUTES = { Biology:'02:39:18', Physics:'01:40:00', Chemistry:'02:05:20', Math:'03:10:12', English:'01:25:40', History:'00:55:20', Science:'01:18:44' };
+const STORAGE_KEY = 'rh_focus_planner_tasks_v1';
+const SUBJECT_BOOKS = [
+  { name:'Biology', note:'NCERT + diagrams', session:'60 min' },
+  { name:'Chemistry', note:'NCERT + reactions', session:'50 min' },
+  { name:'Physics', note:'Numericals + concepts', session:'60 min' },
+  { name:'Math', note:'Questions + speed drill', session:'45 min' }
+];
 let appState = { activeTab:'timer', rank:'—', focus3day:'0h 0m', nextText:'VIP progress', dailyGoal:'0h 0m', members:[], loading:false };
 
 function textOf(el){ return String(el?.textContent || '').trim(); }
@@ -23,6 +20,9 @@ function fmtShort(sec){ sec=Math.max(0,Number(sec)||0); const h=Math.floor(sec/3
 function fmtHours(sec){ return `${(Math.max(0,Number(sec)||0)/3600).toFixed(1)}h`; }
 function initials(name){ return String(name||'S').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase(); }
 function todayLabel(){ try { return new Date().toLocaleDateString(undefined,{ weekday:'short', month:'numeric', day:'numeric' }); } catch(e){ return 'Today'; } }
+function liveClock(){ try { return new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }); } catch(e){ return '--:--'; } }
+function plannerStore(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){ return []; } }
+function savePlanner(tasks){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); } catch(e){} }
 
 function ensureStyle(){
   if(document.getElementById('rh-focus-vip-style')) return;
@@ -33,14 +33,12 @@ function ensureStyle(){
     .rh-focus-gold-chip{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;border:1px solid rgba(251,191,36,.18);background:linear-gradient(90deg,rgba(251,191,36,.14),rgba(255,255,255,.03));font-size:10px;font-weight:900;letter-spacing:.24em;text-transform:uppercase;color:#fde68a;box-shadow:0 0 24px rgba(251,191,36,.08)}
     .rh-focus-gold-title{background:linear-gradient(90deg,#fff6cc,#fbbf24,#f59e0b);-webkit-background-clip:text;background-clip:text;color:transparent!important;text-shadow:none!important}
     .rh-focus-shell{margin-top:18px;border-radius:30px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#111}
-    .rh-focus-vipBar{padding:18px 18px 12px;background:linear-gradient(135deg,#0e0f13 0%,#23180f 28%,#7c3f10 62%,#f97316 100%);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 18px 48px rgba(249,115,22,.18);position:relative}
-    .rh-focus-vipBar:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(251,191,36,.18),transparent 34%,transparent 66%,rgba(255,255,255,.06));pointer-events:none}
-    .rh-focus-vipTop{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;font-weight:800;position:relative;z-index:1}
-    .rh-focus-vipSubject{display:flex;align-items:center;gap:10px}
+    .rh-focus-vipBar{padding:18px 18px 12px;background:linear-gradient(135deg,#0e0f13 0%,#22170d 32%,#7c3f10 68%,#f97316 100%);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 18px 48px rgba(249,115,22,.18);position:relative}
+    .rh-focus-vipBar:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(251,191,36,.16),transparent 35%,transparent 68%,rgba(255,255,255,.05));pointer-events:none}
+    .rh-focus-vipTop{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;font-weight:800;position:relative;z-index:1}.rh-focus-vipSubject{display:flex;align-items:center;gap:10px}
     .rh-focus-vipTimer{margin-top:18px;font-size:52px;line-height:1;font-weight:900;letter-spacing:.05em;position:relative;z-index:1;text-shadow:0 0 18px rgba(255,255,255,.08)}
-    .rh-focus-tabs{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;position:relative;z-index:1}
-    .rh-focus-tab{appearance:none;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff7ed;font-size:13px;padding:9px 14px;border-radius:999px;cursor:pointer;font-weight:700}
-    .rh-focus-tab.active{background:linear-gradient(90deg,rgba(251,191,36,.22),rgba(249,115,22,.28));border-color:rgba(251,191,36,.34);box-shadow:0 0 0 1px rgba(251,191,36,.10) inset}
+    .rh-focus-topMeta{display:flex;gap:10px;align-items:center}.rh-focus-topClock{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);font-size:11px}
+    .rh-focus-tabs{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;position:relative;z-index:1}.rh-focus-tab{appearance:none;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff7ed;font-size:13px;padding:9px 14px;border-radius:999px;cursor:pointer;font-weight:700}.rh-focus-tab.active{background:linear-gradient(90deg,rgba(251,191,36,.22),rgba(249,115,22,.28));border-color:rgba(251,191,36,.34);box-shadow:0 0 0 1px rgba(251,191,36,.10) inset}
     .rh-focus-body{padding:18px;background:#101010;min-height:260px}
     .rh-focus-grid{display:grid;grid-template-columns:1.2fr .85fr;gap:18px}
     .rh-focus-panel{border:1px solid rgba(255,255,255,.08)!important;border-radius:26px!important;background:#121212!important;box-shadow:0 18px 44px rgba(0,0,0,.24)!important}
@@ -48,25 +46,17 @@ function ensureStyle(){
     .rh-focus-timerGlow{color:#fff4ed!important;text-shadow:0 0 24px rgba(251,124,48,.18)!important}
     .rh-focus-softBtn{background:#1b1b1d!important;border:1px solid rgba(255,255,255,.10)!important;color:#f8fafc!important}
     .rh-focus-startBtn{background:linear-gradient(90deg,#ff9f2a,#ff6e1d)!important;color:#fff!important;border:0!important;box-shadow:0 14px 30px rgba(255,110,29,.22)!important}
-    .rh-focus-cardTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
-    .rh-focus-cardTitle b{font-size:24px;color:#fff}
-    .rh-focus-cardTitle span{font-size:12px;color:#9ca3af}
-    .rh-focus-bookList,.rh-focus-planList,.rh-focus-graphList{display:grid;gap:12px}
-    .rh-focus-bookRow,.rh-focus-planRow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 14px;border-radius:20px;background:#171717;border:1px solid rgba(255,255,255,.08)}
-    .rh-focus-bookLeft,.rh-focus-planLeft{display:flex;align-items:center;gap:12px;min-width:0}
-    .rh-focus-play{width:34px;height:34px;border-radius:999px;background:linear-gradient(135deg,#ffb341,#fb7c30);display:grid;place-items:center;color:#fff;font-size:13px;font-weight:900;flex:0 0 34px}
-    .rh-focus-bookTitle{font-size:22px;font-weight:800;color:#fff}
-    .rh-focus-bookSub,.rh-focus-planSub{display:block;margin-top:4px;font-size:12px;color:#9ca3af}
-    .rh-focus-bookTime{font-size:18px;font-weight:800;color:#f8fafc;white-space:nowrap}
-    .rh-focus-planDot{width:22px;height:22px;border-radius:999px;background:#fb7c30;display:grid;place-items:center;color:#fff;font-weight:900;flex:0 0 22px}
-    .rh-focus-planTitle{font-size:18px;font-weight:700;color:#fff}
-    .rh-focus-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:18px}
-    .rh-focus-mini{position:relative;overflow:hidden;border-radius:24px;padding:18px;border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,#151515,#101010)}
-    .rh-focus-mini:before{content:"";position:absolute;inset:auto -10px -24px auto;width:110px;height:110px;background:radial-gradient(circle,rgba(251,124,48,.12),transparent 68%);pointer-events:none}
-    .rh-focus-miniLabel{font-size:11px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;color:#9ca3af}.rh-focus-miniValue{display:block;margin-top:10px;font-size:34px;line-height:1;font-weight:900;color:#fff}.rh-focus-miniMeta{display:block;margin-top:8px;font-size:12px;color:#cbd5e1}
+    .rh-focus-cardTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.rh-focus-cardTitle b{font-size:24px;color:#fff}.rh-focus-cardTitle span{font-size:12px;color:#9ca3af}
+    .rh-focus-bookList,.rh-focus-planList,.rh-focus-graphList{display:grid;gap:12px}.rh-focus-bookRow,.rh-focus-planRow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 14px;border-radius:20px;background:#171717;border:1px solid rgba(255,255,255,.08)}
+    .rh-focus-bookLeft,.rh-focus-planLeft{display:flex;align-items:center;gap:12px;min-width:0}.rh-focus-play{width:34px;height:34px;border-radius:999px;background:linear-gradient(135deg,#ffb341,#fb7c30);display:grid;place-items:center;color:#fff;font-size:13px;font-weight:900;flex:0 0 34px}
+    .rh-focus-bookTitle{font-size:22px;font-weight:800;color:#fff}.rh-focus-bookSub,.rh-focus-planSub{display:block;margin-top:4px;font-size:12px;color:#9ca3af}.rh-focus-bookTime{font-size:18px;font-weight:800;color:#f8fafc;white-space:nowrap}
+    .rh-focus-inlineActions{display:flex;gap:8px;flex-wrap:wrap}.rh-focus-inlineBtn{appearance:none;border:1px solid rgba(251,191,36,.18);background:rgba(251,191,36,.10);color:#fde68a;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:800;cursor:pointer}
+    .rh-focus-planDot{width:22px;height:22px;border-radius:999px;background:#fb7c30;display:grid;place-items:center;color:#fff;font-weight:900;flex:0 0 22px}.rh-focus-planTitle{font-size:18px;font-weight:700;color:#fff}
+    .rh-focus-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:18px}.rh-focus-mini{position:relative;overflow:hidden;border-radius:24px;padding:18px;border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,#151515,#101010)}.rh-focus-mini:before{content:"";position:absolute;inset:auto -10px -24px auto;width:110px;height:110px;background:radial-gradient(circle,rgba(251,124,48,.12),transparent 68%);pointer-events:none}.rh-focus-miniLabel{font-size:11px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;color:#9ca3af}.rh-focus-miniValue{display:block;margin-top:10px;font-size:34px;line-height:1;font-weight:900;color:#fff}.rh-focus-miniMeta{display:block;margin-top:8px;font-size:12px;color:#cbd5e1}
     .rh-focus-graphRow{display:grid;grid-template-columns:120px 1fr 64px;gap:12px;align-items:center}.rh-focus-graphName{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rh-focus-graphTrack{height:14px;border-radius:999px;background:#1f2937;overflow:hidden}.rh-focus-graphBar{height:100%;border-radius:999px;background:linear-gradient(90deg,#fb7c30,#fbbf24);box-shadow:0 0 16px rgba(251,124,48,.18)}.rh-focus-graphValue{font-size:12px;font-weight:800;color:#fbcc9d;text-align:right}
     .rh-focus-groupGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.rh-focus-member{padding:12px 8px;border-radius:20px;border:1px solid rgba(255,255,255,.08);background:#151515;text-align:center}.rh-focus-member.top{border-color:rgba(251,124,48,.38);box-shadow:0 0 0 1px rgba(251,124,48,.12) inset}.rh-focus-avatar{width:58px;height:58px;border-radius:20px;margin:0 auto 10px;background:linear-gradient(135deg,#fb7c30,#fbbf24);display:grid;place-items:center;font-weight:900;color:#111827;font-size:20px;box-shadow:0 12px 24px rgba(251,124,48,.22)}.rh-focus-member b{display:block;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rh-focus-member span{display:block;margin-top:4px;font-size:12px;color:#fb923c}
     .rh-focus-hidden{display:none!important}
+    .rh-focus-plannerInput{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}.rh-focus-plannerInput input{flex:1;min-width:220px;background:#0f172a;border:1px solid rgba(255,255,255,.10);color:#fff;padding:12px 14px;border-radius:16px}.rh-focus-plannerInput button{appearance:none;border:0;background:linear-gradient(90deg,#ff9f2a,#ff6e1d);color:#fff;padding:12px 16px;border-radius:16px;font-weight:800;cursor:pointer}.rh-focus-taskDone{text-decoration:line-through;opacity:.6}.rh-focus-taskActions{display:flex;gap:8px}.rh-focus-taskChip{appearance:none;border:1px solid rgba(255,255,255,.10);background:#1b1b1d;color:#fff;padding:7px 10px;border-radius:999px;font-size:12px;cursor:pointer}
     @media (max-width:1024px){.rh-focus-grid,.rh-focus-metrics{grid-template-columns:1fr}.rh-focus-groupGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.rh-focus-vipTimer{font-size:40px}.rh-focus-graphRow{grid-template-columns:88px 1fr 52px}}
   `;
   document.head.appendChild(style);
@@ -77,8 +67,6 @@ function findRoot(section){ return Array.from(section.querySelectorAll('div')).f
 function findTitleEl(root){ return Array.from(root?.querySelectorAll('h1,h2,h3,h4,b') || []).find(el => textOf(el).toLowerCase().includes('rathod hub focus')) || null; }
 function currentTimerText(section){ return textOf(Array.from(section.querySelectorAll('*')).find(el => /^\d{2}:\d{2}:\d{2}$/.test(textOf(el)))) || '00:00:00'; }
 function selectedSubject(section){ const s = section.querySelector('select'); return s?.value || s?.options?.[s.selectedIndex]?.text || 'Biology'; }
-function findTimerPanel(section){ const timer = Array.from(section.querySelectorAll('*')).find(el => /^\d{2}:\d{2}:\d{2}$/.test(textOf(el))); return timer?.closest('div.rounded-3xl,div.rounded-[32px],div.rounded-[28px]') || timer?.parentElement?.parentElement || null; }
-function findControlPanel(section){ return section.querySelector('select')?.closest('div.rounded-3xl,div.rounded-[32px],div.rounded-[28px]') || section.querySelector('select')?.parentElement?.parentElement || null; }
 function findStats(section){ const nodes = Array.from(section.querySelectorAll('div')); return { today:nodes.find(el => String(el.innerText || '').toLowerCase().includes('today') && String(el.innerText || '').toLowerCase().includes('study time')) || null, streak:nodes.find(el => String(el.innerText || '').toLowerCase().includes('consecutive study days')) || null, sessions:nodes.find(el => String(el.innerText || '').toLowerCase().includes('completed sessions')) || null }; }
 
 function ensureGoldHeader(section){
@@ -97,7 +85,7 @@ function ensureShell(section){
   shell.className = 'rh-focus-shell';
   shell.innerHTML = `
     <div class="rh-focus-vipBar">
-      <div class="rh-focus-vipTop"><div class="rh-focus-vipSubject"><span>👑</span><span id="rh-focus-vip-subject">Biology</span></div><div>VIP Mode</div></div>
+      <div class="rh-focus-vipTop"><div class="rh-focus-vipSubject"><span>👑</span><span id="rh-focus-vip-subject">Biology</span></div><div class="rh-focus-topMeta"><span id="rh-focus-top-clock" class="rh-focus-topClock">--:--</span><span>VIP Mode</span></div></div>
       <div id="rh-focus-vip-timer" class="rh-focus-vipTimer">00:00:00</div>
       <div class="rh-focus-tabs">
         <button type="button" class="rh-focus-tab active" data-rh-focus-tab="timer">Timer</button>
@@ -108,13 +96,29 @@ function ensureShell(section){
     </div>
     <div id="rh-focus-body" class="rh-focus-body"></div>`;
   ensureGoldHeader(section)?.appendChild(shell);
-  shell.querySelectorAll('[data-rh-focus-tab]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      appState.activeTab = btn.getAttribute('data-rh-focus-tab') || 'timer';
-      renderApp(section);
-    });
-  });
+  shell.querySelectorAll('[data-rh-focus-tab]').forEach(btn => btn.addEventListener('click', () => { appState.activeTab = btn.getAttribute('data-rh-focus-tab') || 'timer'; renderApp(section); }));
   return shell;
+}
+
+function setSubjectValue(section, subject){
+  const select = section.querySelector('select');
+  if(!select) return false;
+  const option = Array.from(select.options || []).find(o => String(o.value||o.textContent||'').toLowerCase() === subject.toLowerCase() || String(o.textContent||'').toLowerCase() === subject.toLowerCase());
+  if(!option) return false;
+  select.value = option.value;
+  select.dispatchEvent(new Event('change', { bubbles:true }));
+  return true;
+}
+function startFocusForSubject(section, subject){
+  setSubjectValue(section, subject);
+  const startBtn = Array.from(section.querySelectorAll('button')).find(btn => /start/i.test(textOf(btn)) && !/pomodoro/i.test(textOf(btn)));
+  if(startBtn) startBtn.click();
+  appState.activeTab = 'timer';
+  renderApp(section);
+}
+function quickSetDuration(section, minutes){
+  const input = section.querySelector('input[type="number"]');
+  if(input){ input.value = String(minutes); input.dispatchEvent(new Event('input', { bubbles:true })); input.dispatchEvent(new Event('change', { bubbles:true })); }
 }
 
 function renderGroupPanel(){
@@ -126,23 +130,28 @@ function renderGroupPanel(){
 }
 
 function renderTimerTab(section, body){
-  const timerPanel = findTimerPanel(section); const controlPanel = findControlPanel(section);
-  if(!timerPanel || !controlPanel) return;
-  timerPanel.classList.add('rh-focus-panel','rh-focus-panelOrange');
-  controlPanel.classList.add('rh-focus-panel');
-  const timerDisplay = Array.from(timerPanel.querySelectorAll('*')).find(el => /^\d{2}:\d{2}:\d{2}$/.test(textOf(el)));
-  if(timerDisplay) timerDisplay.classList.add('rh-focus-timerGlow');
-  Array.from(section.querySelectorAll('button')).forEach(btn => { const t=textOf(btn).toLowerCase(); if(/start/.test(t)||/pomodoro/.test(t)) btn.classList.add('rh-focus-startBtn'); else btn.classList.add('rh-focus-softBtn'); });
-  body.innerHTML = '<div id="rh-focus-grid" class="rh-focus-grid"></div><div style="margin-top:18px">'+renderGroupPanel()+'</div>';
-  const grid = body.querySelector('#rh-focus-grid');
-  const left = document.createElement('div'); const right = document.createElement('div');
-  left.appendChild(timerPanel); right.appendChild(controlPanel); grid.appendChild(left); grid.appendChild(right);
+  body.innerHTML = `
+    <div class="rh-focus-grid">
+      <div class="rh-focus-panel rh-focus-panelOrange" style="padding:18px">
+        <div class="rh-focus-cardTitle"><div><b>Live Timer</b><span>Current subject and clock</span></div><span id="rh-focus-live-clock">${liveClock()}</span></div>
+        <div class="rh-focus-metrics" style="margin-bottom:0">
+          <div class="rh-focus-mini"><span class="rh-focus-miniLabel">Current Subject</span><b class="rh-focus-miniValue">${selectedSubject(section)}</b><span class="rh-focus-miniMeta">Ready for focus</span></div>
+          <div class="rh-focus-mini"><span class="rh-focus-miniLabel">Current Time</span><b class="rh-focus-miniValue" id="rh-focus-clock-card">${liveClock()}</b><span class="rh-focus-miniMeta">Kitna baj raha hai abhi</span></div>
+        </div>
+      </div>
+      <div class="rh-focus-panel" style="padding:18px">
+        <div class="rh-focus-cardTitle"><div><b>Quick Actions</b><span>Fast controls</span></div><span>${currentTimerText(section)}</span></div>
+        <div class="rh-focus-inlineActions"><button type="button" class="rh-focus-inlineBtn" data-rh-duration="25">25 min</button><button type="button" class="rh-focus-inlineBtn" data-rh-duration="50">50 min</button><button type="button" class="rh-focus-inlineBtn" data-rh-duration="60">1 hour</button><button type="button" class="rh-focus-inlineBtn" data-rh-quick-subject="Biology">Bio Start</button><button type="button" class="rh-focus-inlineBtn" data-rh-quick-subject="Chemistry">Chem Start</button><button type="button" class="rh-focus-inlineBtn" data-rh-quick-subject="Physics">Phy Start</button></div>
+      </div>
+    </div>
+    <div style="margin-top:18px">${renderGroupPanel()}</div>`;
+  body.querySelectorAll('[data-rh-duration]').forEach(btn => btn.addEventListener('click', () => quickSetDuration(section, btn.getAttribute('data-rh-duration'))));
+  body.querySelectorAll('[data-rh-quick-subject]').forEach(btn => btn.addEventListener('click', () => startFocusForSubject(section, btn.getAttribute('data-rh-quick-subject') || 'Biology')));
 }
 
 function renderBooksTab(section, body){
-  const current = selectedSubject(section);
-  const rows = Object.keys(SUBJECT_MINUTES).map(name => ({ name, time:name===current?currentTimerText(section):SUBJECT_MINUTES[name], active:name===current }));
-  body.innerHTML = `<div class="rh-focus-panel" style="padding:18px"><div class="rh-focus-cardTitle"><div><b>For each subject</b><span>Study and todo</span></div><span>${rows.length} subjects</span></div><div class="rh-focus-bookList">${rows.map(r=>`<div class="rh-focus-bookRow"><div class="rh-focus-bookLeft"><div class="rh-focus-play">▶</div><div><div class="rh-focus-bookTitle">${r.name}</div><span class="rh-focus-bookSub">${r.active?'Current subject':'Ready to study'}</span></div></div><div class="rh-focus-bookTime">${r.time}</div></div>`).join('')}</div></div>`;
+  body.innerHTML = `<div class="rh-focus-panel" style="padding:18px"><div class="rh-focus-cardTitle"><div><b>For each subject</b><span>Study and direct start</span></div><span>${SUBJECT_BOOKS.length} subjects</span></div><div class="rh-focus-bookList">${SUBJECT_BOOKS.map(r=>`<div class="rh-focus-bookRow"><div class="rh-focus-bookLeft"><div class="rh-focus-play">▶</div><div><div class="rh-focus-bookTitle">${r.name}</div><span class="rh-focus-bookSub">${r.note}</span></div></div><div class="rh-focus-inlineActions"><button type="button" class="rh-focus-inlineBtn" data-rh-book-subject="${r.name}">Start ${r.session}</button></div></div>`).join('')}</div></div>`;
+  body.querySelectorAll('[data-rh-book-subject]').forEach(btn => btn.addEventListener('click', () => { const subject = btn.getAttribute('data-rh-book-subject') || 'Biology'; const preset = SUBJECT_BOOKS.find(x => x.name === subject)?.session || '50 min'; const minutes = parseInt(preset,10) || 50; quickSetDuration(section, minutes); startFocusForSubject(section, subject); }));
 }
 
 function renderInsightsTab(body){
@@ -158,14 +167,37 @@ function renderInsightsTab(body){
       <div class="rh-focus-mini"><span class="rh-focus-miniLabel">3-Day Focus</span><b class="rh-focus-miniValue">${appState.focus3day}</b><span class="rh-focus-miniMeta">${appState.nextText}</span></div>
       <div class="rh-focus-mini"><span class="rh-focus-miniLabel">Study Together</span><b class="rh-focus-miniValue">${members.length}</b><span class="rh-focus-miniMeta">Active focus members</span></div>
     </div>
-    <div class="rh-focus-panel" style="padding:18px"><div class="rh-focus-cardTitle"><div><b>All Users Hours Graph</b><span>Sabhi users ka focus hours</span></div><span>${members.length} users</span></div><div class="rh-focus-graphList">${members.map(m=>{const sec=Number(m.total_seconds||0);const pct=Math.max(8,Math.round((sec/max)*100));return `<div class="rh-focus-graphRow"><div class="rh-focus-graphName">${m.name||'Member'}</div><div class="rh-focus-graphTrack"><div class="rh-focus-graphBar" style="width:${pct}%"></div></div><div class="rh-focus-graphValue">${fmtHours(sec)}</div></div>`}).join('')}</div></div>
-    <div style="margin-top:18px">${renderGroupPanel()}</div>`;
+    <div class="rh-focus-panel" style="padding:18px"><div class="rh-focus-cardTitle"><div><b>All Users Hours Graph</b><span>Sabhi users ka focus hours</span></div><span>${members.length} users</span></div><div class="rh-focus-graphList">${members.map(m=>{const sec=Number(m.total_seconds||0);const pct=Math.max(8,Math.round((sec/max)*100));return `<div class="rh-focus-graphRow"><div class="rh-focus-graphName">${m.name||'Member'}</div><div class="rh-focus-graphTrack"><div class="rh-focus-graphBar" style="width:${pct}%"></div></div><div class="rh-focus-graphValue">${fmtHours(sec)}</div></div>`}).join('')}</div></div>`;
 }
 
+function bindPlannerActions(section, body){
+  const input = body.querySelector('#rh-focus-planner-input');
+  const addBtn = body.querySelector('#rh-focus-planner-add');
+  const renderList = () => renderPlannerTab(section, body);
+  addBtn?.addEventListener('click', () => {
+    const value = String(input?.value || '').trim();
+    if(!value) return;
+    const tasks = plannerStore();
+    tasks.unshift({ id: Date.now().toString(36), text:value, done:false, subject:selectedSubject(section), date:new Date().toISOString().slice(0,10) });
+    savePlanner(tasks);
+    renderList();
+  });
+  body.querySelectorAll('[data-rh-task-toggle]').forEach(btn => btn.addEventListener('click', () => {
+    const id = btn.getAttribute('data-rh-task-toggle');
+    const tasks = plannerStore().map(t => t.id === id ? { ...t, done: !t.done } : t);
+    savePlanner(tasks); renderList();
+  }));
+  body.querySelectorAll('[data-rh-task-delete]').forEach(btn => btn.addEventListener('click', () => {
+    const id = btn.getAttribute('data-rh-task-delete');
+    savePlanner(plannerStore().filter(t => t.id !== id)); renderList();
+  }));
+}
 function renderPlannerTab(section, body){
   const subject = selectedSubject(section);
-  const tasks = SUBJECT_TODOS[subject] || ['Focus for 30 minutes','Finish one planned task','Revise mistakes'];
-  body.innerHTML = `<div class="rh-focus-panel" style="padding:18px"><div class="rh-focus-cardTitle"><div><b>${subject}</b><span>Planner</span></div><span>${currentTimerText(section)}</span></div><div class="rh-focus-planList">${tasks.map((t,i)=>`<div class="rh-focus-planRow"><div class="rh-focus-planLeft"><div class="rh-focus-planDot">${i+1}</div><div><div class="rh-focus-planTitle">${t}</div><span class="rh-focus-planSub">${i===0?'Current target':i===1?'Revision target':'Bonus target'}</span></div></div><span class="rh-focus-bookTime">${subject}</span></div>`).join('')}</div></div>`;
+  const date = new Date().toISOString().slice(0,10);
+  const tasks = plannerStore().filter(t => t.date === date);
+  body.innerHTML = `<div class="rh-focus-panel" style="padding:18px"><div class="rh-focus-cardTitle"><div><b>${subject}</b><span>Planner</span></div><span>${currentTimerText(section)}</span></div><div class="rh-focus-plannerInput"><input id="rh-focus-planner-input" type="text" placeholder="Aaj kya karna hai? likho..."><button id="rh-focus-planner-add" type="button">Add Task</button></div><div class="rh-focus-planList">${tasks.length?tasks.map((t,i)=>`<div class="rh-focus-planRow"><div class="rh-focus-planLeft"><div class="rh-focus-planDot">${i+1}</div><div><div class="rh-focus-planTitle ${t.done?'rh-focus-taskDone':''}">${t.text}</div><span class="rh-focus-planSub">${t.subject || subject}</span></div></div><div class="rh-focus-taskActions"><button type="button" class="rh-focus-taskChip" data-rh-task-toggle="${t.id}">${t.done?'Undo':'Done'}</button><button type="button" class="rh-focus-taskChip" data-rh-task-delete="${t.id}">Delete</button></div></div>`).join(''):'<div class="rh-focus-planRow"><div class="rh-focus-planLeft"><div class="rh-focus-planDot">+</div><div><div class="rh-focus-planTitle">No task added yet</div><span class="rh-focus-planSub">Aaj kya karna hai yaha add karo</span></div></div></div>'}</div></div>`;
+  bindPlannerActions(section, body);
 }
 
 function renderApp(section){
@@ -173,6 +205,7 @@ function renderApp(section){
   const subject = selectedSubject(section); const timer = currentTimerText(section);
   shell.querySelector('#rh-focus-vip-subject').textContent = `${subject} • ${todayLabel()}`;
   shell.querySelector('#rh-focus-vip-timer').textContent = timer;
+  shell.querySelector('#rh-focus-top-clock').textContent = liveClock();
   shell.querySelectorAll('[data-rh-focus-tab]').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-rh-focus-tab') === appState.activeTab));
   const body = shell.querySelector('#rh-focus-body'); if(!body) return;
   if(appState.activeTab === 'books') renderBooksTab(section, body);
@@ -213,4 +246,5 @@ function boot(){
 }
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 1200), { once:true }); else setTimeout(boot, 1200);
 setInterval(() => { if(document.visibilityState !== 'hidden') boot(); }, 2500);
+setInterval(() => { document.getElementById('rh-focus-top-clock') && (document.getElementById('rh-focus-top-clock').textContent = liveClock()); document.getElementById('rh-focus-clock-card') && (document.getElementById('rh-focus-clock-card').textContent = liveClock()); document.getElementById('rh-focus-live-clock') && (document.getElementById('rh-focus-live-clock').textContent = liveClock()); }, 1000);
 })();
