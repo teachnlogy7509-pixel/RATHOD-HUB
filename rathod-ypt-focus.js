@@ -12,22 +12,22 @@ const toast = (text, ok=false) => { try { if (typeof window.toast === 'function'
 let currentTab = 'all';
 
 const AVATAR_LIBRARY = {
-  avatar_shadow_striker:{accent:'#f59e0b',hair:'#111827',shirt:'#f3f4f6',skin:'#efc8a6',gender:'boys',label:'Shadow Striker'},
-  avatar_wind_weaver:{accent:'#ec4899',hair:'#d4a373',shirt:'#fff1f2',skin:'#f1c9ae',gender:'girls',label:'Wind Weaver'},
-  avatar_tech_tactician:{accent:'#64748b',hair:'#111827',shirt:'#dbeafe',skin:'#ecc4a2',gender:'boys',label:'Tech Tactician'},
-  avatar_flame_oracle:{accent:'#fb7185',hair:'#1f2937',shirt:'#e5e7eb',skin:'#e9bf9c',gender:'girls',label:'Flame Oracle'},
-  avatar_scroll_sage:{accent:'#a855f7',hair:'#cbd5e1',shirt:'#e2e8f0',skin:'#efc8a5',gender:'boys',label:'Scroll Sage'},
-  avatar_luna_lore:{accent:'#8b5cf6',hair:'#111827',shirt:'#ede9fe',skin:'#efc8af',gender:'girls',label:'Luna Lore'},
-  avatar_hoodie_hacker:{accent:'#06b6d4',hair:'#0f172a',shirt:'#cffafe',skin:'#edc4a2',gender:'boys',label:'Hoodie Hacker'},
-  avatar_royal_librarian:{accent:'#fde68a',hair:'#fde68a',shirt:'#fef3c7',skin:'#f1c8aa',gender:'girls',label:'Royal Librarian'},
-  avatar_noir_swordsman:{accent:'#94a3b8',hair:'#111111',shirt:'#e5e7eb',skin:'#e8bc98',gender:'boys',label:'Noir Swordsman'},
-  avatar_quantum_alchemist:{accent:'#38bdf8',hair:'#7c3aed',shirt:'#ecfeff',skin:'#efc8ae',gender:'girls',label:'Quantum Alchemist'},
-  avatar_note_novice:{accent:'#f59e0b',hair:'#92400e',shirt:'#fff7ed',skin:'#eec6a7',gender:'girls',label:'Note Novice'},
-  avatar_zen_monk:{accent:'#f97316',hair:'#111111',shirt:'#fed7aa',skin:'#edc29e',gender:'boys',label:'Zen Monk'},
-  avatar_ghost_reader:{accent:'#c4b5fd',hair:'#e9d5ff',shirt:'#f5f3ff',skin:'#f0d4c0',gender:'girls',label:'Ghost Reader'},
-  avatar_phoenix_hero:{accent:'#f97316',hair:'#7c2d12',shirt:'#fee2e2',skin:'#efc39d',gender:'boys',label:'Phoenix Hero'},
-  avatar_forest_druid:{accent:'#22c55e',hair:'#166534',shirt:'#dcfce7',skin:'#efc7ab',gender:'girls',label:'Forest Druid'},
-  avatar_astronaut_student:{accent:'#60a5fa',hair:'#e5e7eb',shirt:'#eff6ff',skin:'#efc8ab',gender:'boys',label:'Astronaut Student'}
+  avatar_shadow_striker:{accent:'#f59e0b',hair:'#0f172a',shirt:'#dbe4f0',skin:'#efc8a6',gender:'boys',label:'Shadow Striker',style:'shadowSpikes'},
+  avatar_wind_weaver:{accent:'#ec4899',hair:'#f4c16f',shirt:'#f8ede3',skin:'#f1c9ae',gender:'girls',label:'Wind Weaver',style:'windTwinTails'},
+  avatar_tech_tactician:{accent:'#64748b',hair:'#111827',shirt:'#dbeafe',skin:'#ecc4a2',gender:'boys',label:'Tech Tactician',style:'techShort'},
+  avatar_flame_oracle:{accent:'#fb7185',hair:'#1f2937',shirt:'#e5e7eb',skin:'#e9bf9c',gender:'girls',label:'Flame Oracle',style:'flameLong'},
+  avatar_scroll_sage:{accent:'#a855f7',hair:'#d6d3d1',shirt:'#e2e8f0',skin:'#efc8a5',gender:'boys',label:'Scroll Sage',style:'scrollSilver'},
+  avatar_luna_lore:{accent:'#8b5cf6',hair:'#111827',shirt:'#ede9fe',skin:'#efc8af',gender:'girls',label:'Luna Lore',style:'lunaBraid'},
+  avatar_hoodie_hacker:{accent:'#06b6d4',hair:'#0f172a',shirt:'#cffafe',skin:'#edc4a2',gender:'boys',label:'Hoodie Hacker',style:'hoodieMessy'},
+  avatar_royal_librarian:{accent:'#fde68a',hair:'#f8d66d',shirt:'#fef3c7',skin:'#f1c8aa',gender:'girls',label:'Royal Librarian',style:'royalWave'},
+  avatar_noir_swordsman:{accent:'#94a3b8',hair:'#111111',shirt:'#e5e7eb',skin:'#e8bc98',gender:'boys',label:'Noir Swordsman',style:'noirSweep'},
+  avatar_quantum_alchemist:{accent:'#38bdf8',hair:'#7c3aed',shirt:'#ecfeff',skin:'#efc8ae',gender:'girls',label:'Quantum Alchemist',style:'quantumLong'},
+  avatar_note_novice:{accent:'#f59e0b',hair:'#8b5a2b',shirt:'#fff7ed',skin:'#eec6a7',gender:'girls',label:'Note Novice',style:'noteBob'},
+  avatar_zen_monk:{accent:'#f97316',hair:'#1c1917',shirt:'#fed7aa',skin:'#edc29e',gender:'boys',label:'Zen Monk',style:'zenTopknot'},
+  avatar_ghost_reader:{accent:'#c4b5fd',hair:'#f5f3ff',shirt:'#f5f3ff',skin:'#f0d4c0',gender:'girls',label:'Ghost Reader',style:'ghostFlow'},
+  avatar_phoenix_hero:{accent:'#f97316',hair:'#7c2d12',shirt:'#fee2e2',skin:'#efc39d',gender:'boys',label:'Phoenix Hero',style:'phoenixFlare'},
+  avatar_forest_druid:{accent:'#22c55e',hair:'#166534',shirt:'#dcfce7',skin:'#efc7ab',gender:'girls',label:'Forest Druid',style:'forestLong'},
+  avatar_astronaut_student:{accent:'#60a5fa',hair:'#e5e7eb',shirt:'#eff6ff',skin:'#efc8ab',gender:'boys',label:'Astronaut Student',style:'astroRound'}
 };
 
 function fmt(sec){ sec=Math.max(0,Number(sec)||0); const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60; if(h) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; return `${m}:${String(s).padStart(2,'0')}`; }
@@ -39,11 +39,52 @@ function parseJsonMaybe(value){ if(Array.isArray(value)||!value) return value; i
 function avatarCfg(item){ return AVATAR_LIBRARY[item?.avatar_item_id || item?.item_id] || {accent:'#f59e0b',hair:'#111827',shirt:'#f8fafc',skin:'#efc8a6',gender:'all',label:item?.name||'Avatar'}; }
 function avatarHtml(item, size='h-[118px] w-[118px]'){
   const t = avatarCfg(item);
-  const female = t.gender === 'girls';
-  const extraHair = female
-    ? `<path d="M89 98c2 30 8 47 17 61-21-7-30-27-30-49 0-8 4-17 13-27z" fill="${t.hair}" opacity="0.96"/><path d="M167 98c-2 30-8 47-17 61 21-7 30-27 30-49 0-8-4-17-13-27z" fill="${t.hair}" opacity="0.96"/>`
-    : `<path d="M92 98c7-12 17-18 33-20 18-2 31 2 40 12-3-15-17-27-39-27-16 0-30 10-34 35z" fill="${t.hair}" opacity="0.55"/>`;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="none"><defs><linearGradient id="bg" x1="34" y1="28" x2="220" y2="228"><stop stop-color="#161616"/><stop offset="1" stop-color="#0b0b0d"/></linearGradient><radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 108) rotate(90) scale(92)"><stop offset="0" stop-color="${t.accent}" stop-opacity="0.7"/><stop offset="1" stop-color="${t.accent}" stop-opacity="0"/></radialGradient></defs><rect width="256" height="256" rx="44" fill="url(#bg)"/><circle cx="128" cy="110" r="88" fill="url(#glow)"/><circle cx="58" cy="58" r="22" fill="${t.accent}" opacity="0.18"/><circle cx="198" cy="196" r="28" fill="${t.accent}" opacity="0.14"/><ellipse cx="128" cy="220" rx="52" ry="16" fill="#000" opacity="0.22"/><path d="M74 196c12 18 31 28 54 28 24 0 42-10 54-28l-8-37H82z" fill="${t.accent}"/><rect x="78" y="148" width="100" height="58" rx="26" fill="${t.shirt}"/><path d="M95 153c-19 10-30 27-34 48l28-18 10-28z" fill="${t.shirt}"/><path d="M161 153c19 10 30 27 34 48l-28-18-10-28z" fill="${t.shirt}"/><circle cx="128" cy="94" r="38" fill="${t.skin}"/><path d="M88 92c4-31 24-50 40-50 27 0 45 18 48 48-13-8-24-12-46-12-17 0-29 4-42 14z" fill="${t.hair}"/>${extraHair}<circle cx="113" cy="97" r="4.2" fill="#1F2937"/><circle cx="143" cy="97" r="4.2" fill="#1F2937"/><path d="M117 114c7 6 15 6 22 0" stroke="#8B5E3C" stroke-width="4" stroke-linecap="round"/><path d="M111 124c5 11 10 16 17 16 7 0 13-5 17-16" stroke="${t.skin}" stroke-width="10" stroke-linecap="round"/><rect x="100" y="150" width="56" height="32" rx="8" fill="#fff" opacity="0.94"/><path d="M128 150v32" stroke="#CBD5E1" stroke-width="2"/></svg>`;
+  const style = t.style || (t.gender === 'girls' ? 'forestLong' : 'shadowSpikes');
+  function hairSvg(){
+    const c = t.hair;
+    const map = {
+      shadowSpikes:`<path d="M82 98c4-24 24-50 56-50 19 0 36 9 50 31l-18-5-8 12-12-11-11 13-14-11-13 12-12-8-18 7z" fill="${c}"/><path d="M92 73l18-20 7 15 15-17 10 16 16-11 7 16 14 1-9 10z" fill="${c}"/>`,
+      windTwinTails:`<path d="M82 87c8-28 28-44 47-44 18 0 34 7 47 27l-7 12-18-10-11 12-14-9-13 10-10-10-11 12z" fill="${c}"/><path d="M80 93c-12 18-17 43-13 67 18-7 31-26 34-51l-21-16z" fill="${c}"/><path d="M176 93c12 18 17 43 13 67-18-7-31-26-34-51l21-16z" fill="${c}"/><circle cx="95" cy="68" r="10" fill="${c}"/><circle cx="161" cy="68" r="10" fill="${c}"/>`,
+      techShort:`<path d="M84 91c8-28 31-45 55-45 18 0 37 9 46 28l-16-4-10 8-15-6-12 8-13-6-15 9-9-7z" fill="${c}"/><path d="M86 89c8-10 18-17 33-21 22-5 40-3 59 9-9-20-29-31-55-31-18 0-33 14-37 43z" fill="${c}" opacity=".72"/>`,
+      flameLong:`<path d="M82 88c6-27 28-46 53-46 19 0 36 8 48 30l-13-3-12 11-14-7-14 11-13-8-11 12-12-8z" fill="${c}"/><path d="M85 93c-8 19-10 43-6 68 17-11 24-33 27-57l-21-11z" fill="${c}"/><path d="M171 93c8 19 10 43 6 68-17-11-24-33-27-57l21-11z" fill="${c}"/>`,
+      scrollSilver:`<path d="M82 92c5-25 24-46 53-46 17 0 35 7 47 25l-14 0-12 11-13-7-15 10-13-10-11 9-11 8z" fill="${c}"/><path d="M95 62l18-13 10 11 14-12 12 14 16-8 7 14" stroke="#ffffff" stroke-opacity=".38" stroke-width="3" stroke-linecap="round"/>`,
+      lunaBraid:`<path d="M83 87c6-26 27-44 49-44 20 0 39 8 50 29l-8 11-18-10-12 11-14-8-12 9-11-9-12 11z" fill="${c}"/><path d="M92 98c-6 19-7 41-2 60 14-10 18-30 18-50l-16-10z" fill="${c}"/><path d="M164 98c6 19 7 41 2 60-14-10-18-30-18-50l16-10z" fill="${c}"/><path d="M128 127c0 17 6 31 16 45" stroke="${c}" stroke-width="10" stroke-linecap="round"/>`,
+      hoodieMessy:`<path d="M84 94c6-29 29-47 54-47 18 0 36 9 47 28l-17-5-9 9-14-8-13 10-14-6-14 10-10-7z" fill="${c}"/><path d="M77 133c7-21 18-31 31-40 0 0-19 14-23 30z" fill="#0b1220" opacity=".55"/><path d="M180 133c-7-21-18-31-31-40 0 0 19 14 23 30z" fill="#0b1220" opacity=".55"/>`,
+      royalWave:`<path d="M82 87c8-30 31-46 54-46 22 0 38 11 48 30l-16-4-11 12-15-8-14 11-11-9-12 11-13-9z" fill="${c}"/><path d="M83 93c-8 18-10 39-7 61 16-10 25-31 30-54l-23-7z" fill="${c}"/><path d="M173 93c8 18 10 39 7 61-16-10-25-31-30-54l23-7z" fill="${c}"/><path d="M108 57h40" stroke="#fff7cc" stroke-width="4" stroke-linecap="round" opacity=".8"/>`,
+      noirSweep:`<path d="M83 95c8-31 33-47 58-47 20 0 35 7 45 21l-18 1-17 11-17-8-16 8-14 6-11 8z" fill="${c}"/><path d="M95 70c13-14 36-21 62-14-17-10-42-12-57 4z" fill="#374151" opacity=".45"/>`,
+      quantumLong:`<path d="M82 87c7-29 30-44 53-44 23 0 39 10 48 31l-15-4-12 11-14-8-12 10-13-8-11 10-12-8z" fill="${c}"/><path d="M84 92c-10 20-11 44-6 68 16-12 24-34 27-58l-21-10z" fill="${c}"/><path d="M172 92c10 20 11 44 6 68-16-12-24-34-27-58l21-10z" fill="${c}"/><path d="M151 56l14-7" stroke="#c4b5fd" stroke-width="3" stroke-linecap="round"/>`,
+      noteBob:`<path d="M86 90c8-27 28-43 47-43 20 0 37 8 47 26l-14 2-11 10-14-7-12 10-13-8-12 10-12-7z" fill="${c}"/><path d="M91 95c-4 14-5 31-1 47 13-8 18-24 18-41l-17-6z" fill="${c}"/><path d="M165 95c4 14 5 31 1 47-13-8-18-24-18-41l17-6z" fill="${c}"/>`,
+      zenTopknot:`<path d="M86 95c7-28 29-43 49-43 19 0 35 7 43 22l-16 3-13 8-14-7-13 8-13-4-12 13z" fill="${c}"/><circle cx="128" cy="54" r="10" fill="${c}"/>`,
+      ghostFlow:`<path d="M82 87c7-28 28-44 48-44 23 0 40 10 49 31l-15-5-13 10-14-8-13 9-13-8-11 11-12-8z" fill="${c}"/><path d="M85 92c-10 20-12 43-8 67 16-10 25-31 30-55l-22-12z" fill="${c}" opacity=".95"/><path d="M171 92c10 20 12 43 8 67-16-10-25-31-30-55l22-12z" fill="${c}" opacity=".95"/>`,
+      phoenixFlare:`<path d="M81 96c7-32 33-48 58-48 21 0 38 11 48 28l-18-4-10 10-14-10-15 11-13-9-13 10-13 12z" fill="${c}"/><path d="M103 58l13-17 10 16 14-17 11 18 16-6-3 16" fill="#fb923c" opacity=".55"/>`,
+      forestLong:`<path d="M82 87c7-29 30-44 53-44 23 0 39 10 48 31l-15-4-12 11-14-8-12 10-13-8-11 10-12-8z" fill="${c}"/><path d="M84 93c-10 22-11 46-5 70 18-13 25-35 28-60l-23-10z" fill="${c}"/><path d="M172 93c10 22 11 46 5 70-18-13-25-35-28-60l23-10z" fill="${c}"/><path d="M66 132c10 0 19 8 19 19" stroke="#22c55e" stroke-width="5" stroke-linecap="round" opacity=".7"/>`,
+      astroRound:`<path d="M84 95c6-26 27-41 45-41 21 0 38 9 46 25l-15 1-12 8-13-5-13 7-13-5-13 10z" fill="${c}"/><path d="M95 64c8-5 18-8 30-8 13 0 24 3 33 10-10-13-25-20-40-20-12 0-23 6-23 18z" fill="#ffffff" opacity=".45"/>`
+    };
+    return map[style] || map.shadowSpikes;
+  }
+  function accessorySvg(){
+    const a = t.accent;
+    const map = {
+      shadowSpikes:`<path d="M173 92l12 6-9 7" stroke="${a}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`,
+      windTwinTails:`<path d="M94 72h8M154 72h8" stroke="#fff7cc" stroke-width="4" stroke-linecap="round"/>`,
+      techShort:`<rect x="146" y="92" width="20" height="10" rx="5" fill="#111827" opacity=".7"/>`,
+      flameLong:`<path d="M164 74c4 2 7 6 8 12" stroke="#fb923c" stroke-width="4" stroke-linecap="round"/>`,
+      scrollSilver:`<rect x="158" y="145" width="14" height="30" rx="6" fill="#f8fafc" stroke="#a855f7" stroke-width="3"/>`,
+      lunaBraid:`<circle cx="168" cy="76" r="7" fill="#c4b5fd" opacity=".85"/>`,
+      hoodieMessy:`<path d="M84 148c3-11 10-18 20-23" stroke="#0ea5e9" stroke-width="4" stroke-linecap="round" opacity=".7"/>`,
+      royalWave:`<path d="M112 52h32" stroke="#fde68a" stroke-width="5" stroke-linecap="round"/>`,
+      noirSweep:`<path d="M170 148l13 20" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>`,
+      quantumLong:`<circle cx="169" cy="73" r="6" fill="#38bdf8" opacity=".8"/>`,
+      noteBob:`<path d="M158 150h13v18h-13z" fill="#fff" opacity=".8"/>`,
+      zenTopknot:`<circle cx="128" cy="53" r="5" fill="#fb923c" opacity=".75"/>`,
+      ghostFlow:`<path d="M168 72c4 0 8 3 9 8" stroke="#e9d5ff" stroke-width="4" stroke-linecap="round"/>`,
+      phoenixFlare:`<path d="M168 66l10 2-6 9" fill="#fb923c" opacity=".85"/>`,
+      forestLong:`<path d="M79 147c8-8 17-11 26-8" stroke="#22c55e" stroke-width="4" stroke-linecap="round" opacity=".7"/>`,
+      astroRound:`<path d="M92 77c22-10 50-10 71 0" stroke="#bfdbfe" stroke-width="3" stroke-linecap="round" opacity=".85"/>`
+    };
+    return map[style] || '';
+  }
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="none"><defs><linearGradient id="bg" x1="34" y1="28" x2="220" y2="228"><stop stop-color="#161616"/><stop offset="1" stop-color="#0b0b0d"/></linearGradient><radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 108) rotate(90) scale(92)"><stop offset="0" stop-color="${t.accent}" stop-opacity="0.7"/><stop offset="1" stop-color="${t.accent}" stop-opacity="0"/></radialGradient></defs><rect width="256" height="256" rx="44" fill="url(#bg)"/><circle cx="128" cy="110" r="88" fill="url(#glow)"/><circle cx="58" cy="58" r="22" fill="${t.accent}" opacity="0.18"/><circle cx="198" cy="196" r="28" fill="${t.accent}" opacity="0.14"/><ellipse cx="128" cy="220" rx="52" ry="16" fill="#000" opacity="0.22"/><path d="M74 196c12 18 31 28 54 28 24 0 42-10 54-28l-8-37H82z" fill="${t.accent}"/><rect x="78" y="148" width="100" height="58" rx="26" fill="${t.shirt}"/><path d="M95 153c-19 10-30 27-34 48l28-18 10-28z" fill="${t.shirt}"/><path d="M161 153c19 10 30 27 34 48l-28-18-10-28z" fill="${t.shirt}"/><circle cx="128" cy="96" r="38" fill="${t.skin}"/>${hairSvg()}<path d="M108 95c4-3 8-4 12-4" stroke="#1f2937" stroke-width="3.5" stroke-linecap="round"/><path d="M136 91c4 0 8 1 12 4" stroke="#1f2937" stroke-width="3.5" stroke-linecap="round"/><circle cx="113" cy="102" r="4.2" fill="#1F2937"/><circle cx="143" cy="102" r="4.2" fill="#1F2937"/><path d="M117 118c7 6 15 6 22 0" stroke="#8B5E3C" stroke-width="4" stroke-linecap="round"/><path d="M111 128c5 11 10 16 17 16 7 0 13-5 17-16" stroke="${t.skin}" stroke-width="10" stroke-linecap="round"/><rect x="100" y="150" width="56" height="32" rx="8" fill="#fff" opacity="0.94"/><path d="M128 150v32" stroke="#CBD5E1" stroke-width="2"/>${accessorySvg()}</svg>`;
   return `<img src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}" alt="" class="${size} object-contain">`;
 }
 
