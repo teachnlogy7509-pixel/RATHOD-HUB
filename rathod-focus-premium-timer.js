@@ -32,11 +32,13 @@ function textIncludes(el, str){
 }
 
 function findFocusRoot(section){
-  const nodes = Array.from(section.querySelectorAll('div'));
-  for(const node of nodes){
-    if(textIncludes(node,'RATHOD HUB FOCUS')) return node;
-  }
-  return null;
+  return Array.from(section.querySelectorAll('div')).find(node => textIncludes(node,'RATHOD HUB FOCUS')) || null;
+}
+
+function findTimerCard(section){
+  const timer = Array.from(section.querySelectorAll('*')).find(el => /^\d{2}:\d{2}:\d{2}$/.test(String(el.textContent || '').trim()));
+  if(!timer) return null;
+  return timer.closest('div.rounded-3xl,div.rounded-[32px],div.rounded-[28px]') || timer.parentElement?.parentElement || timer.parentElement || null;
 }
 
 function addVipBadge(root){
@@ -50,20 +52,12 @@ function addVipBadge(root){
   title.parentElement?.insertBefore(badge, title);
 }
 
-function hideSessionLabel(section){
-  Array.from(section.querySelectorAll('*')).forEach(el => {
-    const txt = String(el.textContent || '').trim().toLowerCase();
-    if(txt === 'focus session') el.classList.add('rh-focus-hide');
-  });
-}
-
 function styleTimerPanels(section){
   const timer = Array.from(section.querySelectorAll('*')).find(el => /^\d{2}:\d{2}:\d{2}$/.test(String(el.textContent || '').trim()));
   if(timer){
     timer.classList.add('rh-focus-timer-glow');
-    const panel = timer.closest('div');
-    const higher = panel?.parentElement?.parentElement || panel?.parentElement || panel;
-    if(higher) higher.classList.add('rh-focus-timer-panel');
+    const card = findTimerCard(section);
+    if(card) card.classList.add('rh-focus-timer-panel');
   }
   Array.from(section.querySelectorAll('button')).forEach(btn => {
     const txt = String(btn.textContent || '').trim().toLowerCase();
@@ -72,21 +66,29 @@ function styleTimerPanels(section){
   });
 }
 
+function isDuplicateStatCard(el){
+  const txt = String(el.innerText || '').trim().toLowerCase().replace(/\s+/g,' ');
+  if(!txt) return false;
+  if(txt.includes('completed sessions')) return true;
+  if(txt.includes('consecutive study days')) return true;
+  if(txt === 'streak' || txt.startsWith('streak ')) return txt.includes('consecutive study days');
+  if(txt === 'sessions' || txt.startsWith('sessions ')) return txt.includes('completed sessions');
+  return false;
+}
+
 function hideDuplicateStats(section){
-  const cards = Array.from(section.querySelectorAll('div')).filter(el => {
-    const txt = String(el.innerText || '').toLowerCase();
-    return txt.includes('consecutive study days') || txt.includes('completed sessions') || /\bstreak\b/.test(txt) || /\bsessions\b/.test(txt);
-  });
-  cards.forEach(card => {
-    const target = card.closest('div');
-    if(target) target.classList.add('rh-focus-hide');
+  Array.from(section.querySelectorAll('.rh-focus-hide')).forEach(el => el.classList.remove('rh-focus-hide'));
+  const timerCard = findTimerCard(section);
+  Array.from(section.querySelectorAll('div')).forEach(card => {
+    if(card === timerCard || card.contains(timerCard)) return;
+    if(isDuplicateStatCard(card)) card.classList.add('rh-focus-hide');
   });
 
-  const todayCard = Array.from(section.querySelectorAll('div')).find(el => String(el.innerText || '').toLowerCase().includes('study time') && String(el.innerText || '').toLowerCase().includes('today'));
-  if(todayCard){
-    const wrapper = todayCard.closest('div');
-    if(wrapper) wrapper.classList.add('rh-focus-today-card');
-  }
+  const todayCard = Array.from(section.querySelectorAll('div')).find(el => {
+    const txt = String(el.innerText || '').toLowerCase();
+    return txt.includes('study time') && txt.includes('today');
+  });
+  if(todayCard) todayCard.classList.add('rh-focus-today-card');
 }
 
 function addTopChips(section){
@@ -112,7 +114,6 @@ function polish(){
   if(root) root.classList.add('rh-focus-vip-shell');
   addVipBadge(root);
   addTopChips(section);
-  hideSessionLabel(section);
   styleTimerPanels(section);
   hideDuplicateStats(section);
 }
