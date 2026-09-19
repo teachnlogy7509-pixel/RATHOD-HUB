@@ -40,7 +40,7 @@ function loadOne(src,key){
 }
 function load(){
  loadOne('rathod-ypt-focus.js?v=5','data-rh-ypt-focus');
- loadOne('rathod-focus-premium-timer.js?v=2','data-rh-focus-premium-timer');
+ loadOne('rathod-focus-premium-timer.js?v=3','data-rh-focus-premium-timer');
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load,{once:true});
 else setTimeout(load,0);

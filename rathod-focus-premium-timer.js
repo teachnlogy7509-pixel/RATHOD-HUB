@@ -4,6 +4,11 @@
 if(window.__RH_FOCUS_TIMER_PREMIUM__) return;
 window.__RH_FOCUS_TIMER_PREMIUM__ = 1;
 
+const db = () => { try { return window.db || null; } catch (e) { return null; } };
+const uid = () => { try { return String(window.user?.id || ''); } catch (e) { return ''; } };
+let miniData = { rank: '—', focus3day: '0h 0m', next: 'VIP progress' };
+let loadingMini = false;
+
 function ensureStyle(){
   if(document.getElementById('rh-focus-premium-style')) return;
   const style = document.createElement('style');
@@ -23,12 +28,27 @@ function ensureStyle(){
     .rh-focus-vip-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);font-size:10px;font-weight:800;color:#f8fafc}
     .rh-focus-hide{display:none!important}
     .rh-focus-today-card{border:1px solid rgba(251,191,36,.18)!important;background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(255,255,255,.03))!important;box-shadow:0 18px 40px rgba(0,0,0,.24)}
+    .rh-ypt-mini-row{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:16px;margin-top:18px}
+    @media (min-width: 900px){.rh-ypt-mini-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    .rh-ypt-mini-card{position:relative;overflow:hidden;border:1px solid rgba(251,191,36,.14);border-radius:24px;padding:18px;background:linear-gradient(135deg,rgba(15,23,42,.88),rgba(28,25,23,.92));box-shadow:0 18px 42px rgba(0,0,0,.24)}
+    .rh-ypt-mini-card:before{content:"";position:absolute;inset:auto auto -30px -30px;width:120px;height:120px;background:radial-gradient(circle,rgba(251,191,36,.10),transparent 70%);pointer-events:none}
+    .rh-ypt-mini-card .label{font-size:10px;font-weight:900;letter-spacing:.24em;text-transform:uppercase;color:#fcd34d}
+    .rh-ypt-mini-card .value{display:block;margin-top:8px;font-size:34px;line-height:1;font-weight:900;color:#fff7ed}
+    .rh-ypt-mini-card .meta{display:block;margin-top:8px;font-size:11px;color:#cbd5e1}
+    .rh-ypt-mini-card.rank .value{color:#93c5fd}
+    .rh-ypt-mini-card.focus .value{color:#fca5a5}
   `;
   document.head.appendChild(style);
 }
 
 function textIncludes(el, str){
   return !!el && String(el.textContent || '').toLowerCase().includes(String(str).toLowerCase());
+}
+
+function fmtShort(sec){
+  sec = Math.max(0, Number(sec) || 0);
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
+  return h ? `${h}h ${m}m` : `${m}m`;
 }
 
 function findFocusRoot(section){
@@ -41,6 +61,21 @@ function findTimerCard(section){
   return timer.closest('div.rounded-3xl,div.rounded-[32px],div.rounded-[28px]') || timer.parentElement?.parentElement || timer.parentElement || null;
 }
 
+function findTodayCard(section){
+  return Array.from(section.querySelectorAll('div')).find(el => {
+    const txt = String(el.innerText || '').toLowerCase();
+    return txt.includes('today') && txt.includes('study time');
+  }) || null;
+}
+
+function findStreakCard(section){
+  return Array.from(section.querySelectorAll('div')).find(el => String(el.innerText || '').toLowerCase().includes('consecutive study days')) || null;
+}
+
+function findSessionsCard(section){
+  return Array.from(section.querySelectorAll('div')).find(el => String(el.innerText || '').toLowerCase().includes('completed sessions')) || null;
+}
+
 function addVipBadge(root){
   if(!root || root.querySelector('.rh-focus-vip-badge')) return;
   const title = Array.from(root.querySelectorAll('h1,h2,h3,h4,b')).find(el => textIncludes(el,'RATHOD HUB FOCUS'));
@@ -50,6 +85,21 @@ function addVipBadge(root){
   badge.className = 'rh-focus-vip-badge';
   badge.textContent = 'VIP Focus Suite';
   title.parentElement?.insertBefore(badge, title);
+}
+
+function addTopChips(section){
+  const root = findFocusRoot(section);
+  if(!root || root.querySelector('.rh-focus-vip-chip-row')) return;
+  const title = Array.from(root.querySelectorAll('h1,h2,h3,h4,b')).find(el => textIncludes(el,'RATHOD HUB FOCUS'));
+  if(!title || !title.parentElement) return;
+  const row = document.createElement('div');
+  row.className = 'rh-focus-vip-chip-row';
+  row.style.display = 'flex';
+  row.style.gap = '8px';
+  row.style.flexWrap = 'wrap';
+  row.style.margin = '12px 0 6px';
+  row.innerHTML = '<span class="rh-focus-vip-chip">⚜ Premium</span><span class="rh-focus-vip-chip">👑 VIP Timer</span><span class="rh-focus-vip-chip">✨ YPT Mode</span>';
+  title.parentElement.appendChild(row);
 }
 
 function styleTimerPanels(section){
@@ -66,44 +116,64 @@ function styleTimerPanels(section){
   });
 }
 
-function isDuplicateStatCard(el){
-  const txt = String(el.innerText || '').trim().toLowerCase().replace(/\s+/g,' ');
-  if(!txt) return false;
-  if(txt.includes('completed sessions')) return true;
-  if(txt.includes('consecutive study days')) return true;
-  if(txt === 'streak' || txt.startsWith('streak ')) return txt.includes('consecutive study days');
-  if(txt === 'sessions' || txt.startsWith('sessions ')) return txt.includes('completed sessions');
-  return false;
-}
-
-function hideDuplicateStats(section){
-  Array.from(section.querySelectorAll('.rh-focus-hide')).forEach(el => el.classList.remove('rh-focus-hide'));
-  const timerCard = findTimerCard(section);
-  Array.from(section.querySelectorAll('div')).forEach(card => {
-    if(card === timerCard || card.contains(timerCard)) return;
-    if(isDuplicateStatCard(card)) card.classList.add('rh-focus-hide');
-  });
-
-  const todayCard = Array.from(section.querySelectorAll('div')).find(el => {
-    const txt = String(el.innerText || '').toLowerCase();
-    return txt.includes('study time') && txt.includes('today');
-  });
+function renderYptMiniCards(section){
+  const streakCard = findStreakCard(section);
+  const sessionsCard = findSessionsCard(section);
+  if(streakCard) streakCard.classList.add('rh-focus-hide');
+  if(sessionsCard) sessionsCard.classList.add('rh-focus-hide');
+  const todayCard = findTodayCard(section);
   if(todayCard) todayCard.classList.add('rh-focus-today-card');
+  const anchor = todayCard?.parentElement || streakCard?.parentElement || sessionsCard?.parentElement;
+  if(!anchor) return;
+  let row = document.getElementById('rh-ypt-mini-row');
+  if(!row){
+    row = document.createElement('div');
+    row.id = 'rh-ypt-mini-row';
+    row.className = 'rh-ypt-mini-row';
+    anchor.insertAdjacentElement('afterend', row);
+  }
+  row.innerHTML = `
+    <div class="rh-ypt-mini-card rank">
+      <span class="label">Your Rank</span>
+      <b class="value">${miniData.rank}</b>
+      <span class="meta">YPT leaderboard style live rank</span>
+    </div>
+    <div class="rh-ypt-mini-card focus">
+      <span class="label">3-Day Focus</span>
+      <b class="value">${miniData.focus3day}</b>
+      <span class="meta">${miniData.next}</span>
+    </div>
+  `;
 }
 
-function addTopChips(section){
-  const root = findFocusRoot(section);
-  if(!root || root.querySelector('.rh-focus-vip-chip-row')) return;
-  const title = Array.from(root.querySelectorAll('h1,h2,h3,h4,b')).find(el => textIncludes(el,'RATHOD HUB FOCUS'));
-  if(!title || !title.parentElement) return;
-  const row = document.createElement('div');
-  row.className = 'rh-focus-vip-chip-row';
-  row.style.display = 'flex';
-  row.style.gap = '8px';
-  row.style.flexWrap = 'wrap';
-  row.style.margin = '12px 0 6px';
-  row.innerHTML = '<span class="rh-focus-vip-chip">⚜ Premium</span><span class="rh-focus-vip-chip">👑 VIP Timer</span><span class="rh-focus-vip-chip">✨ Focus Luxury</span>';
-  title.parentElement.appendChild(row);
+async function loadMiniData(){
+  if(loadingMini) return;
+  const client = db();
+  if(!client || !uid()) return;
+  loadingMini = true;
+  try{
+    const [boardRes, statusRes] = await Promise.all([
+      client.rpc('get_ypt_focus_leaderboard',{ p_limit: 100 }),
+      client.rpc('get_focus_avatar_status')
+    ]);
+    const rows = Array.isArray(boardRes?.data) ? boardRes.data : [];
+    const mine = rows.find(x => String(x.user_id) === uid());
+    const status = Array.isArray(statusRes?.data) ? statusRes.data[0] : (statusRes?.data || {});
+    const totalSeconds = Number(status.total_seconds || 0);
+    const avatars = Array.isArray(status.avatars) ? status.avatars : [];
+    const next = avatars.find(x => !x.unlocked);
+    miniData = {
+      rank: mine ? `#${mine.rank}` : '—',
+      focus3day: fmtShort(totalSeconds),
+      next: next ? `Next VIP unlock • ${Number(next.target_hours || 0)}h target` : 'All VIP avatars unlocked'
+    };
+  }catch(e){
+    console.warn('Mini YPT card load skipped', e);
+  }finally{
+    loadingMini = false;
+    const section = document.getElementById('section-focus');
+    if(section) renderYptMiniCards(section);
+  }
 }
 
 function polish(){
@@ -115,10 +185,11 @@ function polish(){
   addVipBadge(root);
   addTopChips(section);
   styleTimerPanels(section);
-  hideDuplicateStats(section);
+  renderYptMiniCards(section);
+  loadMiniData();
 }
 
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(polish, 1200), { once:true });
 else setTimeout(polish, 1200);
-setInterval(polish, 1500);
+setInterval(polish, 1800);
 })();
