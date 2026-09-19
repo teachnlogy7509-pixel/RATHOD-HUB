@@ -25,3 +25,19 @@ window.rhOpenQuestionArchive=showArchive;window.rhLoadArchive=loadArchive;
 function init(){loadSeen();nav();archiveSection();capture();bridgeWrap('qbAnswer');bridgeWrap('n720Answer');setInterval(()=>{nav();capture();bridgeWrap('qbAnswer');bridgeWrap('n720Answer')},1500)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,700);
 })();
+
+(function(){
+'use strict';
+if(window.__RH_YPT_FOCUS_LOADER__)return;
+window.__RH_YPT_FOCUS_LOADER__=1;
+function load(){
+ if(document.querySelector('script[data-rh-ypt-focus]'))return;
+ const s=document.createElement('script');
+ s.defer=true;
+ s.src='rathod-ypt-focus.js?v=3';
+ s.setAttribute('data-rh-ypt-focus','1');
+ document.head.appendChild(s);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load,{once:true});
+else setTimeout(load,0);
+})();
