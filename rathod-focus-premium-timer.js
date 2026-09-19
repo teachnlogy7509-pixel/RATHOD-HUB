@@ -1,4 +1,4 @@
-/* RATHOD HUB • VIP focus app */
+/* RATHOD HUB • VIP focus app final fix */
 (function(){
 'use strict';
 if(window.__RH_FOCUS_TIMER_PREMIUM__) return;
@@ -6,23 +6,35 @@ window.__RH_FOCUS_TIMER_PREMIUM__ = 1;
 
 const db = () => { try { return window.db || null; } catch (e) { return null; } };
 const uid = () => { try { return String(window.user?.id || ''); } catch (e) { return ''; } };
-const STORAGE_KEY = 'rh_focus_planner_tasks_v1';
-const SUBJECT_BOOKS = [
-  { name:'Biology', note:'NCERT + diagrams', session:'60 min' },
-  { name:'Chemistry', note:'NCERT + reactions', session:'50 min' },
-  { name:'Physics', note:'Numericals + concepts', session:'60 min' },
-  { name:'Math', note:'Questions + speed drill', session:'45 min' }
+const STORAGE_KEY = 'rh_focus_planner_tasks_v2';
+const SUBJECT_CARDS = [
+  { name:'Biology', note:'NCERT + diagrams', session:60, icon:'🧬', glow:'#22c55e' },
+  { name:'Chemistry', note:'Reactions + revision', session:50, icon:'🧪', glow:'#f59e0b' },
+  { name:'Physics', note:'Numericals + concepts', session:60, icon:'⚡', glow:'#38bdf8' },
+  { name:'Math', note:'Questions + drill', session:45, icon:'📐', glow:'#a855f7' },
+  { name:'English', note:'Reading + vocab', session:35, icon:'📘', glow:'#ec4899' },
+  { name:'History', note:'Dates + notes', session:40, icon:'🏛️', glow:'#f97316' }
+];
+const FALLBACK_MEMBERS = [
+  { name:'StudyMate', total_seconds:45123, icon:'👑', glow:'#f59e0b' },
+  { name:'Dreamer', total_seconds:40123, icon:'🌙', glow:'#8b5cf6' },
+  { name:'Candy', total_seconds:35123, icon:'🍬', glow:'#ec4899' },
+  { name:'Focus', total_seconds:30123, icon:'🔥', glow:'#f97316' },
+  { name:'Miya', total_seconds:25123, icon:'🌸', glow:'#f472b6' },
+  { name:'Note', total_seconds:22123, icon:'📚', glow:'#22c55e' },
+  { name:'Targin', total_seconds:18123, icon:'✨', glow:'#facc15' },
+  { name:'Mind', total_seconds:14823, icon:'🧠', glow:'#60a5fa' }
 ];
 let appState = { activeTab:'timer', rank:'—', focus3day:'0h 0m', nextText:'VIP progress', dailyGoal:'0h 0m', members:[], loading:false };
 
 function textOf(el){ return String(el?.textContent || '').trim(); }
 function fmtShort(sec){ sec=Math.max(0,Number(sec)||0); const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60); return h?`${h}h ${m}m`:`${m}m`; }
 function fmtHours(sec){ return `${(Math.max(0,Number(sec)||0)/3600).toFixed(1)}h`; }
-function initials(name){ return String(name||'S').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase(); }
 function todayLabel(){ try { return new Date().toLocaleDateString(undefined,{ weekday:'short', month:'numeric', day:'numeric' }); } catch(e){ return 'Today'; } }
 function liveClock(){ try { return new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }); } catch(e){ return '--:--'; } }
 function plannerStore(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){ return []; } }
 function savePlanner(tasks){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); } catch(e){} }
+function normalizeMember(m, i){ return { name:m.name || `Member ${i+1}`, total_seconds:Number(m.total_seconds || 0), icon:FALLBACK_MEMBERS[i % FALLBACK_MEMBERS.length].icon, glow:FALLBACK_MEMBERS[i % FALLBACK_MEMBERS.length].glow }; }
 
 function ensureStyle(){
   if(document.getElementById('rh-focus-vip-style')) return;
@@ -46,24 +58,19 @@ function ensureStyle(){
     .rh-focus-sourceTimer,.rh-focus-sourceControl{border:1px solid rgba(251,191,36,.14)!important;border-radius:28px!important;background:linear-gradient(180deg,#121214,#0c0d12)!important;box-shadow:0 20px 50px rgba(0,0,0,.28),0 0 0 1px rgba(251,191,36,.04) inset!important;position:relative;overflow:hidden}
     .rh-focus-sourceTimer:before,.rh-focus-sourceControl:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at top right,rgba(249,115,22,.10),transparent 28%),radial-gradient(circle at top left,rgba(251,191,36,.08),transparent 22%);pointer-events:none}
     .rh-focus-sourceTimer *,.rh-focus-sourceControl *{position:relative;z-index:1}
-    .rh-focus-sourceTimer .text-red-500,.rh-focus-sourceTimer [class*='text-red']{text-shadow:0 0 24px rgba(249,115,22,.18)!important}
     .rh-focus-sourceControl input,.rh-focus-sourceControl select{background:#0f1117!important;border:1px solid rgba(251,191,36,.12)!important;color:#fff!important;border-radius:14px!important}
     .rh-focus-sourceControl label,.rh-focus-sourceControl [class*='text-slate-400'],.rh-focus-sourceTimer [class*='text-slate-400']{color:#d1d5db!important}
-    .rh-focus-timerGlow{color:#fff4ed!important;text-shadow:0 0 24px rgba(251,124,48,.18)!important}
-    .rh-focus-softBtn{background:#1b1b1d!important;border:1px solid rgba(255,255,255,.10)!important;color:#f8fafc!important}
-    .rh-focus-startBtn{background:linear-gradient(90deg,#ff9f2a,#ff6e1d)!important;color:#fff!important;border:0!important;box-shadow:0 14px 30px rgba(255,110,29,.22)!important}
+    .rh-focus-sourceTimer .text-red-500,.rh-focus-sourceTimer [class*='text-red']{text-shadow:0 0 24px rgba(249,115,22,.18)!important}
+    .rh-focus-startBtn{background:linear-gradient(90deg,#ff9f2a,#ff6e1d)!important;color:#fff!important;border:0!important;box-shadow:0 14px 30px rgba(255,110,29,.22)!important}.rh-focus-softBtn{background:#1b1b1d!important;border:1px solid rgba(255,255,255,.10)!important;color:#f8fafc!important}
     .rh-focus-cardTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.rh-focus-cardTitle b{font-size:24px;color:#fff}.rh-focus-cardTitle span{font-size:12px;color:#9ca3af}
-    .rh-focus-bookList,.rh-focus-planList,.rh-focus-graphList{display:grid;gap:12px}.rh-focus-bookRow,.rh-focus-planRow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 14px;border-radius:20px;background:linear-gradient(180deg,#1a1a1a,#151515);border:1px solid rgba(251,191,36,.10)}
-    .rh-focus-bookLeft,.rh-focus-planLeft{display:flex;align-items:center;gap:12px;min-width:0}.rh-focus-play{width:34px;height:34px;border-radius:999px;background:linear-gradient(135deg,#ffb341,#fb7c30);display:grid;place-items:center;color:#fff;font-size:13px;font-weight:900;flex:0 0 34px}
-    .rh-focus-bookTitle{font-size:22px;font-weight:800;color:#fff}.rh-focus-bookSub,.rh-focus-planSub{display:block;margin-top:4px;font-size:12px;color:#9ca3af}.rh-focus-bookTime{font-size:18px;font-weight:800;color:#f8fafc;white-space:nowrap}
     .rh-focus-inlineActions{display:flex;gap:8px;flex-wrap:wrap}.rh-focus-inlineBtn{appearance:none;border:1px solid rgba(251,191,36,.18);background:rgba(251,191,36,.10);color:#fde68a;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:800;cursor:pointer}
-    .rh-focus-planDot{width:22px;height:22px;border-radius:999px;background:#fb7c30;display:grid;place-items:center;color:#fff;font-weight:900;flex:0 0 22px}.rh-focus-planTitle{font-size:18px;font-weight:700;color:#fff}
+    .rh-focus-booksGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.rh-focus-bookCard{position:relative;overflow:hidden;padding:18px;border-radius:24px;border:1px solid rgba(251,191,36,.16);background:linear-gradient(180deg,#1a1a1a,#131313);box-shadow:0 16px 34px rgba(0,0,0,.22)}.rh-focus-bookCard:before{content:"";position:absolute;inset:auto -20px -20px auto;width:120px;height:120px;background:radial-gradient(circle,var(--glow),transparent 70%);opacity:.22;pointer-events:none}.rh-focus-bookTop{display:flex;align-items:center;justify-content:space-between;gap:12px}.rh-focus-bookIcon{width:52px;height:52px;border-radius:18px;display:grid;place-items:center;font-size:24px;background:linear-gradient(135deg,var(--glow),#ffffff22);box-shadow:0 0 0 1px rgba(255,255,255,.06) inset,0 10px 24px color-mix(in srgb,var(--glow) 34%, transparent)}.rh-focus-bookName{font-size:22px;font-weight:900;color:#fff}.rh-focus-bookNote{margin-top:8px;font-size:13px;color:#d1d5db}.rh-focus-bookFoot{margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px}.rh-focus-bookTime{font-size:13px;font-weight:800;color:#fde68a}.rh-focus-bookStart{appearance:none;border:0;background:linear-gradient(90deg,var(--glow),#f59e0b);color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 10px 22px color-mix(in srgb,var(--glow) 28%, transparent)}
     .rh-focus-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:18px}.rh-focus-mini{position:relative;overflow:hidden;border-radius:24px;padding:18px;border:1px solid rgba(251,191,36,.10);background:linear-gradient(180deg,#171717,#111111)}.rh-focus-mini:before{content:"";position:absolute;inset:auto -10px -24px auto;width:110px;height:110px;background:radial-gradient(circle,rgba(251,124,48,.12),transparent 68%);pointer-events:none}.rh-focus-miniLabel{font-size:11px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;color:#9ca3af}.rh-focus-miniValue{display:block;margin-top:10px;font-size:34px;line-height:1;font-weight:900;color:#fff}.rh-focus-miniMeta{display:block;margin-top:8px;font-size:12px;color:#cbd5e1}
-    .rh-focus-graphRow{display:grid;grid-template-columns:120px 1fr 64px;gap:12px;align-items:center}.rh-focus-graphName{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rh-focus-graphTrack{height:14px;border-radius:999px;background:#1f2937;overflow:hidden}.rh-focus-graphBar{height:100%;border-radius:999px;background:linear-gradient(90deg,#fb7c30,#fbbf24);box-shadow:0 0 16px rgba(251,124,48,.18)}.rh-focus-graphValue{font-size:12px;font-weight:800;color:#fbcc9d;text-align:right}
-    .rh-focus-groupGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.rh-focus-member{padding:12px 8px;border-radius:20px;border:1px solid rgba(251,191,36,.10);background:linear-gradient(180deg,#191919,#141414);text-align:center}.rh-focus-member.top{border-color:rgba(251,124,48,.38);box-shadow:0 0 0 1px rgba(251,124,48,.12) inset}.rh-focus-avatar{width:58px;height:58px;border-radius:20px;margin:0 auto 10px;background:linear-gradient(135deg,#fb7c30,#fbbf24);display:grid;place-items:center;font-weight:900;color:#111827;font-size:20px;box-shadow:0 12px 24px rgba(251,124,48,.22)}.rh-focus-member b{display:block;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rh-focus-member span{display:block;margin-top:4px;font-size:12px;color:#fb923c}
+    .rh-focus-graphList{display:grid;gap:12px}.rh-focus-graphRow{display:grid;grid-template-columns:120px 1fr 64px;gap:12px;align-items:center}.rh-focus-graphName{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rh-focus-graphTrack{height:14px;border-radius:999px;background:#1f2937;overflow:hidden}.rh-focus-graphBar{height:100%;border-radius:999px;background:linear-gradient(90deg,#fb7c30,#fbbf24);box-shadow:0 0 16px rgba(251,124,48,.18)}.rh-focus-graphValue{font-size:12px;font-weight:800;color:#fbcc9d;text-align:right}
+    .rh-focus-groupGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.rh-focus-member{position:relative;overflow:hidden;padding:12px 8px;border-radius:22px;border:1px solid rgba(251,191,36,.10);background:linear-gradient(180deg,#191919,#141414);text-align:center}.rh-focus-member:before{content:"";position:absolute;inset:auto -18px -18px auto;width:100px;height:100px;background:radial-gradient(circle,var(--member-glow),transparent 72%);opacity:.24;pointer-events:none}.rh-focus-member.top{border-color:rgba(251,124,48,.38);box-shadow:0 0 0 1px rgba(251,124,48,.12) inset}.rh-focus-avatar{width:58px;height:58px;border-radius:20px;margin:0 auto 10px;display:grid;place-items:center;font-weight:900;color:#111827;font-size:24px;background:linear-gradient(135deg,var(--member-glow),#fbbf24);box-shadow:0 12px 24px rgba(251,124,48,.22)}.rh-focus-member b{display:block;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rh-focus-member span{display:block;margin-top:4px;font-size:12px;color:#fb923c}
     .rh-focus-hidden{display:none!important}
-    .rh-focus-plannerInput{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}.rh-focus-plannerInput input{flex:1;min-width:220px;background:#0f172a;border:1px solid rgba(255,255,255,.10);color:#fff;padding:12px 14px;border-radius:16px}.rh-focus-plannerInput button{appearance:none;border:0;background:linear-gradient(90deg,#ff9f2a,#ff6e1d);color:#fff;padding:12px 16px;border-radius:16px;font-weight:800;cursor:pointer}.rh-focus-taskDone{text-decoration:line-through;opacity:.6}.rh-focus-taskActions{display:flex;gap:8px}.rh-focus-taskChip{appearance:none;border:1px solid rgba(255,255,255,.10);background:#1b1b1d;color:#fff;padding:7px 10px;border-radius:999px;font-size:12px;cursor:pointer}
-    @media (max-width:1024px){.rh-focus-grid,.rh-focus-metrics{grid-template-columns:1fr}.rh-focus-groupGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.rh-focus-vipTimer{font-size:40px}.rh-focus-graphRow{grid-template-columns:88px 1fr 52px}}
+    .rh-focus-plannerInput{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}.rh-focus-plannerInput input{flex:1;min-width:220px;background:#0f172a;border:1px solid rgba(255,255,255,.10);color:#fff;padding:12px 14px;border-radius:16px}.rh-focus-plannerInput button{appearance:none;border:0;background:linear-gradient(90deg,#ff9f2a,#ff6e1d);color:#fff;padding:12px 16px;border-radius:16px;font-weight:800;cursor:pointer}.rh-focus-taskDone{text-decoration:line-through;opacity:.6}.rh-focus-taskActions{display:flex;gap:8px}.rh-focus-taskChip{appearance:none;border:1px solid rgba(255,255,255,.10);background:#1b1b1d;color:#fff;padding:7px 10px;border-radius:999px;font-size:12px;cursor:pointer}.rh-focus-planList{display:grid;gap:12px}.rh-focus-planRow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 14px;border-radius:20px;background:linear-gradient(180deg,#1a1a1a,#151515);border:1px solid rgba(251,191,36,.10)}.rh-focus-planLeft{display:flex;align-items:center;gap:12px;min-width:0}.rh-focus-planDot{width:22px;height:22px;border-radius:999px;background:#fb7c30;display:grid;place-items:center;color:#fff;font-weight:900;flex:0 0 22px}.rh-focus-planTitle{font-size:18px;font-weight:700;color:#fff}.rh-focus-planSub{display:block;margin-top:4px;font-size:12px;color:#9ca3af}
+    @media (max-width:1024px){.rh-focus-grid,.rh-focus-metrics,.rh-focus-booksGrid{grid-template-columns:1fr}.rh-focus-groupGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.rh-focus-vipTimer{font-size:40px}.rh-focus-graphRow{grid-template-columns:88px 1fr 52px}}
   `;
   document.head.appendChild(style);
 }
@@ -136,17 +143,11 @@ function startFocusForSubject(section, subject){
   appState.activeTab = 'timer';
   renderApp(section);
 }
-function quickSetDuration(section, minutes){
-  const input = section.querySelector('input[type="number"]');
-  if(input){ input.value = String(minutes); input.dispatchEvent(new Event('input', { bubbles:true })); input.dispatchEvent(new Event('change', { bubbles:true })); }
-}
+function quickSetDuration(section, minutes){ const input = section.querySelector('input[type="number"]'); if(input){ input.value = String(minutes); input.dispatchEvent(new Event('input', { bubbles:true })); input.dispatchEvent(new Event('change', { bubbles:true })); } }
 
 function renderGroupPanel(){
-  const members = appState.members.length ? appState.members : [
-    { name:'StudyMate', total_seconds:45123 },{ name:'Dreamer', total_seconds:40123 },{ name:'Candy', total_seconds:35123 },{ name:'Focus', total_seconds:30123 },
-    { name:'Miya', total_seconds:25123 },{ name:'Note', total_seconds:22123 },{ name:'Targin', total_seconds:18123 },{ name:'Mind', total_seconds:14823 }
-  ];
-  return `<div class="rh-focus-panel" style="padding:18px"><div class="rh-focus-cardTitle"><div><b>Study Group</b><span>Study together • motivate each other</span></div><span>${members.length} online</span></div><div class="rh-focus-groupGrid">${members.slice(0,8).map((m,idx)=>`<div class="rh-focus-member ${idx<3?'top':''}"><div class="rh-focus-avatar">${initials(m.name)}</div><b>${m.name}</b><span>${fmtShort(m.total_seconds || 0)}</span></div>`).join('')}</div></div>`;
+  const members = (appState.members.length ? appState.members : FALLBACK_MEMBERS).map(normalizeMember);
+  return `<div class="rh-focus-panel" style="padding:18px"><div class="rh-focus-cardTitle"><div><b>Study Group</b><span>Study together • motivate each other</span></div><span>${members.length} online</span></div><div class="rh-focus-groupGrid">${members.slice(0,8).map((m,idx)=>`<div class="rh-focus-member ${idx<3?'top':''}" style="--member-glow:${m.glow}"><div class="rh-focus-avatar">${m.icon}</div><b>${m.name}</b><span>${fmtShort(m.total_seconds || 0)}</span></div>`).join('')}</div></div>`;
 }
 
 function renderTimerTab(section, body){
@@ -170,15 +171,12 @@ function renderTimerTab(section, body){
 }
 
 function renderBooksTab(section, body){
-  body.innerHTML = `<div class="rh-focus-panel" style="padding:18px"><div class="rh-focus-cardTitle"><div><b>For each subject</b><span>Study and direct start</span></div><span>${SUBJECT_BOOKS.length} subjects</span></div><div class="rh-focus-bookList">${SUBJECT_BOOKS.map(r=>`<div class="rh-focus-bookRow"><div class="rh-focus-bookLeft"><div class="rh-focus-play">▶</div><div><div class="rh-focus-bookTitle">${r.name}</div><span class="rh-focus-bookSub">${r.note}</span></div></div><div class="rh-focus-inlineActions"><button type="button" class="rh-focus-inlineBtn" data-rh-book-subject="${r.name}">Start ${r.session}</button></div></div>`).join('')}</div></div>`;
-  body.querySelectorAll('[data-rh-book-subject]').forEach(btn => btn.addEventListener('click', () => { const subject = btn.getAttribute('data-rh-book-subject') || 'Biology'; const preset = SUBJECT_BOOKS.find(x => x.name === subject)?.session || '50 min'; const minutes = parseInt(preset,10) || 50; quickSetDuration(section, minutes); startFocusForSubject(section, subject); }));
+  body.innerHTML = `<div class="rh-focus-panel" style="padding:18px"><div class="rh-focus-cardTitle"><div><b>Premium Focus Books</b><span>Direct subject start</span></div><span>${SUBJECT_CARDS.length} subjects</span></div><div class="rh-focus-booksGrid">${SUBJECT_CARDS.map(card=>`<div class="rh-focus-bookCard" style="--glow:${card.glow}"><div class="rh-focus-bookTop"><div class="rh-focus-bookIcon">${card.icon}</div><div class="rh-focus-bookTime">${card.session} min</div></div><div class="rh-focus-bookName">${card.name}</div><div class="rh-focus-bookNote">${card.note}</div><div class="rh-focus-bookFoot"><span class="rh-focus-bookTime">Premium Start</span><button type="button" class="rh-focus-bookStart" data-rh-book-subject="${card.name}" data-rh-book-minutes="${card.session}">Start Now</button></div></div>`).join('')}</div></div>`;
+  body.querySelectorAll('[data-rh-book-subject]').forEach(btn => btn.addEventListener('click', () => { const subject = btn.getAttribute('data-rh-book-subject') || 'Biology'; const minutes = parseInt(btn.getAttribute('data-rh-book-minutes') || '50',10) || 50; quickSetDuration(section, minutes); startFocusForSubject(section, subject); }));
 }
 
 function renderInsightsTab(body){
-  const members = appState.members.length ? appState.members : [
-    { name:'StudyMate', total_seconds:45123 },{ name:'Dreamer', total_seconds:40123 },{ name:'Candy', total_seconds:35123 },{ name:'Focus', total_seconds:30123 },
-    { name:'Miya', total_seconds:25123 },{ name:'Note', total_seconds:22123 },{ name:'Targin', total_seconds:18123 },{ name:'Mind', total_seconds:14823 }
-  ];
+  const members = (appState.members.length ? appState.members : FALLBACK_MEMBERS).map(normalizeMember);
   const max = Math.max(...members.map(m => Number(m.total_seconds || 0)),1);
   body.innerHTML = `
     <div class="rh-focus-metrics">
@@ -216,7 +214,7 @@ function renderPlannerTab(section, body){
   const subject = selectedSubject(section);
   const date = new Date().toISOString().slice(0,10);
   const tasks = plannerStore().filter(t => t.date === date);
-  body.innerHTML = `<div class="rh-focus-panel" style="padding:18px"><div class="rh-focus-cardTitle"><div><b>${subject}</b><span>Planner</span></div><span>${currentTimerText(section)}</span></div><div class="rh-focus-plannerInput"><input id="rh-focus-planner-input" type="text" placeholder="Aaj kya karna hai? likho..."><button id="rh-focus-planner-add" type="button">Add Task</button></div><div class="rh-focus-planList">${tasks.length?tasks.map((t,i)=>`<div class="rh-focus-planRow"><div class="rh-focus-planLeft"><div class="rh-focus-planDot">${i+1}</div><div><div class="rh-focus-planTitle ${t.done?'rh-focus-taskDone':''}">${t.text}</div><span class="rh-focus-planSub">${t.subject || subject}</span></div></div><div class="rh-focus-taskActions"><button type="button" class="rh-focus-taskChip" data-rh-task-toggle="${t.id}">${t.done?'Undo':'Done'}</button><button type="button" class="rh-focus-taskChip" data-rh-task-delete="${t.id}">Delete</button></div></div>`).join(''):'<div class="rh-focus-planRow"><div class="rh-focus-planLeft"><div class="rh-focus-planDot">+</div><div><div class="rh-focus-planTitle">No task added yet</div><span class="rh-focus-planSub">Aaj kya karna hai yaha add karo</span></div></div></div>'}</div></div>`;
+  body.innerHTML = `<div class="rh-focus-panel" style="padding:18px"><div class="rh-focus-cardTitle"><div><b>${subject} Planner</b><span>User set tasks</span></div><span>${currentTimerText(section)}</span></div><div class="rh-focus-plannerInput"><input id="rh-focus-planner-input" type="text" placeholder="Aaj kya karna hai? likho..."><button id="rh-focus-planner-add" type="button">Add Task</button></div><div class="rh-focus-planList">${tasks.length?tasks.map((t,i)=>`<div class="rh-focus-planRow"><div class="rh-focus-planLeft"><div class="rh-focus-planDot">${i+1}</div><div><div class="rh-focus-planTitle ${t.done?'rh-focus-taskDone':''}">${t.text}</div><span class="rh-focus-planSub">${t.subject || subject}</span></div></div><div class="rh-focus-taskActions"><button type="button" class="rh-focus-taskChip" data-rh-task-toggle="${t.id}">${t.done?'Undo':'Done'}</button><button type="button" class="rh-focus-taskChip" data-rh-task-delete="${t.id}">Delete</button></div></div>`).join(''):'<div class="rh-focus-planRow"><div class="rh-focus-planLeft"><div class="rh-focus-planDot">+</div><div><div class="rh-focus-planTitle">No task added yet</div><span class="rh-focus-planSub">Aaj kya karna hai yaha add karo</span></div></div></div>'}</div></div>`;
   bindPlannerActions(section, body);
 }
 
@@ -250,7 +248,7 @@ async function loadData(section){
     appState.rank = mine ? `#${mine.rank}` : '—';
     appState.focus3day = fmtShort(totalSeconds);
     appState.nextText = next ? `Next unlock • ${Number(next.target_hours || 0)}h target` : 'All VIP avatars unlocked';
-    appState.members = rows.map(r => ({ name:r.name || 'Aspirant', total_seconds:Number(r.total_seconds || 0) }));
+    appState.members = rows.map((r,i) => normalizeMember({ name:r.name || 'Aspirant', total_seconds:Number(r.total_seconds || 0) }, i));
     appState.dailyGoal = textOf(todayCard?.querySelector('b')) || appState.dailyGoal;
   }catch(e){ console.warn('focus vip load skipped', e); }
   finally{ appState.loading = false; renderApp(section); }
