@@ -75,6 +75,8 @@ returns table(
   user_id uuid,
   name text,
   pfp_url text,
+  avatar_item_id text,
+  avatar_emoji text,
   total_seconds bigint,
   session_count bigint,
   subjects jsonb
@@ -122,11 +124,15 @@ begin
       ut.user_id,
       coalesce(nullif(trim(p.name), ''), 'Aspirant')::text as display_name,
       p.pfp_url::text,
+      avatar.item_id::text as equipped_avatar_item_id,
+      avatar.emoji::text as equipped_avatar_emoji,
       ut.total_seconds,
       ut.session_count,
       coalesce(sl.subjects, '[]'::jsonb) as subject_list
     from user_totals ut
     left join public.profiles p on p.id = ut.user_id
+    left join public.profile_cosmetics pc on pc.user_id = ut.user_id
+    left join public.rh_shop_items avatar on avatar.item_id = pc.equipped_avatar and avatar.kind = 'avatar' and avatar.active = true
     left join subject_lists sl on sl.user_id = ut.user_id
   )
   select
@@ -134,6 +140,8 @@ begin
     r.user_id,
     r.display_name,
     r.pfp_url,
+    r.equipped_avatar_item_id,
+    r.equipped_avatar_emoji,
     r.total_seconds,
     r.session_count,
     r.subject_list
