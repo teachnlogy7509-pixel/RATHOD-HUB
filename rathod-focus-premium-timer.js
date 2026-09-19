@@ -1,4 +1,4 @@
-/* RATHOD HUB • VIP focus app final fix */
+/* RATHOD HUB • VIP focus app final polish */
 (function(){
 'use strict';
 if(window.__RH_FOCUS_TIMER_PREMIUM__) return;
@@ -6,14 +6,13 @@ window.__RH_FOCUS_TIMER_PREMIUM__ = 1;
 
 const db = () => { try { return window.db || null; } catch (e) { return null; } };
 const uid = () => { try { return String(window.user?.id || ''); } catch (e) { return ''; } };
-const STORAGE_KEY = 'rh_focus_planner_tasks_v2';
+const STORAGE_KEY = 'rh_focus_planner_tasks_v3';
 const SUBJECT_CARDS = [
-  { name:'Biology', note:'NCERT + diagrams', session:60, icon:'🧬', glow:'#22c55e' },
+  { name:'Botany', note:'Plants + diagrams revision', session:50, icon:'🌿', glow:'#22c55e' },
+  { name:'Zoology', note:'Animals + NCERT notes', session:50, icon:'🦋', glow:'#10b981' },
   { name:'Chemistry', note:'Reactions + revision', session:50, icon:'🧪', glow:'#f59e0b' },
   { name:'Physics', note:'Numericals + concepts', session:60, icon:'⚡', glow:'#38bdf8' },
-  { name:'Math', note:'Questions + drill', session:45, icon:'📐', glow:'#a855f7' },
-  { name:'English', note:'Reading + vocab', session:35, icon:'📘', glow:'#ec4899' },
-  { name:'History', note:'Dates + notes', session:40, icon:'🏛️', glow:'#f97316' }
+  { name:'Revision', note:'Weak topics quick revise', session:40, icon:'🔁', glow:'#f97316' }
 ];
 const FALLBACK_MEMBERS = [
   { name:'StudyMate', total_seconds:45123, icon:'👑', glow:'#f59e0b' },
@@ -25,6 +24,10 @@ const FALLBACK_MEMBERS = [
   { name:'Targin', total_seconds:18123, icon:'✨', glow:'#facc15' },
   { name:'Mind', total_seconds:14823, icon:'🧠', glow:'#60a5fa' }
 ];
+const SIDEBAR_GLOWS = {
+  'ai doubt':'#ef4444','ai learning':'#8b5cf6','live quiz':'#fb7185','neet 720':'#10b981','daily 9 pm':'#f59e0b',
+  'study material':'#f59e0b','question archive':'#60a5fa','ai notes & formula':'#c084fc','focus timer':'#ef4444','study power':'#facc15','study rooms':'#38bdf8','study diary':'#22c55e','my vault':'#a855f7','community':'#8b5cf6','live chat':'#06b6d4','pw yakeen':'#ef4444'
+};
 let appState = { activeTab:'timer', rank:'—', focus3day:'0h 0m', nextText:'VIP progress', dailyGoal:'0h 0m', members:[], loading:false };
 
 function textOf(el){ return String(el?.textContent || '').trim(); }
@@ -34,7 +37,7 @@ function todayLabel(){ try { return new Date().toLocaleDateString(undefined,{ we
 function liveClock(){ try { return new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }); } catch(e){ return '--:--'; } }
 function plannerStore(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){ return []; } }
 function savePlanner(tasks){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); } catch(e){} }
-function normalizeMember(m, i){ return { name:m.name || `Member ${i+1}`, total_seconds:Number(m.total_seconds || 0), icon:FALLBACK_MEMBERS[i % FALLBACK_MEMBERS.length].icon, glow:FALLBACK_MEMBERS[i % FALLBACK_MEMBERS.length].glow }; }
+function normalizeMember(m, i){ const f = FALLBACK_MEMBERS[i % FALLBACK_MEMBERS.length]; return { name:m.name || `Member ${i+1}`, total_seconds:Number(m.total_seconds || 0), icon:m.icon || f.icon, glow:m.glow || f.glow }; }
 
 function ensureStyle(){
   if(document.getElementById('rh-focus-vip-style')) return;
@@ -66,33 +69,24 @@ function ensureStyle(){
     .rh-focus-inlineActions{display:flex;gap:8px;flex-wrap:wrap}.rh-focus-inlineBtn{appearance:none;border:1px solid rgba(251,191,36,.18);background:rgba(251,191,36,.10);color:#fde68a;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:800;cursor:pointer}
     .rh-focus-booksGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.rh-focus-bookCard{position:relative;overflow:hidden;padding:18px;border-radius:24px;border:1px solid rgba(251,191,36,.16);background:linear-gradient(180deg,#1a1a1a,#131313);box-shadow:0 16px 34px rgba(0,0,0,.22)}.rh-focus-bookCard:before{content:"";position:absolute;inset:auto -20px -20px auto;width:120px;height:120px;background:radial-gradient(circle,var(--glow),transparent 70%);opacity:.22;pointer-events:none}.rh-focus-bookTop{display:flex;align-items:center;justify-content:space-between;gap:12px}.rh-focus-bookIcon{width:52px;height:52px;border-radius:18px;display:grid;place-items:center;font-size:24px;background:linear-gradient(135deg,var(--glow),#ffffff22);box-shadow:0 0 0 1px rgba(255,255,255,.06) inset,0 10px 24px color-mix(in srgb,var(--glow) 34%, transparent)}.rh-focus-bookName{font-size:22px;font-weight:900;color:#fff}.rh-focus-bookNote{margin-top:8px;font-size:13px;color:#d1d5db}.rh-focus-bookFoot{margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px}.rh-focus-bookTime{font-size:13px;font-weight:800;color:#fde68a}.rh-focus-bookStart{appearance:none;border:0;background:linear-gradient(90deg,var(--glow),#f59e0b);color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 10px 22px color-mix(in srgb,var(--glow) 28%, transparent)}
     .rh-focus-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:18px}.rh-focus-mini{position:relative;overflow:hidden;border-radius:24px;padding:18px;border:1px solid rgba(251,191,36,.10);background:linear-gradient(180deg,#171717,#111111)}.rh-focus-mini:before{content:"";position:absolute;inset:auto -10px -24px auto;width:110px;height:110px;background:radial-gradient(circle,rgba(251,124,48,.12),transparent 68%);pointer-events:none}.rh-focus-miniLabel{font-size:11px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;color:#9ca3af}.rh-focus-miniValue{display:block;margin-top:10px;font-size:34px;line-height:1;font-weight:900;color:#fff}.rh-focus-miniMeta{display:block;margin-top:8px;font-size:12px;color:#cbd5e1}
-    .rh-focus-graphList{display:grid;gap:12px}.rh-focus-graphRow{display:grid;grid-template-columns:120px 1fr 64px;gap:12px;align-items:center}.rh-focus-graphName{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rh-focus-graphTrack{height:14px;border-radius:999px;background:#1f2937;overflow:hidden}.rh-focus-graphBar{height:100%;border-radius:999px;background:linear-gradient(90deg,#fb7c30,#fbbf24);box-shadow:0 0 16px rgba(251,124,48,.18)}.rh-focus-graphValue{font-size:12px;font-weight:800;color:#fbcc9d;text-align:right}
+    .rh-focus-graphList{display:grid;gap:12px}.rh-focus-graphRow{display:grid;grid-template-columns:160px 1fr 68px;gap:12px;align-items:center}.rh-focus-graphName{font-size:14px;font-weight:900;color:#fff7ed;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:6px 10px;border-radius:999px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.12)}.rh-focus-graphTrack{height:14px;border-radius:999px;background:#1f2937;overflow:hidden}.rh-focus-graphBar{height:100%;border-radius:999px;background:linear-gradient(90deg,#fb7c30,#fbbf24);box-shadow:0 0 16px rgba(251,124,48,.18)}.rh-focus-graphValue{font-size:12px;font-weight:800;color:#fbcc9d;text-align:right}
     .rh-focus-groupGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.rh-focus-member{position:relative;overflow:hidden;padding:12px 8px;border-radius:22px;border:1px solid rgba(251,191,36,.10);background:linear-gradient(180deg,#191919,#141414);text-align:center}.rh-focus-member:before{content:"";position:absolute;inset:auto -18px -18px auto;width:100px;height:100px;background:radial-gradient(circle,var(--member-glow),transparent 72%);opacity:.24;pointer-events:none}.rh-focus-member.top{border-color:rgba(251,124,48,.38);box-shadow:0 0 0 1px rgba(251,124,48,.12) inset}.rh-focus-avatar{width:58px;height:58px;border-radius:20px;margin:0 auto 10px;display:grid;place-items:center;font-weight:900;color:#111827;font-size:24px;background:linear-gradient(135deg,var(--member-glow),#fbbf24);box-shadow:0 12px 24px rgba(251,124,48,.22)}.rh-focus-member b{display:block;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rh-focus-member span{display:block;margin-top:4px;font-size:12px;color:#fb923c}
     .rh-focus-hidden{display:none!important}
     .rh-focus-plannerInput{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}.rh-focus-plannerInput input{flex:1;min-width:220px;background:#0f172a;border:1px solid rgba(255,255,255,.10);color:#fff;padding:12px 14px;border-radius:16px}.rh-focus-plannerInput button{appearance:none;border:0;background:linear-gradient(90deg,#ff9f2a,#ff6e1d);color:#fff;padding:12px 16px;border-radius:16px;font-weight:800;cursor:pointer}.rh-focus-taskDone{text-decoration:line-through;opacity:.6}.rh-focus-taskActions{display:flex;gap:8px}.rh-focus-taskChip{appearance:none;border:1px solid rgba(255,255,255,.10);background:#1b1b1d;color:#fff;padding:7px 10px;border-radius:999px;font-size:12px;cursor:pointer}.rh-focus-planList{display:grid;gap:12px}.rh-focus-planRow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 14px;border-radius:20px;background:linear-gradient(180deg,#1a1a1a,#151515);border:1px solid rgba(251,191,36,.10)}.rh-focus-planLeft{display:flex;align-items:center;gap:12px;min-width:0}.rh-focus-planDot{width:22px;height:22px;border-radius:999px;background:#fb7c30;display:grid;place-items:center;color:#fff;font-weight:900;flex:0 0 22px}.rh-focus-planTitle{font-size:18px;font-weight:700;color:#fff}.rh-focus-planSub{display:block;margin-top:4px;font-size:12px;color:#9ca3af}
-    @media (max-width:1024px){.rh-focus-grid,.rh-focus-metrics,.rh-focus-booksGrid{grid-template-columns:1fr}.rh-focus-groupGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.rh-focus-vipTimer{font-size:40px}.rh-focus-graphRow{grid-template-columns:88px 1fr 52px}}
+    .rh-vip-sidebar .rh-nav-btn,.rh-vip-sidebar button,.rh-vip-sidebar a{position:relative;border-radius:18px!important;border:1px solid rgba(255,255,255,.05)!important;transition:.18s ease;overflow:hidden}.rh-vip-sidebar .rh-nav-btn:before,.rh-vip-sidebar button:before,.rh-vip-sidebar a:before{content:"";position:absolute;inset:auto -20px -16px auto;width:90px;height:90px;background:radial-gradient(circle,var(--vipGlow,#f59e0b),transparent 72%);opacity:.18;pointer-events:none}.rh-vip-sidebar .rh-nav-btn:hover,.rh-vip-sidebar button:hover,.rh-vip-sidebar a:hover{border-color:color-mix(in srgb,var(--vipGlow,#f59e0b) 45%, transparent)!important;box-shadow:0 0 0 1px color-mix(in srgb,var(--vipGlow,#f59e0b) 18%, transparent) inset,0 10px 24px rgba(0,0,0,.18)}.rh-vip-sidebar .rh-nav-btn span,.rh-vip-sidebar button span,.rh-vip-sidebar a span{font-weight:800!important;color:#fff!important}.rh-vip-sidebar .rh-nav-btn i,.rh-vip-sidebar button i,.rh-vip-sidebar a i,.rh-vip-sidebar .rh-nav-btn svg,.rh-vip-sidebar button svg,.rh-vip-sidebar a svg{color:var(--vipGlow,#f59e0b)!important;filter:drop-shadow(0 0 10px color-mix(in srgb,var(--vipGlow,#f59e0b) 55%, transparent))}
+    @media (max-width:1024px){.rh-focus-grid,.rh-focus-metrics,.rh-focus-booksGrid{grid-template-columns:1fr}.rh-focus-groupGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.rh-focus-vipTimer{font-size:40px}.rh-focus-graphRow{grid-template-columns:108px 1fr 52px}}
   `;
   document.head.appendChild(style);
 }
 
-function findSection(){ return document.getElementById('section-focus'); }
-function findRoot(section){ return Array.from(section.querySelectorAll('div')).find(el => String(el.innerText || '').includes('RATHOD HUB FOCUS')) || null; }
-function findTitleEl(root){ return Array.from(root?.querySelectorAll('h1,h2,h3,h4,b') || []).find(el => textOf(el).toLowerCase().includes('rathod hub focus')) || null; }
-function currentTimerText(section){ return textOf(Array.from(section.querySelectorAll('*')).find(el => /^\d{2}:\d{2}:\d{2}$/.test(textOf(el)))) || '00:00:00'; }
-function selectedSubject(section){ const s = section.querySelector('select'); return s?.value || s?.options?.[s.selectedIndex]?.text || 'Biology'; }
-function findTimerPanel(section){ const timer = Array.from(section.querySelectorAll('*')).find(el => /^\d{2}:\d{2}:\d{2}$/.test(textOf(el))); return timer?.closest('div.rounded-3xl,div.rounded-[32px],div.rounded-[28px]') || timer?.parentElement?.parentElement || null; }
-function findControlPanel(section){ return section.querySelector('select')?.closest('div.rounded-3xl,div.rounded-[32px],div.rounded-[28px]') || section.querySelector('select')?.parentElement?.parentElement || null; }
-function findStats(section){ const nodes = Array.from(section.querySelectorAll('div')); return { today:nodes.find(el => String(el.innerText || '').toLowerCase().includes('today') && String(el.innerText || '').toLowerCase().includes('study time')) || null, streak:nodes.find(el => String(el.innerText || '').toLowerCase().includes('consecutive study days')) || null, sessions:nodes.find(el => String(el.innerText || '').toLowerCase().includes('completed sessions')) || null }; }
-
-function premiumizeSourcePanels(section){
-  const timer = findTimerPanel(section);
-  const control = findControlPanel(section);
-  if(timer) timer.classList.add('rh-focus-sourceTimer');
-  if(control) control.classList.add('rh-focus-sourceControl');
-  Array.from(section.querySelectorAll('button')).forEach(btn => {
-    const t = textOf(btn).toLowerCase();
-    if(/start/.test(t) || /pomodoro/.test(t)) btn.classList.add('rh-focus-startBtn');
-    else btn.classList.add('rh-focus-softBtn');
+function premiumizeSidebar(){
+  const sidebar = document.querySelector('.rh-sidebar');
+  if(!sidebar) return;
+  sidebar.classList.add('rh-vip-sidebar');
+  sidebar.querySelectorAll('button,a,.rh-nav-btn').forEach(el => {
+    const key = textOf(el).toLowerCase();
+    const glow = Object.keys(SIDEBAR_GLOWS).find(k => key.includes(k));
+    if(glow) el.style.setProperty('--vipGlow', SIDEBAR_GLOWS[glow]);
   });
 }
 
@@ -130,8 +124,13 @@ function ensureShell(section){
 function setSubjectValue(section, subject){
   const select = section.querySelector('select');
   if(!select) return false;
-  const option = Array.from(select.options || []).find(o => String(o.value||o.textContent||'').toLowerCase() === subject.toLowerCase() || String(o.textContent||'').toLowerCase() === subject.toLowerCase());
-  if(!option) return false;
+  let option = Array.from(select.options || []).find(o => String(o.value||o.textContent||'').toLowerCase() === subject.toLowerCase() || String(o.textContent||'').toLowerCase() === subject.toLowerCase());
+  if(!option){
+    option = document.createElement('option');
+    option.value = subject;
+    option.textContent = subject;
+    select.appendChild(option);
+  }
   select.value = option.value;
   select.dispatchEvent(new Event('change', { bubbles:true }));
   return true;
@@ -162,17 +161,17 @@ function renderTimerTab(section, body){
       </div>
       <div class="rh-focus-panel" style="padding:18px">
         <div class="rh-focus-cardTitle"><div><b>Quick Actions</b><span>Fast controls</span></div><span>${currentTimerText(section)}</span></div>
-        <div class="rh-focus-inlineActions"><button type="button" class="rh-focus-inlineBtn" data-rh-duration="25">25 min</button><button type="button" class="rh-focus-inlineBtn" data-rh-duration="50">50 min</button><button type="button" class="rh-focus-inlineBtn" data-rh-duration="60">1 hour</button><button type="button" class="rh-focus-inlineBtn" data-rh-quick-subject="Biology">Bio Start</button><button type="button" class="rh-focus-inlineBtn" data-rh-quick-subject="Chemistry">Chem Start</button><button type="button" class="rh-focus-inlineBtn" data-rh-quick-subject="Physics">Phy Start</button></div>
+        <div class="rh-focus-inlineActions"><button type="button" class="rh-focus-inlineBtn" data-rh-duration="25">25 min</button><button type="button" class="rh-focus-inlineBtn" data-rh-duration="50">50 min</button><button type="button" class="rh-focus-inlineBtn" data-rh-duration="60">1 hour</button><button type="button" class="rh-focus-inlineBtn" data-rh-quick-subject="Botany">Botany</button><button type="button" class="rh-focus-inlineBtn" data-rh-quick-subject="Zoology">Zoology</button><button type="button" class="rh-focus-inlineBtn" data-rh-quick-subject="Revision">Revision</button></div>
       </div>
     </div>
     <div style="margin-top:18px">${renderGroupPanel()}</div>`;
   body.querySelectorAll('[data-rh-duration]').forEach(btn => btn.addEventListener('click', () => quickSetDuration(section, btn.getAttribute('data-rh-duration'))));
-  body.querySelectorAll('[data-rh-quick-subject]').forEach(btn => btn.addEventListener('click', () => startFocusForSubject(section, btn.getAttribute('data-rh-quick-subject') || 'Biology')));
+  body.querySelectorAll('[data-rh-quick-subject]').forEach(btn => btn.addEventListener('click', () => startFocusForSubject(section, btn.getAttribute('data-rh-quick-subject') || 'Botany')));
 }
 
 function renderBooksTab(section, body){
   body.innerHTML = `<div class="rh-focus-panel" style="padding:18px"><div class="rh-focus-cardTitle"><div><b>Premium Focus Books</b><span>Direct subject start</span></div><span>${SUBJECT_CARDS.length} subjects</span></div><div class="rh-focus-booksGrid">${SUBJECT_CARDS.map(card=>`<div class="rh-focus-bookCard" style="--glow:${card.glow}"><div class="rh-focus-bookTop"><div class="rh-focus-bookIcon">${card.icon}</div><div class="rh-focus-bookTime">${card.session} min</div></div><div class="rh-focus-bookName">${card.name}</div><div class="rh-focus-bookNote">${card.note}</div><div class="rh-focus-bookFoot"><span class="rh-focus-bookTime">Premium Start</span><button type="button" class="rh-focus-bookStart" data-rh-book-subject="${card.name}" data-rh-book-minutes="${card.session}">Start Now</button></div></div>`).join('')}</div></div>`;
-  body.querySelectorAll('[data-rh-book-subject]').forEach(btn => btn.addEventListener('click', () => { const subject = btn.getAttribute('data-rh-book-subject') || 'Biology'; const minutes = parseInt(btn.getAttribute('data-rh-book-minutes') || '50',10) || 50; quickSetDuration(section, minutes); startFocusForSubject(section, subject); }));
+  body.querySelectorAll('[data-rh-book-subject]').forEach(btn => btn.addEventListener('click', () => { const subject = btn.getAttribute('data-rh-book-subject') || 'Botany'; const minutes = parseInt(btn.getAttribute('data-rh-book-minutes') || '50',10) || 50; quickSetDuration(section, minutes); startFocusForSubject(section, subject); }));
 }
 
 function renderInsightsTab(body){
@@ -260,7 +259,7 @@ function hideUnused(section){ const stats=findStats(section); if(stats.streak) s
 function boot(){
   ensureStyle();
   const section = findSection(); if(!section) return;
-  ensureGoldHeader(section); ensureShell(section); bindSubject(section); hideUnused(section); premiumizeSourcePanels(section); renderApp(section); loadData(section);
+  ensureGoldHeader(section); ensureShell(section); bindSubject(section); hideUnused(section); premiumizeSourcePanels(section); premiumizeSidebar(); renderApp(section); loadData(section);
 }
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 1200), { once:true }); else setTimeout(boot, 1200);
 setInterval(() => { if(document.visibilityState !== 'hidden') boot(); }, 2500);
