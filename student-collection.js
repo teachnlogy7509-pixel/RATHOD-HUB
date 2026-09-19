@@ -34,10 +34,100 @@ function load(){
  if(document.querySelector('script[data-rh-ypt-focus]'))return;
  const s=document.createElement('script');
  s.defer=true;
- s.src='rathod-ypt-focus.js?v=3';
+ s.src='rathod-ypt-focus.js?v=4';
  s.setAttribute('data-rh-ypt-focus','1');
  document.head.appendChild(s);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load,{once:true});
 else setTimeout(load,0);
+})();
+
+(function(){
+'use strict';
+if(window.__RH_YPT_PREMIUM_PASS__)return;
+window.__RH_YPT_PREMIUM_PASS__=1;
+function ensureStyle(){
+ if(document.getElementById('rh-ypt-premium-style'))return;
+ const style=document.createElement('style');
+ style.id='rh-ypt-premium-style';
+ style.textContent=`
+ #rh-ypt-focus-card{position:relative;overflow:hidden}
+ #rh-ypt-focus-card:before{content:"";position:absolute;inset:-20% auto auto -10%;width:220px;height:220px;background:radial-gradient(circle,rgba(251,191,36,.16),transparent 65%);pointer-events:none}
+ #rh-ypt-focus-card:after{content:"";position:absolute;inset:auto -70px 22% auto;width:200px;height:200px;background:radial-gradient(circle,rgba(236,72,153,.10),transparent 65%);pointer-events:none}
+ .rh-ypt-premium-card{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.12)!important;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015))!important;box-shadow:0 20px 45px rgba(0,0,0,.32)}
+ .rh-ypt-premium-card.rh-girl{background:linear-gradient(180deg,rgba(236,72,153,.08),rgba(255,255,255,.02))!important}
+ .rh-ypt-premium-card.rh-boy{background:linear-gradient(180deg,rgba(59,130,246,.08),rgba(255,255,255,.02))!important}
+ .rh-ypt-premium-card.rh-locked{border-color:rgba(250,204,21,.16)!important}
+ .rh-ypt-premium-card.rh-unlocked{border-color:rgba(250,204,21,.22)!important;box-shadow:0 18px 40px rgba(0,0,0,.32),0 0 0 1px rgba(251,191,36,.08)}
+ .rh-ypt-premium-card.rh-activeCard{border-color:rgba(251,191,36,.35)!important;box-shadow:0 20px 55px rgba(251,191,36,.10),0 0 0 1px rgba(251,191,36,.18)}
+ .rh-ypt-vipTop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+ .rh-ypt-vipChip{padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);font-size:10px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;color:#f8fafc}
+ .rh-ypt-vipRarity{padding:6px 10px;border-radius:999px;border:1px solid rgba(251,191,36,.18);background:rgba(251,191,36,.12);font-size:10px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:#fde68a}
+ .rh-ypt-artBox{position:relative;overflow:hidden}
+ .rh-ypt-artBox:before{content:"";position:absolute;inset:-20% -35% auto auto;width:110px;height:110px;background:radial-gradient(circle,rgba(255,255,255,.16),transparent 60%);pointer-events:none}
+ .rh-ypt-shine{position:absolute;inset:-30% auto -30% -65%;width:40%;transform:skewX(-20deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);animation:rhYptShine 3.6s linear infinite;pointer-events:none}
+ .rh-ypt-lockOverlay{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px;background:linear-gradient(180deg,rgba(0,0,0,.06),rgba(0,0,0,.62));pointer-events:none}
+ .rh-ypt-lockText{padding:7px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(7,7,9,.72);backdrop-filter:blur(6px);font-size:10px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#f8fafc}
+ .rh-ypt-title{display:flex;align-items:center;justify-content:center;gap:8px}
+ .rh-ypt-titleMark{font-size:15px;filter:drop-shadow(0 0 8px rgba(251,191,36,.22))}
+ .rh-ypt-progressGlow{box-shadow:0 0 18px rgba(251,191,36,.22)}
+ .rh-ypt-tabGirls{border-color:rgba(244,114,182,.24)!important;background:rgba(236,72,153,.14)!important;color:#fbcfe8!important}
+ .rh-ypt-tabBoys{border-color:rgba(96,165,250,.24)!important;background:rgba(59,130,246,.14)!important;color:#bfdbfe!important}
+ @keyframes rhYptShine{0%{transform:translateX(-120%) skewX(-20deg)}100%{transform:translateX(430%) skewX(-20deg)}}
+ `;
+ document.head.appendChild(style);
+}
+function polish(){
+ ensureStyle();
+ const root=document.getElementById('rh-ypt-focus-card');
+ if(!root)return;
+ const girlsBtn=document.querySelector('[data-rh-tab="girls"]');
+ const boysBtn=document.querySelector('[data-rh-tab="boys"]');
+ if(girlsBtn){girlsBtn.textContent='👸 Girls VIP';girlsBtn.classList.add('rh-ypt-tabGirls')}
+ if(boysBtn){boysBtn.textContent='🥷 Boys VIP';boysBtn.classList.add('rh-ypt-tabBoys')}
+ const allBtn=document.querySelector('[data-rh-tab="all"]');
+ if(allBtn)allBtn.textContent='✨ All VIP';
+ const cards=document.querySelectorAll('#rh-ypt-avatar-grid > div');
+ cards.forEach(card=>{
+   const text=(card.innerText||'').toLowerCase();
+   const isGirl=text.includes('girl');
+   const isBoy=text.includes('boy');
+   const isLocked=text.includes('locked');
+   const isActive=text.includes('active') || text.includes('using now');
+   const top=card.firstElementChild;
+   if(top && !card.querySelector('.rh-ypt-vipTop')){
+     const badgeText=isGirl?'Anime Girl':'Anime Boy';
+     const rarity=card.querySelector('div.mt-4.text-center div')?.textContent?.trim()||'VIP';
+     const wrap=document.createElement('div');
+     wrap.className='rh-ypt-vipTop';
+     wrap.innerHTML=`<span class="rh-ypt-vipChip">${badgeText}</span><span class="rh-ypt-vipRarity">${rarity}</span>`;
+     card.insertBefore(wrap, top.nextSibling || top);
+   }
+   card.classList.add('rh-ypt-premium-card');
+   card.classList.toggle('rh-girl',!!isGirl);
+   card.classList.toggle('rh-boy',!!isBoy);
+   card.classList.toggle('rh-locked',!!isLocked);
+   card.classList.toggle('rh-unlocked',!isLocked);
+   card.classList.toggle('rh-activeCard',!!isActive);
+   const img=card.querySelector('img');
+   const artBox=img?.parentElement;
+   if(artBox){
+     artBox.classList.add('rh-ypt-artBox');
+     if(!artBox.querySelector('.rh-ypt-shine')){const s=document.createElement('div');s.className='rh-ypt-shine';artBox.appendChild(s)}
+     let overlay=artBox.querySelector('.rh-ypt-lockOverlay');
+     if(isLocked && !overlay){overlay=document.createElement('div');overlay.className='rh-ypt-lockOverlay';overlay.innerHTML='<span class="rh-ypt-lockText">Premium Locked</span>';artBox.appendChild(overlay)}
+     if(!isLocked && overlay)overlay.remove();
+   }
+   const title=card.querySelector('b.block');
+   if(title && !title.querySelector('.rh-ypt-title')){
+     const label=title.textContent||'';
+     title.innerHTML=`<span class="rh-ypt-title"><span class="rh-ypt-titleMark">${isGirl?'👑':'⚔️'}</span><span>${label}</span></span>`;
+   }
+   const progressBar=Array.from(card.querySelectorAll('div')).find(el=>String(el.className||'').includes('bg-[linear-gradient(90deg,#fb923c,#fbbf24,#fde68a)]'));
+   if(progressBar)progressBar.classList.add('rh-ypt-progressGlow');
+ });
+}
+setInterval(polish,900);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(polish,1200),{once:true});
+else setTimeout(polish,1200);
 })();
