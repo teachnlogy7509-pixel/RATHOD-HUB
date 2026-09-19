@@ -1,5 +1,5 @@
--- RATHOD HUB: YPT-style 30-day public study leaderboard + earned avatars
--- Run once in Supabase SQL Editor after focus_sessions, profiles, rh_shop_items and profile_cosmetics exist.
+-- RATHOD HUB: YPT-style 30-day public study leaderboard + earned anime avatars
+-- Avatar unlocks are based on total focus in the LAST 3 DAYS.
 
 create table if not exists public.ypt_focus_cycle (
   cycle_id boolean primary key default true check (cycle_id = true),
@@ -43,7 +43,7 @@ begin
        set cycle_start = v_start,
            cycle_end = v_end,
            updated_at = now()
-     where c.cycle_id = true;
+     where cycle_id = true;
   end if;
 
   return query select v_start, v_end;
@@ -181,10 +181,10 @@ begin
     select *
       from (values
         ('avatar_scholar', 86400),
-        ('avatar_medic', 129600),
-        ('avatar_scientist', 172800),
-        ('avatar_warrior', 216000),
-        ('avatar_phoenix', 259200)
+        ('avatar_medic', 108000),
+        ('avatar_scientist', 129600),
+        ('avatar_warrior', 151200),
+        ('avatar_phoenix', 172800)
       ) as milestone(item_id, target_seconds)
      order by target_seconds
   loop
@@ -222,7 +222,6 @@ begin
 end;
 $$;
 
-
 drop function if exists public.get_focus_avatar_status();
 create function public.get_focus_avatar_status()
 returns table(
@@ -252,19 +251,12 @@ begin
   with config(item_id, target_seconds, tier_label, rule_text) as (
     values
       ('avatar_scholar', 86400, '24h', '3 days me 24+ hours focus'),
-      ('avatar_medic', 129600, '36h', '3 days me 36+ hours focus'),
-      ('avatar_scientist', 172800, '48h', '3 days me 48+ hours focus'),
-      ('avatar_warrior', 216000, '60h', '3 days me 60+ hours focus'),
-      ('avatar_phoenix', 259200, '72h', '3 days me 72+ hours focus')
+      ('avatar_medic', 108000, '30h', '3 days me 30+ hours focus'),
+      ('avatar_scientist', 129600, '36h', '3 days me 36+ hours focus'),
+      ('avatar_warrior', 151200, '42h', '3 days me 42+ hours focus'),
+      ('avatar_phoenix', 172800, '48h', '3 days me 48+ hours focus')
   ), items as (
-    select
-      c.item_id,
-      c.target_seconds,
-      c.tier_label,
-      c.rule_text,
-      s.name,
-      s.emoji,
-      s.description
+    select c.item_id, c.target_seconds, c.tier_label, c.rule_text, s.name, s.emoji, s.description
     from config c
     join public.rh_shop_items s on s.item_id = c.item_id
   )
@@ -309,20 +301,15 @@ begin
   perform public.ensure_focus_avatar_rewards();
 
   if not exists (
-    select 1
-      from public.rh_shop_items s
-     where s.item_id = p_item_id
-       and s.kind = 'avatar'
-       and s.active = true
+    select 1 from public.rh_shop_items s
+    where s.item_id = p_item_id and s.kind = 'avatar' and s.active = true
   ) then
     raise exception 'Avatar not found';
   end if;
 
   if not exists (
-    select 1
-      from public.rh_shop_purchases p
-     where p.user_id = auth.uid()
-       and p.item_id = p_item_id
+    select 1 from public.rh_shop_purchases p
+    where p.user_id = auth.uid() and p.item_id = p_item_id
   ) then
     raise exception 'Avatar abhi unlock nahi hua';
   end if;
