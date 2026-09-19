@@ -3,7 +3,7 @@
 'use strict';
 if(window.__RH_QUESTION_ARCHIVE_V4__)return;
 window.__RH_QUESTION_ARCHIVE_V4__=1;
-const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const esc=v=>String(v??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));
 const hash=s=>{let h=2166136261;for(const c of String(s||'')){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return(h>>>0).toString(16)};
 function globals(){try{if(typeof db!=='undefined')window.db=db}catch(e){}try{if(typeof profile!=='undefined')window.profile=profile}catch(e){}try{if(typeof user!=='undefined')window.user=user}catch(e){}}
 function loadSeen(){try{window.rhArchiveSeen=new Set(JSON.parse(localStorage.getItem('rh_archive_seen')||'[]').slice(-800))}catch(e){window.rhArchiveSeen=new Set()}}
@@ -12,15 +12,15 @@ function cleanOptions(list){return[...(list||[])].map(x=>{if(x&&typeof x==='obje
 function isDaily9pmScreen(){const text=String(document.body?.innerText||'').slice(0,12000).toLowerCase();return /daily\s*9\s*pm|9\s*pm\s*(battle|arena|quiz)|scheduled\s*(battle|quiz)/i.test(text)||Boolean(window.dailyBattleQuestions||window.dailyBattle||window.scheduledBattle||window.scheduledBattleQuestions)}
 function allowedAppQuestion(q){const text=`${q.source||''} ${q.mode||''} ${q.quiz_name||''}`.toLowerCase().replace(/_/g,' ');return /neet\s*720/i.test(text)||/daily\s*9\s*pm|9\s*pm\s*(battle|arena|quiz)|scheduled\s*(battle|quiz)/i.test(text)}
 function fromRoom(){try{if(typeof n720Room!=='undefined'&&n720Room){const i=typeof n720CurrentIndex==='function'?n720CurrentIndex():Number(n720Room.current_idx??n720Room.currentIndex??-1);const q=n720Room.questions?.[i];if(q)return{q,source:'NEET 720'}}}catch(e){}try{if(typeof battleQuestions!=='undefined'&&typeof currentBattleIdx!=='undefined'&&battleQuestions[currentBattleIdx]&&isDaily9pmScreen())return{q:battleQuestions[currentBattleIdx],source:'Daily 9 PM'}}catch(e){}return null}
-function fromDom(){const pairs=[['#n720-question-text','#n720-options','NEET 720'],['#battleQuestionTitle','#battleOptionsGrid',isDaily9pmScreen()?'Daily 9 PM':'Event Quiz']];for(const[qs,os,source]of pairs){const qel=document.querySelector(qs),box=document.querySelector(os);if(!qel||!box||!qel.textContent.trim())continue;const opts=cleanOptions(box.querySelectorAll('button,[role="button"],.option'));if(opts.length===4)return{q:{question:qel.textContent.trim(),options:opts,correct_index:null},source}}return null}
+function fromDom(){const pairs=[['#n720-question-text','#n720-options','NEET 720'],['#battleQuestionTitle','#battleOptionsGrid',isDaily9pmScreen()?'Daily 9 PM':'Event Quiz']];for(const[qs,os,source]of pairs){const qel=document.querySelector(qs),box=document.querySelector(os);if(!qel||!box||!qel.textContent.trim())continue;const opts=cleanOptions(box.querySelectorAll('button,[role=\"button\"],.option'));if(opts.length===4)return{q:{question:qel.textContent.trim(),options:opts,correct_index:null},source}}return null}
 function normalise(item){if(!item?.q)return null;const q=item.q,options=cleanOptions(q.options||q.choices||q.answers);if(!String(q.question||'').trim()||options.length!==4)return null;let correct=q.correct_index??q.correctIndex??q.answer_index??q.correctOptionIndex??null;try{correct=correct==null?null:Number(correct)}catch(e){correct=null}if(correct!==null&&!Number.isInteger(correct))correct=null;return{question:String(q.question).trim(),options,correct_index:correct,source:item.source,mode:String(q.mode||q.quiz_mode||item.source||'Quiz').replace(/\s+/g,' ').trim().slice(0,80)||'Quiz',quiz_name:String(q.quiz_name||q.quizName||q.room||item.source||'Quiz').slice(0,100)}}
 async function emitQuestion(item){globals();if(!window.db||!window.user)return;const q=normalise(item);if(!q||!allowedAppQuestion(q))return;const key=hash(`${q.source}|${q.mode}|${q.question}`);if(window.rhArchiveSeen.has(key))return;remember(key);try{const r=await window.db.from('rh_bridge_events').insert({event_type:'quiz_question',delivery_mode:'digest',user_id:window.user.id,display_name:String(window.profile?.name||window.user?.user_metadata?.name||'RATHOD Aspirant').slice(0,60),payload:{...q,archive:true,archive_scope:'app_daily9pm_or_neet720',created_at:new Date().toISOString()}});if(r.error)console.info('Question archive event skipped:',r.error.message)}catch(e){console.info('Question archive event skipped:',e?.message||e)}}
 function capture(){const item=fromRoom()||fromDom();if(item)emitQuestion(item)}
 function bridgeWrap(name){const fn=window[name];if(typeof fn!=='function'||fn.__rhArchiveWrapped)return;const w=async function(){const before=fromRoom()||fromDom();const result=await fn.apply(this,arguments);await emitQuestion(before||fromRoom()||fromDom());return result};w.__rhArchiveWrapped=true;window[name]=w}
-function archiveSection(){let s=document.getElementById('section-questionarchive');if(s)return s;s=document.createElement('section');s.id='section-questionarchive';s.className='hidden space-y-5';s.setAttribute('hidden','');s.innerHTML=`<div class="rounded-3xl border border-sky-400/30 bg-gradient-to-br from-slate-950 via-sky-950/35 to-indigo-950/35 p-5 sm:p-7"><div class="text-[10px] font-black tracking-[.22em] text-sky-300">RATHOD HUB QUESTION ARCHIVE</div><h2 class="mt-1 text-2xl font-black">📚 Saved Questions</h2><p class="mt-2 text-xs text-slate-400">Sirf Daily 9 PM aur NEET 720 ke questions save honge. Live Quiz, Self Quiz aur baaki app events archive nahi honge. Telegram ke sabhi quiz alag se save honge.</p><div class="mt-4 grid grid-cols-2 gap-2"><button type="button" id="rh-archive-notes" class="rounded-xl bg-sky-600 px-3 py-3 text-xs font-black">📝 Notes</button><button type="button" id="rh-archive-tests" class="rounded-xl bg-violet-600 px-3 py-3 text-xs font-black">🧪 Test</button></div></div><div id="rh-archive-files" class="rounded-3xl border border-slate-800 bg-slate-950/90 p-4"><div class="text-xs text-slate-500">Folder select karein.</div></div>`;const host=document.querySelector('#app .rh-content')||document.querySelector('.rh-content')||document.querySelector('#app > main')||document.getElementById('app');if(host)host.appendChild(s);s.querySelector('#rh-archive-notes')?.addEventListener('click',()=>loadArchive('Question Notes'));s.querySelector('#rh-archive-tests')?.addEventListener('click',()=>loadArchive('Question Tests'));return s}
-function showArchive(){globals();const s=archiveSection();document.querySelectorAll('section[id^="section-"]').forEach(x=>{if(x!==s){x.classList.add('hidden');x.setAttribute('hidden','')}});s.classList.remove('hidden');s.removeAttribute('hidden');s.style.display='block';document.querySelectorAll('.rh-nav-btn').forEach(x=>x.classList.remove('rh-active'));document.getElementById('btn-questionarchive')?.classList.add('rh-active');document.getElementById('mob-questionarchive')?.classList.add('rh-active');window.scrollTo({top:0,left:0,behavior:'instant'});return s}
-async function loadArchive(folder){globals();showArchive();const box=document.getElementById('rh-archive-files');if(!box)return;box.innerHTML='<div class="text-xs text-slate-400">Drive PDFs load ho rahe hain…</div>';try{if(!window.db?.functions?.invoke)throw Error('Supabase not ready');const r=await window.db.functions.invoke('google-drive',{body:{action:'list_folder',folderName:folder}});if(r.error)throw r.error;const files=r.data?.files||[];box.innerHTML=files.length?`<div class="mb-3 text-xs font-black text-sky-300">${esc(folder)} • ${files.length} PDFs</div>`+files.map(f=>`<a target="_blank" rel="noopener" href="${esc(f.viewUrl||f.downloadUrl||'#')}" class="mb-2 block rounded-2xl border border-white/10 bg-black/20 p-3 hover:border-sky-400/40"><b class="block text-xs">📄 ${esc(f.name||'PDF')}</b><span class="text-[10px] text-slate-500">${esc(f.modifiedTime||f.createdTime||'Open in Drive')}</span></a>`).join(''):'<div class="text-xs text-slate-500">Abhi PDF available nahi hai.</div>'}catch(e){box.innerHTML=`<div class="text-xs text-amber-300">Archive setup pending: ${esc(e.message||'Drive folder unavailable')}</div>`}}
-function nav(){const aside=document.querySelector('.rh-sidebar');if(aside&&!document.getElementById('btn-questionarchive')){const b=document.createElement('button');b.id='btn-questionarchive';b.type='button';b.className='rh-nav-btn';b.innerHTML='<i class="fa-solid fa-box-archive text-sky-400"></i><span>Question Archive</span>';b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showArchive()});const before=document.getElementById('btn-aicards')||document.getElementById('btn-materials');before?aside.insertBefore(b,before):aside.appendChild(b)}const bottom=document.querySelector('.rh-mobile-bottom');if(bottom&&!document.getElementById('mob-questionarchive')){const b=document.createElement('button');b.id='mob-questionarchive';b.type='button';b.innerHTML='<i class="fa-solid fa-box-archive"></i><span>Archive</span>';b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showArchive()});bottom.appendChild(b)}}
+function archiveSection(){let s=document.getElementById('section-questionarchive');if(s)return s;s=document.createElement('section');s.id='section-questionarchive';s.className='hidden space-y-5';s.setAttribute('hidden','');s.innerHTML=`<div class=\"rounded-3xl border border-sky-400/30 bg-gradient-to-br from-slate-950 via-sky-950/35 to-indigo-950/35 p-5 sm:p-7\"><div class=\"text-[10px] font-black tracking-[.22em] text-sky-300\">RATHOD HUB QUESTION ARCHIVE</div><h2 class=\"mt-1 text-2xl font-black\">📚 Saved Questions</h2><p class=\"mt-2 text-xs text-slate-400\">Sirf Daily 9 PM aur NEET 720 ke questions save honge. Live Quiz, Self Quiz aur baaki app events archive nahi honge. Telegram ke sabhi quiz alag se save honge.</p><div class=\"mt-4 grid grid-cols-2 gap-2\"><button type=\"button\" id=\"rh-archive-notes\" class=\"rounded-xl bg-sky-600 px-3 py-3 text-xs font-black\">📝 Notes</button><button type=\"button\" id=\"rh-archive-tests\" class=\"rounded-xl bg-violet-600 px-3 py-3 text-xs font-black\">🧪 Test</button></div></div><div id=\"rh-archive-files\" class=\"rounded-3xl border border-slate-800 bg-slate-950/90 p-4\"><div class=\"text-xs text-slate-500\">Folder select karein.</div></div>`;const host=document.querySelector('#app .rh-content')||document.querySelector('.rh-content')||document.querySelector('#app > main')||document.getElementById('app');if(host)host.appendChild(s);s.querySelector('#rh-archive-notes')?.addEventListener('click',()=>loadArchive('Question Notes'));s.querySelector('#rh-archive-tests')?.addEventListener('click',()=>loadArchive('Question Tests'));return s}
+function showArchive(){globals();const s=archiveSection();document.querySelectorAll('section[id^=\"section-\"]').forEach(x=>{if(x!==s){x.classList.add('hidden');x.setAttribute('hidden','')}});s.classList.remove('hidden');s.removeAttribute('hidden');s.style.display='block';document.querySelectorAll('.rh-nav-btn').forEach(x=>x.classList.remove('rh-active'));document.getElementById('btn-questionarchive')?.classList.add('rh-active');document.getElementById('mob-questionarchive')?.classList.add('rh-active');window.scrollTo({top:0,left:0,behavior:'instant'});return s}
+async function loadArchive(folder){globals();showArchive();const box=document.getElementById('rh-archive-files');if(!box)return;box.innerHTML='<div class=\"text-xs text-slate-400\">Drive PDFs load ho rahe hain…</div>';try{if(!window.db?.functions?.invoke)throw Error('Supabase not ready');const r=await window.db.functions.invoke('google-drive',{body:{action:'list_folder',folderName:folder}});if(r.error)throw r.error;const files=r.data?.files||[];box.innerHTML=files.length?`<div class=\"mb-3 text-xs font-black text-sky-300\">${esc(folder)} • ${files.length} PDFs</div>`+files.map(f=>`<a target=\"_blank\" rel=\"noopener\" href=\"${esc(f.viewUrl||f.downloadUrl||'#')}\" class=\"mb-2 block rounded-2xl border border-white/10 bg-black/20 p-3 hover:border-sky-400/40\"><b class=\"block text-xs\">📄 ${esc(f.name||'PDF')}</b><span class=\"text-[10px] text-slate-500\">${esc(f.modifiedTime||f.createdTime||'Open in Drive')}</span></a>`).join(''):'<div class=\"text-xs text-slate-500\">Abhi PDF available nahi hai.</div>'}catch(e){box.innerHTML=`<div class=\"text-xs text-amber-300\">Archive setup pending: ${esc(e.message||'Drive folder unavailable')}</div>`}}
+function nav(){const aside=document.querySelector('.rh-sidebar');if(aside&&!document.getElementById('btn-questionarchive')){const b=document.createElement('button');b.id='btn-questionarchive';b.type='button';b.className='rh-nav-btn';b.innerHTML='<i class=\"fa-solid fa-box-archive text-sky-400\"></i><span>Question Archive</span>';b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showArchive()});const before=document.getElementById('btn-aicards')||document.getElementById('btn-materials');before?aside.insertBefore(b,before):aside.appendChild(b)}const bottom=document.querySelector('.rh-mobile-bottom');if(bottom&&!document.getElementById('mob-questionarchive')){const b=document.createElement('button');b.id='mob-questionarchive';b.type='button';b.innerHTML='<i class=\"fa-solid fa-box-archive\"></i><span>Archive</span>';b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showArchive()});bottom.appendChild(b)}}
 window.rhOpenQuestionArchive=showArchive;window.rhLoadArchive=loadArchive;
 function init(){loadSeen();nav();archiveSection();capture();bridgeWrap('qbAnswer');bridgeWrap('n720Answer');setInterval(()=>{nav();capture();bridgeWrap('qbAnswer');bridgeWrap('n720Answer')},1500)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,700);
@@ -30,108 +30,16 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 'use strict';
 if(window.__RH_YPT_FOCUS_LOADER__)return;
 window.__RH_YPT_FOCUS_LOADER__=1;
-function loadOne(src,key){
- if(document.querySelector(`script[${key}]`))return;
- const s=document.createElement('script');
- s.defer=true;
- s.src=src;
- s.setAttribute(key,'1');
- document.head.appendChild(s);
-}
-function load(){
- loadOne('rathod-ypt-focus.js?v=5','data-rh-ypt-focus');
- loadOne('rathod-focus-premium-timer.js?v=3','data-rh-focus-premium-timer');
-}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load,{once:true});
-else setTimeout(load,0);
+function loadOne(src,key){if(document.querySelector(`script[${key}]`))return;const s=document.createElement('script');s.defer=true;s.src=src;s.setAttribute(key,'1');document.head.appendChild(s)}
+function load(){loadOne('rathod-ypt-focus.js?v=5','data-rh-ypt-focus');loadOne('rathod-focus-premium-timer.js?v=4','data-rh-focus-premium-timer')}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load,{once:true});else setTimeout(load,0);
 })();
 
 (function(){
 'use strict';
 if(window.__RH_YPT_PREMIUM_PASS__)return;
 window.__RH_YPT_PREMIUM_PASS__=1;
-function ensureStyle(){
- if(document.getElementById('rh-ypt-premium-style'))return;
- const style=document.createElement('style');
- style.id='rh-ypt-premium-style';
- style.textContent=`
- #rh-ypt-focus-card{position:relative;overflow:hidden}
- #rh-ypt-focus-card:before{content:"";position:absolute;inset:-20% auto auto -10%;width:220px;height:220px;background:radial-gradient(circle,rgba(251,191,36,.16),transparent 65%);pointer-events:none}
- #rh-ypt-focus-card:after{content:"";position:absolute;inset:auto -70px 22% auto;width:200px;height:200px;background:radial-gradient(circle,rgba(236,72,153,.10),transparent 65%);pointer-events:none}
- .rh-ypt-premium-card{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.12)!important;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015))!important;box-shadow:0 20px 45px rgba(0,0,0,.32)}
- .rh-ypt-premium-card.rh-girl{background:linear-gradient(180deg,rgba(236,72,153,.08),rgba(255,255,255,.02))!important}
- .rh-ypt-premium-card.rh-boy{background:linear-gradient(180deg,rgba(59,130,246,.08),rgba(255,255,255,.02))!important}
- .rh-ypt-premium-card.rh-locked{border-color:rgba(250,204,21,.16)!important}
- .rh-ypt-premium-card.rh-unlocked{border-color:rgba(250,204,21,.22)!important;box-shadow:0 18px 40px rgba(0,0,0,.32),0 0 0 1px rgba(251,191,36,.08)}
- .rh-ypt-premium-card.rh-activeCard{border-color:rgba(251,191,36,.35)!important;box-shadow:0 20px 55px rgba(251,191,36,.10),0 0 0 1px rgba(251,191,36,.18)}
- .rh-ypt-vipTop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
- .rh-ypt-vipChip{padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);font-size:10px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;color:#f8fafc}
- .rh-ypt-vipRarity{padding:6px 10px;border-radius:999px;border:1px solid rgba(251,191,36,.18);background:rgba(251,191,36,.12);font-size:10px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:#fde68a}
- .rh-ypt-artBox{position:relative;overflow:hidden}
- .rh-ypt-artBox:before{content:"";position:absolute;inset:-20% -35% auto auto;width:110px;height:110px;background:radial-gradient(circle,rgba(255,255,255,.16),transparent 60%);pointer-events:none}
- .rh-ypt-shine{position:absolute;inset:-30% auto -30% -65%;width:40%;transform:skewX(-20deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);animation:rhYptShine 3.6s linear infinite;pointer-events:none}
- .rh-ypt-lockOverlay{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px;background:linear-gradient(180deg,rgba(0,0,0,.06),rgba(0,0,0,.62));pointer-events:none}
- .rh-ypt-lockText{padding:7px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(7,7,9,.72);backdrop-filter:blur(6px);font-size:10px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#f8fafc}
- .rh-ypt-title{display:flex;align-items:center;justify-content:center;gap:8px}
- .rh-ypt-titleMark{font-size:15px;filter:drop-shadow(0 0 8px rgba(251,191,36,.22))}
- .rh-ypt-progressGlow{box-shadow:0 0 18px rgba(251,191,36,.22)}
- .rh-ypt-tabGirls{border-color:rgba(244,114,182,.24)!important;background:rgba(236,72,153,.14)!important;color:#fbcfe8!important}
- .rh-ypt-tabBoys{border-color:rgba(96,165,250,.24)!important;background:rgba(59,130,246,.14)!important;color:#bfdbfe!important}
- @keyframes rhYptShine{0%{transform:translateX(-120%) skewX(-20deg)}100%{transform:translateX(430%) skewX(-20deg)}}
- `;
- document.head.appendChild(style);
-}
-function polish(){
- ensureStyle();
- const root=document.getElementById('rh-ypt-focus-card');
- if(!root)return;
- const girlsBtn=document.querySelector('[data-rh-tab="girls"]');
- const boysBtn=document.querySelector('[data-rh-tab="boys"]');
- if(girlsBtn){girlsBtn.textContent='👸 Girls VIP';girlsBtn.classList.add('rh-ypt-tabGirls')}
- if(boysBtn){boysBtn.textContent='🥷 Boys VIP';boysBtn.classList.add('rh-ypt-tabBoys')}
- const allBtn=document.querySelector('[data-rh-tab="all"]');
- if(allBtn)allBtn.textContent='✨ All VIP';
- const cards=document.querySelectorAll('#rh-ypt-avatar-grid > div');
- cards.forEach(card=>{
-   const text=(card.innerText||'').toLowerCase();
-   const isGirl=text.includes('girl');
-   const isBoy=text.includes('boy');
-   const isLocked=text.includes('locked');
-   const isActive=text.includes('active') || text.includes('using now');
-   const top=card.firstElementChild;
-   if(top && !card.querySelector('.rh-ypt-vipTop')){
-     const badgeText=isGirl?'Anime Girl':'Anime Boy';
-     const rarity=card.querySelector('div.mt-4.text-center div')?.textContent?.trim()||'VIP';
-     const wrap=document.createElement('div');
-     wrap.className='rh-ypt-vipTop';
-     wrap.innerHTML=`<span class="rh-ypt-vipChip">${badgeText}</span><span class="rh-ypt-vipRarity">${rarity}</span>`;
-     card.insertBefore(wrap, top.nextSibling || top);
-   }
-   card.classList.add('rh-ypt-premium-card');
-   card.classList.toggle('rh-girl',!!isGirl);
-   card.classList.toggle('rh-boy',!!isBoy);
-   card.classList.toggle('rh-locked',!!isLocked);
-   card.classList.toggle('rh-unlocked',!isLocked);
-   card.classList.toggle('rh-activeCard',!!isActive);
-   const img=card.querySelector('img');
-   const artBox=img?.parentElement;
-   if(artBox){
-     artBox.classList.add('rh-ypt-artBox');
-     if(!artBox.querySelector('.rh-ypt-shine')){const s=document.createElement('div');s.className='rh-ypt-shine';artBox.appendChild(s)}
-     let overlay=artBox.querySelector('.rh-ypt-lockOverlay');
-     if(isLocked && !overlay){overlay=document.createElement('div');overlay.className='rh-ypt-lockOverlay';overlay.innerHTML='<span class="rh-ypt-lockText">Premium Locked</span>';artBox.appendChild(overlay)}
-     if(!isLocked && overlay)overlay.remove();
-   }
-   const title=card.querySelector('b.block');
-   if(title && !title.querySelector('.rh-ypt-title')){
-     const label=title.textContent||'';
-     title.innerHTML=`<span class="rh-ypt-title"><span class="rh-ypt-titleMark">${isGirl?'👑':'⚔️'}</span><span>${label}</span></span>`;
-   }
-   const progressBar=Array.from(card.querySelectorAll('div')).find(el=>String(el.className||'').includes('bg-[linear-gradient(90deg,#fb923c,#fbbf24,#fde68a)]'));
-   if(progressBar)progressBar.classList.add('rh-ypt-progressGlow');
- });
-}
-setInterval(polish,900);
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(polish,1200),{once:true});
-else setTimeout(polish,1200);
+function ensureStyle(){if(document.getElementById('rh-ypt-premium-style'))return;const style=document.createElement('style');style.id='rh-ypt-premium-style';style.textContent=`#rh-ypt-focus-card{position:relative;overflow:hidden}#rh-ypt-focus-card:before{content:"";position:absolute;inset:-20% auto auto -10%;width:220px;height:220px;background:radial-gradient(circle,rgba(251,191,36,.16),transparent 65%);pointer-events:none}#rh-ypt-focus-card:after{content:"";position:absolute;inset:auto -70px 22% auto;width:200px;height:200px;background:radial-gradient(circle,rgba(236,72,153,.10),transparent 65%);pointer-events:none}.rh-ypt-premium-card{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.12)!important;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015))!important;box-shadow:0 20px 45px rgba(0,0,0,.32)}.rh-ypt-premium-card.rh-girl{background:linear-gradient(180deg,rgba(236,72,153,.08),rgba(255,255,255,.02))!important}.rh-ypt-premium-card.rh-boy{background:linear-gradient(180deg,rgba(59,130,246,.08),rgba(255,255,255,.02))!important}.rh-ypt-premium-card.rh-locked{border-color:rgba(250,204,21,.16)!important}.rh-ypt-premium-card.rh-unlocked{border-color:rgba(250,204,21,.22)!important;box-shadow:0 18px 40px rgba(0,0,0,.32),0 0 0 1px rgba(251,191,36,.08)}.rh-ypt-premium-card.rh-activeCard{border-color:rgba(251,191,36,.35)!important;box-shadow:0 20px 55px rgba(251,191,36,.10),0 0 0 1px rgba(251,191,36,.18)}.rh-ypt-vipTop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.rh-ypt-vipChip{padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);font-size:10px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;color:#f8fafc}.rh-ypt-vipRarity{padding:6px 10px;border-radius:999px;border:1px solid rgba(251,191,36,.18);background:rgba(251,191,36,.12);font-size:10px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:#fde68a}.rh-ypt-artBox{position:relative;overflow:hidden}.rh-ypt-artBox:before{content:"";position:absolute;inset:-20% -35% auto auto;width:110px;height:110px;background:radial-gradient(circle,rgba(255,255,255,.16),transparent 60%);pointer-events:none}.rh-ypt-shine{position:absolute;inset:-30% auto -30% -65%;width:40%;transform:skewX(-20deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);animation:rhYptShine 3.6s linear infinite;pointer-events:none}.rh-ypt-lockOverlay{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px;background:linear-gradient(180deg,rgba(0,0,0,.06),rgba(0,0,0,.62));pointer-events:none}.rh-ypt-lockText{padding:7px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(7,7,9,.72);backdrop-filter:blur(6px);font-size:10px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#f8fafc}.rh-ypt-title{display:flex;align-items:center;justify-content:center;gap:8px}.rh-ypt-titleMark{font-size:15px;filter:drop-shadow(0 0 8px rgba(251,191,36,.22))}.rh-ypt-progressGlow{box-shadow:0 0 18px rgba(251,191,36,.22)}.rh-ypt-tabGirls{border-color:rgba(244,114,182,.24)!important;background:rgba(236,72,153,.14)!important;color:#fbcfe8!important}.rh-ypt-tabBoys{border-color:rgba(96,165,250,.24)!important;background:rgba(59,130,246,.14)!important;color:#bfdbfe!important}@keyframes rhYptShine{0%{transform:translateX(-120%) skewX(-20deg)}100%{transform:translateX(430%) skewX(-20deg)}}`;document.head.appendChild(style)}
+function polish(){ensureStyle();const root=document.getElementById('rh-ypt-focus-card');if(!root)return;const girlsBtn=document.querySelector('[data-rh-tab=\"girls\"]');const boysBtn=document.querySelector('[data-rh-tab=\"boys\"]');if(girlsBtn){girlsBtn.textContent='👸 Girls VIP';girlsBtn.classList.add('rh-ypt-tabGirls')}if(boysBtn){boysBtn.textContent='🥷 Boys VIP';boysBtn.classList.add('rh-ypt-tabBoys')}const allBtn=document.querySelector('[data-rh-tab=\"all\"]');if(allBtn)allBtn.textContent='✨ All VIP';const cards=document.querySelectorAll('#rh-ypt-avatar-grid > div');cards.forEach(card=>{const text=(card.innerText||'').toLowerCase();const isGirl=text.includes('girl');const isBoy=text.includes('boy');const isLocked=text.includes('locked');const isActive=text.includes('active')||text.includes('using now');const top=card.firstElementChild;if(top&&!card.querySelector('.rh-ypt-vipTop')){const badgeText=isGirl?'Anime Girl':'Anime Boy';const rarity=card.querySelector('div.mt-4.text-center div')?.textContent?.trim()||'VIP';const wrap=document.createElement('div');wrap.className='rh-ypt-vipTop';wrap.innerHTML=`<span class=\"rh-ypt-vipChip\">${badgeText}</span><span class=\"rh-ypt-vipRarity\">${rarity}</span>`;card.insertBefore(wrap,top.nextSibling||top)}card.classList.add('rh-ypt-premium-card');card.classList.toggle('rh-girl',!!isGirl);card.classList.toggle('rh-boy',!!isBoy);card.classList.toggle('rh-locked',!!isLocked);card.classList.toggle('rh-unlocked',!isLocked);card.classList.toggle('rh-activeCard',!!isActive);const img=card.querySelector('img');const artBox=img?.parentElement;if(artBox){artBox.classList.add('rh-ypt-artBox');if(!artBox.querySelector('.rh-ypt-shine')){const s=document.createElement('div');s.className='rh-ypt-shine';artBox.appendChild(s)}let overlay=artBox.querySelector('.rh-ypt-lockOverlay');if(isLocked&&!overlay){overlay=document.createElement('div');overlay.className='rh-ypt-lockOverlay';overlay.innerHTML='<span class=\"rh-ypt-lockText\">Premium Locked</span>';artBox.appendChild(overlay)}if(!isLocked&&overlay)overlay.remove()}const title=card.querySelector('b.block');if(title&&!title.querySelector('.rh-ypt-title')){const label=title.textContent||'';title.innerHTML=`<span class=\"rh-ypt-title\"><span class=\"rh-ypt-titleMark\">${isGirl?'👑':'⚔️'}</span><span>${label}</span></span>`}const progressBar=Array.from(card.querySelectorAll('div')).find(el=>String(el.className||'').includes('bg-[linear-gradient(90deg,#fb923c,#fbbf24,#fde68a)]'));if(progressBar)progressBar.classList.add('rh-ypt-progressGlow')})}
+setInterval(polish,900);if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(polish,1200),{once:true});else setTimeout(polish,1200);
 })();
