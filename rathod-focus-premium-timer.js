@@ -20,6 +20,7 @@ let appState = { activeTab:'timer', rank:'—', focus3day:'0h 0m', nextText:'VIP
 
 function textOf(el){ return String(el?.textContent || '').trim(); }
 function fmtShort(sec){ sec=Math.max(0,Number(sec)||0); const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60); return h?`${h}h ${m}m`:`${m}m`; }
+function fmtHours(sec){ return `${(Math.max(0,Number(sec)||0)/3600).toFixed(1)}h`; }
 function initials(name){ return String(name||'S').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase(); }
 function todayLabel(){ try { return new Date().toLocaleDateString(undefined,{ weekday:'short', month:'numeric', day:'numeric' }); } catch(e){ return 'Today'; } }
 
@@ -76,10 +77,18 @@ function ensureStyle(){
     .rh-focus-cardTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
     .rh-focus-cardTitle b{font-size:24px;color:#fff}
     .rh-focus-cardTitle span{font-size:12px;color:#9ca3af}
+    .rh-focus-graphPanel{margin-top:18px;padding:18px}
+    .rh-focus-graphList{display:grid;gap:12px;margin-top:12px}
+    .rh-focus-graphRow{display:grid;grid-template-columns:120px 1fr 64px;gap:12px;align-items:center}
+    .rh-focus-graphName{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .rh-focus-graphTrack{height:14px;border-radius:999px;background:#1f2937;overflow:hidden;position:relative}
+    .rh-focus-graphBar{height:100%;border-radius:999px;background:linear-gradient(90deg,#fb7c30,#fbbf24);box-shadow:0 0 16px rgba(251,124,48,.18)}
+    .rh-focus-graphValue{font-size:12px;font-weight:800;color:#fbcc9d;text-align:right}
     @media (max-width:1024px){
       .rh-focus-timerGrid,.rh-focus-cards3,.rh-focus-cards2,.rh-focus-insightGrid{grid-template-columns:1fr}
       .rh-focus-groupGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
       .rh-focus-app-bigTimer{font-size:40px}
+      .rh-focus-graphRow{grid-template-columns:88px 1fr 52px}
     }
   `;
   document.head.appendChild(style);
@@ -197,6 +206,25 @@ function renderBooksView(section){
     </div>`;
 }
 
+function renderInsightsGraph(){
+  const members = appState.members.length ? appState.members : [
+    { name:'StudyMate', total_seconds:45123 },{ name:'Dreamer', total_seconds:40123 },{ name:'Candy', total_seconds:35123 },{ name:'Focus', total_seconds:30123 },
+    { name:'Miya', total_seconds:25123 },{ name:'Note', total_seconds:22123 },{ name:'Targin', total_seconds:18123 },{ name:'Mind', total_seconds:14823 }
+  ];
+  const max = Math.max(...members.map(m => Number(m.total_seconds || 0)), 1);
+  return `
+    <div class="rh-focus-panel rh-focus-graphPanel">
+      <div class="rh-focus-cardTitle"><div><b>All Users Hours Graph</b><span>Sabhi users ka focus hours</span></div><span>${members.length} users</span></div>
+      <div class="rh-focus-graphList">
+        ${members.map(m => {
+          const sec = Number(m.total_seconds || 0);
+          const pct = Math.max(8, Math.round((sec / max) * 100));
+          return `<div class="rh-focus-graphRow"><div class="rh-focus-graphName">${m.name || 'Member'}</div><div class="rh-focus-graphTrack"><div class="rh-focus-graphBar" style="width:${pct}%"></div></div><div class="rh-focus-graphValue">${fmtHours(sec)}</div></div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
 function renderInsightsView(section){
   const target = document.getElementById('rh-focus-view-insights'); if(!target) return;
   target.innerHTML = `
@@ -206,6 +234,7 @@ function renderInsightsView(section){
       <div class="rh-focus-mini"><span class="rh-focus-miniLabel">3-Day Focus</span><b class="rh-focus-miniValue">${appState.focus3day}</b><span class="rh-focus-miniMeta">${appState.nextText}</span></div>
       <div class="rh-focus-mini"><span class="rh-focus-miniLabel">Study Together</span><b class="rh-focus-miniValue">${appState.members.length || 8}</b><span class="rh-focus-miniMeta">Active focus members</span></div>
     </div>
+    ${renderInsightsGraph()}
     <div style="margin-top:18px" id="rh-focus-insightGroup"></div>`;
   renderGroupPanel(document.getElementById('rh-focus-insightGroup'));
 }
