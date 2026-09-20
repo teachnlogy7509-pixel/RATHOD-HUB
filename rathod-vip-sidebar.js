@@ -1,39 +1,39 @@
-/* RATHOD HUB VIP sidebar + mobile menu polish without removing features */
+/* RATHOD HUB VIP sidebar + mobile premium menu */
 (function(){
 'use strict';
 if(window.__RH_VIP_SIDEBAR__) return;
 window.__RH_VIP_SIDEBAR__ = 1;
 
 const featureMap = {
-  home:{ label:'Home', icon:'fa-solid fa-house', accent:'59,130,246' },
-  ai:{ label:'AI Doubt', icon:'fa-solid fa-circle-question', accent:'168,85,247' },
-  aitutor:{ label:'AI Tutor Pro', icon:'fa-solid fa-robot', accent:'14,165,233' },
-  quiz:{ label:'AI Learning', icon:'fa-solid fa-wand-magic-sparkles', accent:'139,92,246' },
-  battle:{ label:'Live Quiz', icon:'fa-solid fa-trophy', accent:'244,63,94' },
-  neet720:{ label:'NEET 720', icon:'fa-solid fa-notes-medical', accent:'16,185,129' },
-  badges:{ label:'Badge Library', icon:'fa-solid fa-medal', accent:'245,158,11' },
-  dailyBattle:{ label:'Daily 9 PM', icon:'fa-solid fa-clock', accent:'251,146,60' },
-  materials:{ label:'Study Material', icon:'fa-solid fa-folder-open', accent:'234,179,8' },
-  aicards:{ label:'AI Notes & Formula', icon:'fa-solid fa-wand-magic-sparkles', accent:'168,85,247' },
-  dailyformula:{ label:'Daily Formula', icon:'fa-solid fa-square-root-variable', accent:'56,189,248' },
-  focus:{ label:'Focus Timer', icon:'fa-solid fa-stopwatch', accent:'239,68,68' },
-  studypower:{ label:'Study Power', icon:'fa-solid fa-bolt', accent:'249,115,22' },
-  studyrooms:{ label:'Study Rooms', icon:'fa-solid fa-door-open', accent:'99,102,241' },
-  diary:{ label:'Study Diary', icon:'fa-solid fa-calendar-check', accent:'34,197,94' },
-  vault:{ label:'My Vault', icon:'fa-solid fa-lock', accent:'107,114,128' },
-  community:{ label:'Community', icon:'fa-solid fa-users', accent:'236,72,153' },
-  chatroom:{ label:'Live Chat', icon:'fa-solid fa-comments', accent:'8,145,178' },
-  stories:{ label:'Stories', icon:'fa-solid fa-circle-play', accent:'168,85,247' },
-  cardbattle:{ label:'Knowledge Battle', icon:'fa-solid fa-shield-halved', accent:'225,29,72' },
-  games:{ label:'Games', icon:'fa-solid fa-gamepad', accent:'14,165,233' },
-  hubevents:{ label:'Live Events', icon:'fa-solid fa-bolt', accent:'251,146,60' },
-  leaderboard:{ label:'Leaderboard', icon:'fa-solid fa-trophy', accent:'250,204,21' },
-  treasure:{ label:'NEET Treasure Hunt', icon:'fa-solid fa-map-location-dot', accent:'34,197,94' },
-  tests45:{ label:'45Q Tests', icon:'fa-solid fa-file-pen', accent:'16,185,129' },
-  ncert:{ label:'NCERT', icon:'fa-solid fa-book-open', accent:'59,130,246' },
-  adminpanel:{ label:'Admin Panel', icon:'fa-solid fa-shield-halved', accent:'248,113,113' },
+  home:{ label:'Royal Home', icon:'fa-solid fa-crown', accent:'59,130,246' },
+  ai:{ label:'AI Doctor', icon:'fa-solid fa-stethoscope', accent:'168,85,247' },
+  aitutor:{ label:'Tutor Elite', icon:'fa-solid fa-robot', accent:'14,165,233' },
+  quiz:{ label:'Mind Lab', icon:'fa-solid fa-brain', accent:'139,92,246' },
+  battle:{ label:'Battle Arena', icon:'fa-solid fa-trophy', accent:'244,63,94' },
+  neet720:{ label:'NEET 720 Pro', icon:'fa-solid fa-gem', accent:'16,185,129' },
+  badges:{ label:'Victory Badges', icon:'fa-solid fa-award', accent:'245,158,11' },
+  dailyBattle:{ label:'Prime 9 PM', icon:'fa-solid fa-clock', accent:'251,146,60' },
+  materials:{ label:'Elite Library', icon:'fa-solid fa-book-open-reader', accent:'234,179,8' },
+  aicards:{ label:'Smart Notes Lab', icon:'fa-solid fa-wand-magic-sparkles', accent:'168,85,247' },
+  dailyformula:{ label:'Formula Vault', icon:'fa-solid fa-square-root-variable', accent:'56,189,248' },
+  focus:{ label:'Focus Elite', icon:'fa-solid fa-stopwatch-20', accent:'239,68,68' },
+  studypower:{ label:'Power Boost', icon:'fa-solid fa-bolt', accent:'249,115,22' },
+  studyrooms:{ label:'Study Lounge', icon:'fa-solid fa-door-open', accent:'99,102,241' },
+  diary:{ label:'Daily Journal', icon:'fa-solid fa-calendar-check', accent:'34,197,94' },
+  vault:{ label:'Private Vault', icon:'fa-solid fa-vault', accent:'107,114,128' },
+  community:{ label:'Aspirant Circle', icon:'fa-solid fa-users', accent:'236,72,153' },
+  chatroom:{ label:'Live Lounge', icon:'fa-solid fa-comments', accent:'8,145,178' },
+  stories:{ label:'Daily Stories', icon:'fa-solid fa-clapperboard', accent:'168,85,247' },
+  cardbattle:{ label:'Knowledge War', icon:'fa-solid fa-shield-halved', accent:'225,29,72' },
+  games:{ label:'Arena Games', icon:'fa-solid fa-gamepad', accent:'14,165,233' },
+  hubevents:{ label:'Live Spotlight', icon:'fa-solid fa-bolt', accent:'251,146,60' },
+  leaderboard:{ label:'Elite Rank', icon:'fa-solid fa-ranking-star', accent:'250,204,21' },
+  treasure:{ label:'Treasure Quest', icon:'fa-solid fa-map-location-dot', accent:'34,197,94' },
+  tests45:{ label:'45Q Arena', icon:'fa-solid fa-file-pen', accent:'16,185,129' },
+  ncert:{ label:'NCERT Zone', icon:'fa-solid fa-book-open', accent:'59,130,246' },
+  adminpanel:{ label:'Control Room', icon:'fa-solid fa-shield-halved', accent:'248,113,113' },
   profile:{ label:'My Profile', icon:'fa-solid fa-user-pen', accent:'96,165,250' },
-  logout:{ label:'Logout', icon:'fa-solid fa-right-from-bracket', accent:'239,68,68' }
+  logout:{ label:'Secure Exit', icon:'fa-solid fa-right-from-bracket', accent:'239,68,68' }
 };
 
 function injectStyle(){
@@ -63,11 +63,9 @@ function injectStyle(){
     .rh-mobile-drawer .rh-vip-mobile-card{--accent1:239,68,68;position:relative;overflow:hidden;min-height:94px!important;padding:12px 8px!important;border-radius:18px!important;border:1px solid rgba(var(--accent1),.28)!important;background:linear-gradient(180deg,rgba(var(--accent1),.18),rgba(255,255,255,.03) 76%)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 12px 22px rgba(0,0,0,.18)!important;color:#fff!important;transition:transform .18s ease,border-color .18s ease}
     .rh-mobile-drawer .rh-vip-mobile-card::before{content:'';position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.08),transparent 42%,rgba(0,0,0,.10));pointer-events:none}
     .rh-mobile-drawer .rh-vip-mobile-card i,.rh-mobile-drawer .rh-vip-mobile-card span{position:relative;z-index:1}
-    .rh-mobile-drawer .rh-vip-mobile-card i{width:42px;height:42px;border-radius:14px;display:grid!important;place-items:center!important;margin:0 auto 8px auto!important;background:linear-gradient(135deg,rgba(var(--accent1),.38),rgba(var(--accent1),.16))!important;border:1px solid rgba(255,255,255,.08)!important;color:#fff!important;box-shadow:0 10px 18px rgba(var(--accent1),.16)!important;font-size:18px!important}
+    .rh-mobile-drawer .rh-vip-mobile-card i{width:42px!important;height:42px!important;min-width:42px!important;border-radius:14px;display:grid!important;place-items:center!important;margin:0 auto 8px auto!important;background:linear-gradient(135deg,rgba(var(--accent1),.38),rgba(var(--accent1),.16))!important;border:1px solid rgba(255,255,255,.08)!important;color:#fff!important;box-shadow:0 10px 18px rgba(var(--accent1),.16)!important;font-size:18px!important}
     .rh-mobile-drawer .rh-vip-mobile-card span{font-size:11px!important;line-height:1.25!important;font-weight:800!important;display:block!important}
     .rh-mobile-drawer .rh-vip-mobile-card:active{transform:scale(.97)!important}
-    @media (max-width:900px){.rh-sidebar .rh-nav-btn{padding:11px 8px!important;margin:0 0 10px!important;min-height:50px!important}.rh-sidebar .rh-nav-btn i{width:34px!important;height:34px!important;min-width:34px!important;margin:0 auto!important}.rh-sidebar{padding:14px 8px!important}.rh-side-sep{margin:8px 6px!important}}
-    @media (max-width:640px){.rh-mobile-drawer .rh-vip-mobile-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}.rh-mobile-drawer .rh-vip-mobile-card{min-height:88px!important;padding:11px 7px!important}.rh-mobile-drawer .rh-vip-mobile-card span{font-size:10px!important}}
   `;
   document.head.appendChild(style);
 }
@@ -90,7 +88,7 @@ function upgradeSidebar(){
   document.querySelectorAll('.rh-sidebar button[onclick="logout()"]').forEach(el => setTheme(el,'logout'));
 }
 
-function getKeyForAction(action, href){
+function getKey(action, href){
   if(action.includes("switchTab('aitutor')")) return 'aitutor';
   if(action.includes("switchTab('aicards')")) return 'aicards';
   if(action.includes("switchTab('ai')")) return 'ai';
@@ -126,23 +124,24 @@ function upgradeMobileDrawer(){
   const drawer = document.getElementById('mobile-menu-drawer');
   if(!drawer) return;
   const shell = drawer.firstElementChild;
-  if(shell){
-    shell.classList.add('rh-vip-mobile-shell');
-    const head = shell.querySelector('.flex.justify-between.items-center');
-    if(head){
-      head.classList.add('rh-vip-mobile-head');
-      const title = head.querySelector('b');
-      const close = head.querySelector('button');
-      if(title){
-        title.className = 'rh-vip-mobile-title';
-        title.innerHTML = 'All Features & Modules<div class="rh-vip-mobile-sub">premium style • original names kept</div>';
-      }
-      if(close) close.className = 'rh-vip-mobile-close';
+  if(!shell) return;
+  shell.classList.add('rh-vip-mobile-shell');
+  const head = shell.querySelector('.flex.justify-between.items-center');
+  if(head){
+    head.classList.add('rh-vip-mobile-head');
+    const title = head.querySelector('b');
+    const close = head.querySelector('button');
+    if(title){
+      title.className = 'rh-vip-mobile-title';
+      title.innerHTML = 'VIP Command Deck<div class="rh-vip-mobile-sub">Premium modules • no feature removed</div>';
     }
-    const grid = shell.querySelector('.grid');
-    if(grid) grid.classList.add('rh-vip-mobile-grid');
-    grid?.querySelectorAll('button,a').forEach(el => {
-      const key = getKeyForAction(String(el.getAttribute('onclick')||''), String(el.getAttribute('href')||''));
+    if(close) close.className = 'rh-vip-mobile-close';
+  }
+  const grid = shell.querySelector('.grid');
+  if(grid){
+    grid.classList.add('rh-vip-mobile-grid');
+    grid.querySelectorAll('button,a').forEach(el => {
+      const key = getKey(String(el.getAttribute('onclick')||''), String(el.getAttribute('href')||''));
       if(!key) return;
       el.classList.add('rh-vip-mobile-card');
       setTheme(el, key);
