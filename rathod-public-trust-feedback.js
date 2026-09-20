@@ -24,16 +24,6 @@ function ensureStyle(){
   const style = document.createElement('style');
   style.id = 'rh-public-trust-feedback-style';
   style.textContent = `
-    .rh-official-facts-card{position:relative;overflow:hidden;border:1px solid rgba(244,193,93,.22);border-radius:26px;background:linear-gradient(135deg,rgba(24,17,10,.96),rgba(13,18,29,.94));box-shadow:0 18px 40px rgba(0,0,0,.28);padding:18px}
-    .rh-official-facts-card:before{content:'';position:absolute;inset:auto -30px -30px auto;width:200px;height:200px;background:radial-gradient(circle,rgba(244,193,93,.14),transparent 70%);pointer-events:none}
-    .rh-official-facts-kicker{font-size:10px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#f4c15d}
-    .rh-official-facts-title{margin-top:6px;font-size:24px;font-weight:900;color:#fff}
-    .rh-official-facts-copy{margin-top:8px;font-size:13px;line-height:1.7;color:#d5dde7;max-width:900px}
-    .rh-official-facts-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
-    .rh-official-facts-item{border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(255,255,255,.04);padding:14px}
-    .rh-official-facts-item b{display:block;color:#fff;font-size:14px;margin-top:8px}
-    .rh-official-facts-item span{display:block;color:#9eabba;font-size:11px;line-height:1.6;margin-top:4px}
-    .rh-official-facts-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
     .rh-official-btn,.rh-feedback-open-btn{appearance:none;border:0;border-radius:14px;padding:12px 16px;font-size:12px;font-weight:900;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}
     .rh-official-btn.primary,.rh-feedback-open-btn{background:linear-gradient(90deg,#f59e0b,#ef4444);color:#fff;box-shadow:0 10px 24px rgba(239,68,68,.16)}
     .rh-official-btn.secondary{background:#121923;color:#fff;border:1px solid rgba(255,255,255,.12)}
@@ -55,7 +45,7 @@ function ensureStyle(){
     .rh-feedback-links{display:flex;gap:10px;flex-wrap:wrap}.rh-feedback-links a{font-size:11px;color:#f4c15d;text-decoration:none;font-weight:800}
     .rh-feedback-submit{appearance:none;border:0;border-radius:16px;padding:13px 18px;background:linear-gradient(90deg,#f59e0b,#ef4444);color:#fff;font-size:12px;font-weight:900;cursor:pointer}
     .rh-feedback-note{font-size:11px;color:#8ea0b3;line-height:1.6}
-    @media (max-width:800px){.rh-official-facts-grid,.rh-feedback-meta{grid-template-columns:1fr}.rh-official-facts-title{font-size:20px}}
+    @media (max-width:800px){.rh-feedback-meta{grid-template-columns:1fr}}
   `;
   document.head.appendChild(style);
 }
@@ -69,28 +59,7 @@ function saveFeedback(entry){
 }
 
 function ensureFactsCard(){
-  const home = document.getElementById('section-home');
-  if(!home || home.querySelector('#rh-official-facts-card')) return;
-  const target = home.querySelector('.rh-home-main') || home;
-  const card = document.createElement('section');
-  card.id = 'rh-official-facts-card';
-  card.className = 'rh-official-facts-card';
-  card.innerHTML = `
-    <div class="rh-official-facts-kicker">Official public information</div>
-    <div class="rh-official-facts-title">RATHOD HUB ke bare me ab <span style="color:#f4c15d">clear facts</span> bhi visible hain</div>
-    <div class="rh-official-facts-copy">Google aur AI tools ko sahi samajh mile isliye official About, FAQ aur AI facts pages add kiye gaye hain. Isse RATHOD HUB ko sirf ek quiz page nahi, balki <b>complete NEET preparation platform</b> ke roop me samajhna aasaan hoga.</div>
-    <div class="rh-official-facts-grid">
-      <div class="rh-official-facts-item"><div>📘</div><b>About RATHOD HUB</b><span>Platform kya hai, kisliye hai, aur iske core modules ka official overview.</span></div>
-      <div class="rh-official-facts-item"><div>❓</div><b>Official FAQ</b><span>Students, Google aur AI ke common questions ke direct answers.</span></div>
-      <div class="rh-official-facts-item"><div>🤖</div><b>AI Facts File</b><span>Assistants ke liye short trusted public facts file jo galat summaries ko kam kare.</span></div>
-    </div>
-    <div class="rh-official-facts-actions">
-      <a class="rh-official-btn primary" href="${FACTS.about}" target="_blank" rel="noopener">Open About</a>
-      <a class="rh-official-btn secondary" href="${FACTS.faq}" target="_blank" rel="noopener">Open FAQ</a>
-      <a class="rh-official-btn secondary" href="${FACTS.llms}" target="_blank" rel="noopener">Open AI Facts</a>
-    </div>
-  `;
-  target.insertBefore(card, target.children[1] || null);
+  return;
 }
 
 function ensureFeedbackModal(){
