@@ -7,7 +7,7 @@ const add=(id,src)=>{if(document.getElementById(id))return;const script=document
 const ensureFocusScripts=()=>{
   add('rh-ypt-focus-script','rathod-ypt-focus.js?v=6');
   add('rh-focus-premium-direct-script','rathod-focus-premium-timer.js?v=21');
-  add('rh-focus-live-luxury-script','rathod-focus-live-luxury.js?v=3');
+  add('rh-focus-live-luxury-script','rathod-focus-live-luxury.js?v=4');
 };
 const extras=()=>{
   add('rh-auth-recovery-fix-script','rathod-auth-recovery-fix.js?v=2');

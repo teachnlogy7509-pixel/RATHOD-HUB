@@ -55,9 +55,11 @@ function findSourceTimer(root){
 }
 
 function vipTimer(){ return document.getElementById('rh-focus-vip-timer'); }
-function setVipText(text){
+function setDisplayText(root, text){
   const vip = vipTimer();
   if(vip && vip.textContent !== text) vip.textContent = text;
+  const source = findSourceTimer(root);
+  if(source && textOf(source) !== text) source.textContent = text;
   window.__RH_FOCUS_VIP_LIVE_TEXT__ = text;
 }
 function currentDerivedSeconds(){
@@ -66,21 +68,21 @@ function currentDerivedSeconds(){
   const elapsed = Math.floor((Date.now() - state.baseAt) / 1000);
   return Math.max(0, state.baseSeconds - elapsed);
 }
-function syncToSeconds(secs, preserveRun){
+function syncToSeconds(root, secs, preserveRun){
   if(secs == null) return;
   state.baseSeconds = secs;
   state.baseAt = Date.now();
   if(!preserveRun) state.running = false;
   const text = formatTimer(secs);
   state.lastShown = text;
-  setVipText(text);
+  setDisplayText(root, text);
 }
 function syncFromSource(root, preserveRun){
   const source = findSourceTimer(root);
   const secs = parseTimer(textOf(source));
   if(secs == null) return;
   const current = currentDerivedSeconds();
-  if(current == null || Math.abs(current - secs) > 1 || !state.running) syncToSeconds(secs, !!preserveRun);
+  if(current == null || Math.abs(current - secs) > 1 || !state.running) syncToSeconds(root, secs, !!preserveRun);
 }
 function styleSource(root){ const source = findSourceTimer(root); if(source) source.classList.add('rh-focus-luxury-number'); const vip = vipTimer(); if(vip) vip.classList.add('rh-focus-luxury-number'); }
 function startRunning(root){ syncFromSource(root, true); state.running = true; state.baseAt = Date.now(); }
@@ -109,12 +111,13 @@ function observeSourceTimer(root){
 }
 
 function renderLoop(){
+  const root = section();
   const secs = currentDerivedSeconds();
-  if(secs != null){
+  if(root && secs != null){
     const text = formatTimer(secs);
     if(text !== state.lastShown){
       state.lastShown = text;
-      setVipText(text);
+      setDisplayText(root, text);
       if(secs <= 0) state.running = false;
     }
   }
