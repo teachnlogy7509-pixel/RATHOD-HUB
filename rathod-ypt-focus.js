@@ -8,7 +8,7 @@ function ensurePremiumFocusLoaded(){
   if(document.querySelector('script[data-rh-focus-premium-timer]')) return;
   const s=document.createElement('script');
   s.defer=true;
-  s.src='rathod-focus-premium-timer.js?v=9';
+  s.src='rathod-focus-premium-timer.js?v=19';
   s.setAttribute('data-rh-focus-premium-timer','1');
   document.head.appendChild(s);
 }
