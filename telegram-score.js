@@ -24,6 +24,7 @@ const extras=()=>{
   add('rh-notify-smooth-vip-script','rathod-notify-smooth-vip.js?v=1');
   add('rh-public-trust-feedback-script','rathod-public-trust-feedback.js?v=1');
   add('rh-home-seo-refresh-script','rathod-home-seo-refresh.js?v=1');
+  add('rh-quiz-timer-fix-script','rathod-quiz-timer-fix.js?v=1');
   ensureFocusScripts();
   add('rh-archive-layout-fix-script','rathod-archive-layout-fix.js?v=2');
   add('rh-adsense-verify-script','adsense-verify.js?v=1');

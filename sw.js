@@ -1,4 +1,4 @@
-const CACHE_NAME='rathod-hub-v46-force-all-loaders-1am';
+const CACHE_NAME='rathod-hub-v47-quiz-timer-fix';
 const APP_SHELL=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./rathod-modern-theme.css','./rathod-modern-effects.js','./rathod-world.css','./rathod-world.js','./telegram-score.js','./profile-card-update.js','./rathod-admin-layout.js','./rathod-social-ui.js','./rathod-study-ecosystem.js','./rathod-offline.js','./rathod-pw-batches.js','./rathod-ypt-focus.js','./rathod-focus-premium-timer.js','./student-collection.js'];
 self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE_NAME).then(cache=>Promise.all(APP_SHELL.map(url=>cache.add(url).catch(()=>null))))) });
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim()).then(()=>self.clients.matchAll({type:'window',includeUncontrolled:true})).then(clients=>clients.forEach(c=>c.postMessage({type:'RH_OFFLINE_READY'}))))});
