@@ -1,13 +1,13 @@
-/* RATHOD HUB • VIP focus hard replacement */
+/* RATHOD HUB • VIP focus restore old features + keep premium grid */
 (function(){
 'use strict';
-if(window.__RH_FOCUS_TIMER_PREMIUM_V11__) return;
-window.__RH_FOCUS_TIMER_PREMIUM_V11__ = 1;
+if(window.__RH_FOCUS_TIMER_PREMIUM_V12__) return;
+window.__RH_FOCUS_TIMER_PREMIUM_V12__ = 1;
 window.__RH_FOCUS_TIMER_PREMIUM__ = 1;
 
 const db = () => { try { return window.db || null; } catch (e) { return null; } };
 const uid = () => { try { return String(window.user?.id || ''); } catch (e) { return ''; } };
-const STORAGE_KEY = 'rh_focus_planner_tasks_v4';
+const STORAGE_KEY = 'rh_focus_planner_tasks_v5';
 const SUBJECT_CARDS = [
   { name:'Botany', note:'Plants + diagrams revision', session:50, icon:'🌿', glow:'#22c55e' },
   { name:'Zoology', note:'Animals + NCERT notes', session:50, icon:'🦋', glow:'#10b981' },
@@ -45,9 +45,9 @@ function allSource(section, sel){ return Array.from((sourceRoot(section) || sect
 function firstSource(section, sel){ return (sourceRoot(section) || section).querySelector(sel); }
 
 function ensureStyle(){
-  if(document.getElementById('rh-focus-vip-style-v11')) return;
+  if(document.getElementById('rh-focus-vip-style-v12')) return;
   const style = document.createElement('style');
-  style.id = 'rh-focus-vip-style-v11';
+  style.id = 'rh-focus-vip-style-v12';
   style.textContent = `
     #section-focus{position:relative;border:1px solid rgba(251,191,36,.12)!important;border-radius:34px!important;overflow:hidden!important;background:radial-gradient(circle at top right,rgba(249,115,22,.12),transparent 28%),radial-gradient(circle at top left,rgba(251,191,36,.10),transparent 24%),linear-gradient(180deg,#151515,#0f0f10)!important;box-shadow:0 30px 90px rgba(0,0,0,.42)!important;padding:18px!important}
     #section-focus>.rh-focus-source-host{display:none!important}
@@ -60,14 +60,16 @@ function ensureStyle(){
     .rh-focus-body{padding:18px;background:linear-gradient(180deg,#111111,#0e0e0f);min-height:260px}.rh-focus-grid{display:grid;grid-template-columns:1.2fr .85fr;gap:18px}
     .rh-focus-panel{border:1px solid rgba(251,191,36,.12)!important;border-radius:26px!important;background:linear-gradient(180deg,#171717,#111111)!important;box-shadow:0 18px 44px rgba(0,0,0,.24)!important}.rh-focus-panelOrange{border-color:rgba(251,124,48,.28)!important;box-shadow:0 18px 44px rgba(251,124,48,.10)!important;background:radial-gradient(circle at top,rgba(249,115,22,.10),transparent 32%),linear-gradient(180deg,#0b0d14,#111827)!important}
     .rh-focus-cardTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.rh-focus-cardTitle b{font-size:24px;color:#fff}.rh-focus-cardTitle span{font-size:12px;color:#9ca3af}
-    .rh-focus-inlineActions{display:flex;gap:8px;flex-wrap:wrap}.rh-focus-inlineBtn{appearance:none;border:1px solid rgba(251,191,36,.18);background:rgba(251,191,36,.10);color:#fde68a;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:800;cursor:pointer}
+    .rh-focus-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:18px 0}.rh-focus-mini{position:relative;overflow:hidden;border-radius:24px;padding:18px;border:1px solid rgba(251,191,36,.10);background:linear-gradient(180deg,#171717,#111111)}.rh-focus-mini:before{content:"";position:absolute;inset:auto -10px -24px auto;width:110px;height:110px;background:radial-gradient(circle,rgba(251,124,48,.12),transparent 68%);pointer-events:none}.rh-focus-miniLabel{font-size:11px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;color:#9ca3af}.rh-focus-miniValue{display:block;margin-top:10px;font-size:34px;line-height:1;font-weight:900;color:#fff}.rh-focus-miniMeta{display:block;margin-top:8px;font-size:12px;color:#cbd5e1}
+    .rh-focus-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}.rh-focus-actBtn{appearance:none;border:1px solid rgba(251,191,36,.16);background:#18181b;color:#fff;padding:12px 16px;border-radius:16px;font-size:13px;font-weight:900;cursor:pointer}.rh-focus-actBtn.primary{background:linear-gradient(90deg,#ff9f2a,#ff6e1d);border:0;box-shadow:0 12px 28px rgba(255,110,29,.20)}.rh-focus-actBtn.red{background:linear-gradient(90deg,#ef4444,#dc2626);border:0}.rh-focus-quickRow{display:flex;gap:10px;flex-wrap:wrap}.rh-focus-chip{appearance:none;border:1px solid rgba(251,191,36,.18);background:rgba(251,191,36,.10);color:#fde68a;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:800;cursor:pointer}
+    .rh-focus-controlGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.rh-focus-controlGrid input,.rh-focus-controlGrid select{background:#0f1117;border:1px solid rgba(251,191,36,.12);color:#fff;border-radius:14px;padding:12px 14px}
     .rh-focus-booksGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.rh-focus-bookCard{position:relative;overflow:hidden;padding:18px;border-radius:24px;border:1px solid rgba(251,191,36,.16);background:linear-gradient(180deg,#1a1a1a,#131313);box-shadow:0 16px 34px rgba(0,0,0,.22)}.rh-focus-bookCard:before{content:"";position:absolute;inset:auto -20px -20px auto;width:120px;height:120px;background:radial-gradient(circle,var(--glow),transparent 70%);opacity:.22;pointer-events:none}.rh-focus-bookTop{display:flex;align-items:center;justify-content:space-between;gap:12px}.rh-focus-bookIcon{width:52px;height:52px;border-radius:18px;display:grid;place-items:center;font-size:24px;background:linear-gradient(135deg,var(--glow),#ffffff22);box-shadow:0 0 0 1px rgba(255,255,255,.06) inset,0 10px 24px color-mix(in srgb,var(--glow) 34%, transparent)}.rh-focus-bookName{font-size:22px;font-weight:900;color:#fff}.rh-focus-bookNote{margin-top:8px;font-size:13px;color:#d1d5db}.rh-focus-bookFoot{margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px}.rh-focus-bookTime{font-size:13px;font-weight:800;color:#fde68a}.rh-focus-bookStart{appearance:none;border:0;background:linear-gradient(90deg,var(--glow),#f59e0b);color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 10px 22px color-mix(in srgb,var(--glow) 28%, transparent)}
-    .rh-focus-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:18px}.rh-focus-mini{position:relative;overflow:hidden;border-radius:24px;padding:18px;border:1px solid rgba(251,191,36,.10);background:linear-gradient(180deg,#171717,#111111)}.rh-focus-mini:before{content:"";position:absolute;inset:auto -10px -24px auto;width:110px;height:110px;background:radial-gradient(circle,rgba(251,124,48,.12),transparent 68%);pointer-events:none}.rh-focus-miniLabel{font-size:11px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;color:#9ca3af}.rh-focus-miniValue{display:block;margin-top:10px;font-size:34px;line-height:1;font-weight:900;color:#fff}.rh-focus-miniMeta{display:block;margin-top:8px;font-size:12px;color:#cbd5e1}
+    .rh-focus-leaderGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.rh-focus-leaderCard{position:relative;overflow:hidden;padding:14px;border-radius:22px;border:1px solid rgba(251,191,36,.12);background:linear-gradient(180deg,#171717,#121212)}.rh-focus-leaderCard:before{content:"";position:absolute;inset:auto -18px -18px auto;width:100px;height:100px;background:radial-gradient(circle,var(--leader-glow),transparent 72%);opacity:.24;pointer-events:none}.rh-focus-leaderTop{display:flex;align-items:center;justify-content:space-between;gap:8px}.rh-focus-rank{font-size:12px;font-weight:900;color:#fde68a}.rh-focus-avatar{width:54px;height:54px;border-radius:18px;display:grid;place-items:center;font-size:24px;background:linear-gradient(135deg,var(--leader-glow),#fbbf24);box-shadow:0 12px 24px rgba(251,124,48,.18);margin:12px auto 10px}.rh-focus-name{display:block;text-align:center;font-size:14px;font-weight:900;color:#fff}.rh-focus-hours{display:block;text-align:center;font-size:12px;color:#fb923c;margin-top:4px}
     .rh-focus-graphList{display:grid;gap:12px}.rh-focus-graphRow{display:grid;grid-template-columns:160px 1fr 68px;gap:12px;align-items:center}.rh-focus-graphName{font-size:14px;font-weight:900;color:#fff7ed;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:6px 10px;border-radius:999px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.12)}.rh-focus-graphTrack{height:14px;border-radius:999px;background:#1f2937;overflow:hidden}.rh-focus-graphBar{height:100%;border-radius:999px;background:linear-gradient(90deg,#fb7c30,#fbbf24);box-shadow:0 0 16px rgba(251,124,48,.18)}.rh-focus-graphValue{font-size:12px;font-weight:800;color:#fbcc9d;text-align:right}
-    .rh-focus-groupGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.rh-focus-member{position:relative;overflow:hidden;padding:12px 8px;border-radius:22px;border:1px solid rgba(251,191,36,.10);background:linear-gradient(180deg,#191919,#141414);text-align:center}.rh-focus-member:before{content:"";position:absolute;inset:auto -18px -18px auto;width:100px;height:100px;background:radial-gradient(circle,var(--member-glow),transparent 72%);opacity:.24;pointer-events:none}.rh-focus-member.top{border-color:rgba(251,124,48,.38);box-shadow:0 0 0 1px rgba(251,124,48,.12) inset}.rh-focus-avatar{width:58px;height:58px;border-radius:20px;margin:0 auto 10px;display:grid;place-items:center;font-weight:900;color:#111827;font-size:24px;background:linear-gradient(135deg,var(--member-glow),#fbbf24);box-shadow:0 12px 24px rgba(251,124,48,.22)}.rh-focus-member b{display:block;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rh-focus-member span{display:block;margin-top:4px;font-size:12px;color:#fb923c}
+    .rh-focus-groupGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.rh-focus-member{position:relative;overflow:hidden;padding:12px 8px;border-radius:22px;border:1px solid rgba(251,191,36,.10);background:linear-gradient(180deg,#191919,#141414);text-align:center}.rh-focus-member:before{content:"";position:absolute;inset:auto -18px -18px auto;width:100px;height:100px;background:radial-gradient(circle,var(--member-glow),transparent 72%);opacity:.24;pointer-events:none}.rh-focus-member.top{border-color:rgba(251,124,48,.38);box-shadow:0 0 0 1px rgba(251,124,48,.12) inset}.rh-focus-member b{display:block;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rh-focus-member span{display:block;margin-top:4px;font-size:12px;color:#fb923c}
     .rh-focus-plannerInput{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}.rh-focus-plannerInput input{flex:1;min-width:220px;background:#0f172a;border:1px solid rgba(255,255,255,.10);color:#fff;padding:12px 14px;border-radius:16px}.rh-focus-plannerInput button{appearance:none;border:0;background:linear-gradient(90deg,#ff9f2a,#ff6e1d);color:#fff;padding:12px 16px;border-radius:16px;font-weight:800;cursor:pointer}.rh-focus-taskDone{text-decoration:line-through;opacity:.6}.rh-focus-taskActions{display:flex;gap:8px}.rh-focus-taskChip{appearance:none;border:1px solid rgba(255,255,255,.10);background:#1b1b1d;color:#fff;padding:7px 10px;border-radius:999px;font-size:12px;cursor:pointer}.rh-focus-planList{display:grid;gap:12px}.rh-focus-planRow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 14px;border-radius:20px;background:linear-gradient(180deg,#1a1a1a,#151515);border:1px solid rgba(251,191,36,.10)}.rh-focus-planLeft{display:flex;align-items:center;gap:12px;min-width:0}.rh-focus-planDot{width:22px;height:22px;border-radius:999px;background:#fb7c30;display:grid;place-items:center;color:#fff;font-weight:900;flex:0 0 22px}.rh-focus-planTitle{font-size:18px;font-weight:700;color:#fff}.rh-focus-planSub{display:block;margin-top:4px;font-size:12px;color:#9ca3af}
     .rh-vip-sidebar .rh-nav-btn,.rh-vip-sidebar button,.rh-vip-sidebar a{position:relative;border-radius:18px!important;border:1px solid rgba(255,255,255,.05)!important;transition:.18s ease;overflow:hidden}.rh-vip-sidebar .rh-nav-btn:before,.rh-vip-sidebar button:before,.rh-vip-sidebar a:before{content:"";position:absolute;inset:auto -20px -16px auto;width:90px;height:90px;background:radial-gradient(circle,var(--vipGlow,#f59e0b),transparent 72%);opacity:.18;pointer-events:none}.rh-vip-sidebar .rh-nav-btn:hover,.rh-vip-sidebar button:hover,.rh-vip-sidebar a:hover{border-color:color-mix(in srgb,var(--vipGlow,#f59e0b) 45%, transparent)!important;box-shadow:0 0 0 1px color-mix(in srgb,var(--vipGlow,#f59e0b) 18%, transparent) inset,0 10px 24px rgba(0,0,0,.18)}.rh-vip-sidebar .rh-nav-btn span,.rh-vip-sidebar button span,.rh-vip-sidebar a span{font-weight:800!important;color:#fff!important}.rh-vip-sidebar .rh-nav-btn i,.rh-vip-sidebar button i,.rh-vip-sidebar a i,.rh-vip-sidebar .rh-nav-btn svg,.rh-vip-sidebar button svg,.rh-vip-sidebar a svg{color:var(--vipGlow,#f59e0b)!important;filter:drop-shadow(0 0 10px color-mix(in srgb,var(--vipGlow,#f59e0b) 55%, transparent))}
-    @media (max-width:1024px){.rh-focus-grid,.rh-focus-metrics,.rh-focus-booksGrid{grid-template-columns:1fr}.rh-focus-groupGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.rh-focus-vipTimer{font-size:40px}.rh-focus-graphRow{grid-template-columns:108px 1fr 52px}}
+    @media (max-width:1024px){.rh-focus-grid,.rh-focus-booksGrid,.rh-focus-metrics,.rh-focus-leaderGrid{grid-template-columns:1fr}.rh-focus-groupGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.rh-focus-vipTimer{font-size:40px}.rh-focus-graphRow{grid-template-columns:108px 1fr 52px}.rh-focus-controlGrid{grid-template-columns:1fr}}
   `;
   document.head.appendChild(style);
 }
@@ -95,7 +97,11 @@ function currentTimerText(section){
 }
 function selectedSubject(section){
   const s = firstSource(section,'select');
-  return s?.value || s?.options?.[s.selectedIndex]?.text || 'Botany';
+  return s?.value || s?.options?.[s.selectedIndex]?.text || 'Biology';
+}
+function sourceOptions(section){
+  const s = firstSource(section,'select');
+  return Array.from(s?.options || []).map(o => ({ value:o.value, text:textOf(o) })).filter(o => o.text);
 }
 function setSubjectValue(section, subject){
   const select = firstSource(section,'select');
@@ -113,10 +119,16 @@ function quickSetDuration(section, minutes){
   input.dispatchEvent(new Event('input', { bubbles:true }));
   input.dispatchEvent(new Event('change', { bubbles:true }));
 }
+function clickSourceButton(section, matcher, exclude){
+  const btn = allSource(section,'button').find(b => {
+    const t = textOf(b).toLowerCase();
+    return matcher.test(t) && !(exclude && exclude.test(t));
+  });
+  if(btn) btn.click();
+}
 function startFocusForSubject(section, subject){
   setSubjectValue(section, subject);
-  const startBtn = allSource(section,'button').find(btn => /start/i.test(textOf(btn)) && !/pomodoro/i.test(textOf(btn)));
-  if(startBtn) startBtn.click();
+  clickSourceButton(section,/start/i,/pomodoro/i);
   appState.activeTab = 'timer';
   renderApp(section);
 }
@@ -124,6 +136,15 @@ function getTodayStudy(section){
   const todayCard = allSource(section,'div').find(el => { const t = String(el.innerText || '').toLowerCase(); return t.includes('today') && t.includes('study time'); });
   const match = String(todayCard?.innerText || '').match(/(\d+h\s*\d+m|\d+h|\d+m)/i);
   return match ? match[1] : appState.dailyGoal;
+}
+function getStatValue(section, label, fallback){
+  const node = allSource(section,'div').find(el => String(el.innerText || '').toLowerCase().includes(label));
+  if(!node) return fallback;
+  const t = String(node.innerText || '');
+  const timeMatch = t.match(/(\d+h\s*\d+m|\d+h|\d+m)/i);
+  if(timeMatch) return timeMatch[1];
+  const numMatch = t.match(/\b\d+\b/);
+  return numMatch ? numMatch[0] : fallback;
 }
 
 function premiumizeSidebar(){
@@ -145,7 +166,7 @@ function ensureShell(section){
   shell.className = 'rh-focus-shell';
   shell.innerHTML = `
     <div class="rh-focus-vipBar">
-      <div class="rh-focus-vipTop"><div class="rh-focus-vipSubject"><span>👑</span><span id="rh-focus-vip-subject">Botany</span></div><div class="rh-focus-topMeta"><span id="rh-focus-top-clock" class="rh-focus-topClock">--:--</span><span>VIP Mode</span></div></div>
+      <div class="rh-focus-vipTop"><div class="rh-focus-vipSubject"><span>👑</span><span id="rh-focus-vip-subject">Biology</span></div><div class="rh-focus-topMeta"><span id="rh-focus-top-clock" class="rh-focus-topClock">--:--</span><span>VIP Mode</span></div></div>
       <div id="rh-focus-vip-timer" class="rh-focus-vipTimer">00:30:00</div>
       <div class="rh-focus-tabs">
         <button type="button" class="rh-focus-tab active" data-rh-focus-tab="timer">Timer</button>
@@ -160,27 +181,63 @@ function ensureShell(section){
   return shell;
 }
 
+function renderLeaderPanel(){
+  const members = (appState.members.length ? appState.members : FALLBACK_MEMBERS).map(normalizeMember).slice(0,6);
+  return `<div class="rh-focus-panel" style="padding:18px"><div class="rh-focus-cardTitle"><div><b>Avatar Leaderboard</b><span>Top focus users</span></div><span>${members.length} users</span></div><div class="rh-focus-leaderGrid">${members.map((m,idx)=>`<div class="rh-focus-leaderCard" style="--leader-glow:${m.glow}"><div class="rh-focus-leaderTop"><span class="rh-focus-rank">#${idx+1}</span><span>${idx===0?'🏆':idx===1?'🥈':idx===2?'🥉':'⭐'}</span></div><div class="rh-focus-avatar" style="--member-glow:${m.glow};--leader-glow:${m.glow}">${m.icon}</div><b class="rh-focus-name">${m.name}</b><span class="rh-focus-hours">${fmtShort(m.total_seconds || 0)}</span></div>`).join('')}</div></div>`;
+}
+
 function renderGroupPanel(){
   const members = (appState.members.length ? appState.members : FALLBACK_MEMBERS).map(normalizeMember);
-  return `<div class="rh-focus-panel" style="padding:18px"><div class="rh-focus-cardTitle"><div><b>Study Group</b><span>Study together • motivate each other</span></div><span>${members.length} online</span></div><div class="rh-focus-groupGrid">${members.slice(0,8).map((m,idx)=>`<div class="rh-focus-member ${idx<3?'top':''}" style="--member-glow:${m.glow}"><div class="rh-focus-avatar">${m.icon}</div><b>${m.name}</b><span>${fmtShort(m.total_seconds || 0)}</span></div>`).join('')}</div></div>`;
+  return `<div class="rh-focus-panel" style="padding:18px"><div class="rh-focus-cardTitle"><div><b>Study Group</b><span>Study together • motivate each other</span></div><span>${members.length} online</span></div><div class="rh-focus-groupGrid">${members.slice(0,8).map((m,idx)=>`<div class="rh-focus-member ${idx<3?'top':''}" style="--member-glow:${m.glow}"><div class="rh-focus-avatar" style="--leader-glow:${m.glow}">${m.icon}</div><b>${m.name}</b><span>${fmtShort(m.total_seconds || 0)}</span></div>`).join('')}</div></div>`;
 }
 
 function renderTimerTab(section, body){
+  const options = sourceOptions(section);
+  const todayVal = getTodayStudy(section) || appState.dailyGoal;
+  const streakVal = getStatValue(section,'streak','0');
+  const sessionsVal = getStatValue(section,'session','0');
   body.innerHTML = `
     <div class="rh-focus-grid">
       <div class="rh-focus-panel rh-focus-panelOrange" style="padding:18px">
-        <div class="rh-focus-cardTitle"><div><b>Live Timer</b><span>Current subject and clock</span></div><span id="rh-focus-live-clock">${liveClock()}</span></div>
-        <div class="rh-focus-metrics" style="margin-bottom:0">
+        <div class="rh-focus-cardTitle"><div><b>Start Timer</b><span>Old timer controls restored</span></div><span id="rh-focus-live-clock">${liveClock()}</span></div>
+        <div class="rh-focus-actions">
+          <button type="button" class="rh-focus-actBtn primary" data-rh-source-action="start">Start</button>
+          <button type="button" class="rh-focus-actBtn red" data-rh-source-action="stop">Stop</button>
+          <button type="button" class="rh-focus-actBtn" data-rh-source-action="reset">Reset</button>
+          <button type="button" class="rh-focus-actBtn" data-rh-source-action="pomodoro">Start 50/10 Pomodoro</button>
+        </div>
+        <div class="rh-focus-controlGrid">
+          <input id="rh-focus-custom-mins" type="number" min="1" placeholder="Custom session (minutes)">
+          <select id="rh-focus-subject-select">${options.map(o => `<option value="${o.value}">${o.text}</option>`).join('')}</select>
+        </div>
+        <div class="rh-focus-quickRow" style="margin-top:12px"><button type="button" class="rh-focus-chip" data-rh-duration="25">25 min</button><button type="button" class="rh-focus-chip" data-rh-duration="50">50 min</button><button type="button" class="rh-focus-chip" data-rh-duration="60">1 hour</button><button type="button" class="rh-focus-chip" data-rh-quick-subject="Botany">Botany</button><button type="button" class="rh-focus-chip" data-rh-quick-subject="Zoology">Zoology</button><button type="button" class="rh-focus-chip" data-rh-quick-subject="Revision">Revision</button></div>
+      </div>
+      <div class="rh-focus-panel" style="padding:18px">
+        <div class="rh-focus-cardTitle"><div><b>Live Timer</b><span>Current subject and clock</span></div><span>${currentTimerText(section)}</span></div>
+        <div class="rh-focus-metrics" style="grid-template-columns:1fr 1fr;margin:0">
           <div class="rh-focus-mini"><span class="rh-focus-miniLabel">Current Subject</span><b class="rh-focus-miniValue">${selectedSubject(section)}</b><span class="rh-focus-miniMeta">Ready for focus</span></div>
           <div class="rh-focus-mini"><span class="rh-focus-miniLabel">Current Time</span><b class="rh-focus-miniValue" id="rh-focus-clock-card">${liveClock()}</b><span class="rh-focus-miniMeta">Kitna baj raha hai abhi</span></div>
         </div>
       </div>
-      <div class="rh-focus-panel" style="padding:18px">
-        <div class="rh-focus-cardTitle"><div><b>Quick Actions</b><span>Fast controls</span></div><span>${currentTimerText(section)}</span></div>
-        <div class="rh-focus-inlineActions"><button type="button" class="rh-focus-inlineBtn" data-rh-duration="25">25 min</button><button type="button" class="rh-focus-inlineBtn" data-rh-duration="50">50 min</button><button type="button" class="rh-focus-inlineBtn" data-rh-duration="60">1 hour</button><button type="button" class="rh-focus-inlineBtn" data-rh-quick-subject="Botany">Botany</button><button type="button" class="rh-focus-inlineBtn" data-rh-quick-subject="Zoology">Zoology</button><button type="button" class="rh-focus-inlineBtn" data-rh-quick-subject="Revision">Revision</button></div>
-      </div>
     </div>
-    <div style="margin-top:18px">${renderGroupPanel()}</div>`;
+    <div class="rh-focus-metrics">
+      <div class="rh-focus-mini"><span class="rh-focus-miniLabel">Today</span><b class="rh-focus-miniValue">${todayVal}</b><span class="rh-focus-miniMeta">Study time</span></div>
+      <div class="rh-focus-mini"><span class="rh-focus-miniLabel">Streak</span><b class="rh-focus-miniValue">${streakVal}</b><span class="rh-focus-miniMeta">Consecutive study days</span></div>
+      <div class="rh-focus-mini"><span class="rh-focus-miniLabel">Sessions</span><b class="rh-focus-miniValue">${sessionsVal}</b><span class="rh-focus-miniMeta">Completed sessions</span></div>
+    </div>
+    <div style="display:grid;gap:18px">${renderLeaderPanel()}${renderGroupPanel()}</div>`;
+
+  const subjSelect = body.querySelector('#rh-focus-subject-select');
+  if(subjSelect){ subjSelect.value = selectedSubject(section); subjSelect.addEventListener('change', () => setSubjectValue(section, subjSelect.value)); }
+  const minsInput = body.querySelector('#rh-focus-custom-mins');
+  if(minsInput) minsInput.addEventListener('change', () => quickSetDuration(section, minsInput.value));
+  body.querySelectorAll('[data-rh-source-action]').forEach(btn => btn.addEventListener('click', () => {
+    const action = btn.getAttribute('data-rh-source-action');
+    if(action === 'start') clickSourceButton(section,/start/i,/pomodoro/i);
+    else if(action === 'stop') clickSourceButton(section,/stop/i);
+    else if(action === 'reset') clickSourceButton(section,/reset/i);
+    else if(action === 'pomodoro') clickSourceButton(section,/pomodoro/i);
+  }));
   body.querySelectorAll('[data-rh-duration]').forEach(btn => btn.addEventListener('click', () => quickSetDuration(section, btn.getAttribute('data-rh-duration'))));
   body.querySelectorAll('[data-rh-quick-subject]').forEach(btn => btn.addEventListener('click', () => startFocusForSubject(section, btn.getAttribute('data-rh-quick-subject') || 'Botany')));
 }
@@ -194,7 +251,7 @@ function renderInsightsTab(body){
   const members = (appState.members.length ? appState.members : FALLBACK_MEMBERS).map(normalizeMember);
   const max = Math.max(...members.map(m => Number(m.total_seconds || 0)),1);
   body.innerHTML = `
-    <div class="rh-focus-metrics">
+    <div class="rh-focus-metrics" style="grid-template-columns:repeat(2,minmax(0,1fr))">
       <div class="rh-focus-mini"><span class="rh-focus-miniLabel">Daily Goal</span><b class="rh-focus-miniValue">${appState.dailyGoal}</b><span class="rh-focus-miniMeta">Today's study time</span></div>
       <div class="rh-focus-mini"><span class="rh-focus-miniLabel">Your Rank</span><b class="rh-focus-miniValue">${appState.rank}</b><span class="rh-focus-miniMeta">Live leaderboard standing</span></div>
       <div class="rh-focus-mini"><span class="rh-focus-miniLabel">3-Day Focus</span><b class="rh-focus-miniValue">${appState.focus3day}</b><span class="rh-focus-miniMeta">${appState.nextText}</span></div>
