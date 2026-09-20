@@ -6,7 +6,7 @@ window.__RH_TG_SCORE_LOADER__=1;
 const add=(id,src)=>{if(document.getElementById(id))return;const script=document.createElement('script');script.id=id;script.src=src;script.defer=true;document.head.appendChild(script)};
 const ensureFocusScripts=()=>{
   add('rh-ypt-focus-script','rathod-ypt-focus.js?v=6');
-  add('rh-focus-premium-direct-script','rathod-focus-premium-timer.js?v=14');
+  add('rh-focus-premium-direct-script','rathod-focus-premium-timer.js?v=15');
 };
 const extras=()=>{
   add('rh-auth-recovery-fix-script','rathod-auth-recovery-fix.js?v=2');
