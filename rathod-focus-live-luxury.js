@@ -4,7 +4,7 @@
 if(window.__RH_FOCUS_LIVE_LUXURY__) return;
 window.__RH_FOCUS_LIVE_LUXURY__ = 1;
 
-const state = { members: [], ticking:false, seconds:null, timerId:null };
+const state = { members: [], running:false, baseSeconds:null, baseAt:0, lastShown:null, observer:null };
 const db = () => { try { return window.db || null; } catch(e){ return null; } };
 const textOf = el => String(el?.textContent || '').trim();
 const section = () => document.getElementById('section-focus');
@@ -55,21 +55,36 @@ function findSourceTimer(root){
 }
 
 function vipTimer(){ return document.getElementById('rh-focus-vip-timer'); }
-function setVip(seconds){ const vip = vipTimer(); if(vip) vip.textContent = formatTimer(seconds); }
-function syncFromSource(root){ const source = findSourceTimer(root); const secs = parseTimer(textOf(source)); if(secs != null){ state.seconds = secs; setVip(secs); } }
-function stopTick(){ if(state.timerId){ clearInterval(state.timerId); state.timerId=null; } state.ticking=false; }
-function startTick(root){
-  if(state.timerId) return;
-  if(state.seconds == null) syncFromSource(root);
-  if(state.seconds == null) return;
-  state.ticking=true;
-  state.timerId = setInterval(() => {
-    if(state.seconds == null) return;
-    state.seconds = Math.max(0, state.seconds - 1);
-    setVip(state.seconds);
-    if(state.seconds <= 0) stopTick();
-  }, 1000);
+function setVipText(text){
+  const vip = vipTimer();
+  if(vip && vip.textContent !== text) vip.textContent = text;
+  window.__RH_FOCUS_VIP_LIVE_TEXT__ = text;
 }
+function currentDerivedSeconds(){
+  if(state.baseSeconds == null) return null;
+  if(!state.running) return state.baseSeconds;
+  const elapsed = Math.floor((Date.now() - state.baseAt) / 1000);
+  return Math.max(0, state.baseSeconds - elapsed);
+}
+function syncToSeconds(secs, preserveRun){
+  if(secs == null) return;
+  state.baseSeconds = secs;
+  state.baseAt = Date.now();
+  if(!preserveRun) state.running = false;
+  const text = formatTimer(secs);
+  state.lastShown = text;
+  setVipText(text);
+}
+function syncFromSource(root, preserveRun){
+  const source = findSourceTimer(root);
+  const secs = parseTimer(textOf(source));
+  if(secs == null) return;
+  const current = currentDerivedSeconds();
+  if(current == null || Math.abs(current - secs) > 1 || !state.running) syncToSeconds(secs, !!preserveRun);
+}
+function styleSource(root){ const source = findSourceTimer(root); if(source) source.classList.add('rh-focus-luxury-number'); const vip = vipTimer(); if(vip) vip.classList.add('rh-focus-luxury-number'); }
+function startRunning(root){ syncFromSource(root, true); state.running = true; state.baseAt = Date.now(); }
+function stopRunning(root){ state.running = false; setTimeout(() => syncFromSource(root, false), 120); }
 
 function bindButtons(root){
   root.querySelectorAll('button').forEach(btn => {
@@ -77,18 +92,33 @@ function bindButtons(root){
     btn.dataset.rhLiveBound = '1';
     const t = textOf(btn).toLowerCase();
     btn.addEventListener('click', () => {
-      if(/start|pomodoro/.test(t)) { setTimeout(() => { syncFromSource(root); startTick(root); }, 120); }
-      if(/stop|pause/.test(t)) { stopTick(); }
-      if(/reset/.test(t)) { stopTick(); setTimeout(() => syncFromSource(root), 120); }
+      if(/start|pomodoro/.test(t)) setTimeout(() => startRunning(root), 80);
+      if(/stop|pause/.test(t)) stopRunning(root);
+      if(/reset/.test(t)) { state.running = false; setTimeout(() => syncFromSource(root, false), 80); }
     });
   });
 }
 
-function styleTimers(root){
+function observeSourceTimer(root){
   const source = findSourceTimer(root);
-  if(source) source.classList.add('rh-focus-luxury-number');
-  const vip = vipTimer();
-  if(vip) vip.classList.add('rh-focus-luxury-number');
+  if(!source || source.dataset.rhObserved) return;
+  source.dataset.rhObserved = '1';
+  state.observer?.disconnect?.();
+  state.observer = new MutationObserver(() => syncFromSource(root, state.running));
+  state.observer.observe(source, { childList:true, subtree:true, characterData:true });
+}
+
+function renderLoop(){
+  const secs = currentDerivedSeconds();
+  if(secs != null){
+    const text = formatTimer(secs);
+    if(text !== state.lastShown){
+      state.lastShown = text;
+      setVipText(text);
+      if(secs <= 0) state.running = false;
+    }
+  }
+  requestAnimationFrame(renderLoop);
 }
 
 function styleButtons(root){
@@ -139,17 +169,19 @@ function run(){
   injectStyle();
   const root = section();
   if(!root) return;
-  if(!state.ticking) syncFromSource(root);
   bindButtons(root);
-  styleTimers(root);
+  observeSourceTimer(root);
+  syncFromSource(root, state.running);
+  styleSource(root);
   styleButtons(root);
   updateStudyGroup(root);
   updateGraph(root);
   polishCards(root);
 }
 
-if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { setTimeout(run, 1200); setTimeout(loadMembers, 1400); }, { once:true });
-else { setTimeout(run, 1200); setTimeout(loadMembers, 1400); }
-setInterval(run, 800);
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { setTimeout(run, 1000); setTimeout(loadMembers, 1200); }, { once:true });
+else { setTimeout(run, 1000); setTimeout(loadMembers, 1200); }
+setInterval(run, 1200);
 setInterval(loadMembers, 15000);
+requestAnimationFrame(renderLoop);
 })();

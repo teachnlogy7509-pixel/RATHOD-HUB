@@ -75,7 +75,7 @@ function ensureStyle(){
 function findSection(){ return document.getElementById('section-focus'); }
 function findRoot(section){ return Array.from(section.querySelectorAll('div')).find(el => String(el.innerText || '').includes('RATHOD HUB FOCUS')) || null; }
 function findTitleEl(root){ return Array.from(root?.querySelectorAll('h1,h2,h3,h4,b') || []).find(el => textOf(el).toLowerCase().includes('rathod hub focus')) || null; }
-function currentTimerText(section){ return textOf(Array.from(section.querySelectorAll('*')).find(el => /^\d{2}:\d{2}:\d{2}$/.test(textOf(el)))) || '00:00:00'; }
+function currentTimerText(section){ return window.__RH_FOCUS_VIP_LIVE_TEXT__ || textOf(Array.from(section.querySelectorAll('*')).find(el => /^\d{2}:\d{2}:\d{2}$/.test(textOf(el)))) || '00:00:00'; }
 function selectedSubject(section){ const s = section.querySelector('select'); return s?.value || s?.options?.[s.selectedIndex]?.text || 'Botany'; }
 function findTimerPanel(section){ const timer = Array.from(section.querySelectorAll('*')).find(el => /^\d{2}:\d{2}:\d{2}$/.test(textOf(el))); return timer?.closest('div.rounded-3xl,div.rounded-[32px],div.rounded-[28px]') || timer?.parentElement?.parentElement || null; }
 function findControlPanel(section){ return section.querySelector('select')?.closest('div.rounded-3xl,div.rounded-[32px],div.rounded-[28px]') || section.querySelector('select')?.parentElement?.parentElement || null; }
@@ -253,6 +253,7 @@ async function loadData(section){
 
 function bindSubject(section){ const sel=section.querySelector('select'); if(!sel||sel.dataset.boundVip) return; sel.dataset.boundVip='1'; sel.addEventListener('change',()=>renderApp(section)); }
 function hideUnused(section){ const stats=findStats(section); if(stats.streak) stats.streak.classList.add('rh-focus-hidden'); if(stats.sessions) stats.sessions.classList.add('rh-focus-hidden'); }
+function softRefresh(){ const section = findSection(); if(!section) return; bindSubject(section); hideUnused(section); premiumizeSourcePanels(section); loadData(section); }
 
 function boot(){
   ensureStyle();
@@ -260,6 +261,6 @@ function boot(){
   ensureGoldHeader(section); ensureShell(section); bindSubject(section); hideUnused(section); premiumizeSourcePanels(section); renderApp(section); loadData(section);
 }
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 1200), { once:true }); else setTimeout(boot, 1200);
-setInterval(() => { if(document.visibilityState !== 'hidden') boot(); }, 2500);
+setInterval(() => { if(document.visibilityState !== 'hidden') softRefresh(); }, 15000);
 setInterval(() => { document.getElementById('rh-focus-top-clock') && (document.getElementById('rh-focus-top-clock').textContent = liveClock()); document.getElementById('rh-focus-clock-card') && (document.getElementById('rh-focus-clock-card').textContent = liveClock()); document.getElementById('rh-focus-live-clock') && (document.getElementById('rh-focus-live-clock').textContent = liveClock()); }, 1000);
 })();
