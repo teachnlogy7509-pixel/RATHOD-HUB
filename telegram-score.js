@@ -18,6 +18,7 @@ const extras=()=>{
   add('rh-mentor-room-script','rathod-mentor-room.js?v=8');
   add('rh-study-room-fix-script','rathod-study-room-fix.js?v=6');
   add('rh-study-ecosystem-script','rathod-study-ecosystem.js?v=3');
+  add('rh-vip-sidebar-script','rathod-vip-sidebar.js?v=1');
   ensureFocusScripts();
   add('rh-archive-layout-fix-script','rathod-archive-layout-fix.js?v=2');
   add('rh-adsense-verify-script','adsense-verify.js?v=1');
