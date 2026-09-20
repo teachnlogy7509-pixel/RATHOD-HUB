@@ -20,8 +20,7 @@ const extras=()=>{
   add('rh-study-room-fix-script','rathod-study-room-fix.js?v=6');
   add('rh-study-ecosystem-script','rathod-study-ecosystem.js?v=3');
   add('rh-vip-sidebar-script','rathod-vip-sidebar.js?v=6');
-  add('rh-vip-launch-bg-script','rathod-vip-launch-bg.js?v=1');
-  add('rh-dynamic-studio-script','rathod-dynamic-studio.js?v=1');
+  add('rh-notify-smooth-vip-script','rathod-notify-smooth-vip.js?v=1');
   add('rh-public-trust-feedback-script','rathod-public-trust-feedback.js?v=1');
   ensureFocusScripts();
   add('rh-archive-layout-fix-script','rathod-archive-layout-fix.js?v=2');
