@@ -7,6 +7,7 @@ const add=(id,src)=>{if(document.getElementById(id))return;const script=document
 const ensureFocusScripts=()=>{
   add('rh-ypt-focus-script','rathod-ypt-focus.js?v=6');
   add('rh-focus-premium-direct-script','rathod-focus-premium-timer.js?v=19');
+  add('rh-focus-luxury-override-script','rathod-focus-luxury-override.js?v=1');
 };
 const extras=()=>{
   add('rh-auth-recovery-fix-script','rathod-auth-recovery-fix.js?v=2');
@@ -18,7 +19,7 @@ const extras=()=>{
   add('rh-mentor-room-script','rathod-mentor-room.js?v=8');
   add('rh-study-room-fix-script','rathod-study-room-fix.js?v=6');
   add('rh-study-ecosystem-script','rathod-study-ecosystem.js?v=3');
-  add('rh-vip-sidebar-script','rathod-vip-sidebar.js?v=3');
+  add('rh-vip-sidebar-script','rathod-vip-sidebar.js?v=4');
   ensureFocusScripts();
   add('rh-archive-layout-fix-script','rathod-archive-layout-fix.js?v=2');
   add('rh-adsense-verify-script','adsense-verify.js?v=1');
