@@ -8,12 +8,11 @@ const db = () => { try { return window.db || null; } catch (e) { return null; } 
 const uid = () => { try { return String(window.user?.id || ''); } catch (e) { return ''; } };
 const STORAGE_KEY = 'rh_focus_planner_tasks_v2';
 const SUBJECT_CARDS = [
-  { name:'Biology', note:'NCERT + diagrams', session:60, icon:'🧬', glow:'#22c55e' },
+  { name:'Botany', note:'Plants + NCERT flowcharts', session:60, icon:'🌿', glow:'#22c55e' },
+  { name:'Zoology', note:'Human + animal systems', session:60, icon:'🦋', glow:'#10b981' },
   { name:'Chemistry', note:'Reactions + revision', session:50, icon:'🧪', glow:'#f59e0b' },
   { name:'Physics', note:'Numericals + concepts', session:60, icon:'⚡', glow:'#38bdf8' },
-  { name:'Math', note:'Questions + drill', session:45, icon:'📐', glow:'#a855f7' },
-  { name:'English', note:'Reading + vocab', session:35, icon:'📘', glow:'#ec4899' },
-  { name:'History', note:'Dates + notes', session:40, icon:'🏛️', glow:'#f97316' }
+  { name:'Revision', note:'Rapid recap + weak topics', session:45, icon:'🔁', glow:'#a855f7' }
 ];
 const FALLBACK_MEMBERS = [
   { name:'StudyMate', total_seconds:45123, icon:'👑', glow:'#f59e0b' },
@@ -30,7 +29,6 @@ let appState = { activeTab:'timer', rank:'—', focus3day:'0h 0m', nextText:'VIP
 function textOf(el){ return String(el?.textContent || '').trim(); }
 function fmtShort(sec){ sec=Math.max(0,Number(sec)||0); const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60); return h?`${h}h ${m}m`:`${m}m`; }
 function fmtHours(sec){ return `${(Math.max(0,Number(sec)||0)/3600).toFixed(1)}h`; }
-function initials(name){ return String(name||'S').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase(); }
 function todayLabel(){ try { return new Date().toLocaleDateString(undefined,{ weekday:'short', month:'numeric', day:'numeric' }); } catch(e){ return 'Today'; } }
 function liveClock(){ try { return new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }); } catch(e){ return '--:--'; } }
 function plannerStore(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){ return []; } }
@@ -60,7 +58,6 @@ function ensureStyle(){
     .rh-focus-sourceTimer *,.rh-focus-sourceControl *{position:relative;z-index:1}
     .rh-focus-sourceControl input,.rh-focus-sourceControl select{background:#0f1117!important;border:1px solid rgba(251,191,36,.12)!important;color:#fff!important;border-radius:14px!important}
     .rh-focus-sourceControl label,.rh-focus-sourceControl [class*='text-slate-400'],.rh-focus-sourceTimer [class*='text-slate-400']{color:#d1d5db!important}
-    .rh-focus-sourceTimer .text-red-500,.rh-focus-sourceTimer [class*='text-red']{text-shadow:0 0 24px rgba(249,115,22,.18)!important}
     .rh-focus-startBtn{background:linear-gradient(90deg,#ff9f2a,#ff6e1d)!important;color:#fff!important;border:0!important;box-shadow:0 14px 30px rgba(255,110,29,.22)!important}.rh-focus-softBtn{background:#1b1b1d!important;border:1px solid rgba(255,255,255,.10)!important;color:#f8fafc!important}
     .rh-focus-cardTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.rh-focus-cardTitle b{font-size:24px;color:#fff}.rh-focus-cardTitle span{font-size:12px;color:#9ca3af}
     .rh-focus-inlineActions{display:flex;gap:8px;flex-wrap:wrap}.rh-focus-inlineBtn{appearance:none;border:1px solid rgba(251,191,36,.18);background:rgba(251,191,36,.10);color:#fde68a;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:800;cursor:pointer}
@@ -79,7 +76,7 @@ function findSection(){ return document.getElementById('section-focus'); }
 function findRoot(section){ return Array.from(section.querySelectorAll('div')).find(el => String(el.innerText || '').includes('RATHOD HUB FOCUS')) || null; }
 function findTitleEl(root){ return Array.from(root?.querySelectorAll('h1,h2,h3,h4,b') || []).find(el => textOf(el).toLowerCase().includes('rathod hub focus')) || null; }
 function currentTimerText(section){ return textOf(Array.from(section.querySelectorAll('*')).find(el => /^\d{2}:\d{2}:\d{2}$/.test(textOf(el)))) || '00:00:00'; }
-function selectedSubject(section){ const s = section.querySelector('select'); return s?.value || s?.options?.[s.selectedIndex]?.text || 'Biology'; }
+function selectedSubject(section){ const s = section.querySelector('select'); return s?.value || s?.options?.[s.selectedIndex]?.text || 'Botany'; }
 function findTimerPanel(section){ const timer = Array.from(section.querySelectorAll('*')).find(el => /^\d{2}:\d{2}:\d{2}$/.test(textOf(el))); return timer?.closest('div.rounded-3xl,div.rounded-[32px],div.rounded-[28px]') || timer?.parentElement?.parentElement || null; }
 function findControlPanel(section){ return section.querySelector('select')?.closest('div.rounded-3xl,div.rounded-[32px],div.rounded-[28px]') || section.querySelector('select')?.parentElement?.parentElement || null; }
 function findStats(section){ const nodes = Array.from(section.querySelectorAll('div')); return { today:nodes.find(el => String(el.innerText || '').toLowerCase().includes('today') && String(el.innerText || '').toLowerCase().includes('study time')) || null, streak:nodes.find(el => String(el.innerText || '').toLowerCase().includes('consecutive study days')) || null, sessions:nodes.find(el => String(el.innerText || '').toLowerCase().includes('completed sessions')) || null }; }
@@ -112,7 +109,7 @@ function ensureShell(section){
   shell.className = 'rh-focus-shell';
   shell.innerHTML = `
     <div class="rh-focus-vipBar">
-      <div class="rh-focus-vipTop"><div class="rh-focus-vipSubject"><span>👑</span><span id="rh-focus-vip-subject">Biology</span></div><div class="rh-focus-topMeta"><span id="rh-focus-top-clock" class="rh-focus-topClock">--:--</span><span>VIP Mode</span></div></div>
+      <div class="rh-focus-vipTop"><div class="rh-focus-vipSubject"><span>👑</span><span id="rh-focus-vip-subject">Botany</span></div><div class="rh-focus-topMeta"><span id="rh-focus-top-clock" class="rh-focus-topClock">--:--</span><span>VIP Mode</span></div></div>
       <div id="rh-focus-vip-timer" class="rh-focus-vipTimer">00:00:00</div>
       <div class="rh-focus-tabs">
         <button type="button" class="rh-focus-tab active" data-rh-focus-tab="timer">Timer</button>
@@ -162,17 +159,17 @@ function renderTimerTab(section, body){
       </div>
       <div class="rh-focus-panel" style="padding:18px">
         <div class="rh-focus-cardTitle"><div><b>Quick Actions</b><span>Fast controls</span></div><span>${currentTimerText(section)}</span></div>
-        <div class="rh-focus-inlineActions"><button type="button" class="rh-focus-inlineBtn" data-rh-duration="25">25 min</button><button type="button" class="rh-focus-inlineBtn" data-rh-duration="50">50 min</button><button type="button" class="rh-focus-inlineBtn" data-rh-duration="60">1 hour</button><button type="button" class="rh-focus-inlineBtn" data-rh-quick-subject="Biology">Bio Start</button><button type="button" class="rh-focus-inlineBtn" data-rh-quick-subject="Chemistry">Chem Start</button><button type="button" class="rh-focus-inlineBtn" data-rh-quick-subject="Physics">Phy Start</button></div>
+        <div class="rh-focus-inlineActions"><button type="button" class="rh-focus-inlineBtn" data-rh-duration="25">25 min</button><button type="button" class="rh-focus-inlineBtn" data-rh-duration="50">50 min</button><button type="button" class="rh-focus-inlineBtn" data-rh-duration="60">1 hour</button><button type="button" class="rh-focus-inlineBtn" data-rh-quick-subject="Physics">Phy Start</button><button type="button" class="rh-focus-inlineBtn" data-rh-quick-subject="Botany">Botany</button><button type="button" class="rh-focus-inlineBtn" data-rh-quick-subject="Chemistry">Chem Start</button></div>
       </div>
     </div>
     <div style="margin-top:18px">${renderGroupPanel()}</div>`;
   body.querySelectorAll('[data-rh-duration]').forEach(btn => btn.addEventListener('click', () => quickSetDuration(section, btn.getAttribute('data-rh-duration'))));
-  body.querySelectorAll('[data-rh-quick-subject]').forEach(btn => btn.addEventListener('click', () => startFocusForSubject(section, btn.getAttribute('data-rh-quick-subject') || 'Biology')));
+  body.querySelectorAll('[data-rh-quick-subject]').forEach(btn => btn.addEventListener('click', () => startFocusForSubject(section, btn.getAttribute('data-rh-quick-subject') || 'Physics')));
 }
 
 function renderBooksTab(section, body){
   body.innerHTML = `<div class="rh-focus-panel" style="padding:18px"><div class="rh-focus-cardTitle"><div><b>Premium Focus Books</b><span>Direct subject start</span></div><span>${SUBJECT_CARDS.length} subjects</span></div><div class="rh-focus-booksGrid">${SUBJECT_CARDS.map(card=>`<div class="rh-focus-bookCard" style="--glow:${card.glow}"><div class="rh-focus-bookTop"><div class="rh-focus-bookIcon">${card.icon}</div><div class="rh-focus-bookTime">${card.session} min</div></div><div class="rh-focus-bookName">${card.name}</div><div class="rh-focus-bookNote">${card.note}</div><div class="rh-focus-bookFoot"><span class="rh-focus-bookTime">Premium Start</span><button type="button" class="rh-focus-bookStart" data-rh-book-subject="${card.name}" data-rh-book-minutes="${card.session}">Start Now</button></div></div>`).join('')}</div></div>`;
-  body.querySelectorAll('[data-rh-book-subject]').forEach(btn => btn.addEventListener('click', () => { const subject = btn.getAttribute('data-rh-book-subject') || 'Biology'; const minutes = parseInt(btn.getAttribute('data-rh-book-minutes') || '50',10) || 50; quickSetDuration(section, minutes); startFocusForSubject(section, subject); }));
+  body.querySelectorAll('[data-rh-book-subject]').forEach(btn => btn.addEventListener('click', () => { const subject = btn.getAttribute('data-rh-book-subject') || 'Physics'; const minutes = parseInt(btn.getAttribute('data-rh-book-minutes') || '50',10) || 50; quickSetDuration(section, minutes); startFocusForSubject(section, subject); }));
 }
 
 function renderInsightsTab(body){

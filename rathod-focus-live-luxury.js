@@ -4,13 +4,15 @@
 if(window.__RH_FOCUS_LIVE_LUXURY__) return;
 window.__RH_FOCUS_LIVE_LUXURY__ = 1;
 
-const state = { members: [] };
+const state = { members: [], ticking:false, seconds:null, timerId:null };
 const db = () => { try { return window.db || null; } catch(e){ return null; } };
 const textOf = el => String(el?.textContent || '').trim();
 const section = () => document.getElementById('section-focus');
 const fmtShort = sec => { sec = Math.max(0, Number(sec)||0); const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60); return h ? `${h}h ${m}m` : `${m}m`; };
 const fmtHours = sec => `${(Math.max(0, Number(sec)||0)/3600).toFixed(1)}h`;
 const initials = name => String(name||'?').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase();
+const parseTimer = text => { const m = String(text||'').match(/^(\d{2}):(\d{2}):(\d{2})$/); return m ? Number(m[1])*3600 + Number(m[2])*60 + Number(m[3]) : null; };
+const formatTimer = total => { total = Math.max(0, Number(total)||0); const h=String(Math.floor(total/3600)).padStart(2,'0'); const m=String(Math.floor((total%3600)/60)).padStart(2,'0'); const s=String(total%60).padStart(2,'0'); return `${h}:${m}:${s}`; };
 
 function injectStyle(){
   if(document.getElementById('rh-focus-live-luxury-style')) return;
@@ -40,11 +42,7 @@ async function loadMembers(){
   if(!client) return;
   try{
     const res = await client.rpc('get_ypt_focus_leaderboard',{ p_limit: 8 });
-    state.members = Array.isArray(res?.data) ? res.data.map(r => ({
-      name: r.name || 'Member',
-      total_seconds: Number(r.total_seconds || 0),
-      rank: r.rank
-    })) : [];
+    state.members = Array.isArray(res?.data) ? res.data.map(r => ({ name: r.name || 'Member', total_seconds: Number(r.total_seconds || 0), rank: r.rank })) : [];
   }catch(e){}
 }
 
@@ -56,16 +54,40 @@ function findSourceTimer(root){
   return candidates[0] || null;
 }
 
-function syncVipTimer(root){
-  const source = findSourceTimer(root);
-  const vip = document.getElementById('rh-focus-vip-timer');
-  if(source && vip) vip.textContent = textOf(source);
+function vipTimer(){ return document.getElementById('rh-focus-vip-timer'); }
+function setVip(seconds){ const vip = vipTimer(); if(vip) vip.textContent = formatTimer(seconds); }
+function syncFromSource(root){ const source = findSourceTimer(root); const secs = parseTimer(textOf(source)); if(secs != null){ state.seconds = secs; setVip(secs); } }
+function stopTick(){ if(state.timerId){ clearInterval(state.timerId); state.timerId=null; } state.ticking=false; }
+function startTick(root){
+  if(state.timerId) return;
+  if(state.seconds == null) syncFromSource(root);
+  if(state.seconds == null) return;
+  state.ticking=true;
+  state.timerId = setInterval(() => {
+    if(state.seconds == null) return;
+    state.seconds = Math.max(0, state.seconds - 1);
+    setVip(state.seconds);
+    if(state.seconds <= 0) stopTick();
+  }, 1000);
+}
+
+function bindButtons(root){
+  root.querySelectorAll('button').forEach(btn => {
+    if(btn.dataset.rhLiveBound) return;
+    btn.dataset.rhLiveBound = '1';
+    const t = textOf(btn).toLowerCase();
+    btn.addEventListener('click', () => {
+      if(/start|pomodoro/.test(t)) { setTimeout(() => { syncFromSource(root); startTick(root); }, 120); }
+      if(/stop|pause/.test(t)) { stopTick(); }
+      if(/reset/.test(t)) { stopTick(); setTimeout(() => syncFromSource(root), 120); }
+    });
+  });
 }
 
 function styleTimers(root){
   const source = findSourceTimer(root);
   if(source) source.classList.add('rh-focus-luxury-number');
-  const vip = document.getElementById('rh-focus-vip-timer');
+  const vip = vipTimer();
   if(vip) vip.classList.add('rh-focus-luxury-number');
 }
 
@@ -87,10 +109,7 @@ function updateStudyGroup(root){
   if(!panel) return;
   const grid = panel.querySelector('.rh-focus-groupGrid');
   if(!grid) return;
-  if(!state.members.length){
-    grid.innerHTML = '<div class="rh-focus-empty">No live members yet</div>';
-    return;
-  }
+  if(!state.members.length){ grid.innerHTML = '<div class="rh-focus-empty">No live members yet</div>'; return; }
   grid.innerHTML = state.members.map((m,idx)=>`<div class="rh-focus-member ${idx<3?'top':''}"><div class="rh-focus-avatar">${initials(m.name)}</div><b>${m.name}</b><span>${fmtShort(m.total_seconds)}</span></div>`).join('');
   const count = Array.from(panel.querySelectorAll('span')).find(el => /online/i.test(textOf(el)));
   if(count) count.textContent = `${state.members.length} online`;
@@ -101,15 +120,9 @@ function updateGraph(root){
   if(!panel) return;
   const list = panel.querySelector('.rh-focus-graphList');
   if(!list) return;
-  if(!state.members.length){
-    list.innerHTML = '<div class="rh-focus-empty">No leaderboard data yet</div>';
-    return;
-  }
+  if(!state.members.length){ list.innerHTML = '<div class="rh-focus-empty">No leaderboard data yet</div>'; return; }
   const max = Math.max(...state.members.map(m => m.total_seconds),1);
-  list.innerHTML = state.members.map(m => {
-    const pct = Math.max(8, Math.round((m.total_seconds/max)*100));
-    return `<div class="rh-focus-graphRow"><div class="rh-focus-graphName">${m.name}</div><div class="rh-focus-graphTrack"><div class="rh-focus-graphBar" style="width:${pct}%"></div></div><div class="rh-focus-graphValue">${fmtHours(m.total_seconds)}</div></div>`;
-  }).join('');
+  list.innerHTML = state.members.map(m => { const pct = Math.max(8, Math.round((m.total_seconds/max)*100)); return `<div class="rh-focus-graphRow"><div class="rh-focus-graphName">${m.name}</div><div class="rh-focus-graphTrack"><div class="rh-focus-graphBar" style="width:${pct}%"></div></div><div class="rh-focus-graphValue">${fmtHours(m.total_seconds)}</div></div>`; }).join('');
   const users = Array.from(panel.querySelectorAll('span')).find(el => /users/i.test(textOf(el)));
   if(users) users.textContent = `${state.members.length} users`;
 }
@@ -126,7 +139,8 @@ function run(){
   injectStyle();
   const root = section();
   if(!root) return;
-  syncVipTimer(root);
+  if(!state.ticking) syncFromSource(root);
+  bindButtons(root);
   styleTimers(root);
   styleButtons(root);
   updateStudyGroup(root);

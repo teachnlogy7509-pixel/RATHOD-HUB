@@ -46,9 +46,9 @@ function injectStyle(){
     .rh-side-sep{margin:10px 12px!important;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent)!important}
     .rh-sidebar .rh-nav-btn{--accent1:239,68,68;position:relative;overflow:hidden;min-height:52px!important;margin:0 6px 10px!important;padding:11px 14px!important;border-radius:18px!important;border:1px solid rgba(var(--accent1),.26)!important;background:linear-gradient(90deg,rgba(var(--accent1),.18),rgba(var(--accent1),.08) 38%,rgba(255,255,255,.03) 100%)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 14px 30px rgba(0,0,0,.18)!important;backdrop-filter:blur(14px);transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease}
     .rh-sidebar .rh-nav-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.06),transparent 38%,rgba(0,0,0,.06));pointer-events:none}
-    .rh-sidebar .rh-nav-btn span,.rh-sidebar .rh-nav-btn i{position:relative;z-index:1}
-    .rh-sidebar .rh-nav-btn span{font-size:14px!important;letter-spacing:.01em;font-weight:800!important;text-shadow:0 1px 8px rgba(0,0,0,.24)}
     .rh-sidebar .rh-nav-btn i{width:32px!important;height:32px!important;min-width:32px!important;border-radius:12px!important;display:grid!important;place-items:center!important;flex:0 0 32px;background:linear-gradient(135deg,rgba(var(--accent1),.34),rgba(var(--accent1),.16))!important;border:1px solid rgba(255,255,255,.08)!important;color:#fff!important;box-shadow:0 10px 18px rgba(var(--accent1),.16);transition:transform .18s ease,box-shadow .18s ease}
+    .rh-sidebar .rh-nav-btn span{font-size:14px!important;letter-spacing:.01em;font-weight:800!important;text-shadow:0 1px 8px rgba(0,0,0,.24)}
+    .rh-sidebar .rh-nav-btn i,.rh-sidebar .rh-nav-btn span{position:relative;z-index:1}
     .rh-sidebar .rh-nav-btn:hover{transform:translateY(-1px) scale(1.01)!important;border-color:rgba(var(--accent1),.48)!important;background:linear-gradient(90deg,rgba(var(--accent1),.28),rgba(var(--accent1),.12) 46%,rgba(255,255,255,.04) 100%)!important;color:#fff!important}
     .rh-sidebar .rh-nav-btn:hover i{transform:scale(1.06);box-shadow:0 12px 24px rgba(var(--accent1),.22)}
     .rh-sidebar .rh-nav-btn.rh-active{border-color:rgba(255,95,95,.92)!important;background:linear-gradient(90deg,rgba(255,66,66,.30),rgba(255,66,66,.12) 42%,rgba(255,255,255,.04) 100%)!important;box-shadow:inset 0 0 0 1px rgba(255,79,79,.20),0 0 0 1px rgba(255,79,79,.14),0 18px 34px rgba(239,43,43,.12)!important}
@@ -62,30 +62,27 @@ function injectStyle(){
     .rh-mobile-drawer .rh-vip-mobile-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important}
     .rh-mobile-drawer .rh-vip-mobile-card{--accent1:239,68,68;position:relative;overflow:hidden;min-height:94px!important;padding:12px 8px!important;border-radius:18px!important;border:1px solid rgba(var(--accent1),.28)!important;background:linear-gradient(180deg,rgba(var(--accent1),.18),rgba(255,255,255,.03) 76%)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 12px 22px rgba(0,0,0,.18)!important;color:#fff!important;transition:transform .18s ease,border-color .18s ease}
     .rh-mobile-drawer .rh-vip-mobile-card::before{content:'';position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.08),transparent 42%,rgba(0,0,0,.10));pointer-events:none}
-    .rh-mobile-drawer .rh-vip-mobile-card i,.rh-mobile-drawer .rh-vip-mobile-card span{position:relative;z-index:1}
-    .rh-mobile-drawer .rh-vip-mobile-card i{width:42px!important;height:42px!important;min-width:42px!important;border-radius:14px;display:grid!important;place-items:center!important;margin:0 auto 8px auto!important;background:linear-gradient(135deg,rgba(var(--accent1),.38),rgba(var(--accent1),.16))!important;border:1px solid rgba(255,255,255,.08)!important;color:#fff!important;box-shadow:0 10px 18px rgba(var(--accent1),.16)!important;font-size:18px!important}
+    .rh-mobile-drawer .rh-vip-mobile-card i{width:42px!important;height:42px!important;min-width:42px!important;border-radius:14px!important;display:grid!important;place-items:center!important;margin:0 auto 8px auto!important;background:linear-gradient(135deg,rgba(var(--accent1),.38),rgba(var(--accent1),.16))!important;border:1px solid rgba(255,255,255,.08)!important;color:#fff!important;box-shadow:0 10px 18px rgba(var(--accent1),.16)!important;font-size:18px!important}
     .rh-mobile-drawer .rh-vip-mobile-card span{font-size:11px!important;line-height:1.25!important;font-weight:800!important;display:block!important}
+    .rh-mobile-drawer .rh-vip-mobile-card i,.rh-mobile-drawer .rh-vip-mobile-card span{position:relative;z-index:1}
     .rh-mobile-drawer .rh-vip-mobile-card:active{transform:scale(.97)!important}
   `;
   document.head.appendChild(style);
 }
 
-function setTheme(el, key){
+function renderItem(el,key){
   const meta = featureMap[key];
   if(!el || !meta) return;
-  const icon = el.querySelector('i');
-  const label = el.querySelector('span');
   el.style.setProperty('--accent1', meta.accent);
-  if(icon) icon.className = meta.icon;
-  if(label) label.textContent = meta.label;
+  el.innerHTML = `<i class="${meta.icon}"></i><span>${meta.label}</span>`;
 }
 
 function upgradeSidebar(){
   [
     ['btn-home','home'],['btn-ai','ai'],['btn-aitutor','aitutor'],['btn-quiz','quiz'],['btn-battle','battle'],['btn-neet720','neet720'],['btn-badges','badges'],['btn-daily-battle','dailyBattle'],['btn-materials','materials'],['btn-aicards','aicards'],['btn-dailyformula','dailyformula'],['btn-focus','focus'],['btn-studypower','studypower'],['btn-studyrooms','studyrooms'],['btn-diary','diary'],['btn-vault','vault'],['btn-community','community'],['btn-chatroom','chatroom'],['btn-stories','stories'],['btn-cardbattle','cardbattle'],['btn-games','games'],['btn-hubevents','hubevents'],['btn-leaderboard','leaderboard'],['btn-treasure','treasure'],['btn-adminpanel','adminpanel']
-  ].forEach(([id,key]) => setTheme(document.getElementById(id), key));
-  document.querySelectorAll('.rh-sidebar button[onclick="openProfile()"]').forEach(el => setTheme(el,'profile'));
-  document.querySelectorAll('.rh-sidebar button[onclick="logout()"]').forEach(el => setTheme(el,'logout'));
+  ].forEach(([id,key]) => renderItem(document.getElementById(id), key));
+  document.querySelectorAll('.rh-sidebar button[onclick="openProfile()"]').forEach(el => renderItem(el,'profile'));
+  document.querySelectorAll('.rh-sidebar button[onclick="logout()"]').forEach(el => renderItem(el,'logout'));
 }
 
 function getKey(action, href){
@@ -133,20 +130,19 @@ function upgradeMobileDrawer(){
     const close = head.querySelector('button');
     if(title){
       title.className = 'rh-vip-mobile-title';
-      title.innerHTML = 'VIP Command Deck<div class="rh-vip-mobile-sub">Premium modules • no feature removed</div>';
+      title.innerHTML = 'VIP Command Deck<div class="rh-vip-mobile-sub">premium modules • no feature removed</div>';
     }
     if(close) close.className = 'rh-vip-mobile-close';
   }
   const grid = shell.querySelector('.grid');
-  if(grid){
-    grid.classList.add('rh-vip-mobile-grid');
-    grid.querySelectorAll('button,a').forEach(el => {
-      const key = getKey(String(el.getAttribute('onclick')||''), String(el.getAttribute('href')||''));
-      if(!key) return;
-      el.classList.add('rh-vip-mobile-card');
-      setTheme(el, key);
-    });
-  }
+  if(!grid) return;
+  grid.classList.add('rh-vip-mobile-grid');
+  grid.querySelectorAll('button,a').forEach(el => {
+    const key = getKey(String(el.getAttribute('onclick')||''), String(el.getAttribute('href')||''));
+    if(!key) return;
+    el.classList.add('rh-vip-mobile-card');
+    renderItem(el,key);
+  });
 }
 
 function run(){

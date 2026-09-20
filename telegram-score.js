@@ -6,8 +6,8 @@ window.__RH_TG_SCORE_LOADER__=1;
 const add=(id,src)=>{if(document.getElementById(id))return;const script=document.createElement('script');script.id=id;script.src=src;script.defer=true;document.head.appendChild(script)};
 const ensureFocusScripts=()=>{
   add('rh-ypt-focus-script','rathod-ypt-focus.js?v=6');
-  add('rh-focus-premium-direct-script','rathod-focus-premium-timer.js?v=19');
-  add('rh-focus-live-luxury-script','rathod-focus-live-luxury.js?v=1');
+  add('rh-focus-premium-direct-script','rathod-focus-premium-timer.js?v=20');
+  add('rh-focus-live-luxury-script','rathod-focus-live-luxury.js?v=2');
 };
 const extras=()=>{
   add('rh-auth-recovery-fix-script','rathod-auth-recovery-fix.js?v=2');
@@ -19,7 +19,7 @@ const extras=()=>{
   add('rh-mentor-room-script','rathod-mentor-room.js?v=8');
   add('rh-study-room-fix-script','rathod-study-room-fix.js?v=6');
   add('rh-study-ecosystem-script','rathod-study-ecosystem.js?v=3');
-  add('rh-vip-sidebar-script','rathod-vip-sidebar.js?v=5');
+  add('rh-vip-sidebar-script','rathod-vip-sidebar.js?v=6');
   ensureFocusScripts();
   add('rh-archive-layout-fix-script','rathod-archive-layout-fix.js?v=2');
   add('rh-adsense-verify-script','adsense-verify.js?v=1');
