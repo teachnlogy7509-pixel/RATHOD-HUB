@@ -25,7 +25,7 @@ async function authContext(){
   return{d,u,p};
 }
 function apiUrl(){return String(window.RATHOD_SONG_API_URL||localStorage.getItem('rh_song_api_url')||DEFAULT_API).trim().replace(/\/+$/,'')}
-function audioSource(row){const id=String(row?.drive_file_id||'').trim(),base=apiUrl();return id&&base?base+'/song/audio/'+encodeURIComponent(id):String(row?.audio_url||'')}
+function driveSources(row){const id=String(row?.drive_file_id||'').trim();if(!id)return [];return ['https://drive.google.com/uc?export=download&id='+encodeURIComponent(id),'https://drive.usercontent.google.com/download?id='+encodeURIComponent(id)+'&export=download&confirm=t']}\nfunction audioSource(row){const sources=driveSources(row);return sources[0]||String(row?.drive_url||'')||String(row?.audio_url||'')}
 function notify(text,ok=true){if(typeof window.toast==='function')window.toast(text,ok);else console.info(text)}
 function aiHost(){
   for(const id of ['section-aicards','section-ai-shorts-notes','section-ai-short-notes','section-short-notes','section-aishorts','section-ainotes']){const node=$(id);if(node)return node}
@@ -41,7 +41,7 @@ function songRows(rows){
 }
 function wireRows(root){
   if(!root)return;
-  root.querySelectorAll('audio[data-rh-song-audio]').forEach(audio=>audio.addEventListener('error',()=>{const fallback=audio.dataset.fallback;if(fallback&&!audio.dataset.fallbackTried){audio.dataset.fallbackTried='1';audio.src=fallback;audio.load()}},{once:true}));
+  root.querySelectorAll('audio[data-rh-song-audio]').forEach(audio=>{audio.addEventListener('error',()=>{const fallback=audio.dataset.fallback;if(fallback&&!audio.dataset.fallbackTried){audio.dataset.fallbackTried='1';audio.src=fallback;audio.load()}},{once:true});audio.addEventListener('loadedmetadata',()=>{audio.dataset.rhPlayback='ok'},{once:true})});
   root.querySelectorAll('[data-rh-song-delete]').forEach(button=>button.addEventListener('click',()=>deleteSong(button.dataset.rhSongDelete||'',button.dataset.rhSongTitle||'RATHOD HUB Song')));
 }
 function ensureLibrarySection(){
