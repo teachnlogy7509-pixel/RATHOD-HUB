@@ -5284,7 +5284,7 @@ async function forceRathodUpdate() {
   }
 }
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {navigator.serviceWorker.register('./sw.js').then(reg => reg.update()).catch(() => {})});
+  window.addEventListener('load', () => {navigator.serviceWorker.register('./sw.js?v=20260921-reset-otp-fix').then(reg => reg.update()).catch(() => {})});
   navigator.serviceWorker.addEventListener('message',event=>{if(event.data?.type==='OPEN_HUB_NOTIFICATION'){const id=event.data?.payload?.notificationId;if(id)openHubNotification(id)}});
 }
 </script>
