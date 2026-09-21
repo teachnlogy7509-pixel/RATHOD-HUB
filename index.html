@@ -5931,5 +5931,157 @@ window.loadStudyWar=loadStudyWar;window.createStudyWar=createStudyWar;window.joi
 
 <script defer src="telegram-score.js?v=1"></script>
 <script defer src="student-collection.js?v=2"></script>
+
+<!-- RATHOD_HUB_PRECISION_COUNTDOWN_WATCHDOG_V1 -->
+<script>
+/* RATHOD HUB — Precision Countdown Watchdog
+   Visual-only layer. Existing timer/quiz logic, scoring, Supabase writes,
+   question boundaries and finish handlers remain authoritative and unchanged.
+*/
+(function(){
+  const pad2=n=>String(Math.max(0,Number(n)||0)).padStart(2,'0');
+  let lastDailyIndex=-1;
+  let lastQbIndex=-1;
+  let lastN720Index=-1;
+  let lastNthIndex=-1;
+  let dailyFinishRequested=false;
+  let hubTestFinishRequested=false;
+
+  function frame(){
+    try{
+      const now=Date.now();
+
+      /* USER-HOSTED LIVE QUIZ */
+      if(typeof qbRoom!=='undefined' && qbRoom && qbRoom.status==='live' && qbRoom.started_at){
+        const elapsed=Math.max(0,now-new Date(qbRoom.started_at).getTime());
+        const total=typeof qbQuestionTotal==='function'?qbQuestionTotal():Number(qbRoom.question_count||15);
+        const idx=Math.floor(elapsed/(QB_QUESTION_SECONDS*1000));
+        const sec=QB_QUESTION_SECONDS-Math.floor((elapsed%(QB_QUESTION_SECONDS*1000))/1000);
+        const timer=document.getElementById('qb-timer');
+        if(timer)timer.textContent=sec+'s';
+        const bar=document.getElementById('qb-timer-bar');
+        if(bar)bar.style.width=(Math.max(0,Math.min(QB_QUESTION_SECONDS,sec))/QB_QUESTION_SECONDS*100)+'%';
+        if(idx!==lastQbIndex && idx<total){
+          lastQbIndex=idx;
+          if(typeof qbRenderQuestion==='function')qbRenderQuestion(idx);
+        }
+      }else if(typeof qbRoom!=='undefined' && (!qbRoom || qbRoom.status!=='live')){
+        lastQbIndex=-1;
+      }
+
+      /* NEET 720 LIVE QUIZ */
+      if(typeof n720Room!=='undefined' && n720Room && n720Room.status==='live' && n720Room.started_at){
+        const elapsed=Math.max(0,now-new Date(n720Room.started_at).getTime());
+        const total=Number(n720Room.question_count||n720Count||15);
+        const idx=Math.floor(elapsed/(N720_SECONDS*1000));
+        const sec=N720_SECONDS-Math.floor((elapsed%(N720_SECONDS*1000))/1000);
+        const timer=document.getElementById('n720-timer');
+        if(timer)timer.textContent=sec+'s';
+        const bar=document.getElementById('n720-timer-bar');
+        if(bar)bar.style.width=(Math.max(0,Math.min(N720_SECONDS,sec))/N720_SECONDS*100)+'%';
+        if(idx!==lastN720Index && idx<total){
+          lastN720Index=idx;
+          if(typeof n720RenderQuestion==='function')n720RenderQuestion(idx);
+        }
+      }else if(typeof n720Room!=='undefined' && (!n720Room || n720Room.status!=='live')){
+        lastN720Index=-1;
+      }
+
+      /* DAILY 9 PM SYNCHRONIZED BATTLE */
+      if(typeof activeScheduledBattle!=='undefined' && activeScheduledBattle?.scheduled_at){
+        const target=new Date(activeScheduledBattle.scheduled_at).getTime();
+        const elapsed=now-target;
+        const countdown=document.getElementById('battleGlobalCountdown');
+        const badge=document.getElementById('battleStatusBadge');
+        if(elapsed<0){
+          const diff=-elapsed;
+          if(countdown)countdown.textContent=`${pad2(Math.floor(diff/3600000))}:${pad2(Math.floor(diff%3600000/60000))}:${pad2(Math.floor(diff%60000/1000))}`;
+          if(badge)badge.textContent='⏱️ SCHEDULED';
+          dailyFinishRequested=false;
+          lastDailyIndex=-1;
+        }else{
+          const totalMs=typeof dailyBattleDurationMs==='function'?dailyBattleDurationMs():((typeof dailyBattleQuestionTotal==='function'?dailyBattleQuestionTotal():15)*(DAILY_BATTLE_SECONDS*1000));
+          if(elapsed>=totalMs){
+            if(countdown)countdown.textContent='00:00:00';
+            if(badge)badge.textContent='🏁 FINISHED';
+            if(!dailyFinishRequested){
+              dailyFinishRequested=true;
+              if(typeof syncDailyBattleClock==='function')syncDailyBattleClock();
+            }
+          }else{
+            dailyFinishRequested=false;
+            if(typeof isBattleLive!=='undefined' && isBattleLive){
+              const idx=Math.floor(elapsed/(DAILY_BATTLE_SECONDS*1000));
+              const within=elapsed%(DAILY_BATTLE_SECONDS*1000);
+              const sec=DAILY_BATTLE_SECONDS-Math.floor(within/1000);
+              if(countdown)countdown.textContent='00:00:00 • LIVE';
+              if(badge)badge.textContent='🔴 LIVE NOW';
+              if(typeof battleTimer!=='undefined'){
+                battleTimer=Math.max(1,Math.min(DAILY_BATTLE_SECONDS,sec));
+              }
+              if(typeof updateBattleTimerUI==='function')updateBattleTimerUI();
+              if(idx!==lastDailyIndex){
+                lastDailyIndex=idx;
+                if(typeof syncLiveDailyQuestion==='function')syncLiveDailyQuestion(elapsed);
+              }
+            }
+          }
+        }
+      }
+
+      /* ADMIN 45Q TEST */
+      if(typeof hubActiveTest!=='undefined' && hubActiveTest && typeof hubTestEndsAt!=='undefined' && hubTestEndsAt){
+        const left=Math.max(0,hubTestEndsAt-now);
+        const sec=Math.ceil(left/1000);
+        const el=document.getElementById('hub-test-timer');
+        if(el)el.textContent=`${pad2(Math.floor(sec/60))}:${pad2(sec%60)}`;
+        if(sec<=0 && !hubTestFinishRequested){
+          hubTestFinishRequested=true;
+          if(typeof finishHubTest==='function')finishHubTest();
+        }
+      }else{
+        hubTestFinishRequested=false;
+      }
+
+      /* TREASURE HUNT QUIZ */
+      if(typeof nthRoom!=='undefined' && nthRoom && nthRoom.status==='live' && typeof nthSecondsLeft==='function'){
+        const sec=Math.max(0,Number(nthSecondsLeft())||0);
+        const total=Number(nthRoom.duration_seconds||25);
+        const timer=document.getElementById('nth-timer');
+        if(timer)timer.textContent=sec+'s';
+        const bar=document.getElementById('nth-timer-bar');
+        if(bar)bar.style.width=(total?Math.max(0,Math.min(100,sec/total*100)):0)+'%';
+        if(typeof nthCurrentIndex==='function'){
+          const idx=nthCurrentIndex();
+          if(idx!==lastNthIndex){
+            lastNthIndex=idx;
+            if(typeof nthTick==='function')nthTick();
+          }
+        }
+      }else{
+        lastNthIndex=-1;
+      }
+
+      /* ELITE FOCUS — render from the real start timestamp every frame.
+         This eliminates visible 1-second interval lag while preserving
+         the existing persistence/sync/XP logic in tickFocus(). */
+      if(typeof focusState!=='undefined' && focusState && focusState.status==='running'){
+        if(typeof renderFocusTimer==='function')renderFocusTimer();
+        if(typeof focusRemaining==='function' && focusRemaining()<=0 && typeof tickFocus==='function')tickFocus();
+      }
+
+      /* HUB EVENT COUNTDOWN */
+      if(typeof tickHubCountdown==='function'){
+        tickHubCountdown();
+      }
+    }catch(e){
+      console.warn('Precision countdown watchdog:',e);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
+})();
+</script>
 </body>
 </html>
