@@ -41,7 +41,7 @@ function songRows(rows){
 }
 function wireRows(root){
   if(!root)return;
-  root.querySelectorAll('audio[data-rh-song-audio]').forEach(audio=>{audio.addEventListener('error',()=>{const fallback=audio.dataset.fallback,viewer=audio.dataset.fallbackViewer;if(fallback&&!audio.dataset.fallbackTried){audio.dataset.fallbackTried='1';audio.src=fallback;audio.load()}else if(viewer&&!audio.dataset.fallbackViewerTried){audio.dataset.fallbackViewerTried='1';audio.src=viewer;audio.load()}},{once:true});audio.addEventListener('loadedmetadata',()=>{audio.dataset.rhPlayback='ok'},{once:true})});
+  root.querySelectorAll('audio[data-rh-song-audio]').forEach(audio=>{audio.addEventListener('error',()=>{const fallback=audio.dataset.fallback,viewer=audio.dataset.fallbackViewer;if(fallback&&!audio.dataset.fallbackTried){audio.dataset.fallbackTried='1';audio.src=fallback;audio.load()}else if(viewer&&!audio.dataset.fallbackViewerTried){audio.dataset.fallbackViewerTried='1';audio.src=viewer;audio.load()}});audio.addEventListener('loadedmetadata',()=>{audio.dataset.rhPlayback='ok'},{once:true})});
   root.querySelectorAll('[data-rh-song-delete]').forEach(button=>button.addEventListener('click',()=>deleteSong(button.dataset.rhSongDelete||'',button.dataset.rhSongTitle||'RATHOD HUB Song')));
 }
 function ensureLibrarySection(){
