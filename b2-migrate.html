@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RATHOD HUB — B2 Song Migration</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:#070b18;color:#e5e7eb;font:15px system-ui;padding:24px}.card{max-width:720px;margin:auto;background:#10172a;border:1px solid #334155;border-radius:24px;padding:24px;box-shadow:0 20px 60px #0008}h1{margin:0 0 8px;font-size:24px}.muted{color:#94a3b8}.status{margin:18px 0;padding:14px;border-radius:14px;background:#07101f;white-space:pre-wrap}button,a.btn{display:inline-block;border:0;border-radius:14px;padding:13px 18px;background:#c026d3;color:white;font-weight:800;text-decoration:none;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.bar{height:12px;background:#1e293b;border-radius:99px;overflow:hidden;margin:14px 0}.fill{height:100%;width:0;background:linear-gradient(90deg,#d946ef,#06b6d4);transition:width .2s}.log{max-height:300px;overflow:auto;font:12px ui-monospace,monospace;background:#030712;padding:12px;border-radius:12px}.ok{color:#86efac}.bad{color:#fca5a5}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>🎵 RATHOD HUB B2 Migration</h1>
+    <p class="muted">यह केवल logged-in Admin के लिए है। Google Drive originals और database rows delete नहीं होंगे।</p>
+    <div id="status" class="status">Login जाँचा जा रहा है…</div>
+    <div class="bar"><div id="fill" class="fill"></div></div>
+    <button id="start" disabled>सभी songs B2 पर migrate करें</button>
+    <a class="btn" href="/" style="background:#334155">App पर वापस जाएँ</a>
+    <pre id="log" class="log"></pre>
+  </main>
+<script>
+const SUPABASE_URL='https://fezyljxjbgefaqroxorl.supabase.co';
+const SUPABASE_KEY='sb_publishable_UQ0y1axzT6jsesDmz1JHPA_j2budIh3';
+const WORKER='https://rathod-hub-audio.sanatanirambhakt73.workers.dev';
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const statusEl=document.getElementById('status'),start=document.getElementById('start'),fill=document.getElementById('fill'),log=document.getElementById('log');
+let session=null,rows=[];
+const line=(text,ok=true)=>{const span=document.createElement('div');span.className=ok?'ok':'bad';span.textContent=text;log.appendChild(span);log.scrollTop=log.scrollHeight};
+async function init(){
+  session=(await db.auth.getSession()).data.session;
+  if(!session){statusEl.textContent='पहले main RATHOD HUB app में Admin login करें, फिर यह page दोबारा खोलें।';return}
+  const result=await db.from('rh_song_library').select('id,title,drive_file_id,status').eq('status','ready').order('created_at',{ascending:true});
+  if(result.error){statusEl.textContent='Song list नहीं मिली: '+result.error.message;return}
+  rows=(result.data||[]).filter(row=>row.drive_file_id);
+  statusEl.textContent=`Admin login मिला। ${rows.length} ready songs migration के लिए मिले।`;
+  start.disabled=!rows.length;
+}
+start.onclick=async()=>{
+  start.disabled=true;log.textContent='';let ok=0,failed=0;
+  for(let i=0;i<rows.length;i++){
+    const row=rows[i];statusEl.textContent=`${i+1}/${rows.length}: ${row.title}`;fill.style.width=`${Math.round(i*100/rows.length)}%`;
+    try{
+      const response=await fetch(`${WORKER}/migrate/${encodeURIComponent(row.drive_file_id)}`,{method:'POST',headers:{Authorization:'Bearer '+session.access_token}});
+      const payload=await response.json().catch(()=>({}));
+      if(!response.ok||!payload.ok)throw new Error(payload.error||`HTTP ${response.status}`);
+      ok++;line(`✓ ${row.title}${payload.alreadyExists?' — पहले से B2 पर है':' — migrate हो गया'}`);
+    }catch(error){failed++;line(`✗ ${row.title} — ${error.message||error}`,false)}
+  }
+  fill.style.width='100%';
+  statusEl.textContent=failed?`पूरा हुआ: ${ok} सफल, ${failed} failed. Failed songs पुराने fallback से चलते रहेंगे।`:`✅ सभी ${ok} songs B2 पर उपलब्ध हैं। Supabase media egress अब इन songs के लिए बंद रहेगा।`;
+  start.disabled=false;
+};
+init();
+</script>
+</body>
+</html>
