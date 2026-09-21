@@ -450,13 +450,13 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
     </div>
 
     <form id="forgot-form" class="hidden rh-forgot-card mt-3">
-      <div class="text-xs font-bold text-slate-300 mb-2">Reset Password via OTP</div>
+      <div class="text-xs font-bold text-slate-300 mb-2">Reset Password via Email / OTP</div>
       <div class="rh-input-wrapper mb-3">
         <i class="fa-regular fa-envelope rh-field-icon"></i>
         <input id="forgot-email" type="email" required placeholder="Registered Email" class="rh-mobile-input text-sm">
       </div>
       <button id="forgot-btn" class="rh-secondary-btn w-full">
-        <i class="fa-solid fa-paper-plane mr-2"></i>Send Reset OTP
+        <i class="fa-solid fa-paper-plane mr-2"></i>Send Reset Link
       </button>
     </form>
 
@@ -485,7 +485,7 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
       <div class="flex items-center justify-between mb-4">
         <div>
           <h3 class="font-bold text-lg text-white">Reset Password</h3>
-          <p class="text-xs text-slate-400 mt-1">Email में आया OTP code डालें</p>
+          <p id="reset-method-note" class="text-xs text-slate-400 mt-1">Email में आया reset link खोलें। OTP मिले तो नीचे code भी डाल सकते हैं।</p>
         </div>
         <div class="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
           <i class="fa-solid fa-shield-halved text-rose-400 text-lg"></i>
@@ -4235,18 +4235,21 @@ async function sendPasswordResetEmail(e){
  if(!email)return;
  btn.disabled=true;btn.textContent='Sending...';
  try{
-  const {error}=await db.auth.resetPasswordForEmail(email);
+  const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
   if(error)throw error;
-  document.getElementById('reset-otp-email').textContent='Code भेजा गया: '+email;
+  passwordResetEmail=email;
+  document.getElementById('reset-otp-email').textContent='Reset link भेजा गया: '+email;
+  const note=document.getElementById('reset-method-note');
+  if(note)note.textContent='Email में Reset Password link खोलें। अगर आपके template में OTP आता है, तो code नीचे भी verify कर सकते हैं।';
   document.getElementById('password-reset-modal').classList.remove('hidden');
   document.getElementById('forgot-form').classList.add('hidden');
   document.getElementById('reset-otp').focus();
-  toast('Reset code email पर भेज दिया गया 📩');
+  toast('Reset link email पर भेज दिया गया 📩');
  }catch(err){
   console.error('Password reset request failed:',err);
-  toast(err?.message||'Reset code भेजने में समस्या हुई',false);
+  toast(err?.message||'Reset email भेजने में समस्या हुई. Email provider/SMTP, rate limit और Auth URL settings check करें.',false);
  }finally{
-  btn.disabled=false;btn.textContent='Send OTP';
+  btn.disabled=false;btn.textContent='Send Reset Link';
  }
 }
 
@@ -4331,7 +4334,7 @@ document.getElementById('resend-reset-btn').addEventListener('click',async()=>{
   document.getElementById('new-password-fields').classList.add('hidden');
   document.getElementById('verify-otp-btn').classList.remove('hidden');
   passwordResetVerified=false;
-  toast('नया reset code भेज दिया गया 📩');
+  toast('नया reset link भेज दिया गया 📩');
  }catch(err){toast(err?.message||'Code resend नहीं हुआ',false)}
 });
 
@@ -4339,6 +4342,23 @@ db.auth.onAuthStateChange((event,s)=>{
  if(event==='PASSWORD_RECOVERY'){
    session=s||null;
    user=s?.user||null;
+   passwordResetEmail=s?.user?.email||passwordResetEmail;
+   passwordResetVerified=true;
+
+   const modal=document.getElementById('password-reset-modal');
+   const note=document.getElementById('reset-method-note');
+   const emailEl=document.getElementById('reset-otp-email');
+   const otp=document.getElementById('reset-otp');
+   const verify=document.getElementById('verify-otp-btn');
+   const fields=document.getElementById('new-password-fields');
+
+   if(emailEl)emailEl.textContent='Recovery link verified ✅ '+(passwordResetEmail||'');
+   if(note)note.textContent='Recovery link verified. Ab new password set karein.';
+   if(otp){otp.value='';otp.disabled=true;otp.classList.add('hidden');}
+   if(verify)verify.classList.add('hidden');
+   if(fields)fields.classList.remove('hidden');
+   if(modal)modal.classList.remove('hidden');
+   setTimeout(()=>document.getElementById('new-password')?.focus(),50);
  }
 });
 
@@ -4975,6 +4995,31 @@ async function syncFocusLiveSession(force=false){
     focusDbReady=true;
   }catch(e){console.warn('Live focus sync failed:',e)}
 }
+
+async function flushFocusOfflineSync(){
+  if(!user)return;
+  try{
+    await migrateLocalFocusSessionsToSupabase();
+    if(focusState.status==='running'&&!focusState.break){
+      await syncFocusLiveSession(true);
+    }
+    if(navigator.onLine){
+      await loadFocusSessionsFromSupabase();
+    }
+  }catch(e){
+    console.warn('Focus offline queue flush failed:',e);
+  }
+}
+
+window.addEventListener('online',()=>{
+  setTimeout(()=>flushFocusOfflineSync(),150);
+});
+
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&navigator.onLine){
+    setTimeout(()=>flushFocusOfflineSync(),100);
+  }
+});
 
 function saveFocusState(){if(!user)return;localStorage.setItem(focusStoreKey(),JSON.stringify(focusState))}
 function readFocusState(){try{const x=JSON.parse(localStorage.getItem(focusStoreKey())||'null');return x&&Number(x.duration)>0?x:null}catch{return null}}
