@@ -37,7 +37,7 @@ function aiHost(){
 function songRows(rows){
   if(!rows.length)return '<div class="rounded-2xl bg-black/20 p-4 text-xs text-slate-500">अभी कोई VIP song ready नहीं है।</div>';
   return rows.map((row,index)=>{
-    const sources=streamSources(row),src=sources[0]||String(row.drive_url||row.audio_url||'').trim(),fallback=sources[1]&&sources[1]!==src?` data-fallback="${esc(sources[1])}"`:'','';
+    const sources=streamSources(row),src=sources[0]||String(row.drive_url||row.audio_url||'').trim(),fallback=sources[1]&&sources[1]!==src?` data-fallback="${esc(sources[1])}"`:'';
     const remove=canManageSongs&&row.id?`<button type="button" data-rh-song-delete="${esc(row.id)}" data-rh-song-title="${esc(row.title)}" class="shrink-0 rounded-lg border border-red-400/30 bg-red-500/10 px-2 py-1 text-[10px] font-black text-red-200">Delete</button>`:'';
     return `<article class="rh-song-row rounded-3xl border border-fuchsia-400/15 bg-slate-950/85 p-4"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="font-black text-slate-100" style="overflow-wrap:anywhere"><span class="mr-2 text-fuchsia-300">${String(index+1).padStart(2,'0')}</span>🎵 ${esc(row.title)}</div><div class="mt-1 text-[10px] text-emerald-300">VIP MP3 • RATHOD HUB</div></div><div class="flex shrink-0 items-center gap-2">${row.drive_url?`<a class="text-[10px] text-cyan-300" href="${esc(row.drive_url)}" target="_blank" rel="noopener">Drive</a>`:''}${remove}</div></div><audio data-rh-song-audio class="mt-3 block w-full" controls preload="metadata" src="${esc(src)}"${fallback}${row.drive_url?` data-fallback-viewer="${esc(row.drive_url)}"`:''}></audio></article>`;
   }).join('');
