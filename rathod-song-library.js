@@ -25,7 +25,8 @@ async function authContext(){
   return{d,u,p};
 }
 function apiUrl(){return String(window.RATHOD_SONG_API_URL||localStorage.getItem('rh_song_api_url')||DEFAULT_API).trim().replace(/\/+$/,'')}
-function driveSources(row){const id=String(row?.drive_file_id||'').trim();if(!id)return [];return ['https://drive.google.com/uc?export=download&id='+encodeURIComponent(id),'https://drive.usercontent.google.com/download?id='+encodeURIComponent(id)+'&export=download&confirm=t']}\nfunction audioSource(row){const sources=driveSources(row);return sources[0]||String(row?.drive_url||'')||String(row?.audio_url||'')}
+function driveSources(row){const id=String(row?.drive_file_id||'').trim();if(!id)return [];return ['https://drive.google.com/uc?export=download&id='+encodeURIComponent(id),'https://drive.usercontent.google.com/download?id='+encodeURIComponent(id)+'&export=download&confirm=t']}
+function audioSource(row){const sources=driveSources(row);return sources[0]||String(row?.drive_url||'')||String(row?.audio_url||'')}
 function notify(text,ok=true){if(typeof window.toast==='function')window.toast(text,ok);else console.info(text)}
 function aiHost(){
   for(const id of ['section-aicards','section-ai-shorts-notes','section-ai-short-notes','section-short-notes','section-aishorts','section-ainotes']){const node=$(id);if(node)return node}
