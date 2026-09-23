@@ -16,6 +16,7 @@ on:
       - 'rathod-social-ui.js'
       - 'rathod-study-ecosystem.js'
       - 'rathod-ypt-focus.js'
+      - 'rathod-focus-blocker-bridge.js'
       - 'rathod-archive-layout-fix.js'
       - 'rathod-offline.js'
       - 'rathod-pw-batches.js'
@@ -44,10 +45,10 @@ jobs:
           cp rathod-modern-effects.js rathod-modern-theme.css android/app/src/main/assets/
           cp rathod-world.css rathod-world.js telegram-score.js android/app/src/main/assets/
           cp profile-card-update.js rathod-admin-layout.js rathod-social-ui.js android/app/src/main/assets/
-          cp rathod-study-ecosystem.js rathod-ypt-focus.js rathod-archive-layout-fix.js rathod-offline.js rathod-pw-batches.js rathod-pw-subject-launcher.js rathod-agent-vip.js rathod-study-room-fix.js rathod-branding-fix.js android/app/src/main/assets/
+          cp rathod-study-ecosystem.js rathod-ypt-focus.js rathod-focus-blocker-bridge.js rathod-archive-layout-fix.js rathod-offline.js rathod-pw-batches.js rathod-pw-subject-launcher.js rathod-agent-vip.js rathod-study-room-fix.js rathod-branding-fix.js android/app/src/main/assets/
           cp icon-192.png icon-512.png android/app/src/main/assets/
           cp icon-512.png android/app/src/main/res/drawable/rathod_hub_icon.png
-      - name: Inject YPT Focus and archive layout modules into APK
+      - name: Inject YPT Focus, native blocker sync and archive layout modules into APK
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -55,6 +56,7 @@ jobs:
           s = p.read_text()
           tags = [
               '<script defer src="rathod-ypt-focus.js?v=1"></script>',
+              '<script defer src="rathod-focus-blocker-bridge.js?v=2"></script>',
               '<script defer src="rathod-archive-layout-fix.js?v=1"></script>',
           ]
           missing = [tag for tag in tags if tag not in s]
