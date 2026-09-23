@@ -1,10 +1,11 @@
-/* RATHOD HUB VIP Song Library — in-content Google Drive music box. */
+/* RATHOD HUB VIP Song Library — direct media playback without Supabase relay. */
 (()=>{
 'use strict';
 if(window.__RH_SONG_LIBRARY__)return;
 window.__RH_SONG_LIBRARY__=1;
 const OWNER_EMAILS=new Set(['ashisharmy1982@gmail.com','teachnlogy7509@gmail.com']);
 const DEFAULT_API='https://rathod-question-archive-production.up.railway.app';
+const B2_WORKER_BASE='https://rathod-hub-audio.sanatanirambhakt73.workers.dev';
 let canManageSongs=false;
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -25,9 +26,17 @@ async function authContext(){
   return{d,u,p};
 }
 function apiUrl(){return String(window.RATHOD_SONG_API_URL||localStorage.getItem('rh_song_api_url')||DEFAULT_API).trim().replace(/\/+$/,'')}
-const SONG_STREAM_BASE='https://fezyljxjbgefaqroxorl.supabase.co/functions/v1/song-stream';
 function driveSources(row){const id=String(row?.drive_file_id||'').trim();if(!id)return [];return ['https://drive.google.com/uc?export=download&id='+encodeURIComponent(id),'https://drive.usercontent.google.com/download?id='+encodeURIComponent(id)+'&export=download&confirm=t']}
-function streamSources(row){const id=String(row?.drive_file_id||'').trim();return id?[SONG_STREAM_BASE+'/'+encodeURIComponent(id),...driveSources(row)]:driveSources(row)}
+function directSources(row){
+  const sources=[];
+  const audio=String(row?.audio_url||'').trim();
+  const id=String(row?.drive_file_id||'').trim();
+  if(audio)sources.push(audio);
+  if(id.startsWith('b2_'))sources.push(B2_WORKER_BASE+'/'+encodeURIComponent(id)+'.mp3');
+  sources.push(...driveSources(row));
+  return [...new Set(sources.filter(Boolean))];
+}
+function streamSources(row){return directSources(row)}
 function audioSource(row){const sources=streamSources(row);return sources[0]||String(row?.drive_url||'')||String(row?.audio_url||'')}
 function notify(text,ok=true){if(typeof window.toast==='function')window.toast(text,ok);else console.info(text)}
 function aiHost(){
@@ -39,7 +48,7 @@ function songRows(rows){
   return rows.map((row,index)=>{
     const sources=streamSources(row),src=sources[0]||String(row.drive_url||row.audio_url||'').trim(),fallback=sources[1]&&sources[1]!==src?` data-fallback="${esc(sources[1])}"`:'';
     const remove=canManageSongs&&row.id?`<button type="button" data-rh-song-delete="${esc(row.id)}" data-rh-song-title="${esc(row.title)}" class="shrink-0 rounded-lg border border-red-400/30 bg-red-500/10 px-2 py-1 text-[10px] font-black text-red-200">Delete</button>`:'';
-    return `<article class="rh-song-row rounded-3xl border border-fuchsia-400/15 bg-slate-950/85 p-4"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="font-black text-slate-100" style="overflow-wrap:anywhere"><span class="mr-2 text-fuchsia-300">${String(index+1).padStart(2,'0')}</span>🎵 ${esc(row.title)}</div><div class="mt-1 text-[10px] text-emerald-300">VIP MP3 • RATHOD HUB</div></div><div class="flex shrink-0 items-center gap-2">${row.drive_url?`<a class="text-[10px] text-cyan-300" href="${esc(row.drive_url)}" target="_blank" rel="noopener">Drive</a>`:''}${remove}</div></div><audio data-rh-song-audio class="mt-3 block w-full" controls preload="metadata" src="${esc(src)}"${fallback}${row.drive_url?` data-fallback-viewer="${esc(row.drive_url)}"`:''}></audio></article>`;
+    return `<article class="rh-song-row rounded-3xl border border-fuchsia-400/15 bg-slate-950/85 p-4"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="font-black text-slate-100" style="overflow-wrap:anywhere"><span class="mr-2 text-fuchsia-300">${String(index+1).padStart(2,'0')}</span>🎵 ${esc(row.title)}</div><div class="mt-1 text-[10px] text-emerald-300">VIP MP3 • RATHOD HUB</div></div><div class="flex shrink-0 items-center gap-2">${row.drive_url?`<a class="text-[10px] text-cyan-300" href="${esc(row.drive_url)}" target="_blank" rel="noopener">Drive</a>`:''}${remove}</div></div><audio data-rh-song-audio class="mt-3 block w-full" controls preload="none" src="${esc(src)}"${fallback}${row.drive_url?` data-fallback-viewer="${esc(row.drive_url)}"`:''}></audio></article>`;
   }).join('');
 }
 function wireRows(root){
