@@ -14,7 +14,7 @@ const extras=()=>{
   add('rh-mobile-polish-script','rathod-mobile-polish.js?v=2');
   add('rh-archive-icon-fix-script','rathod-archive-icon-fix.js?v=6');
   add('rh-master-control-script','rathod-master-control.js?v=8');
-  add('rh-song-library-script','rathod-song-library.js?v=10');
+  add('rh-song-library-script','rathod-song-library.js?v=11');
   add('rh-song-layout-fix-script','rathod-song-layout-fix.js?v=9');
   add('rh-mentor-room-script','rathod-mentor-room.js?v=8');
   add('rh-study-room-fix-script','rathod-study-room-fix.js?v=6');
