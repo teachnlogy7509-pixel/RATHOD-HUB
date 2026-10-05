@@ -74,7 +74,7 @@ function ensureInlineCard(){
   return card;
 }
 function renderRows(rows){const card=$('rh-song-library-card'),section=ensureLibrarySection(),inline=card?.querySelector('[data-rh-song-inline-list]'),list=section?.querySelector('[data-rh-song-list]');if(inline){inline.innerHTML=songRows(rows);wireRows(inline)}if(list){list.innerHTML=songRows(rows);wireRows(list)}}
-async function loadSongs(){const d=dbRef();if(!d)return;const ctx=await authContext();canManageSongs=staticAdmin(ctx.u,ctx.p);ensureInlineCard();ensureLibrarySection();const result=await d.from('rh_song_library').select('id,title,audio_url,drive_url,drive_file_id,status,created_at').eq('status','ready').order('created_at',{ascending:false});if(result.error){console.info('Song Library query pending',result.error.message);return}renderRows(result.data||[])}
+async function loadSongs(){const d=dbRef(),ctx=await authContext();canManageSongs=staticAdmin(ctx.u,ctx.p);ensureInlineCard();ensureLibrarySection();let rows=[];if(d){const result=await d.from('rh_song_library').select('id,title,audio_url,drive_url,drive_file_id,status,created_at').eq('status','ready').order('created_at',{ascending:false});if(result.error)console.info('Song Library primary query pending',result.error.message);else rows=result.data||[]}const shared=await window.rhFirebaseSharedLibrary?.loadSongs?.()||[];const map=new Map();[...rows,...shared].forEach(x=>map.set(String(x.id||x.audio_url||x.title),x));renderRows([...map.values()])}
 async function deleteSong(id,title){
   if(!id)return;
   const ctx=await authContext();if(!staticAdmin(ctx.u,ctx.p))return notify('केवल Admin song delete कर सकता है',false);
@@ -96,5 +96,7 @@ async function boot(){const card=ensureInlineCard();ensureLibrarySection();if(ca
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 let bootTimer=0;
 new MutationObserver(()=>{if($('rh-song-library-card'))return;clearTimeout(bootTimer);bootTimer=setTimeout(boot,300)}).observe(document.documentElement,{childList:true,subtree:true});
+if(!document.getElementById('rh-shared-library-script')){const shared=document.createElement('script');shared.id='rh-shared-library-script';shared.type='module';shared.src='rathod-shared-library.js?v=1';document.head.appendChild(shared)}
+window.addEventListener('rathod-shared-library-ready',()=>{loadSongs();window.rhFirebaseSharedLibrary?.renderMaterials?.()});
 window.openSongLibrary=openLibrary;window.loadSongLibrary=loadSongs;
 })();
