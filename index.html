@@ -343,6 +343,50 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
 }
 </style>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7515533774374052" crossorigin="anonymous"></script>\n<meta name="google-adsense-account" content="ca-pub-7515533774374052">\n<link rel="alternate" title="YPT by Rathod" href="https://teachnlogy7509-pixel.github.io/RATHOD-HUB-2.0/">
+
+<style id="rh-ai-quiz-overlap-fix">
+/* Keep long AI Doubt replies inside their chat column instead of overflowing into nearby UI. */
+#section-ai,
+#section-ai * {
+  box-sizing: border-box;
+  min-width: 0;
+}
+#section-ai {
+  width: 100%;
+  max-width: 100%;
+}
+#ai-output {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+#ai-agent-history {
+  min-width: 0;
+  max-width: 100%;
+  max-height: min(58vh, 620px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  overflow-wrap: anywhere;
+}
+#ai-agent-history > div {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 94%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+#ai-agent-history .whitespace-pre-wrap {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+@media (max-width: 640px) {
+  #ai-output { padding: 12px; }
+  #ai-agent-history > div { max-width: 100%; }
+}
+</style>
+
 </head>
 <body class="doctor-bg min-h-screen font-sans">
 
@@ -3334,6 +3378,7 @@ let qbChannel = null;
 let qbTimer = null;
 let qbPoll = null;
 let qbHeartbeat = null;
+let qbFinishPending = false;
 let qbSelected = new Set();
 let qbSubject = 'Biology';
 let qbLastRenderedIndex = -1;
@@ -3426,17 +3471,55 @@ function qbRenderRoom(){
   document.getElementById('qb-lobby')?.classList.add('hidden');document.getElementById('qb-match')?.classList.remove('hidden');const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};set('qb-match-topic',qbRoom.topic||'Live Quiz');set('qb-match-host',qbRoom.host_name||'Student');const isHost=qbRoom.host_id===user.id;document.getElementById('qb-start-btn')?.classList.toggle('hidden',!isHost||qbRoom.status!=='waiting');document.getElementById('qb-waiting-panel')?.classList.toggle('hidden',qbRoom.status!=='waiting');document.getElementById('qb-question-panel')?.classList.toggle('hidden',qbRoom.status!=='live');document.getElementById('qb-finished-panel')?.classList.toggle('hidden',qbRoom.status!=='finished');set('qb-match-status',qbRoom.status==='live'?'LIVE':qbRoom.status==='finished'?'FINISHED':'WAITING');set('qb-global-status',qbRoom.status==='live'?'● LIVE QUIZ':qbRoom.status==='finished'?'FINISHED':'WAITING');set('qb-waiting-title',qbRoom.mode==='duel'?'Waiting for opponent...':'Waiting for players...');set('qb-waiting-note',qbRoom.mode==='duel'?'1 vs 1 ke liye 2 players required.':'Host quiz start karega to sabka timer same hoga.');const invite=document.getElementById('qb-match-invite-code');if(invite){invite.classList.toggle('hidden',qbRoom.mode!=='private');invite.textContent=qbRoom.mode==='private'?`Invite code: ${qbRoom.room_code}`:''}if(qbRoom.status!=='finished')qbShowLiveLayout();}
 async function qbStartMatch(){if(!qbRoom||qbRoom.host_id!==user.id||qbRoom.status!=='waiting')return;if(qbRoom.mode==='duel'){const {count,error}=await db.from('quiz_battle_participants').select('user_id',{count:'exact',head:true}).eq('room_code',qbRoom.room_code);if(error)return toast(error.message,false);if((count||0)<2)return toast('1 vs 1 start karne ke liye opponent join kare.',false)}const started_at=new Date().toISOString();const {data,error}=await db.from('quiz_battle_rooms').update({status:'live',started_at}).eq('room_code',qbRoom.room_code).eq('host_id',user.id).eq('status','waiting').select('*').single();if(error)return toast(error.message||'Quiz start failed',false);qbRoom=data;qbRenderRoom();qbSyncCurrentRoom();try{await qbChannel?.send({type:'broadcast',event:'battle-event',payload:{type:'started'}})}catch(e){}if(['public','detective'].includes(qbRoom.mode))await sendHubNotification('⚡ Public Quiz LIVE Now',`${qbRoom.topic} • Host: ${qbRoom.host_name||'Student'}`,'livequiz','battle',{room:qbRoom.room_code,mode:qbRoom.mode,status:'live'})}
 function qbCurrentIndex(){if(!qbRoom?.started_at)return -1;const elapsed=Date.now()-new Date(qbRoom.started_at).getTime();if(elapsed<0)return -1;return Math.floor(elapsed/(QB_QUESTION_SECONDS*1000))}
-function qbSecondsLeft(){if(!qbRoom?.started_at)return 30;const elapsed=Math.max(0,Date.now()-new Date(qbRoom.started_at).getTime());const used=Math.floor((elapsed%(QB_QUESTION_SECONDS*1000))/1000);return QB_QUESTION_SECONDS-used}
+function qbSecondsLeft(){
+  if(!qbRoom?.started_at)return QB_QUESTION_SECONDS;
+  const startedAtMs=new Date(qbRoom.started_at).getTime();
+  if(!Number.isFinite(startedAtMs))return QB_QUESTION_SECONDS;
+  const durationMs=QB_QUESTION_SECONDS*1000;
+  const elapsed=Math.max(0,Date.now()-startedAtMs);
+  const elapsedInQuestion=elapsed%durationMs;
+  return Math.max(1,Math.ceil((durationMs-elapsedInQuestion)/1000));
+}
 function qbSyncCurrentRoom(){
   if(!qbRoom)return;
   clearInterval(qbTimer);clearInterval(qbPoll);clearInterval(qbHeartbeat);
-  qbTimer=setInterval(qbTick,200);
+  qbFinishPending=false;
+  // Keep the visual countdown independent from network polling.
+  qbTimer=setInterval(qbTick,250);
   qbTick();
+  // Poll participants/leaderboard separately; never block the live clock.
   qbPoll=setInterval(()=>{if(qbRoom)qbRefreshParticipants()},1500);
   qbHeartbeat=setInterval(()=>{if(qbRoom)qbHeartbeatFn()},5000);
 }
 async function qbHeartbeatFn(){if(!qbRoom||!user)return;try{await db.from('quiz_battle_participants').update({last_seen:new Date().toISOString()}).eq('room_code',qbRoom.room_code).eq('user_id',user.id)}catch(e){}}
-async function qbTick(){if(!qbRoom)return;if(qbRoom.status==='waiting'){const {data}=await db.from('quiz_battle_participants').select('user_id').eq('room_code',qbRoom.room_code);const c=data?.length||0;document.getElementById('qb-waiting-count')?.replaceChildren(document.createTextNode(String(c)));return}if(qbRoom.status==='finished')return;const idx=qbCurrentIndex();if(idx>=qbQuestionTotal()){if(qbRoom.host_id===user.id)await qbFinishRoom();else{qbRoom.status='finished';qbRenderRoom();await qbRefreshParticipants();await qbLoadMyFinalStats()}return}const sec=qbSecondsLeft();document.getElementById('qb-timer')?.replaceChildren(document.createTextNode(`${sec}s`));const bar=document.getElementById('qb-timer-bar');if(bar)bar.style.width=`${(sec/30)*100}%`;if(idx!==qbLastRenderedIndex){qbLastRenderedIndex=idx;qbRenderQuestion(idx)}}
+function qbTick(){
+  if(!qbRoom||qbRoom.status==='waiting'||qbRoom.status==='finished')return;
+  const idx=qbCurrentIndex();
+  if(idx<0)return;
+  if(idx>=qbQuestionTotal()){
+    if(qbFinishPending)return;
+    qbFinishPending=true;
+    if(qbRoom.host_id===user.id){
+      (async()=>{try{await qbFinishRoom()}catch(e){console.warn('qbFinishRoom',e)}finally{qbFinishPending=false}})();
+    }else{
+      qbRoom.status='finished';
+      qbRenderRoom();
+      Promise.all([qbRefreshParticipants(),qbLoadMyFinalStats()])
+        .catch(e=>console.warn('qbFinalizeViewer',e))
+        .finally(()=>{qbFinishPending=false});
+    }
+    return;
+  }
+  const sec=qbSecondsLeft();
+  const timer=document.getElementById('qb-timer');
+  if(timer)timer.textContent=`${sec}s`;
+  const bar=document.getElementById('qb-timer-bar');
+  if(bar)bar.style.width=`${(sec/QB_QUESTION_SECONDS)*100}%`;
+  if(idx!==qbLastRenderedIndex){
+    qbLastRenderedIndex=idx;
+    qbRenderQuestion(idx);
+  }
+}
 function qbRenderQuestion(idx){const qs=Array.isArray(qbRoom?.questions)?qbRoom.questions:[],q=qs[idx];if(!q)return;document.getElementById('qb-question-num').textContent=`Question ${idx+1} / ${qbQuestionTotal()}`;document.getElementById('qb-question-text').textContent=q.question;document.getElementById('qb-answer-note').textContent=qbSelected.has(idx)?'Answer submitted. Next question auto-sync hoga.':'';const box=document.getElementById('qb-options');box.innerHTML='';(q.options||[]).forEach((opt,j)=>{const b=document.createElement('button');b.className='qb-option w-full text-left p-3.5 rounded-xl text-sm font-semibold flex items-center gap-3';b.innerHTML=`<span class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-red-400 font-black">${String.fromCharCode(65+j)}</span><span>${qbEsc(opt)}</span>`;b.disabled=qbSelected.has(idx);b.onclick=()=>qbAnswer(idx,j,b);box.appendChild(b)})}
 async function qbAnswer(idx,selected,clicked){if(!qbRoom||qbRoom.status!=='live'||qbSelected.has(idx))return;if(qbCurrentIndex()!==idx)return toast('Time over — next question live ho chuka hai.',false);qbSelected.add(idx);const q=qbRoom.questions[idx],correct=Number(q.correct_index??q.answer??0),isCorrect=selected===correct;document.querySelectorAll('#qb-options button').forEach(b=>b.disabled=true);if(isCorrect)clicked.classList.add('qb-correct');else clicked.classList.add('qb-wrong');const buttons=document.querySelectorAll('#qb-options button');if(buttons[correct])buttons[correct].classList.add('qb-correct');const xp=isCorrect?10:0;if(!isCorrect)recordMistake(q,'Live Quiz',qbSubject,qbRoom.topic||'',selected);try{const {error}=await db.from('quiz_battle_answers').insert({room_code:qbRoom.room_code,user_id:user.id,question_index:idx,selected_index:selected,is_correct:isCorrect,xp_awarded:xp});if(error&&error.code!=='23505')throw error;if(isCorrect){const {data:p}=await db.from('quiz_battle_participants').select('score,xp_earned').eq('room_code',qbRoom.room_code).eq('user_id',user.id).maybeSingle();const score=Number(p?.score||0)+1,earned=Number(p?.xp_earned||0)+10;const {error:ue}=await db.from('quiz_battle_participants').update({score,xp_earned:earned,last_seen:new Date().toISOString()}).eq('room_code',qbRoom.room_code).eq('user_id',user.id);if(ue)throw ue;await grantXP(10);await recordSolvedQuestion();toast('+10 XP 🎉')}await qbRefreshParticipants();try{await qbChannel?.send({type:'broadcast',event:'battle-event',payload:{type:'refresh'}})}catch(e){}}catch(e){console.warn('qbAnswer',e);toast(e.message||'Answer save nahi hua.',false)}}
 async function qbRefreshParticipants(){
@@ -3464,7 +3547,7 @@ async function qbRefreshParticipants(){
   }
 }
 async function qbFinishRoom(){if(!qbRoom)return;const {data,error}=await db.from('quiz_battle_rooms').update({status:'finished',finished_at:new Date().toISOString()}).eq('room_code',qbRoom.room_code).eq('host_id',user.id).eq('status','live').select('*').single();if(!error&&data){qbRoom=data;qbRenderRoom();await qbRefreshParticipants();await qbLoadMyFinalStats();try{await qbChannel?.send({type:'broadcast',event:'battle-event',payload:{type:'finished'}})}catch(e){}}}
-async function qbLeaveMatch(silent=false){clearInterval(qbTimer);clearInterval(qbPoll);clearInterval(qbHeartbeat);if(qbChannel){try{await db.removeChannel(qbChannel)}catch(e){}qbChannel=null;}if(qbRoom&&user&&qbRoom.status!=='finished'){try{await db.from('quiz_battle_participants').delete().eq('room_code',qbRoom.room_code).eq('user_id',user.id)}catch(e){}}qbRoom=null;qbSelected.clear();qbLastRenderedIndex=-1;qbShowLiveLayout();document.getElementById('qb-match')?.classList.add('hidden');document.getElementById('qb-lobby')?.classList.remove('hidden');document.getElementById('qb-global-status').textContent='NO QUIZ';document.getElementById('qb-private-invite')?.classList.add('hidden');if(!silent)await qbLoadRooms()}
+async function qbLeaveMatch(silent=false){clearInterval(qbTimer);clearInterval(qbPoll);clearInterval(qbHeartbeat);if(qbChannel){try{await db.removeChannel(qbChannel)}catch(e){}qbChannel=null;}if(qbRoom&&user&&qbRoom.status!=='finished'){try{await db.from('quiz_battle_participants').delete().eq('room_code',qbRoom.room_code).eq('user_id',user.id)}catch(e){}}qbRoom=null;qbSelected.clear();qbLastRenderedIndex=-1;qbFinishPending=false;qbShowLiveLayout();document.getElementById('qb-match')?.classList.add('hidden');document.getElementById('qb-lobby')?.classList.remove('hidden');document.getElementById('qb-global-status').textContent='NO QUIZ';document.getElementById('qb-private-invite')?.classList.add('hidden');if(!silent)await qbLoadRooms()}
 function qbBackToLobby(){qbLeaveMatch()}
 async function qbSyncOnOpen(){if(qbRoom)await qbReloadRoomAndSync()}
 document.getElementById('qb-host-form')?.addEventListener('submit',e=>{e.preventDefault();qbHostMatch()});
