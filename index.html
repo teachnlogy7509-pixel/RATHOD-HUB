@@ -387,6 +387,18 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
 }
 </style>
 
+<style id="rh-ai-agent-tone-fix">
+#ai-agent-history .ai-rich-reply{display:flex;flex-direction:column;gap:.32rem;min-width:0;overflow-wrap:anywhere;word-break:break-word}
+#ai-agent-history .ai-reply-paragraph{margin:0;white-space:pre-wrap}
+#ai-agent-history .ai-reply-heading{margin:.35rem 0 .08rem;color:#a5f3fc;font-size:12px;font-weight:800;line-height:1.45}
+#ai-agent-history .ai-reply-list{margin:.08rem 0 .2rem;padding-left:1.25rem;display:flex;flex-direction:column;gap:.22rem;list-style:disc}
+#ai-agent-history ol.ai-reply-list{list-style:decimal}
+#ai-agent-history .ai-reply-list li{padding-left:.08rem}
+#ai-agent-history .ai-rich-reply strong{font-weight:800;color:#f8fafc}
+#ai-agent-history .ai-rich-reply em{font-style:italic}
+#ai-agent-history .ai-rich-reply code{overflow-wrap:anywhere}
+#ai-agent-history .ai-reply-gap{height:.22rem}
+</style>
 </head>
 <body class="doctor-bg min-h-screen font-sans">
 
@@ -3285,7 +3297,50 @@ async function askAI(){
  const question=aiAgentMode==='app'?`${RATHOD_APP_CONTEXT}\n\nConversation so far:\n${recent}\n\nAnswer the latest user message.`:`You are RATHOD HUB's careful NEET/NCERT tutor. Developer: Ashish Rathod from Madhya Pradesh, a NEET aspirant and PW Yakeen Batch student. Reply in the student's language. Explain step by step, mark the final answer clearly, mention subject/chapter when possible, and say when a claim should be checked in the latest NCERT edition. Do not fabricate citations. Use conversation context for follow-ups.\n\nConversation so far:\n${recent}`;
  try{const {data,error}=await db.functions.invoke('ai-chat',{body:{question}});if(error)throw error;aiAgentHistory.push({role:'assistant',text:String(data?.answer||data?.message||'No answer returned.'),mode:aiAgentMode});renderAIAgentHistory(false)}catch(e){aiAgentHistory.push({role:'assistant',text:'AI request failed. Please try again.\n'+(e.message||'Request failed.'),mode:aiAgentMode,error:true});renderAIAgentHistory(false)}
 }
-function renderAIAgentHistory(thinking=false){const box=document.getElementById('ai-agent-history');if(!box)return;const rows=aiAgentHistory.slice(-10);box.innerHTML=rows.map(x=>x.role==='user'?`<div class="ml-auto max-w-[88%] rounded-2xl rounded-br-md bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-3 text-xs leading-5 text-white"><div class="mb-1 text-[8px] font-black uppercase text-indigo-200">You</div>${esc(x.text)}</div>`:`<div class="max-w-[94%] rounded-2xl rounded-bl-md border ${x.error?'border-rose-400/20 bg-rose-500/5':'border-cyan-400/15 bg-cyan-500/5'} px-4 py-3 text-xs leading-6 text-slate-200"><div class="mb-1 text-[8px] font-black uppercase ${x.error?'text-rose-300':'text-cyan-300'}">🤖 RATHOD Agent</div><div class="whitespace-pre-wrap">${esc(x.text)}</div></div>`).join('')+(thinking?'<div class="max-w-[70%] rounded-2xl rounded-bl-md border border-cyan-400/15 bg-cyan-500/5 px-4 py-3 text-xs text-cyan-200"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>सोच रहा हूँ…</div>':'');box.lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'})}
+function formatAIAgentReply(value){
+ const inline=function(value){
+  let out=esc(value);
+  out=out.replace(/`([^`]+)`/g,'<code class="rounded bg-slate-900 px-1 py-0.5 text-cyan-200">$1</code>');
+  out=out.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');
+  out=out.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  out=out.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g,'$1<em>$2</em>');
+  out=out.replace(/___(.+?)___/g,'<strong><em>$1</em></strong>');
+  out=out.replace(/__(.+?)__/g,'<strong>$1</strong>');
+  return out;
+ };
+ const lines=String(value??'').replace(/\r\n?/g,'\n').split('\n');
+ let html='',listType=null;
+ const closeList=function(){if(listType){html+=listType==='ol'?' </ol>':' </ul>';listType=null;}};
+ for(const raw of lines){
+  const line=raw.trim();
+  if(!line){closeList();html+='<div class="ai-reply-gap"></div>';continue;}
+  const heading=line.match(/^#{1,3}\s+(.+)$/);
+  if(heading){closeList();html+='<h4 class="ai-reply-heading">'+inline(heading[1])+'</h4>';continue;}
+  const bullet=line.match(/^(?:[-•]|\*)\s+(.+)$/);
+  const numbered=line.match(/^\d+[.)]\s+(.+)$/);
+  if(bullet||numbered){
+   const nextType=numbered?'ol':'ul';
+   if(listType!==nextType){closeList();html+=nextType==='ol'?'<ol class="ai-reply-list">':'<ul class="ai-reply-list">';listType=nextType;}
+   html+='<li>'+inline((numbered||bullet)[1])+'</li>';
+   continue;
+  }
+  closeList();
+  html+='<p class="ai-reply-paragraph">'+inline(line)+'</p>';
+ }
+ closeList();
+ return html;
+}
+function renderAIAgentHistory(thinking=false){
+ const box=document.getElementById('ai-agent-history');if(!box)return;
+ const rows=aiAgentHistory.slice(-10);
+ box.innerHTML=rows.map(function(x){
+  if(x.role==='user'){
+   return '<div class="ml-auto max-w-[88%] rounded-2xl rounded-br-md bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-3 text-xs leading-5 text-white"><div class="mb-1 text-[8px] font-black uppercase text-indigo-200">You</div>'+esc(x.text)+'</div>';
+  }
+  return '<div class="max-w-[94%] rounded-2xl rounded-bl-md border '+(x.error?'border-rose-400/20 bg-rose-500/5':'border-cyan-400/15 bg-cyan-500/5')+' px-4 py-3 text-xs leading-6 text-slate-200"><div class="mb-1 text-[8px] font-black uppercase '+(x.error?'text-rose-300':'text-cyan-300')+'">🤖 RATHOD Agent</div><div class="ai-rich-reply">'+formatAIAgentReply(x.text)+'</div></div>';
+ }).join('')+(thinking?'<div class="max-w-[70%] rounded-2xl rounded-bl-md border border-cyan-400/15 bg-cyan-500/5 px-4 py-3 text-xs text-cyan-200"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>सोच रहा हूँ…</div>':'');
+ box.lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
 function clearAIAgentChat(){aiAgentHistory=[];const box=document.getElementById('ai-agent-history');if(box)box.innerHTML='';document.getElementById('ai-output')?.classList.add('hidden');toast('Agent chat cleared')}
 
 function rhQuizHistoryKey(){
