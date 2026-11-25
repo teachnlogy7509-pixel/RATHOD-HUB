@@ -3311,32 +3311,36 @@ async function askAI(){
   ? RATHOD_APP_CONTEXT+'\n\nConversation so far:\n'+recent+'\n\nAnswer the latest user message.'
   : "You are RATHOD HUB's careful NEET/NCERT tutor. Reply warmly in the student's language, explain concepts clearly, and use the existing AI Doctor personality and teaching rules. Do not fabricate citations. Use the conversation context for follow-ups.\n\nConversation so far:\n"+recent;
 
+ let fullAnswer='';
  let liveMessage=null;
- let streamBuffer='';
  let renderQueued=false;
  const renderSoon=function(){
   if(renderQueued)return;
   renderQueued=true;
   requestAnimationFrame(()=>{renderQueued=false;renderAIAgentHistory(false)});
  };
- const appendStreamToken=function(token){
-  streamBuffer+=token;
-  const paragraphs=streamBuffer.split(/\n{2,}/);
-  if(paragraphs.length>1){
-   paragraphs.slice(0,-1).forEach(part=>{
-    const clean=part.trim();
-    if(clean)aiAgentHistory.push({role:'assistant',text:clean,mode:aiAgentMode});
-   });
-   streamBuffer=paragraphs[paragraphs.length-1];
-   liveMessage=null;
-  }
-  if(streamBuffer.length){
-   if(!liveMessage){
-    liveMessage={role:'assistant',text:streamBuffer,mode:aiAgentMode,streaming:true};
-    aiAgentHistory.push(liveMessage);
-   }else{
-    liveMessage.text=streamBuffer;
+ const appendStreamToken=function(incoming){
+  if(typeof incoming!=='string'||!incoming)return;
+  let delta=incoming;
+  if(fullAnswer&&incoming.startsWith(fullAnswer)){
+   delta=incoming.slice(fullAnswer.length);
+  }else if(fullAnswer&&incoming===fullAnswer){
+   delta='';
+  }else if(fullAnswer&&incoming.length>=12){
+   const maxOverlap=Math.min(fullAnswer.length,incoming.length,2048);
+   let overlap=0;
+   for(let size=maxOverlap;size>=12;size--){
+    if(fullAnswer.slice(-size)===incoming.slice(0,size)){overlap=size;break;}
    }
+   if(overlap>=Math.min(24,Math.ceil(incoming.length*.6)))delta=incoming.slice(overlap);
+  }
+  if(!delta)return;
+  fullAnswer+=delta;
+  if(!liveMessage){
+   liveMessage={role:'assistant',text:fullAnswer,mode:aiAgentMode,streaming:true};
+   aiAgentHistory.push(liveMessage);
+  }else{
+   liveMessage.text=fullAnswer;
   }
   renderSoon();
  };
@@ -3399,24 +3403,23 @@ async function askAI(){
   if(streamError)throw streamError;
   if(!gotDone)throw new Error('AI stream ended before the answer was complete. Please retry.');
 
-  if(streamBuffer.trim()){
-   if(liveMessage)liveMessage.text=streamBuffer.trim();
-   else aiAgentHistory.push({role:'assistant',text:streamBuffer.trim(),mode:aiAgentMode});
-  }
   if(liveMessage)liveMessage.streaming=false;
+  if(!fullAnswer.trim()){
+   aiAgentHistory.push({role:'assistant',text:'AI ne abhi khaali jawab diya. Ek baar dobara poochho 😊',mode:aiAgentMode,error:true});
+  }
   renderAIAgentHistory(false);
  }catch(e){
   if(e?.name==='AbortError')return;
-  if(streamBuffer.trim()&&liveMessage){
-   liveMessage.text=streamBuffer.trim();
+  if(liveMessage){
    liveMessage.streaming=false;
+   if(fullAnswer.trim()){
+    liveMessage.text=fullAnswer+'\n\n'+(e?.message||'Connection beech mein ruk gaya.');
+   }else{
+    aiAgentHistory.push({role:'assistant',text:e?.message||'AI request failed. Please try again.',mode:aiAgentMode,error:true});
+   }
+  }else{
+   aiAgentHistory.push({role:'assistant',text:e?.message||'AI request failed. Please try again.',mode:aiAgentMode,error:true});
   }
-  aiAgentHistory.push({
-   role:'assistant',
-   text:e?.message||'AI request failed. Please try again.',
-   mode:aiAgentMode,
-   error:true
-  });
   renderAIAgentHistory(false);
  }finally{
   aiAgentBusy=false;
@@ -3424,10 +3427,35 @@ async function askAI(){
   if(button){button.disabled=false;button.classList.remove('opacity-60','cursor-wait');}
  }
 }
+function cleanAIRepeatedParagraphs(value){
+ const raw=String(value??'').replace(/\r\n?/g,'\n');
+ const parts=raw.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean);
+ const output=[];
+ const normalize=function(text){
+  return text.toLowerCase()
+   .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu,'')
+   .replace(/[^\p{L}\p{N}\s]/gu,' ')
+   .replace(/\s+/g,' ').trim();
+ };
+ for(const part of parts){
+  const key=normalize(part);
+  if(!key)continue;
+  const previous=output.length?output[output.length-1]:null;
+  const previousKey=previous?normalize(previous):'';
+  if(previousKey&&key===previousKey)continue;
+  if(previousKey.length>=55&&key.startsWith(previousKey)){
+   output[output.length-1]=part;continue;
+  }
+  if(key.length>=55&&previousKey.startsWith(key))continue;
+  output.push(part);
+ }
+ return output.join('\n\n');
+}
 function formatAIAgentReply(value){
+ const clean=cleanAIRepeatedParagraphs(value);
  const inline=function(value){
   let out=esc(value);
-  out=out.replace(/`([^`]+)`/g,'<code class="rounded bg-slate-900 px-1 py-0.5 text-cyan-200">$1</code>');
+  out=out.replace(/\x60([^\x60]+)\x60/g,'<code class="rounded bg-slate-900 px-1 py-0.5 text-cyan-200">$1</code>');
   out=out.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');
   out=out.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
   out=out.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g,'$1<em>$2</em>');
@@ -3435,7 +3463,7 @@ function formatAIAgentReply(value){
   out=out.replace(/__(.+?)__/g,'<strong>$1</strong>');
   return out;
  };
- const lines=String(value??'').replace(/\r\n?/g,'\n').split('\n');
+ const lines=clean.split('\n');
  const blocks=[];
  let paragraph=[],listItems=[],listType='';
  const flushParagraph=function(){
@@ -6465,5 +6493,52 @@ window.loadStudyWar=loadStudyWar;window.createStudyWar=createStudyWar;window.joi
   requestAnimationFrame(frame);
 })();
 </script>
+
+<script id="rh-master-quiz-clock-guard">
+(function(){
+ if(window.__rhMasterQuizClockGuard)return;
+ const update=function(room,secondsPerQuestion,totalQuestions,timerId,barId){
+  if(!room||room.status!=='live'||!room.started_at)return;
+  const start=Date.parse(room.started_at);
+  if(!Number.isFinite(start))return;
+  const duration=Math.max(1,Number(secondsPerQuestion)||30)*1000;
+  const elapsed=Math.max(0,Date.now()-start);
+  const left=Math.max(1,Math.ceil((duration-(elapsed%duration))/1000));
+  const idx=Math.floor(elapsed/duration);
+  if(Number.isFinite(Number(totalQuestions))&&idx>=Number(totalQuestions))return;
+  const timer=document.getElementById(timerId);
+  if(timer&&timer.textContent!==left+'s')timer.textContent=left+'s';
+  const bar=document.getElementById(barId);
+  if(bar){
+   const width=Math.max(0,Math.min(100,left/(duration/1000)*100));
+   if(Math.abs((parseFloat(bar.style.width)||0)-width)>.1)bar.style.width=width+'%';
+  }
+ };
+ window.__rhMasterQuizClockGuard=window.setInterval(function(){
+  try{
+   if(typeof qbRoom!=='undefined'&&qbRoom){
+    update(qbRoom,30,typeof qbQuestionTotal==='function'?qbQuestionTotal():15,'qb-timer','qb-timer-bar');
+   }
+   if(typeof n720Room!=='undefined'&&n720Room){
+    update(n720Room,30,Number(n720Room.question_count||15),'n720-timer','n720-timer-bar');
+   }
+   if(typeof nthRoom!=='undefined'&&nthRoom&&nthRoom.status==='live'){
+    update(nthRoom,Number(nthRoom.duration_seconds||25),10,'nth-timer','nth-timer-bar');
+   }
+   if(typeof activeScheduledBattle!=='undefined'&&activeScheduledBattle&&
+      typeof isBattleLive!=='undefined'&&isBattleLive){
+    const start=Date.parse(activeScheduledBattle.scheduled_at);
+    if(Number.isFinite(start)){
+     const elapsed=Math.max(0,Date.now()-start);
+     const sec=30-Math.floor((elapsed%30000)/1000);
+     if(typeof battleTimer!=='undefined'&&battleTimer!==sec)battleTimer=sec;
+     if(typeof updateBattleTimerUI==='function')updateBattleTimerUI();
+    }
+   }
+  }catch(error){console.warn('RATHOD HUB quiz clock guard',error);}
+ },250);
+})();
+</script>
+
 </body>
 </html>
