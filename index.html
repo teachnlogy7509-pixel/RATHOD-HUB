@@ -3498,7 +3498,28 @@ function formatAIAgentReply(value){
 function renderAIAgentHistory(thinking=false){
  const box=document.getElementById('ai-agent-history');if(!box)return;
  const rows=aiAgentHistory.slice(-10);
- box.innerHTML=rows.map(function(x){
+ const visibleRows=[];
+ let assistantMessagesThisTurn=new Set();
+
+ // A repeated assistant result within the same user turn should only be shown once.
+ rows.forEach(function(item){
+  if(item.role==='user'){
+   assistantMessagesThisTurn.clear();
+   visibleRows.push(item);
+   return;
+  }
+  if(item.role==='assistant'){
+   const signature=String(cleanAIRepeatedParagraphs(item.text)||'')
+    .toLowerCase()
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu,'')
+    .replace(/[^\p{L}\p{N}\s]/gu,' ')
+    .replace(/\s+/g,' ').trim();
+   if(signature.length>=32&&assistantMessagesThisTurn.has(signature))return;
+   if(signature.length>=32)assistantMessagesThisTurn.add(signature);
+  }
+  visibleRows.push(item);
+ });
+ box.innerHTML=visibleRows.map(function(x){
   if(x.role==='user'){
    return '<div class="ml-auto max-w-[88%] rounded-2xl rounded-br-md bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-3 text-xs leading-5 text-white"><div class="mb-1 text-[8px] font-black uppercase text-indigo-200">You</div>'+esc(x.text)+'</div>';
   }
@@ -6537,6 +6558,60 @@ window.loadStudyWar=loadStudyWar;window.createStudyWar=createStudyWar;window.joi
    }
   }catch(error){console.warn('RATHOD HUB quiz clock guard',error);}
  },250);
+})();
+</script>
+
+
+<script id="rh-remove-archive-bottom-dock-item">
+(function(){
+ if(window.__RH_REMOVE_ARCHIVE_DOCK__)return;
+ window.__RH_REMOVE_ARCHIVE_DOCK__=true;
+ const archivePattern=/(^|[^a-z])(archive|archived|box[-_ ]?archive|archive[-_ ]?box|file[-_ ]?archive)([^a-z]|$)/i;
+ const selectors=[
+  'nav','.rh-mobile-bottom','.rh-android-dock','.bottom-nav',
+  '.bottom-navigation','.mobile-bottom-nav','.mobile-dock',
+  '[role="navigation"]','[class*="bottom-nav"]','[id*="bottom-nav"]'
+ ];
+ function describe(el){
+  if(!el)return '';
+  const parts=[
+   el.id,typeof el.className==='string'?el.className:el.getAttribute('class'),
+   el.getAttribute('aria-label'),el.getAttribute('title'),
+   el.getAttribute('data-nav'),el.getAttribute('data-tab'),
+   el.getAttribute('onclick'),el.textContent
+  ];
+  const icon=el.querySelector('i,svg,[class*="icon"],[data-icon]');
+  if(icon)parts.push(icon.getAttribute('class'),icon.getAttribute('aria-label'),
+   icon.getAttribute('title'),icon.getAttribute('data-icon'),icon.getAttribute('data-lucide'));
+  return parts.filter(Boolean).join(' ');
+ }
+ function isBottomDock(root){
+  const rect=root.getBoundingClientRect(),style=getComputedStyle(root);
+  const name=(root.id||'')+' '+(typeof root.className==='string'?root.className:'');
+  if(/bottom|dock|mobile-nav|tabbar/i.test(name))return true;
+  return rect.width>0&&rect.bottom>=innerHeight-48&&
+   (style.position==='fixed'||style.position==='sticky'||rect.height<=120);
+ }
+ function removeArchiveItems(){
+  const roots=new Set();
+  document.querySelectorAll(selectors.join(',')).forEach(root=>{
+   if(isBottomDock(root))roots.add(root);
+  });
+  roots.forEach(root=>{
+   root.querySelectorAll('button,a,[role="button"],[role="tab"]').forEach(control=>{
+    if(archivePattern.test(describe(control)))control.remove();
+   });
+  });
+ }
+ let queued=false;
+ function schedule(){
+  if(queued)return;queued=true;
+  requestAnimationFrame(()=>{queued=false;removeArchiveItems()});
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule,{once:true});
+ else schedule();
+ new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true});
+ window.addEventListener('resize',schedule,{passive:true});
 })();
 </script>
 
