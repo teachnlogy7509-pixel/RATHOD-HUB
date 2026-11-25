@@ -3290,12 +3290,139 @@ function setAIAgentMode(mode){
 }
 function useAIQuickPrompt(i){const row=AI_AGENT_QUICK[aiAgentMode]?.[Number(i)];if(row)setAIDoubtPrompt(row[1])}
 function setAIDoubtPrompt(text){const input=document.getElementById('ai-input');if(!input)return;input.value=text;input.focus()}
+let aiAgentBusy=false;
+let aiAgentAbortController=null;
+
 async function askAI(){
- const q=document.getElementById('ai-input')?.value.trim(),out=document.getElementById('ai-output');if(!q||!out)return;
- out.classList.remove('hidden');aiAgentHistory.push({role:'user',text:q,mode:aiAgentMode});renderAIAgentHistory(true);document.getElementById('ai-input').value='';
- const recent=aiAgentHistory.slice(-8).map(x=>`${x.role==='user'?'User':'Agent'}: ${x.text}`).join('\n');
- const question=aiAgentMode==='app'?`${RATHOD_APP_CONTEXT}\n\nConversation so far:\n${recent}\n\nAnswer the latest user message.`:`You are RATHOD HUB's careful NEET/NCERT tutor. Developer: Ashish Rathod from Madhya Pradesh, a NEET aspirant and PW Yakeen Batch student. Reply in the student's language. Explain step by step, mark the final answer clearly, mention subject/chapter when possible, and say when a claim should be checked in the latest NCERT edition. Do not fabricate citations. Use conversation context for follow-ups.\n\nConversation so far:\n${recent}`;
- try{const {data,error}=await db.functions.invoke('ai-chat',{body:{question}});if(error)throw error;aiAgentHistory.push({role:'assistant',text:String(data?.answer||data?.message||'No answer returned.'),mode:aiAgentMode});renderAIAgentHistory(false)}catch(e){aiAgentHistory.push({role:'assistant',text:'AI request failed. Please try again.\n'+(e.message||'Request failed.'),mode:aiAgentMode,error:true});renderAIAgentHistory(false)}
+ const input=document.getElementById('ai-input');
+ const button=document.getElementById('ai-ask-button');
+ const q=input?.value.trim(),out=document.getElementById('ai-output');
+ if(!q||!out||aiAgentBusy)return;
+
+ aiAgentBusy=true;
+ if(button){button.disabled=true;button.classList.add('opacity-60','cursor-wait');}
+ out.classList.remove('hidden');
+ aiAgentHistory.push({role:'user',text:q,mode:aiAgentMode});
+ renderAIAgentHistory(true);
+ input.value='';
+
+ const recent=aiAgentHistory.slice(-9).map(x=>(x.role==='user'?'User':'Agent')+': '+x.text).join('\n');
+ const question=aiAgentMode==='app'
+  ? RATHOD_APP_CONTEXT+'\n\nConversation so far:\n'+recent+'\n\nAnswer the latest user message.'
+  : "You are RATHOD HUB's careful NEET/NCERT tutor. Reply warmly in the student's language, explain concepts clearly, and use the existing AI Doctor personality and teaching rules. Do not fabricate citations. Use the conversation context for follow-ups.\n\nConversation so far:\n"+recent;
+
+ let liveMessage=null;
+ let streamBuffer='';
+ let renderQueued=false;
+ const renderSoon=function(){
+  if(renderQueued)return;
+  renderQueued=true;
+  requestAnimationFrame(()=>{renderQueued=false;renderAIAgentHistory(false)});
+ };
+ const appendStreamToken=function(token){
+  streamBuffer+=token;
+  const paragraphs=streamBuffer.split(/\n{2,}/);
+  if(paragraphs.length>1){
+   paragraphs.slice(0,-1).forEach(part=>{
+    const clean=part.trim();
+    if(clean)aiAgentHistory.push({role:'assistant',text:clean,mode:aiAgentMode});
+   });
+   streamBuffer=paragraphs[paragraphs.length-1];
+   liveMessage=null;
+  }
+  if(streamBuffer.length){
+   if(!liveMessage){
+    liveMessage={role:'assistant',text:streamBuffer,mode:aiAgentMode,streaming:true};
+    aiAgentHistory.push(liveMessage);
+   }else{
+    liveMessage.text=streamBuffer;
+   }
+  }
+  renderSoon();
+ };
+
+ aiAgentAbortController=new AbortController();
+ try{
+  const {data:authData,error:authError}=await db.auth.getSession();
+  if(authError)throw authError;
+  const accessToken=authData?.session?.access_token;
+  if(!accessToken)throw new Error('Login session expired. Please login again.');
+
+  const response=await fetch(SUPABASE_URL+'/functions/v1/ai-chat',{
+   method:'POST',
+   headers:{
+    apikey:SUPABASE_KEY,
+    Authorization:'Bearer '+accessToken,
+    'Content-Type':'application/json',
+    Accept:'text/event-stream'
+   },
+   body:JSON.stringify({question:question,stream:true}),
+   signal:aiAgentAbortController.signal
+  });
+  if(!response.ok){
+   const errorText=await response.text();
+   let detail=errorText;
+   try{const parsed=JSON.parse(errorText);detail=parsed?.message||parsed?.error||parsed?.answer||errorText}catch{}
+   throw new Error(detail||('AI request failed ('+response.status+')'));
+  }
+  if(!response.body?.getReader)throw new Error('This browser does not support live AI replies. Please update your browser.');
+
+  const reader=response.body.getReader();
+  const decoder=new TextDecoder();
+  let buffer='',gotDone=false,streamError=null;
+  const processEvent=function(eventText){
+   const data=eventText.split(/\r?\n/)
+    .filter(line=>line.startsWith('data:'))
+    .map(line=>line.slice(5).trimStart()).join('\n');
+   if(!data)return;
+   let event;
+   try{event=JSON.parse(data)}catch{return}
+   if(event.type==='token'&&typeof event.text==='string')appendStreamToken(event.text);
+   if(event.type==='done')gotDone=true;
+   if(event.type==='error')streamError=new Error(String(event.message||'AI stream failed'));
+  };
+
+  while(true){
+   const result=await reader.read();
+   buffer+=result.done?decoder.decode():decoder.decode(result.value,{stream:true});
+   buffer=buffer.replace(/\r\n/g,'\n');
+   let boundary=buffer.indexOf('\n\n');
+   while(boundary>=0){
+    processEvent(buffer.slice(0,boundary));
+    buffer=buffer.slice(boundary+2);
+    boundary=buffer.indexOf('\n\n');
+   }
+   if(result.done)break;
+  }
+  if(buffer.trim())processEvent(buffer);
+  try{reader.releaseLock()}catch{}
+  if(streamError)throw streamError;
+  if(!gotDone)throw new Error('AI stream ended before the answer was complete. Please retry.');
+
+  if(streamBuffer.trim()){
+   if(liveMessage)liveMessage.text=streamBuffer.trim();
+   else aiAgentHistory.push({role:'assistant',text:streamBuffer.trim(),mode:aiAgentMode});
+  }
+  if(liveMessage)liveMessage.streaming=false;
+  renderAIAgentHistory(false);
+ }catch(e){
+  if(e?.name==='AbortError')return;
+  if(streamBuffer.trim()&&liveMessage){
+   liveMessage.text=streamBuffer.trim();
+   liveMessage.streaming=false;
+  }
+  aiAgentHistory.push({
+   role:'assistant',
+   text:e?.message||'AI request failed. Please try again.',
+   mode:aiAgentMode,
+   error:true
+  });
+  renderAIAgentHistory(false);
+ }finally{
+  aiAgentBusy=false;
+  aiAgentAbortController=null;
+  if(button){button.disabled=false;button.classList.remove('opacity-60','cursor-wait');}
+ }
 }
 function formatAIAgentReply(value){
  const inline=function(value){
@@ -3351,7 +3478,7 @@ function renderAIAgentHistory(thinking=false){
  }).join('')+(thinking?'<div class="max-w-[70%] rounded-2xl rounded-bl-md border border-cyan-400/15 bg-cyan-500/5 px-4 py-3 text-xs text-cyan-200"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>सोच रहा हूँ…</div>':'');
  box.lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
-function clearAIAgentChat(){aiAgentHistory=[];const box=document.getElementById('ai-agent-history');if(box)box.innerHTML='';document.getElementById('ai-output')?.classList.add('hidden');toast('Agent chat cleared')}
+function clearAIAgentChat(){if(aiAgentAbortController)aiAgentAbortController.abort();aiAgentHistory=[];const box=document.getElementById('ai-agent-history');if(box)box.innerHTML='';document.getElementById('ai-output')?.classList.add('hidden');toast('Agent chat cleared')}
 
 function rhQuizHistoryKey(){
   return `rh_quiz_recent_${user?.id||'guest'}`;
