@@ -14,6 +14,16 @@ const mobileSheet = () => document.getElementById('rh-mobile-notify-sheet');
 const getUserId = () => window.user?.id || 'guest';
 const keyStore = () => `rh_hub_notifications_${getUserId()}`;
 const keySeen = () => `rh_hub_notification_seen_${getUserId()}`;
+const keyClear = () => `rh_hub_notifications_cleared_at_${getUserId()}`;
+function clearAllCutoff(){
+  const local = Number(localStorage.getItem(keyClear()) || 0) || 0;
+  let shared = 0; try { shared = Number(window.rhNotificationClearAt?.() || 0) || 0; } catch(e) {}
+  return Math.max(local, shared);
+}
+function isBeforeClearAll(item){
+  const created = new Date(item?.created_at || 0).getTime();
+  return created > 0 && created <= clearAllCutoff();
+}
 
 function ensureStyle(){
   if(document.getElementById('rh-notify-smooth-vip-style')) return;
@@ -78,7 +88,7 @@ function purgeNotifications(rows){
     };
   }).filter(item => {
     const ts = new Date(item.created_at).getTime();
-    return Number.isFinite(ts) && ts >= cutoff;
+    return Number.isFinite(ts) && ts >= cutoff && ts > clearAllCutoff();
   }).sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, LIMIT);
 }
 function readStore(){
@@ -158,6 +168,7 @@ function addOrMerge(item, opts={}){
     created_at: item.created_at || nowIso(),
     icon: item.icon || (typeof hubNotificationIcon === 'function' ? hubNotificationIcon(item.tag) : '🔔')
   };
+  if(isBeforeClearAll(row)) return null;
   if(existing >= 0) list[existing] = {...list[existing], ...row};
   else list.unshift(row);
   hubNotifications = purgeNotifications(list);
@@ -190,12 +201,18 @@ window.toggleHubNotifications = function(){
     Notification.requestPermission().catch(()=>{});
   }
 };
-window.clearHubNotifications = function(){
+window.clearHubNotifications = async function(){
   if(typeof hubNotifications === 'undefined') return;
+  const clearedAt = Date.now();
   markSeen(hubNotifications.map(x => x.id));
+  try { localStorage.setItem(keyClear(), String(clearedAt)); } catch(e) {}
   hubNotifications = [];
   writeStore([]);
   renderVip();
+  panel()?.classList.add('hidden');
+  mobileSheet()?.classList.add('hidden');
+  try { await window.rhPersistNotificationClearState?.(clearedAt); }
+  catch(e) { console.warn('Notification clear-all sync pending:', e?.message || e); }
   if(typeof toast === 'function') toast('Notifications cleared ✓');
 };
 window.dismissHubNotification = function(id){
@@ -240,10 +257,15 @@ window.normalizeHubNotificationRow = function(row){
 };
 window.loadPersistedHubNotifications = async function(){
   try{
+    await window.rhLoadNotificationClearState?.();
+    const clearedAt = clearAllCutoff();
     const cutoff = new Date(Date.now() - THREE_DAYS_MS).toISOString();
     const {data,error} = await db.from('hub_notifications').select('id,title,body,tag,action,metadata,created_at,expires_at').gte('created_at', cutoff).gt('expires_at', nowIso()).order('created_at',{ascending:false}).limit(LIMIT);
     if(error) throw error;
-    const rows = (data || []).filter(row => typeof hubNotificationIsForMe !== 'function' || hubNotificationIsForMe(row));
+    const rows = (data || []).filter(row =>
+      (typeof hubNotificationIsForMe !== 'function' || hubNotificationIsForMe(row)) &&
+      new Date(row.created_at || 0).getTime() > clearedAt
+    );
     const list = purgeNotifications([...(hubNotifications || []), ...rows.map(row => ({
       id: row.id,
       title: row.title,
@@ -283,13 +305,14 @@ function removeDynamicStudio(){
   if(overlay) overlay.style.background = 'rgba(0,0,0,.2)';
 }
 
-function boot(){
+async function boot(){
   ensureStyle();
   removeDynamicStudio();
+  try { await window.rhLoadNotificationClearState?.(); } catch(e) {}
   if(typeof hubNotifications !== 'undefined'){
     hubNotifications = readStore();
     renderVip();
-    window.loadPersistedHubNotifications?.();
+    await window.loadPersistedHubNotifications?.();
   }
 }
 
