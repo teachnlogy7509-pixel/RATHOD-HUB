@@ -780,7 +780,7 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
   </div>
  </div>
  <div id="admin-controls-host" class="space-y-5"></div>
-  <div class="rounded-2xl border border-cyan-400/25 bg-cyan-500/5 p-4"><div class="flex items-center justify-between gap-3"><div><b class="text-sm text-cyan-200">🎟️ Coupon / Gift Card Access</b><p class="mt-1 text-[10px] text-slate-500">Common code • 1 month redeem expiry • 5 days user access</p></div><span class="text-[9px] font-black text-cyan-300">ADMIN ONLY</span></div><div class="mt-3 flex flex-col gap-2 sm:flex-row"><input id="admin-coupon-code" maxlength="80" placeholder="Optional custom code (blank = auto-generate)" class="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-xs uppercase"><button onclick="createHubCoupon()" class="rounded-xl bg-cyan-600 px-4 py-2.5 text-xs font-black">Generate Coupon</button></div><div id="admin-coupon-result" class="mt-3 hidden rounded-xl bg-slate-950 p-3 text-xs text-cyan-200"></div></div>
+  <div class="rounded-2xl border border-cyan-400/25 bg-cyan-500/5 p-4"><div class="flex items-center justify-between gap-3"><div><b class="text-sm text-cyan-200">🎟️ Coupon / Gift Card Access</b><p class="mt-1 text-[10px] text-slate-500">Code valid 1 month • 1 month premium access after redeem</p></div><span class="text-[9px] font-black text-cyan-300">ADMIN ONLY</span></div><div class="mt-3 flex flex-col gap-2 sm:flex-row"><input id="admin-coupon-code" maxlength="80" placeholder="Optional custom code (blank = auto-generate)" class="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-xs uppercase"><button onclick="createHubCoupon()" class="rounded-xl bg-cyan-600 px-4 py-2.5 text-xs font-black">Generate Coupon</button></div><div id="admin-coupon-result" class="mt-3 hidden rounded-xl bg-slate-950 p-3 text-xs text-cyan-200"></div></div>
  <div class="bg-slate-800/95 border border-slate-700 rounded-2xl p-4">
   <div class="flex items-center justify-between gap-3">
    <div><b class="text-sm">Other admin controls</b><p class="text-[10px] text-slate-500 mt-1">Materials, Community aur Live Events ke existing admin actions wahi available hain.</p></div>
@@ -2016,8 +2016,8 @@ let hubCouponAccess=null;
 function hasHubCouponAccess(){return profile?.role==='admin'||!!(hubCouponAccess?.expires_at&&new Date(hubCouponAccess.expires_at)>new Date())}
 function renderCouponAccess(){const active=hasHubCouponAccess(),status=document.getElementById('coupon-access-status'),badge=document.getElementById('coupon-access-badge'),area=document.getElementById('coupon-redeem-area');if(status)status.textContent=active?`Premium features unlocked till ${new Date(hubCouponAccess.expires_at).toLocaleDateString()} — Material, Community, Stories, AI Learning और NEET Planner available.`:'Coupon redeem करके Material, Community, Stories, AI Learning और NEET Planner unlock करें।';if(badge){badge.textContent=active?'UNLOCKED':'LOCKED';badge.className=`rounded-full px-3 py-1.5 text-[9px] font-black ${active?'bg-emerald-500/10 text-emerald-300':'bg-rose-500/10 text-rose-300'}`}if(area)area.classList.toggle('hidden',active)}
 async function loadHubCouponAccess(){if(!user)return;try{const{data,error}=await db.rpc('get_hub_coupon_access');if(error)throw error;hubCouponAccess=data?.active?data:null}catch(e){console.warn('Coupon access load failed',e)}renderCouponAccess()}
-async function redeemHubCoupon(){if(!user)return toast('Pehle login karein.',false);const input=document.getElementById('coupon-code-input'),code=input?.value.trim().toUpperCase();if(!code)return toast('Coupon code likhein.',false);try{const{data,error}=await db.rpc('redeem_hub_coupon',{p_code:code});if(error)throw error;if(!data?.success)throw new Error(data?.error||'Coupon invalid ya expire ho gaya.');hubCouponAccess={expires_at:data.expires_at,code:data.code};renderCouponAccess();toast('✅ Premium features 5 din ke liye unlock ho gaye')}catch(e){toast(e.message||'Coupon redeem failed',false)}}
-async function createHubCoupon(){if(profile?.role!=='admin')return toast('Admin only',false);const input=document.getElementById('admin-coupon-code'),code=input?.value.trim().toUpperCase()||null;try{const{data,error}=await db.rpc('create_hub_coupon',{p_code:code});if(error)throw error;const out=document.getElementById('admin-coupon-result');if(out){out.classList.remove('hidden');out.innerHTML=`<b>New Coupon:</b> <code class="text-white">${esc(data.code)}</code><br><span class="text-[10px] text-slate-400">Redeem before ${new Date(data.expires_at).toLocaleString()} • User access 5 days</span>`}if(input)input.value='';toast('Coupon generated ✓')}catch(e){toast(e.message||'Coupon create failed',false)}}
+async function redeemHubCoupon(){if(!user)return toast('Pehle login karein.',false);const input=document.getElementById('coupon-code-input'),code=input?.value.trim().toUpperCase();if(!code)return toast('Coupon code likhein.',false);try{const{data,error}=await db.rpc('redeem_hub_coupon',{p_code:code});if(error)throw error;if(!data?.success)throw new Error(data?.error||'Coupon invalid ya expire ho gaya.');hubCouponAccess={expires_at:data.expires_at,code:data.code};renderCouponAccess();toast('✅ Premium features 1 month ke liye unlock ho gaye')}catch(e){toast(e.message||'Coupon redeem failed',false)}}
+async function createHubCoupon(){if(profile?.role!=='admin')return toast('Admin only',false);const input=document.getElementById('admin-coupon-code'),code=input?.value.trim().toUpperCase()||null;try{const{data,error}=await db.rpc('create_hub_coupon',{p_code:code});if(error)throw error;const out=document.getElementById('admin-coupon-result');if(out){out.classList.remove('hidden');out.innerHTML=`<b>New Coupon:</b> <code class="text-white">${esc(data.code)}</code><br><span class="text-[10px] text-slate-400">Redeem before ${new Date(data.expires_at).toLocaleString()} • Premium access 30 days after redeem</span>`}if(input)input.value='';toast('Coupon generated ✓')}catch(e){toast(e.message||'Coupon create failed',false)}}
 function switchTab(tab){
   if(COUPON_LOCKED_TABS.has(tab)&&!hasHubCouponAccess()){toast('🎟️ Pehle valid Coupon/Gift Card redeem karein.',false);setTimeout(()=>document.getElementById('coupon-code-input')?.focus(),50);tab='home'}
   try{
@@ -2549,9 +2549,57 @@ function communityReactionEntry(value){const raw=String(value||''),split=raw.ind
 function communityReactionState(likes=[]){const entries=(Array.isArray(likes)?likes:[]).map(communityReactionEntry),counts=Object.fromEntries([...COMMUNITY_REACTIONS,...COUNCIL_REACTIONS].map(x=>[x,0]));entries.forEach(x=>{if(counts[x.reaction]!==undefined)counts[x.reaction]++});const mine=entries.find(x=>String(x.userId)===String(user?.id));return{entries,counts,mine:mine?.reaction||null,total:entries.length}}
 function communityTime(value){const ms=Date.now()-new Date(value).getTime(),min=Math.max(0,Math.floor(ms/60000));if(min<1)return'just now';if(min<60)return`${min} min ago`;const hr=Math.floor(min/60);if(hr<24)return`${hr}h ago`;const day=Math.floor(hr/24);return day<30?`${day}d ago`:new Date(value).toLocaleDateString()}
 async function shareCommunityPost(id){const url=`${location.origin}${location.pathname}#community-post-${id}`;try{if(navigator.share)await navigator.share({title:'RATHOD HUB Community Post',url});else{await navigator.clipboard.writeText(url);toast('Post link copied ✓')}}catch(e){if(e?.name!=='AbortError')prompt('Copy post link',url)}}
+function mergeCommunityPostRealtimeRow(row){
+ if(!row?.id)return;
+ const id=String(row.id),index=posts.findIndex(p=>String(p.id)===id);
+ if(row.is_material===true){
+  if(index>=0){posts.splice(index,1);renderPosts()}
+  loadMaterials();
+  return;
+ }
+ if(row.is_material!==false)return;
+ if(index>=0)posts[index]={...posts[index],...row};
+ else posts.unshift(row);
+ renderPosts();
+}
+function ensureCommunityPostsRealtime(){
+ if(!user||communityChannel)return;
+ const channel=db.channel('public:posts')
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'posts'},payload=>{
+   if(payload?.new?.is_material===false)mergeCommunityPostRealtimeRow(payload.new);
+   else if(payload?.new?.is_material===true)loadMaterials();
+  })
+  .on('postgres_changes',{event:'UPDATE',schema:'public',table:'posts'},payload=>{
+   if(payload?.new?.is_material===false)mergeCommunityPostRealtimeRow(payload.new);
+   else if(payload?.new?.is_material===true)mergeCommunityPostRealtimeRow(payload.new);
+  })
+  .on('postgres_changes',{event:'DELETE',schema:'public',table:'posts'},payload=>{
+   const id=payload?.old?.id;
+   if(id!==undefined&&id!==null){
+    posts=posts.filter(p=>String(p.id)!==String(id));
+    renderPosts();
+   }
+   loadMaterials();
+  })
+  .subscribe((status,error)=>{
+   if(status==='SUBSCRIBED')console.info('Community realtime connected: posts and comments update live.');
+   else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')console.warn('Community realtime connection issue:',error?.message||status);
+   else if(status==='CLOSED'&&communityChannel===channel)communityChannel=null;
+  });
+ communityChannel=channel;
+}
 async function loadPosts(){
- const {data,error}=await db.from('posts').select('*').eq('is_material',false).order('created_at',{ascending:false});if(error){console.error(error);return}posts=data||[];communityCouncilMap=new Map();const authorIds=[...new Set(posts.map(x=>x.author_id).filter(Boolean))];if(authorIds.length){const{data:roles}=await db.from('league_rewards').select('user_id,council_role,badge,name_color,frame_style,access_expires_at').in('user_id',authorIds).gt('access_expires_at',new Date().toISOString()).order('created_at',{ascending:false});(roles||[]).forEach(r=>{if(!communityCouncilMap.has(String(r.user_id)))communityCouncilMap.set(String(r.user_id),r)})}renderPosts();
- if(!communityChannel&&user){communityChannel=db.channel('public:posts').on('postgres_changes',{event:'*',schema:'public',table:'posts'},()=>{loadPosts();loadMaterials()}).subscribe()}
+ const {data,error}=await db.from('posts').select('*').eq('is_material',false).order('created_at',{ascending:false});
+ if(error){console.error(error);return}
+ posts=data||[];
+ communityCouncilMap=new Map();
+ const authorIds=[...new Set(posts.map(x=>x.author_id).filter(Boolean))];
+ if(authorIds.length){
+  const{data:roles}=await db.from('league_rewards').select('user_id,council_role,badge,name_color,frame_style,access_expires_at').in('user_id',authorIds).gt('access_expires_at',new Date().toISOString()).order('created_at',{ascending:false});
+  (roles||[]).forEach(r=>{if(!communityCouncilMap.has(String(r.user_id)))communityCouncilMap.set(String(r.user_id),r)});
+ }
+ renderPosts();
+ ensureCommunityPostsRealtime();
 }
 function renderPosts(){
  if(communityFeedMode==='people')return;
@@ -2575,9 +2623,31 @@ async function toggleReaction(id,reaction='❤️'){
 }
 async function toggleLike(id){return toggleReaction(id,'❤️')}
 async function addComment(id){
- const input=document.getElementById('comment-'+id),file=document.getElementById('replyfile-'+id)?.files?.[0],text=input?.value.trim();if(!text&&!file)return;
- const p=posts.find(x=>String(x.id)===String(id));if(!p)return toast('Post not found',false);let comments=Array.isArray(p.comments)?[...p.comments]:[],image_url=null;
- try{if(file){const drive=await uploadToGoogleDrive('Community',file);image_url=driveImageUrl(drive.id)}comments.push({author:profile.name,text,image_url,user_id:user.id,date:new Date().toISOString()});const{error}=await db.from('posts').update({comments}).eq('id',p.id);if(error)throw error;input.value='';document.getElementById('replyfile-'+id).value='';if(String(p.author_id)!==String(user.id))await sendPersonalHubNotification(p.author_id,`${profile.name||'Someone'} commented on your post`,text||'Sent an image','community','community',{post_id:p.id,actor_id:user.id});communityOpenComments.add(String(id));await loadPosts()}catch(err){console.error(err);toast(err.message,false)}
+ const input=document.getElementById('comment-'+id),file=document.getElementById('replyfile-'+id)?.files?.[0],text=input?.value.trim()||'';
+ if(!text&&!file)return;
+ if(!user)return toast('Please login to comment.',false);
+ const p=posts.find(x=>String(x.id)===String(id));
+ if(!p)return toast('Post not found',false);
+ let image_url=null;
+ try{
+  if(file){const drive=await uploadToGoogleDrive('Community',file);image_url=driveImageUrl(drive.id)}
+  const{data,error}=await db.rpc('add_community_post_comment',{
+   p_post_id:Number(p.id),
+   p_text:text,
+   p_image_url:image_url
+  });
+  if(error)throw error;
+  const updated=Array.isArray(data)?data[0]:data;
+  if(!updated?.id)throw new Error('Comment saved, but updated post could not be returned. Refresh Community.');
+  const index=posts.findIndex(x=>String(x.id)===String(updated.id));
+  if(index>=0)posts[index]={...posts[index],...updated};
+  else posts.unshift(updated);
+  if(input)input.value='';
+  const replyFile=document.getElementById('replyfile-'+id);if(replyFile)replyFile.value='';
+  communityOpenComments.add(String(id));
+  renderPosts();
+  if(String(p.author_id)!==String(user.id))await sendPersonalHubNotification(p.author_id,`${profile?.name||'Someone'} commented on your post`,text||'Sent an image','community','community',{post_id:p.id,actor_id:user.id});
+ }catch(err){console.error(err);toast(err.message||'Comment could not be sent',false)}
 }
 
 async function deletePost(id){if(!confirm('Delete this post?'))return;const item=posts.find(x=>String(x.id)===String(id));const{error}=await db.from('posts').delete().eq('id',id);if(error)return toast(error.message,false);if(item?.storage_path){try{await deleteFromGoogleDrive(item.storage_path)}catch(e){console.warn('Drive delete failed',e)}}toast('Deleted');await loadPosts();await loadMaterials()}
@@ -3328,7 +3398,7 @@ STUDY POWER: Open Study Power. Current tools include Smart Daily Motivation/remi
 STUDY ROOMS: Open Study Rooms. Join a live peer-study room and use Voice or Live Cam where enabled. The 1.1 Mentor room is available inside Study Rooms; it creates a private room/invite link and uses the meeting provider. Leave the room when finished; camera/microphone need browser permission.
 STUDY DIARY: Open Study Diary / VIP Study Diary to save daily targets or a mission for the day and review the private study timeline/history.
 MY VAULT / VIP PRIVATE VAULT: Open My Vault. It is the Google Drive-protected private file shelf. Students can choose/upload a file, save it securely and later use 'Open Securely'. The runtime also places an active coupon display inside My Vault when an active coupon exists. The Vault is where the student checks/copies the available active coupon; it is not the redemption input.
-COUPON REDEMPTION: To redeem, go to Home > 'Unlock RATHOD HUB Features', enter the code in the 'Coupon / Gift Card code' field and press 'Redeem Code'. The currently coupon-gated sections are Study Material, Community, Stories, AI Learning and AI Notes & Formula Sheets. A generated coupon code itself is redeemable for one month from its creation; after a successful redemption, the current default premium access duration is 5 days. These are two different periods. Never invent or reveal a code.
+COUPON REDEMPTION: To redeem, go to Home > 'Unlock RATHOD HUB Features', enter the code in the 'Coupon / Gift Card code' field and press 'Redeem Code'. The currently coupon-gated sections are Study Material, Community, Stories, AI Learning and AI Notes & Formula Sheets. A generated coupon code itself is redeemable for one month from its creation; after a successful redemption, premium access lasts 30 days (one month) from the redemption time. These are two different periods. Never invent or reveal a code.
 COMMUNITY: Open Community for student posts, reactions, comments, voice posts and member discovery/following. It is a student discussion/social feed, not the Live Chat message room.
 LIVE CHAT & STORIES: Open Live Chat for realtime student discussion. Stories are integrated into the Live Chat/social experience in the current runtime; where the Stories view is visible, students can share photo/video moments designed for 24-hour viewing.
 GAMES: Open Games. It includes Tic-Tac-Toe rooms and Ludo against the computer or in online 2-player/4-player rooms; room codes can be shared with friends.
@@ -3337,7 +3407,7 @@ LEADERBOARD: Open Leaderboard for the 13-day competitive league. The live UI sho
 NEET TREASURE HUNT: Open NEET Treasure Hunt. Create or join a live room, select a topic and subject (Biology, Physics or Chemistry), choose a timed question setting (20/25/30 seconds per question where shown), answer questions across five checkpoints and compete for the final treasure score.
 QUESTION ARCHIVE: If the Question Archive button is visible in the app navigation, it stores only questions from Daily 9 PM and NEET 720; the archive screen has Question Notes and Question Tests folders loaded from Google Drive. It does not archive Live Quiz, Self Practice or other app events.
 PW YAKEEN: If the PW Yakeen entry/card is visible, it opens the official PW Yakeen NEET Hindi batch links and separate RATHOD HUB realtime batch communities. RATHOD HUB is independent and does not bypass PW login, purchase or batch-access checks. Direct users to the official PW app/site for purchased course access.
-ADMIN PANEL: Admin-only tools include Study Material upload, Live Quiz/45Q Test controls, background/logo settings, HUB Events, community moderation and Coupon/Gift Card Access. Coupon generation is only for admins. Current coupon generation sets code expiry to one month and user access to 5 days. Do not tell students to open admin controls.
+ADMIN PANEL: Admin-only tools include Study Material upload, Live Quiz/45Q Test controls, background/logo settings, HUB Events, community moderation and Coupon/Gift Card Access. Coupon generation is only for admins. Current coupon generation sets code expiry to one month and user access to 30 days (one month) after redemption. Do not tell students to open admin controls.
 GENERAL NAVIGATION: On desktop, use the left sidebar. On mobile, use the app's menu/navigation control or visible mobile navigation. Only give routes that match buttons currently visible in that user's build. If an entry is hidden/removed in their build, ask for a screenshot rather than directing them to a guessed location.`;
 function setAIAgentMode(mode){
  aiAgentMode=mode==='doubt'?'doubt':'app';
