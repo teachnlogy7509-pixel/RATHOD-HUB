@@ -7,7 +7,7 @@ create table if not exists public.hub_access_coupons (
   created_by uuid not null references public.profiles(id) on delete cascade,
   created_at timestamptz not null default now(),
   expires_at timestamptz not null,
-  access_days integer not null default 5 check(access_days between 1 and 30),
+  access_days integer not null default 30 check(access_days between 1 and 30),
   active boolean not null default true
 );
 
@@ -19,6 +19,10 @@ create table if not exists public.hub_coupon_redemptions (
   access_expires_at timestamptz not null,
   unique(coupon_id,user_id)
 );
+
+alter table public.hub_access_coupons alter column access_days set default 30;
+update public.hub_access_coupons set access_days=30 where active=true and expires_at>now() and access_days<>30;
+update public.hub_coupon_redemptions set access_expires_at=redeemed_at+interval '30 days' where access_expires_at>now() and access_expires_at<redeemed_at+interval '30 days';
 
 alter table public.hub_access_coupons enable row level security;
 alter table public.hub_coupon_redemptions enable row level security;
@@ -37,7 +41,7 @@ declare v_code text;v_row public.hub_access_coupons;
 begin
   if not exists(select 1 from public.profiles where id=auth.uid() and role='admin') then raise exception 'Admin only';end if;
   v_code:=upper(trim(coalesce(nullif(p_code,''),'RATHOD-'||substr(replace(gen_random_uuid()::text,'-',''),1,10))));
-  insert into public.hub_access_coupons(code,created_by,expires_at,access_days) values(v_code,auth.uid(),now()+interval '3 days',5) returning * into v_row;
+  insert into public.hub_access_coupons(code,created_by,expires_at,access_days) values(v_code,auth.uid(),now()+interval '1 month',30) returning * into v_row;
   return jsonb_build_object('success',true,'code',v_row.code,'expires_at',v_row.expires_at,'access_days',v_row.access_days);
 exception when unique_violation then raise exception 'This coupon code already exists';
 end $$;
