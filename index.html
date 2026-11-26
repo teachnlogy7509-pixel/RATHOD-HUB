@@ -569,10 +569,10 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
  <div class="rh-brand"><div id="hub-logo-mark" class="rh-brand-mark overflow-hidden"><img id="hub-logo-img" src="icon-192.png" alt="RATHOD HUB" class="w-full h-full object-cover"></div><div><div>RATHOD HUB</div><div style="font-size:9px;color:#8b93a0;font-weight:600;letter-spacing:.08em">NEET LEARNING PLATFORM</div></div><button class="rh-header-streak" onclick="switchTab('focus')" title="अपना Focus Streak देखें" aria-label="Focus streak"><span class="rh-streak-fire">🔥</span><span id="header-streak-count">0</span><span class="rh-streak-label">day streak</span></button></div>
  <div class="rh-top-actions">
   <button id="install-app-btn" class="rh-icon-btn" style="display:none" onclick="installRathodHub()" title="Download / Install App"><i class="fa-solid fa-download"></i></button>
-  <button class="rh-icon-btn rh-more-trigger" onclick="openMobileMenu()" title="All Features" aria-label="More options"><i class="fa-solid fa-bars"></i></button>
+
   <button class="rh-icon-btn" onclick="switchTab('focus')" title="Focus Timer"><i class="fa-solid fa-stopwatch"></i></button>
   <div class="rh-notify-wrap"><button id="hub-notify-btn" class="rh-icon-btn" onclick="toggleHubNotifications()" title="Notifications" aria-label="Notifications"><i class="fa-regular fa-bell"></i><span id="hub-notify-badge" class="rh-notify-badge">0</span></button><div id="hub-notify-panel" class="rh-notify-panel hidden"><div class="p-3 flex items-center justify-between border-b border-white/10"><div><b class="text-sm">🔔 Notifications</b><p class="text-[10px] text-slate-500">Nayi activity yahan dikhegi.</p></div><button onclick="clearHubNotifications()" class="text-[10px] text-red-400 font-bold">Clear all</button></div><div id="hub-notify-list" class="max-h-[360px] overflow-y-auto"></div></div></div>
-  <div class="rh-icon-btn" title="Rupee" aria-label="Rupee"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+  <button id="rh-focus-wallet-trigger" class="rh-icon-btn rh-wallet-trigger" onclick="openStudyWallet()" title="Daily Earn / Knowledge Arena" aria-label="Open daily study earnings"><i class="fa-solid fa-indian-rupee-sign"></i><span id="rh-focus-wallet-balance">0.00</span></button>
   <div class="rh-user"><div id="nav-pfp" class="w-9 h-9 rounded-full overflow-hidden border border-indigo-200 bg-slate-100 flex items-center justify-center shrink-0"></div><div><div id="nav-name" class="rh-user-name">User</div><span id="user-badge" class="text-[9px] uppercase font-bold text-indigo-600">Member</span></div><button onclick="openProfile()" class="rh-icon-btn" title="Profile"><i class="fa-solid fa-chevron-down"></i></button></div>
  </div>
 </header>
@@ -1365,7 +1365,27 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
 <div class="grid lg:grid-cols-2 gap-4"><div class="relative overflow-hidden bg-gradient-to-br from-indigo-950/70 to-violet-950/50 border border-indigo-400/25 rounded-2xl p-5"><div class="absolute -right-10 -top-10 w-32 h-32 bg-violet-500/10 blur-2xl rounded-full"></div><div class="relative"><span class="text-[9px] uppercase tracking-wider text-indigo-300 font-black">Visual Learning</span><h3 class="text-lg font-black mt-1">🧠 AI Memory Palace</h3><p class="text-xs text-slate-400 mt-1">किसी chapter को rooms, objects और memorable journey में बदलें.</p><input id="memory-palace-topic" maxlength="160" placeholder="Topic e.g. Human Digestion" class="mt-4 w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm"><button onclick="generateMemoryPalace()" class="mt-2 w-full bg-indigo-600 hover:bg-indigo-500 py-2.5 rounded-xl text-xs font-black">Build Memory Palace</button><div id="memory-palace-output" class="hidden mt-3 bg-black/25 border border-indigo-400/15 rounded-xl p-4 text-xs leading-6 whitespace-pre-wrap"></div></div></div><div class="relative overflow-hidden bg-gradient-to-br from-amber-950/50 to-violet-950/60 border border-amber-400/25 rounded-2xl p-5"><div class="flex justify-between gap-3"><div><span class="text-[9px] uppercase tracking-wider text-amber-300 font-black">Leaderboard Top-3</span><h3 class="text-lg font-black mt-1">💎 VIP Adaptive Exam</h3><p class="text-xs text-slate-400 mt-1">Mistakes और weakness के अनुसार intelligent mock test.</p></div><span class="text-2xl">👑</span></div><button onclick="startAdaptiveExam()" class="mt-4 w-full bg-gradient-to-r from-amber-600 to-violet-600 py-2.5 rounded-xl text-xs font-black">Open Adaptive Simulator</button><div id="adaptive-exam-box" class="hidden mt-3"></div></div></div>
 </section>
 
-<section id="section-cardbattle" class="hidden space-y-4"><div class="relative overflow-hidden bg-gradient-to-br from-slate-950 via-rose-950/45 to-violet-950/40 border border-rose-400/25 rounded-3xl p-5 sm:p-6"><div class="flex justify-between gap-3"><div><div class="text-[9px] uppercase tracking-[.2em] text-rose-300 font-black">Knowledge Arena</div><h2 class="text-2xl font-black mt-1">⚔️ NEET Knowledge Card Battle</h2><p class="text-xs text-slate-400 mt-1">Correct answer से attack करें, streak से rare cards unlock करें.</p></div><div class="text-4xl">🃏</div></div><div id="card-battle-lobby" class="mt-5 grid sm:grid-cols-[150px_1fr_auto] gap-2"><select id="card-battle-subject" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm"><option>Biology</option><option>Chemistry</option><option>Physics</option></select><input id="card-battle-topic" maxlength="120" placeholder="Battle topic (optional)" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm"><button onclick="startKnowledgeCardBattle()" class="bg-rose-600 px-5 py-2.5 rounded-xl text-xs font-black">Start Battle</button></div><div id="card-battle-arena" class="hidden mt-5"><div class="grid grid-cols-2 gap-3"><div class="bg-emerald-500/10 border border-emerald-400/20 rounded-xl p-3"><div class="flex justify-between text-xs"><b>🧑 YOU</b><span id="card-player-hp">100 HP</span></div><div class="h-2 bg-slate-800 rounded mt-2 overflow-hidden"><div id="card-player-bar" class="h-full bg-emerald-500" style="width:100%"></div></div></div><div class="bg-rose-500/10 border border-rose-400/20 rounded-xl p-3"><div class="flex justify-between text-xs"><b>🤖 AI RIVAL</b><span id="card-ai-hp">100 HP</span></div><div class="h-2 bg-slate-800 rounded mt-2 overflow-hidden"><div id="card-ai-bar" class="h-full bg-rose-500" style="width:100%"></div></div></div></div><div id="card-battle-card" class="mt-4"></div></div></div></section>
+<section id="section-cardbattle" class="hidden space-y-4">
+<div id="rh-study-earn-card" class="relative overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-br from-slate-950 via-amber-950/20 to-violet-950/25 p-4 sm:p-5 shadow-xl">
+ <div class="absolute -right-8 -top-10 text-8xl opacity-[.06] pointer-events-none">₹</div>
+ <div class="relative flex flex-wrap items-start justify-between gap-3">
+  <div><div class="text-[9px] font-black uppercase tracking-[.22em] text-amber-300">FOCUS TIMER REWARDS</div><h3 class="mt-1 text-xl font-black text-white">💰 Daily Earn</h3><p class="mt-1 text-[11px] text-slate-400">YPT Focus Timer पर जितना पढ़ोगे, उतना reward अपने आप जुड़ेगा।</p></div>
+  <button onclick="syncFocusWalletRewards(true)" class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-black text-slate-200"><i class="fa-solid fa-rotate mr-1"></i>Refresh</button>
+ </div>
+ <div class="relative mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+  <div class="rounded-2xl border border-amber-300/20 bg-amber-400/[.07] p-3"><span class="text-[9px] font-bold uppercase tracking-wider text-amber-200/70">Total Reward Balance</span><b id="rh-wallet-balance-big" class="mt-1 block text-2xl font-black text-amber-100">₹0.00</b></div>
+  <div class="rounded-2xl border border-emerald-300/15 bg-emerald-400/[.06] p-3"><span class="text-[9px] font-bold uppercase tracking-wider text-emerald-200/70">Today's Earn</span><b id="rh-wallet-today-earn" class="mt-1 block text-2xl font-black text-emerald-200">₹0.00</b></div>
+  <div class="col-span-2 rounded-2xl border border-white/10 bg-white/[.035] p-3 sm:col-span-1"><span class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Today's Focus Time</span><b id="rh-wallet-today-time" class="mt-1 block text-xl font-black text-white">0h 0m</b></div>
+ </div>
+ <div class="relative mt-4 rounded-2xl border border-white/10 bg-black/20 p-3">
+  <div class="flex items-center justify-between gap-2"><b class="text-xs font-black text-white">Daily target progress</b><span id="rh-wallet-progress-label" class="text-[10px] font-bold text-amber-200">0% • ₹0.00 / ₹5.00</span></div>
+  <div class="mt-2 h-2.5 overflow-hidden rounded-full bg-slate-800"><div id="rh-wallet-progress" class="h-full rounded-full bg-gradient-to-r from-amber-400 to-emerald-400" style="width:0%"></div></div>
+  <div class="mt-2 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400"><span>⏱️ 8 hours Focus Timer = ₹5.00</span><span>4 hours = ₹2.50</span></div>
+ </div>
+ <div class="relative mt-4"><div class="mb-2 text-[9px] font-black uppercase tracking-[.18em] text-slate-400">Recent daily earnings</div><div id="rh-wallet-history" class="space-y-1.5"><div class="rounded-xl bg-white/[.03] p-3 text-[10px] text-slate-500">Your saved study earnings will appear here.</div></div></div>
+ <p class="relative mt-3 text-[9px] leading-relaxed text-slate-500">Rewards are calculated from saved Focus Timer study sessions. This is an in-app reward balance; cash withdrawal is not enabled.</p>
+</div>
+<div class="relative overflow-hidden bg-gradient-to-br from-slate-950 via-rose-950/45 to-violet-950/40 border border-rose-400/25 rounded-3xl p-5 sm:p-6"><div class="flex justify-between gap-3"><div><div class="text-[9px] uppercase tracking-[.2em] text-rose-300 font-black">Knowledge Arena</div><h2 class="text-2xl font-black mt-1">⚔️ NEET Knowledge Card Battle</h2><p class="text-xs text-slate-400 mt-1">Correct answer से attack करें, streak से rare cards unlock करें.</p></div><div class="text-4xl">🃏</div></div><div id="card-battle-lobby" class="mt-5 grid sm:grid-cols-[150px_1fr_auto] gap-2"><select id="card-battle-subject" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm"><option>Biology</option><option>Chemistry</option><option>Physics</option></select><input id="card-battle-topic" maxlength="120" placeholder="Battle topic (optional)" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm"><button onclick="startKnowledgeCardBattle()" class="bg-rose-600 px-5 py-2.5 rounded-xl text-xs font-black">Start Battle</button></div><div id="card-battle-arena" class="hidden mt-5"><div class="grid grid-cols-2 gap-3"><div class="bg-emerald-500/10 border border-emerald-400/20 rounded-xl p-3"><div class="flex justify-between text-xs"><b>🧑 YOU</b><span id="card-player-hp">100 HP</span></div><div class="h-2 bg-slate-800 rounded mt-2 overflow-hidden"><div id="card-player-bar" class="h-full bg-emerald-500" style="width:100%"></div></div></div><div class="bg-rose-500/10 border border-rose-400/20 rounded-xl p-3"><div class="flex justify-between text-xs"><b>🤖 AI RIVAL</b><span id="card-ai-hp">100 HP</span></div><div class="h-2 bg-slate-800 rounded mt-2 overflow-hidden"><div id="card-ai-bar" class="h-full bg-rose-500" style="width:100%"></div></div></div></div><div id="card-battle-card" class="mt-4"></div></div></div></section>
 
 
 
@@ -1967,6 +1987,7 @@ async function boot(providedSession){
   try{ qbInit();qbAutoJoinFromLink();nthAutoJoinFromLink(); }catch(e){}
   if(profile.role==='admin'){ try{ populateBackgroundForm(); }catch(e){} }
   try{ initFocusSystem(); }catch(e){}
+  try{ initFocusWalletRewards(); }catch(e){}
   try{ applyRHSectionHeaders(); }catch(e){}
   try{ renderHomeDashboard(); }catch(e){}
   try{ switchTab('home'); }catch(e){}
@@ -5378,6 +5399,67 @@ let focusState={duration:1800,remaining:1800,status:'idle',startedAt:null,paused
 let focusInterval=null,focusChannel=null,focusHeartbeat=null,focusReady=false;
 let focusLiveSessionId=null,focusLastDbSyncAt=0;
 let livePeersMap={};
+
+const RH_FOCUS_REWARD_RATE_SECONDS = 8 * 60 * 60;
+const RH_FOCUS_REWARD_RATE_RUPEES = 5;
+let rhFocusWalletState = {balance_rupees:0,today_seconds:0,today_earned_rupees:0,tracked_seconds:0,history:[]};
+let rhFocusWalletBusy = false;
+let rhFocusWalletLastSyncAt = 0;
+function rhWalletMoney(value){return '₹'+Math.max(0,Number(value)||0).toFixed(2)}
+function rhWalletTime(seconds){const n=Math.max(0,Math.floor(Number(seconds)||0)),h=Math.floor(n/3600),m=Math.floor((n%3600)/60);return h+'h '+m+'m'}
+function renderFocusWalletRewards(){
+ const state=rhFocusWalletState||{},balance=Number(state.balance_rupees||0),today=Number(state.today_earned_rupees||0),seconds=Number(state.today_seconds||0);
+ const balanceTop=document.getElementById('rh-focus-wallet-balance');if(balanceTop)balanceTop.textContent=balance.toFixed(2);
+ const balanceCard=document.getElementById('rh-wallet-balance-big');if(balanceCard)balanceCard.textContent=rhWalletMoney(balance);
+ const todayCard=document.getElementById('rh-wallet-today-earn');if(todayCard)todayCard.textContent=rhWalletMoney(today);
+ const timeCard=document.getElementById('rh-wallet-today-time');if(timeCard)timeCard.textContent=rhWalletTime(seconds);
+ const pct=Math.min(100,seconds/RH_FOCUS_REWARD_RATE_SECONDS*100);
+ const bar=document.getElementById('rh-wallet-progress');if(bar)bar.style.width=pct.toFixed(2)+'%';
+ const label=document.getElementById('rh-wallet-progress-label');if(label)label.textContent=Math.floor(pct)+'% • '+rhWalletMoney(today)+' / ₹5.00';
+ const history=document.getElementById('rh-wallet-history');
+ if(history){
+  const rows=Array.isArray(state.history)?state.history:[];
+  history.innerHTML=rows.length?rows.map(row=>{
+   const date=new Date(String(row.date||'')+'T12:00:00');
+   const day=Number.isNaN(date.getTime())?String(row.date||''):date.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+   return '<div class="flex items-center justify-between gap-3 rounded-xl border border-white/[.06] bg-white/[.025] px-3 py-2"><span class="text-[10px] text-slate-300">'+day+' <span class="text-slate-500">• '+rhWalletTime(row.seconds)+'</span></span><b class="text-[11px] font-black text-emerald-200">'+rhWalletMoney(row.earned_rupees)+'</b></div>';
+  }).join(''):'<div class="rounded-xl bg-white/[.03] p-3 text-[10px] text-slate-500">No daily earnings yet. Start your Focus Timer to earn.</div>';
+ }
+}
+function openStudyWallet(){
+ switchTab('cardbattle');
+ setTimeout(()=>document.getElementById('rh-study-earn-card')?.scrollIntoView({behavior:'smooth',block:'start'}),100);
+ syncFocusWalletRewards(true);
+}
+async function syncFocusWalletRewards(force=false,flushLive=true){
+ if(!user||rhFocusWalletBusy)return;
+ const now=Date.now();
+ if(!force&&now-rhFocusWalletLastSyncAt<30000)return;
+ rhFocusWalletLastSyncAt=now;rhFocusWalletBusy=true;
+ try{
+  if(flushLive&&focusState?.status==='running'&&!focusState.break)await syncFocusLiveSession(true);
+  const {data,error}=await db.rpc('sync_focus_wallet_rewards',{p_earn_date:localDay()});
+  if(error)throw error;
+  const result=Array.isArray(data)?data[0]:data;
+  if(result&&typeof result==='object')rhFocusWalletState={
+   balance_rupees:Number(result.balance_rupees||0),
+   today_seconds:Number(result.today_seconds||0),
+   today_earned_rupees:Number(result.today_earned_rupees||0),
+   tracked_seconds:Number(result.tracked_seconds||0),
+   history:Array.isArray(result.history)?result.history:[]
+  };
+  renderFocusWalletRewards();
+ }catch(e){
+  rhFocusWalletLastSyncAt=0;
+  console.warn('Focus wallet reward sync failed:',e);
+ }finally{rhFocusWalletBusy=false}
+}
+function initFocusWalletRewards(){
+ rhFocusWalletLastSyncAt=0;
+ renderFocusWalletRewards();
+ syncFocusWalletRewards(true);
+}
+
 const FOCUS_KEY_PREFIX='rathod_focus_v2_';
 function focusKey(){return FOCUS_KEY_PREFIX+(user?.id||'guest')}
 function focusStoreKey(){return focusKey()+'_state'}
@@ -5460,7 +5542,7 @@ function startFocusTimer(){
  if(focusState.status==='running')return;
  focusState.subject=document.getElementById('focus-subject')?.value||focusState.subject||'Other';
  if(focusState.remaining<=0||focusState.remaining>focusState.duration)focusState.remaining=focusState.duration;
- focusState.startedAt=Date.now();focusState.status='running';focusState.pausedAt=null;if(!focusLiveSessionId)focusLiveSessionId=((crypto&&crypto.randomUUID)?crypto.randomUUID():('live_'+Date.now()+'_'+Math.random().toString(36).slice(2)));focusLastDbSyncAt=0;saveFocusState();startFocusTicker();syncFocusLiveSession(true);broadcastFocus();renderFocusTimer();toast('Focus session started 🔥');
+ focusState.startedAt=Date.now();focusState.status='running';focusState.pausedAt=null;if(!focusLiveSessionId)focusLiveSessionId=((crypto&&crypto.randomUUID)?crypto.randomUUID():('live_'+Date.now()+'_'+Math.random().toString(36).slice(2)));focusLastDbSyncAt=0;saveFocusState();startFocusTicker();syncFocusLiveSession(true);syncFocusWalletRewards(true,false);broadcastFocus();renderFocusTimer();toast('Focus session started 🔥');
 }
 
 function startFocusTicker(){
@@ -5483,15 +5565,16 @@ function tickFocus(){
    if(homeStreak)homeStreak.textContent=streak+' 🔥';if(headerStreak)headerStreak.textContent=streak;
  }
  if(focusState.status==='running')broadcastFocusThrottled();
- if(focusState.status==='running'&&!focusState.break)syncFocusLiveSession(false);
+ if(focusState.status==='running'&&!focusState.break){syncFocusLiveSession(false);syncFocusWalletRewards(false);}
  if(focusState.status==='running'&&rem<=0)completeFocusTimer();
 }
-async function pauseFocusTimer(){if(focusState.status!=='running')return;await syncFocusLiveSession(true);focusState.elapsedBeforePause=focusElapsed();focusState.remaining=Math.max(0,focusState.duration-focusState.elapsedBeforePause);focusState.status='paused';focusState.startedAt=null;focusState.pausedAt=Date.now();saveFocusState();renderFocusTimer();broadcastFocus();toast('Timer paused ⏸️')}
+async function pauseFocusTimer(){if(focusState.status!=='running')return;await syncFocusLiveSession(true);await syncFocusWalletRewards(true,false);focusState.elapsedBeforePause=focusElapsed();focusState.remaining=Math.max(0,focusState.duration-focusState.elapsedBeforePause);focusState.status='paused';focusState.startedAt=null;focusState.pausedAt=Date.now();saveFocusState();renderFocusTimer();broadcastFocus();toast('Timer paused ⏸️')}
 async function stopFocusTimer(){
   if(!['running','paused'].includes(focusState.status))return;
   if(focusState.status==='running')await syncFocusLiveSession(true);
   const elapsed=focusState.status==='running'?focusElapsed():focusState.elapsedBeforePause;
   if(elapsed>=60)await recordFocusSession(Math.min(elapsed,focusState.duration),focusState.subject);
+  await syncFocusWalletRewards(true,false);
   focusLiveSessionId=null;focusLastDbSyncAt=0;
   focusState={duration:focusState.duration,remaining:focusState.duration,status:'idle',startedAt:null,pausedAt:null,elapsedBeforePause:0,subject:focusState.subject||'Other',pomodoro:false,break:false};
   saveFocusState();
@@ -5533,7 +5616,7 @@ function renderFocusTimer(){const d=document.getElementById('focus-timer-display
 async function recordFocusSession(seconds,subject){
   if(seconds<60||!user)return;const st=readFocusStats();const now=new Date();st.sessions=Array.isArray(st.sessions)?st.sessions:[];
   const session={id:(focusLiveSessionId||((crypto&&crypto.randomUUID)?crypto.randomUUID():('fs_'+Date.now()+'_'+Math.random().toString(36).slice(2)))),date:localDay(now),seconds:Math.round(seconds),subject:subject||'Other',at:now.toISOString()};
-  st.sessions.push(session);st.sessions=st.sessions.slice(-2000);writeFocusStats(st);renderFocusDashboard();renderHomeDashboard();broadcastFocus();await persistFocusSession(session);
+  st.sessions.push(session);st.sessions=st.sessions.slice(-2000);writeFocusStats(st);renderFocusDashboard();renderHomeDashboard();broadcastFocus();await persistFocusSession(session);await syncFocusWalletRewards(true,false);
   const today=st.sessions.filter(x=>x.date===localDay()).reduce((a,x)=>a+Number(x.seconds||0),0),goal=Number(st.goalHours||4)*3600;
   if(today>=goal&&!st.goalNotifiedDate){st.goalNotifiedDate=localDay();writeFocusStats(st);notifyFocus('🎯 Daily goal complete!','Your study goal for today is complete.');toast('Daily goal complete! 🏆')}
 }
@@ -6686,6 +6769,15 @@ window.loadStudyWar=loadStudyWar;window.createStudyWar=createStudyWar;window.joi
 
 
 
+
+
+<style id="rh-study-wallet-header-style">
+.rh-wallet-trigger{width:auto!important;min-width:64px!important;padding:0 7px!important;gap:4px!important;display:flex!important;align-items:center;justify-content:center;white-space:nowrap}
+.rh-wallet-trigger i{font-size:14px}
+.rh-wallet-trigger span{font-size:10px;font-weight:950;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+#rh-study-earn-card{scroll-margin-top:82px}
+@media(max-width:640px){.rh-wallet-trigger{min-width:61px!important;padding:0 6px!important}.rh-wallet-trigger span{font-size:9px}.rh-top-actions{gap:4px!important}}
+</style>
 
 </body>
 </html>
