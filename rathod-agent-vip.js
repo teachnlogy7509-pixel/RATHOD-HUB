@@ -48,7 +48,7 @@ PRIVATE VAULT & COUPONS:
 - A newly generated coupon code has a one-month redeem window. After a successful redemption, premium access lasts 30 days (one month) from the redemption time. The code's one-month redeem validity and the one-month access period start at different times.
 
 SOCIAL, GAMES & EVENTS:
-- Community is the posts/reactions/comments/voice-post and member-following feed. Live Chat is the realtime student discussion room; Stories are integrated with the Chat/social area in the current runtime and, where visible, are 24-hour photo/video moments.
+- Community is the posts/reactions/comments/voice-post and member-following feed. Comments are synchronized live to connected users through Supabase Realtime post updates. Live Chat is the separate realtime student discussion room; Stories are integrated with the Chat/social area in the current runtime and, where visible, are 24-hour photo/video moments.
 - Games includes Tic-Tac-Toe rooms and Ludo vs Computer or online 2-player/4-player rooms. Room codes can be shared with friends.
 - Live Events contains active student challenges such as Daily Biology Challenge and Spin & Win. Creating events or adding questions is Admin-only.
 - Leaderboard is the 13-day competitive league: up to 15 students per group, ranks 1–10 promote, 11–13 are safety, 14–15 demote. It has season XP/level and a Top-3 Manager Lounge where enabled. This differs from Home's Daily Quiz Top 5 and the Focus leaderboard.
@@ -58,7 +58,7 @@ OTHER / VERSION-DEPENDENT MODULES:
 - Some older entries such as Daily Formula or RATHOD NEW may be hidden by the current runtime layer. Do not guide a student to a hidden/removed entry. Ask for a screenshot if the student says a menu is missing.
 
 ADMIN PANEL:
-- Admin Panel controls are role-restricted. They include Study Material upload, Live Quiz/45Q administration, backgrounds/logo, HUB Events, community moderation and Coupon/Gift Card Access. Coupon creation is Admin-only; generated code redeem expiry is one month and default user access is 5 days. Never tell an ordinary student to open or use admin controls.
+- Admin Panel controls are role-restricted. They include Study Material upload, Live Quiz/45Q administration, backgrounds/logo, HUB Events, community moderation and Coupon/Gift Card Access. Coupon creation is Admin-only; generated code redeem expiry is one month and premium access lasts 30 days (one month) after redemption. Never tell an ordinary student to open or use admin controls.
 
 NAVIGATION RULE:
 - Desktop: use the visible left sidebar. Mobile: open the visible app menu/mobile navigation first. Give the exact visible section name, then 2–5 simple steps.
