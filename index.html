@@ -566,13 +566,13 @@ section[id^="section-"].hidden{display:none!important;visibility:hidden!importan
 <!-- APP -->
 <div id="app" class="hidden min-h-screen flex flex-col">
 <header class="rh-topbar">
- <div class="rh-brand"><div id="hub-logo-mark" class="rh-brand-mark overflow-hidden"><img id="hub-logo-img" src="icon-192.png" alt="RATHOD HUB" class="w-full h-full object-cover"></div><div><div>RATHOD HUB</div><div style="font-size:9px;color:#8b93a0;font-weight:600;letter-spacing:.08em">NEET LEARNING PLATFORM</div></div><button class="rh-header-streak" onclick="switchTab('focus')" title="अपना Focus Streak देखें" aria-label="Focus streak"><span class="rh-streak-fire">🔥</span><span id="header-streak-count">0</span><span class="rh-streak-label">day streak</span></button></div>
+ <div class="rh-brand"><div id="hub-logo-mark" class="rh-brand-mark overflow-hidden"><img id="hub-logo-img" src="icon-192.png" alt="RATHOD HUB" class="w-full h-full object-cover"></div><div class="rh-brand-copy"><div class="rh-brand-name">RATHOD HUB</div></div><button class="rh-header-streak" onclick="switchTab('focus')" title="अपना Focus Streak देखें" aria-label="Focus streak"><span class="rh-streak-fire">🔥</span><span id="header-streak-count">0</span><span class="rh-streak-label">day streak</span></button></div>
  <div class="rh-top-actions">
   <button id="install-app-btn" class="rh-icon-btn" style="display:none" onclick="installRathodHub()" title="Download / Install App"><i class="fa-solid fa-download"></i></button>
   <button class="rh-icon-btn rh-more-trigger" onclick="openMobileMenu()" title="All Features" aria-label="More options"><i class="fa-solid fa-bars"></i></button>
   <button class="rh-icon-btn" onclick="switchTab('focus')" title="Focus Timer"><i class="fa-solid fa-stopwatch"></i></button>
-  <div class="rh-notify-wrap"><button id="hub-notify-btn" class="rh-icon-btn" onclick="toggleHubNotifications()" title="Notifications" aria-label="Notifications"><i class="fa-regular fa-bell"></i><span id="hub-notify-badge" class="rh-notify-badge">0</span></button><div id="hub-notify-panel" class="rh-notify-panel hidden"><div class="p-3 flex items-center justify-between border-b border-white/10"><div><b class="text-sm">🔔 Notifications</b><p class="text-[10px] text-slate-500">Nayi activity yahan dikhegi.</p></div><button onclick="clearHubNotifications()" class="text-[10px] text-red-400 font-bold">Clear all</button></div><div id="hub-notify-list" class="max-h-[360px] overflow-y-auto"></div></div></div>
-  <button class="rh-icon-btn" onclick="switchTab('leaderboard')" title="Leaderboard"><i class="fa-solid fa-trophy"></i></button>
+  <div class="rh-notify-wrap"><button id="hub-notify-btn" class="rh-icon-btn" onclick="toggleHubNotifications()" title="Notifications" aria-label="Notifications"><i class="fa-regular fa-bell"></i><span id="hub-notify-badge" class="rh-notify-badge">0</span></button><div id="hub-notify-panel" class="rh-notify-panel hidden"><div class="rh-notify-header"><div class="rh-notify-heading"><span class="rh-notify-heading-icon"><i class="fa-regular fa-bell"></i></span><div><b>Notifications</b><p>Your RATHOD HUB updates</p></div></div><button onclick="clearHubNotifications()" class="rh-notify-clear">Clear all</button></div><div id="hub-notify-list" class="rh-notify-list"></div></div></div>
+  <button class="rh-icon-btn" onclick="switchTab('leaderboard')" title="Leaderboard / Rewards" aria-label="Leaderboard and rewards"><i class="fa-solid fa-indian-rupee-sign"></i></button>
   <div class="rh-user"><div id="nav-pfp" class="w-9 h-9 rounded-full overflow-hidden border border-indigo-200 bg-slate-100 flex items-center justify-center shrink-0"></div><div><div id="nav-name" class="rh-user-name">User</div><span id="user-badge" class="text-[9px] uppercase font-bold text-indigo-600">Member</span></div><button onclick="openProfile()" class="rh-icon-btn" title="Profile"><i class="fa-solid fa-chevron-down"></i></button></div>
  </div>
 </header>
@@ -5794,7 +5794,7 @@ const HUB_NOTIFICATION_LIMIT=100;
 function hubNotifyKey(){return `rh_hub_notifications_${user?.id||'guest'}`}
 function hubNotifySeenKey(){return `rh_hub_notification_seen_${user?.id||'guest'}`}
 function hubSeenIds(){try{return new Set(JSON.parse(localStorage.getItem(hubNotifySeenKey())||'[]'))}catch{return new Set()}}
-function markHubNotificationsSeen(ids=[]){try{const seen=hubSeenIds();ids.filter(Boolean).forEach(id=>seen.add(String(id)));localStorage.setItem(hubNotifySeenKey(),JSON.stringify([...seen].slice(-500)))}catch{}}
+function markHubNotificationsSeen(ids=[]){try{const seen=hubSeenIds();ids.filter(Boolean).forEach(id=>seen.add(String(id)));localStorage.setItem(hubNotifySeenKey(),JSON.stringify([...seen].slice(-10000)))}catch{}}
 function hubNotificationIcon(tag){return ({livequiz:'⚡',dailyquiz:'🏆',voice:'🎙️',material:'📚',admin:'📣',event:'📅',test:'📝',bounty:'💰',group:'👥',treasure:'🗺️',game:'🎮',community:'💬',reaction:'✨',league:'🏆'})[tag]||'🔔'}
 function hubNotificationIsForMe(row){const metadata=row?.metadata&&typeof row.metadata==='object'?row.metadata:{};const target=metadata.target_user_id;return !target||String(target)===String(user?.id)}
 function loadHubNotificationStore(){try{const a=JSON.parse(localStorage.getItem(hubNotifyKey())||'[]');hubNotifications=Array.isArray(a)?a.slice(0,HUB_NOTIFICATION_LIMIT):[]}catch{hubNotifications=[]}renderHubNotifications()}
@@ -5803,7 +5803,15 @@ function hubNotificationMarkup(){return hubNotifications.length?hubNotifications
 function renderHubNotifications(){const n=hubNotifications.length,markup=hubNotificationMarkup();['hub-notify-list','hub-notify-list-mobile'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=markup});['hub-notify-badge'].forEach(id=>{const badge=document.getElementById(id);if(!badge)return;badge.textContent=n>99?'99+':String(n);badge.style.display=n?'flex':'none'})}
 function closeMobileNotifications(){document.getElementById('rh-mobile-notify-sheet')?.classList.add('hidden')}
 function toggleHubNotifications(){const mobile=window.matchMedia('(max-width:640px)').matches,el=document.getElementById(mobile?'rh-mobile-notify-sheet':'hub-notify-panel');if(!el)return;el.classList.toggle('hidden');renderHubNotifications();if(!el.classList.contains('hidden')&&'Notification'in window&&Notification.permission==='default')Notification.requestPermission().catch(()=>{})}
-function clearHubNotifications(){markHubNotificationsSeen(hubNotifications.map(x=>x.id));hubNotifications=[];saveHubNotificationStore();toast('Notifications cleared ✓')}
+function clearHubNotifications(){
+ const clearedIds=hubNotifications.map(x=>String(x.id)).filter(Boolean);
+ markHubNotificationsSeen(clearedIds);
+ hubNotifications=[];
+ try{localStorage.setItem(hubNotifyKey(),'[]')}catch(e){}
+ saveHubNotificationStore();
+ renderHubNotifications();
+ toast('Notifications cleared ✓');
+}
 function dismissHubNotification(id){if(!id)return;markHubNotificationsSeen([id]);hubNotifications=hubNotifications.filter(x=>String(x.id)!==String(id));saveHubNotificationStore()}
 function openHubNotification(id){
  const n=hubNotifications.find(x=>String(x.id)===String(id));markHubNotificationsSeen([id]);hubNotifications=hubNotifications.filter(x=>String(x.id)!==String(id));saveHubNotificationStore();document.getElementById('hub-notify-panel')?.classList.add('hidden');closeMobileNotifications();
@@ -5816,7 +5824,7 @@ function openHubNotification(id){
 async function showSystemHubNotification(item){if(!item||!('Notification'in window)||Notification.permission!=='granted')return;try{if(typeof window.AndroidNotifications!=='undefined'){new Notification(item.title,{body:item.body,tag:item.tag});return}if('serviceWorker'in navigator){const reg=await navigator.serviceWorker.ready;await reg.showNotification(item.title,{body:item.body,tag:item.tag||'rathod-hub',icon:'./icon-192.png',badge:'./icon-192.png',data:{notificationId:item.id,action:item.action,metadata:item.metadata,url:location.href},vibrate:[180,80,180]});return}const n=new Notification(item.title,{body:item.body,tag:item.tag,icon:'./icon-192.png'});n.onclick=()=>{window.focus();openHubNotification(item.id)}}catch(e){console.warn('System notification failed',e)}}
 function showHubNotification(title,body,tag='rathod-hub',action='',opts={}){if(!hubNotificationIsForMe({metadata:opts.metadata}))return null;const id=String(opts.id||(crypto?.randomUUID?crypto.randomUUID():`n_${Date.now()}_${Math.random()}`));if(hubSeenIds().has(id)||hubNotifications.some(x=>String(x.id)===id))return null;const item={id,title,body,tag,action,metadata:opts.metadata||{},icon:hubNotificationIcon(tag),created_at:opts.created_at||new Date().toISOString()};hubNotifications.unshift(item);hubNotifications=hubNotifications.slice(0,HUB_NOTIFICATION_LIMIT);saveHubNotificationStore();if(!opts.silent)toast(`${item.icon} ${title}`);if(!opts.silent)showSystemHubNotification(item);return item}
 function normalizeHubNotificationRow(row){return {id:row.id,title:row.title||'RATHOD HUB',body:row.body||'',tag:row.tag||'rathod-hub',action:row.action||'',metadata:row.metadata||{},created_at:row.created_at||new Date().toISOString()}}
-async function loadPersistedHubNotifications(){try{const {data,error}=await db.from('hub_notifications').select('id,title,body,tag,action,metadata,created_at,expires_at').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false}).limit(HUB_NOTIFICATION_LIMIT);if(error)throw error;const seen=hubSeenIds(),rows=(data||[]).filter(hubNotificationIsForMe),latestAdmin=rows.find(row=>row.tag==='admin'&&!seen.has(String(row.id)))?.id;rows.slice().reverse().forEach(row=>{if(!seen.has(String(row.id)))showHubNotification(row.title,row.body,row.tag,row.action,{...row,silent:String(row.id)!==String(latestAdmin)})})}catch(e){console.info('Persistent notifications SQL not installed yet; realtime fallback active.',e?.message||e)}}
+async function loadPersistedHubNotifications(){try{const {data,error}=await db.from('hub_notifications').select('id,title,body,tag,action,metadata,created_at,expires_at').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false}).limit(HUB_NOTIFICATION_LIMIT);if(error)throw error;const seen=hubSeenIds(),rows=(data||[]).filter(row=>hubNotificationIsForMe(row)&&!seen.has(String(row.id))),latestAdmin=rows.find(row=>row.tag==='admin')?.id;rows.slice().reverse().forEach(row=>{if(!hubSeenIds().has(String(row.id)))showHubNotification(row.title,row.body,row.tag,row.action,{...row,silent:String(row.id)!==String(latestAdmin)})})}catch(e){console.info('Persistent notifications SQL not installed yet; realtime fallback active.',e?.message||e)}}
 async function sendHubNotification(title,body,tag='rathod-hub',action='',metadata={}){try{const {data,error}=await db.rpc('publish_hub_notification',{p_title:String(title||'RATHOD HUB'),p_body:String(body||''),p_tag:String(tag||'rathod-hub'),p_action:String(action||''),p_metadata:metadata||{}});if(error)throw error;const row=Array.isArray(data)?data[0]:data;if(row?.id)return showHubNotification(row.title,row.body,row.tag,row.action,{...row,silent:false})}catch(e){console.info('Persistent notification publish fallback.',e?.message||e)}const local=showHubNotification(title,body,tag,action,{metadata});try{await hubNotifyChannel?.send({type:'broadcast',event:'hub-notification',payload:{title,body,tag,action,metadata,sourceId:user?.id||null,id:local?.id}})}catch(e){}return local}
 async function sendPersonalHubNotification(targetId,title,body,tag='community',action='community',metadata={}){
  if(!targetId||String(targetId)===String(user?.id))return null;
@@ -6670,6 +6678,40 @@ window.loadStudyWar=loadStudyWar;window.createStudyWar=createStudyWar;window.joi
  window.addEventListener('resize',schedule,{passive:true});
 })();
 </script>
+
+
+<style id="rh-premium-header-notifications">
+.rh-brand-copy{min-width:0;display:flex;align-items:center}
+.rh-brand-name{font-size:16px;font-weight:950;letter-spacing:.015em;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
+.rh-notify-wrap{position:static!important}
+#hub-notify-panel.rh-notify-panel{position:fixed!important;top:72px!important;right:16px!important;left:auto!important;width:min(410px,calc(100vw - 24px))!important;max-height:min(76vh,590px)!important;display:flex;flex-direction:column;background:linear-gradient(165deg,rgba(8,13,24,.99),rgba(18,17,36,.985))!important;border:1px solid rgba(148,163,184,.22)!important;border-radius:22px!important;box-shadow:0 24px 70px rgba(0,0,0,.58),0 0 0 1px rgba(255,255,255,.025) inset!important;backdrop-filter:blur(22px)!important;overflow:hidden!important;z-index:1400!important}
+.rh-notify-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 16px;border-bottom:1px solid rgba(255,255,255,.09);background:linear-gradient(105deg,rgba(14,165,233,.11),rgba(124,58,237,.13),rgba(236,72,153,.08));flex:none}
+.rh-notify-heading{display:flex;align-items:center;gap:11px;min-width:0}
+.rh-notify-heading-icon{width:38px;height:38px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(14,165,233,.22),rgba(124,58,237,.25));border:1px solid rgba(125,211,252,.23);color:#bae6fd;font-size:16px}
+.rh-notify-heading b{display:block;color:#f8fafc;font-size:14px;font-weight:900;letter-spacing:.01em}
+.rh-notify-heading p{margin-top:3px;color:#94a3b8;font-size:10px}
+.rh-notify-clear{border:1px solid rgba(248,113,113,.24);background:rgba(239,68,68,.09);color:#fca5a5;border-radius:999px;padding:8px 12px;font-size:10px;font-weight:900;white-space:nowrap;transition:background .16s,border-color .16s}
+.rh-notify-clear:hover{background:rgba(239,68,68,.17);border-color:rgba(248,113,113,.48)}
+.rh-notify-list{padding:11px;overflow-y:auto;overscroll-behavior:contain;max-height:min(64vh,500px)}
+.rh-notify-item{position:relative;width:100%;display:flex;align-items:flex-start;gap:11px;margin:0 0 9px;padding:13px 13px 13px 14px;border:1px solid rgba(148,163,184,.13);border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.055),rgba(255,255,255,.025));color:#fff;text-align:left;cursor:pointer;transition:transform .16s,border-color .16s,background .16s}
+.rh-notify-item:last-child{margin-bottom:0}
+.rh-notify-item:hover{transform:translateY(-1px);border-color:rgba(125,211,252,.30);background:linear-gradient(135deg,rgba(14,165,233,.09),rgba(124,58,237,.07))}
+.rh-notify-item>div:first-child{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;border-radius:12px;background:rgba(56,189,248,.10);border:1px solid rgba(125,211,252,.14);font-size:18px}
+.rh-notify-item>div:nth-child(2){min-width:0;flex:1;text-align:left}
+.rh-notify-item b{display:block;color:#f8fafc;font-size:12px;font-weight:850;line-height:1.4}
+.rh-notify-item p{margin-top:4px;color:#cbd5e1;font-size:11px;line-height:1.55;overflow-wrap:anywhere}
+.rh-notify-item span{display:block;margin-top:7px;color:#8292a8;font-size:9px}
+.rh-notify-arrow{align-self:center;color:#64748b;font-size:10px;flex:none}
+.rh-notify-empty{padding:30px 14px;text-align:center;color:#94a3b8;font-size:11px;line-height:1.65;border:1px dashed rgba(148,163,184,.17);border-radius:15px;background:rgba(255,255,255,.02)}
+.rh-notify-badge{background:linear-gradient(135deg,#0ea5e9,#7c3aed)!important;border:2px solid #07090d!important;box-shadow:0 5px 16px rgba(59,130,246,.34)!important}
+.rh-mobile-notify-sheet{position:fixed!important;inset:0!important;z-index:1500!important;display:flex;align-items:flex-start;justify-content:center;padding:72px 12px 20px;background:rgba(2,6,16,.72);backdrop-filter:blur(9px)}
+.rh-mobile-notify-card{width:100%;max-width:520px;max-height:calc(100dvh - 92px);display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(148,163,184,.22);border-radius:22px;background:linear-gradient(165deg,#080d18,#17132c);box-shadow:0 25px 70px rgba(0,0,0,.55)}
+.rh-mobile-notify-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 16px;border-bottom:1px solid rgba(255,255,255,.09);background:linear-gradient(105deg,rgba(14,165,233,.11),rgba(124,58,237,.13))}
+.rh-mobile-notify-head b{font-size:14px;color:#f8fafc}.rh-mobile-notify-head p{margin-top:3px;font-size:10px;color:#94a3b8}
+.rh-mobile-notify-head>div:last-child button:first-child{border:1px solid rgba(248,113,113,.24);background:rgba(239,68,68,.09);border-radius:999px;padding:7px 10px;font-weight:900;color:#fca5a5}
+.rh-mobile-notify-list{padding:11px;overflow-y:auto;overscroll-behavior:contain}
+@media(max-width:640px){#hub-notify-panel.rh-notify-panel{top:66px!important;right:10px!important;left:10px!important;width:auto!important;max-height:72vh!important}.rh-notify-list{max-height:calc(72vh - 70px)}.rh-brand-name{font-size:15px}.rh-top-actions{gap:5px!important}}
+</style>
 
 </body>
 </html>
