@@ -5404,7 +5404,9 @@ const RH_FOCUS_REWARD_RATE_SECONDS = 8 * 60 * 60;
 const RH_FOCUS_REWARD_RATE_RUPEES = 5;
 let rhFocusWalletState = {balance_rupees:0,today_seconds:0,today_earned_rupees:0,tracked_seconds:0,history:[]};
 let rhFocusWalletBusy = false;
+let rhFocusWalletPending = false;
 let rhFocusWalletLastSyncAt = 0;
+let rhFocusWalletInterval = null;
 function rhWalletMoney(value){return '₹'+Math.max(0,Number(value)||0).toFixed(2)}
 function rhWalletTime(seconds){const n=Math.max(0,Math.floor(Number(seconds)||0)),h=Math.floor(n/3600),m=Math.floor((n%3600)/60);return h+'h '+m+'m'}
 function renderFocusWalletRewards(){
@@ -5432,7 +5434,8 @@ function openStudyWallet(){
  syncFocusWalletRewards(true);
 }
 async function syncFocusWalletRewards(force=false,flushLive=true){
- if(!user||rhFocusWalletBusy)return;
+ if(!user)return;
+ if(rhFocusWalletBusy){if(force)rhFocusWalletPending=true;return;}
  const now=Date.now();
  if(!force&&now-rhFocusWalletLastSyncAt<30000)return;
  rhFocusWalletLastSyncAt=now;rhFocusWalletBusy=true;
@@ -5452,12 +5455,17 @@ async function syncFocusWalletRewards(force=false,flushLive=true){
  }catch(e){
   rhFocusWalletLastSyncAt=0;
   console.warn('Focus wallet reward sync failed:',e);
- }finally{rhFocusWalletBusy=false}
+ }finally{
+  rhFocusWalletBusy=false;
+  if(rhFocusWalletPending){rhFocusWalletPending=false;setTimeout(()=>syncFocusWalletRewards(true,false),120);}
+ }
 }
 function initFocusWalletRewards(){
  rhFocusWalletLastSyncAt=0;
+ if(rhFocusWalletInterval)clearInterval(rhFocusWalletInterval);
  renderFocusWalletRewards();
  syncFocusWalletRewards(true);
+ rhFocusWalletInterval=setInterval(()=>syncFocusWalletRewards(false,false),30000);
 }
 
 const FOCUS_KEY_PREFIX='rathod_focus_v2_';
