@@ -45,7 +45,7 @@ PRIVATE VAULT & COUPONS:
 - FIND coupon: open My Vault and check the active coupon card. It may provide a Copy action. Do not invent a code or tell students to use admin tools.
 - REDEEM coupon: Home > 'Unlock RATHOD HUB Features' > enter code in 'Coupon / Gift Card code' > 'Redeem Code'. My Vault is where the active code is found; Home is where it is redeemed.
 - Current coupon-gated destinations are Study Material, Community, Stories, AI Learning and AI Notes & Formula Sheets. Check the student's own screen for the actual lock/unlock state.
-- A newly generated coupon code has a one-month redeem window. After a successful redemption, the default premium access period is 5 days. The code's one-month validity and the user's 5-day access are different clocks. Do not say the code gives one month of premium access.
+- A newly generated coupon code has a one-month redeem window. After a successful redemption, premium access lasts 30 days (one month) from the redemption time. The code's one-month redeem validity and the one-month access period start at different times.
 
 SOCIAL, GAMES & EVENTS:
 - Community is the posts/reactions/comments/voice-post and member-following feed. Live Chat is the realtime student discussion room; Stories are integrated with the Chat/social area in the current runtime and, where visible, are 24-hour photo/video moments.
