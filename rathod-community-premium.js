@@ -156,7 +156,7 @@ async function sendComment(postId){
   // Notify asynchronously: do not keep the member's comment composer waiting
   // for a separate push-notification request to finish.
   if(String(post.author_id)!==String(user.id)){
-   Promise.resolve(sendPersonalHubNotification(post.author_id,(profile&&profile.name||'Someone')+' commented on your post',text||'Shared an image','community','community',{post_id:post.id,actor_id:user.id}))
+   Promise.resolve().then(function(){return sendPersonalHubNotification(post.author_id,(profile&&profile.name||'Someone')+' commented on your post',text||'Shared an image','community','community',{post_id:post.id,actor_id:user.id})})
     .catch(function(err){console.info('Comment notification delayed:',err?.message||err)});
   }
   toast('Comment posted ✓');
@@ -254,7 +254,7 @@ document.addEventListener('submit',function(event){
   try{
    var mime=file.type||'';
    if(!/^(image|video)\//i.test(mime))throw new Error('केवल image/video story allowed.');
-   if(file.size>500*1024*1024)throw new Error('Story maximum 500 MB रखें.');
+   if(file.size>80*1024*1024)throw new Error('Story video maximum 80 MB रखें.');
    driveFile=await uploadToGoogleDrive('Stories',file);
    if(!driveFile||!driveFile.id)throw new Error('Google Drive did not return a file ID.');
    var mediaUrl=mime.indexOf('image/')===0?driveImageUrl(driveFile.id):driveDownloadUrl(driveFile.id);
