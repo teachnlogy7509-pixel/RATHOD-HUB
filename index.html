@@ -1822,6 +1822,7 @@ async function deleteFromGoogleDrive(fileId){
 }
 
 let session=null,user=null,profile=null,materials=[],posts=[],chatMessages=[],diaryEntries=[];
+let chatProfileMap=new Map(),chatSubmitting=false;
 let mediaRecorder=null,audioChunks=[],recordedAudioBlob=null,isRecording=false;
 let authMode='login';
 let chatChannel=null;
@@ -2171,10 +2172,39 @@ async function loadChatMessages(){
  await cleanupExpiredChatMessages();
  const {data,error}=await db.from('chat_messages').select('id,user_id,name,message,created_at').gte('created_at',chatRetentionCutoff()).order('created_at',{ascending:false}).limit(100);
  if(error){console.error(error);document.getElementById('chat-messages').innerHTML='<div class="text-center py-10 text-slate-500">Chatroom table setup required.</div>';return}
- chatMessages=(data||[]).filter(m=>new Date(m.created_at).getTime()>=Date.now()-30*24*60*60*1000).reverse();renderChatMessages();
+ chatMessages=(data||[]).filter(m=>new Date(m.created_at).getTime()>=Date.now()-30*24*60*60*1000).reverse();
+ chatProfileMap=new Map();
+ if(profile?.id&&profile.pfp_url)chatProfileMap.set(String(profile.id),profile);
+ const ids=[...new Set(chatMessages.map(m=>String(m.user_id||'')).filter(Boolean))];
+ if(ids.length){
+  try{
+   const{data:profileRows,error:profileError}=await db.from('profiles').select('id,name,pfp_url').in('id',ids);
+   if(profileError)throw profileError;
+   (profileRows||[]).forEach(row=>chatProfileMap.set(String(row.id),row));
+  }catch(e){console.info('Live Chat profile photo lookup skipped:',e?.message||e)}
+ }
+ renderChatMessages();
+}
+async function ensureChatProfile(userId){
+ const id=String(userId||'');if(!id||chatProfileMap.has(id))return;
+ try{
+  const{data,error}=await db.from('profiles').select('id,name,pfp_url').eq('id',id).maybeSingle();
+  if(error)throw error;
+  if(data){chatProfileMap.set(id,data);renderChatMessages()}
+ }catch(e){console.info('Live Chat profile lookup pending:',e?.message||e)}
 }
 function renderChatMessages(){
- const box=document.getElementById('chat-messages');box.innerHTML=chatMessages.length?chatMessages.map(m=>{const mine=m.user_id===user?.id,name=m.name||'Member',initial=String(name).trim().charAt(0).toUpperCase()||'M';return`<div class="flex gap-2 ${mine?'flex-row-reverse ml-auto':'mr-auto'} max-w-[94%]"><div class="w-8 h-8 rounded-full shrink-0 grid place-items-center text-[10px] font-black ${mine?'bg-gradient-to-br from-cyan-400 to-blue-600':'bg-gradient-to-br from-violet-500 to-fuchsia-600'}">${esc(initial)}</div><div class="min-w-0 ${mine?'bg-gradient-to-br from-cyan-500/20 to-blue-600/10 border-cyan-400/25 rounded-tr-sm':'bg-white/5 border-white/10 rounded-tl-sm'} border rounded-2xl px-3 py-2.5"><div class="flex gap-3 items-center mb-1 ${mine?'justify-end':''}"><b class="text-[10px] ${mine?'text-cyan-300':'text-violet-300'}">${esc(mine?'You':name)}</b><span class="text-[8px] text-slate-600">${new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div><p class="text-sm text-slate-200 whitespace-pre-wrap break-words">${esc(m.message)}</p></div></div>`}).join(''):'<div class="h-full grid place-items-center text-center text-slate-500"><div><div class="text-4xl mb-2">💬</div><b class="text-sm text-slate-300">VIP study lounge is quiet</b><p class="text-xs mt-1">Start the first discussion.</p></div></div>';scrollChatToBottom();
+ const box=document.getElementById('chat-messages');if(!box)return;
+ box.innerHTML=chatMessages.length?chatMessages.map(m=>{
+  const mine=String(m.user_id)===String(user?.id),name=m.name||'Member',initial=String(name).trim().charAt(0).toUpperCase()||'M';
+  const cached=chatProfileMap.get(String(m.user_id||''))||{};
+  const pfp=m.pfp_url||cached.pfp_url||(mine?profile?.pfp_url:'');
+  const avatar=pfp
+   ? `<span class="hidden">${esc(initial)}</span><img src="${safeUrl(drivePreviewUrl(pfp))}" alt="" class="h-full w-full object-cover" loading="lazy" onerror="this.remove();this.previousElementSibling.classList.remove('hidden')">`
+   : esc(initial);
+  return `<div class="flex gap-2 ${mine?'flex-row-reverse ml-auto':'mr-auto'} max-w-[94%]" data-chat-message-id="${esc(String(m.id))}"><div class="w-8 h-8 rounded-full shrink-0 overflow-hidden grid place-items-center text-[10px] font-black ${mine?'bg-gradient-to-br from-cyan-400 to-blue-600':'bg-gradient-to-br from-violet-500 to-fuchsia-600'}">${avatar}</div><div class="min-w-0 ${mine?'bg-gradient-to-br from-cyan-500/20 to-blue-600/10 border-cyan-400/25 rounded-tr-sm':'bg-white/5 border-white/10 rounded-tl-sm'} border rounded-2xl px-3 py-2.5"><div class="flex gap-3 items-center mb-1 ${mine?'justify-end':''}"><b class="text-[10px] ${mine?'text-cyan-300':'text-violet-300'}">${esc(mine?'You':name)}</b><span class="text-[8px] text-slate-600">${new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>${m.pending?'<span class="text-[8px] text-cyan-300">Sending…</span>':''}</div><p class="text-sm text-slate-200 whitespace-pre-wrap break-words">${esc(m.message)}</p></div></div>`
+ }).join(''):'<div class="h-full grid place-items-center text-center text-slate-500"><div><div class="text-4xl mb-2">💬</div><b class="text-sm text-slate-300">VIP study lounge is quiet</b><p class="text-xs mt-1">Start the first discussion.</p></div></div>';
+ scrollChatToBottom();
 }
 function scrollChatToBottom(){const box=document.getElementById('chat-messages');requestAnimationFrame(()=>{box.scrollTop=box.scrollHeight})}
 async function subscribeToChat(){
@@ -2182,13 +2212,18 @@ async function subscribeToChat(){
  if(chatChannel){try{await db.removeChannel(chatChannel)}catch(e){}}
  chatChannel=db.channel('public:chat_messages')
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},payload=>{
-    const message=payload.new;if(!message||new Date(message.created_at).getTime()<Date.now()-30*24*60*60*1000)return;
-    const idx=chatMessages.findIndex(m=>m.id===message.id||(m.tempId&&m.tempId===message.id));
-    if(idx>=0){ chatMessages[idx]=message; }
-    else if(!chatMessages.some(m=>m.id===message.id)){
+    const message=payload.new;
+    if(!message||new Date(message.created_at).getTime()<Date.now()-30*24*60*60*1000)return;
+    const actualIndex=chatMessages.findIndex(m=>String(m.id)===String(message.id));
+    const pendingIndex=chatMessages.findIndex(m=>m.pending&&String(m.user_id)===String(message.user_id)&&m.message===message.message&&Math.abs(new Date(m.created_at).getTime()-new Date(message.created_at).getTime())<20000);
+    if(pendingIndex>=0){
+      if(actualIndex>=0&&actualIndex!==pendingIndex)chatMessages.splice(pendingIndex,1);
+      else chatMessages[pendingIndex]=message;
+    }else if(actualIndex<0){
       chatMessages.push(message);
-      if(chatMessages.length>50)chatMessages.shift();
+      if(chatMessages.length>100)chatMessages.shift();
     }
+    ensureChatProfile(message.user_id);
     renderChatMessages();
   })
   .subscribe();
@@ -2198,20 +2233,32 @@ async function cleanupChatSubscription(){
  const channel=chatChannel;chatChannel=null;await db.removeChannel(channel);
 }
 document.getElementById('chat-form').addEventListener('submit',async e=>{
- e.preventDefault();if(!user||!profile)return toast('Please login to chat.',false);
+ e.preventDefault();
+ if(chatSubmitting)return;
+ if(!user||!profile)return toast('Please login to chat.',false);
  const input=document.getElementById('chat-input'),message=input.value.trim();if(!message)return;
- const btn=document.getElementById('chat-send-btn');btn.disabled=true;
- const tempMsg={id:'temp_'+Date.now(),user_id:user.id,name:profile.name||user.email||'Member',message,created_at:new Date().toISOString()};
+ const btn=document.getElementById('chat-send-btn');chatSubmitting=true;btn.disabled=true;
+ const tempId='temp_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+ const tempMsg={id:tempId,tempId,pending:true,user_id:user.id,name:profile.name||user.email||'Member',pfp_url:profile.pfp_url||'',message,created_at:new Date().toISOString()};
  chatMessages.push(tempMsg);renderChatMessages();input.value='';
  try{
   const {data,error}=await db.from('chat_messages').insert({user_id:user.id,name:profile.name||user.email||'Member',message}).select().single();
   if(error)throw error;
   if(data){
-    const idx=chatMessages.findIndex(m=>m.id===tempMsg.id);
-    if(idx>=0)chatMessages[idx]=data;
+    const serverIndex=chatMessages.findIndex(m=>String(m.id)===String(data.id));
+    const pendingIndex=chatMessages.findIndex(m=>m.tempId===tempId);
+    if(serverIndex>=0){
+      if(pendingIndex>=0&&pendingIndex!==serverIndex)chatMessages.splice(pendingIndex,1);
+    }else if(pendingIndex>=0)chatMessages[pendingIndex]=data;
+    else chatMessages.push(data);
     renderChatMessages();
   }
- }catch(err){toast(err.message||'Message send failed',false);loadChatMessages()}finally{btn.disabled=false}
+ }catch(err){
+  chatMessages=chatMessages.filter(m=>m.tempId!==tempId);
+  if(!input.value)input.value=message;
+  renderChatMessages();
+  toast(err.message||'Message send failed',false);
+ }finally{chatSubmitting=false;btn.disabled=false}
 });
 
 function localDateValue(date=new Date()){const offset=date.getTimezoneOffset();return new Date(date.getTime()-offset*60000).toISOString().slice(0,10)}
