@@ -13,6 +13,7 @@ var openPostMenu=null;
 var commentDraft='';
 var selectedCommentFile=null;
 var collapsedReplies=new Set();
+var submittingCommentPosts=new Set();
 
 function el(id){return document.getElementById(id)}
 function txt(value){return typeof window.esc==='function'?window.esc(value):String(value==null?'':value).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -110,7 +111,7 @@ function renderDrawer(){
    '<div class="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-3" id="rh-community-comment-list">'+rows+'</div>'+
    '<form class="border-t border-slate-800 bg-slate-950/90 p-3" onsubmit="event.preventDefault();rhSendCommunityComment(\''+txt(post.id)+'\')">'+replyInfo+
     '<textarea id="rh-community-comment-input" rows="2" maxlength="1000" oninput="rhUpdateCommunityDraft(this.value)" placeholder="'+(replyTarget?'Write a reply…':'Write a comment…')+'" class="w-full resize-none rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-400"></textarea>'+
-    '<div class="mt-2 flex items-center justify-between gap-2"><label class="flex cursor-pointer items-center gap-2 text-xs text-slate-400 hover:text-white"><i class="fa-regular fa-image text-lg"></i> Attach image<input id="rh-community-comment-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" class="hidden" onchange="rhSetCommunityCommentFile(this)"></label><span id="rh-community-comment-file-name" class="min-w-0 flex-1 truncate text-[10px] text-slate-500">'+txt(selectedCommentFile?selectedCommentFile.name:'')+'</span><button class="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-xs font-black text-white"><i class="fa-solid fa-paper-plane mr-1"></i>'+(replyTarget?'Reply':'Comment')+'</button></div>'+
+    '<div class="mt-2 flex items-center justify-between gap-2"><label class="flex cursor-pointer items-center gap-2 text-xs text-slate-400 hover:text-white"><i class="fa-regular fa-image text-lg"></i> Attach image<input id="rh-community-comment-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" class="hidden" onchange="rhSetCommunityCommentFile(this)"></label><span id="rh-community-comment-file-name" class="min-w-0 flex-1 truncate text-[10px] text-slate-500">'+txt(selectedCommentFile?selectedCommentFile.name:'')+'</span><button '+(submittingCommentPosts.has(String(post.id))?'disabled':'')+' class="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-xs font-black text-white disabled:cursor-wait disabled:opacity-60"><i class="fa-solid '+(submittingCommentPosts.has(String(post.id))?'fa-circle-notch fa-spin':'fa-paper-plane')+' mr-1"></i>'+(submittingCommentPosts.has(String(post.id))?'Sending…':(replyTarget?'Reply':'Comment'))+'</button></div>'+
    '</form></aside></div>';
  var input=el('rh-community-comment-input');if(input&&commentDraft)input.value=commentDraft;
  var list=el('rh-community-comment-list');if(list)list.scrollTop=list.scrollHeight;
@@ -125,14 +126,19 @@ function editStart(postId,commentId){var found=getComment(getPost(postId),commen
 function editCancel(){editingComment=null;renderDrawer()}
 function applyPost(raw){var row=Array.isArray(raw)?raw[0]:raw;if(!row||!row.id)return;var i=posts.findIndex(function(p){return String(p.id)===String(row.id)});if(i>=0)posts[i]=Object.assign({},posts[i],row);else posts.unshift(row);window.renderPosts()}
 async function sendComment(postId){
+ var key=String(postId);
+ if(submittingCommentPosts.has(key))return;
  var input=el('rh-community-comment-input'),text=input?input.value.trim():'',file=window.rhCommunitySelectedCommentFile||selectedCommentFile;
  if(!text&&!file)return;
  if(!user)return toast('Please login to comment.',false);
  var post=getPost(postId);if(!post)return toast('Post not found.',false);
+ submittingCommentPosts.add(key);
+ commentDraft=text;
+ renderDrawer();
  try{
   var imageUrl=null;
   if(file){
-   if(!/^image\/(jpeg|png|webp|gif|avif)$/i.test(file.type||''))throw new Error('Choose a JPG, PNG, WebP, GIF or AVIF image.');
+   if(!/^image\\/(jpeg|png|webp|gif|avif)$/i.test(file.type||''))throw new Error('Choose a JPG, PNG, WebP, GIF or AVIF image.');
    if(file.size>15*1024*1024)throw new Error('Comment image must be 15 MB or smaller.');
    var path=uploadPath(file);
    var uploaded=await db.storage.from('rathod-community-media').upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type});
@@ -144,10 +150,23 @@ async function sendComment(postId){
    ? {p_post_id:Number(post.id),p_parent_comment_id:replyTarget.commentId,p_text:text,p_image_url:imageUrl}
    : {p_post_id:Number(post.id),p_text:text,p_image_url:imageUrl};
   var result=await db.rpc(rpc,args);if(result.error)throw result.error;
-  commentDraft='';selectedCommentFile=null;window.rhCommunitySelectedCommentFile=null;replyTarget=null;applyPost(result.data);
-  if(String(post.author_id)!==String(user.id))await sendPersonalHubNotification(post.author_id,(profile&&profile.name||'Someone')+' commented on your post',text||'Shared an image','community','community',{post_id:post.id,actor_id:user.id});
+  if(!result.data)throw new Error('Comment was not saved. Please try again.');
+  commentDraft='';selectedCommentFile=null;window.rhCommunitySelectedCommentFile=null;replyTarget=null;
+  applyPost(result.data);
+  // Notify asynchronously: do not keep the member's comment composer waiting
+  // for a separate push-notification request to finish.
+  if(String(post.author_id)!==String(user.id)){
+   Promise.resolve(sendPersonalHubNotification(post.author_id,(profile&&profile.name||'Someone')+' commented on your post',text||'Shared an image','community','community',{post_id:post.id,actor_id:user.id}))
+    .catch(function(err){console.info('Comment notification delayed:',err?.message||err)});
+  }
   toast('Comment posted ✓');
- }catch(e){console.error(e);toast(e.message||'Comment could not be sent.',false)}
+ }catch(e){
+  console.error(e);
+  toast(e.message||'Comment could not be sent.',false);
+ }finally{
+  submittingCommentPosts.delete(key);
+  if(activePostId===key)renderDrawer();
+ }
 }
 async function editSave(){
  if(!editingComment)return;var input=el('rh-premium-comment-edit'),text=input?input.value.trim():'';
@@ -221,32 +240,41 @@ function communityMenuBind(){window.renderPosts=newRenderPosts;window.toggleComm
 }
 communityMenuBind();
 
-/* Dedicated Supabase Storage uploader for Stories: Google Drive OAuth is kept
-   for other existing modules, but no longer gates Story uploads. */
+/* Stories use the original Google Drive folder again.
+   This keeps video/photo egress off Supabase Storage. */
 document.addEventListener('submit',function(event){
  if(!event.target||event.target.id!=='story-form')return;
  event.preventDefault();event.stopImmediatePropagation();
  var form=event.target,file=el('story-file')&&el('story-file').files[0],button=form.querySelector('button');
  if(!file)return toast('पहले photo या video चुनें.',false);
  if(!user)return toast('पहले login करें.',false);
- button.disabled=true;button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Saving story...';
- var path=null;
+ button.disabled=true;button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Uploading to Google Drive…';
+ var driveFile=null;
  (async function(){
   try{
    var mime=file.type||'';
-   if(!/^(image|video)\//i.test(mime))throw new Error('केवल image/video story allowed.');
-   if(file.size>80*1024*1024)throw new Error('Story maximum 80 MB रखें.');
-   path=uploadPath(file);
-   var result=await db.storage.from('rathod-stories').upload(path,file,{cacheControl:'3600',upsert:false,contentType:mime});
-   if(result.error)throw new Error(result.error.message||'Story upload failed.');
-   var url=db.storage.from('rathod-stories').getPublicUrl(path).data.publicUrl;
-   var saved=await db.from('stories').insert({user_id:user.id,name:profile&&profile.name||user.email,media_url:url,media_type:mime,caption:(el('story-text')&&el('story-text').value||'').trim(),expires_at:new Date(Date.now()+86400000).toISOString()});
+   if(!/^(image|video)\\//i.test(mime))throw new Error('केवल image/video story allowed.');
+   if(file.size>500*1024*1024)throw new Error('Story maximum 500 MB रखें.');
+   driveFile=await uploadToGoogleDrive('Stories',file);
+   if(!driveFile||!driveFile.id)throw new Error('Google Drive did not return a file ID.');
+   var mediaUrl=mime.indexOf('image/')===0?driveImageUrl(driveFile.id):driveDownloadUrl(driveFile.id);
+   var saved=await db.from('stories').insert({
+    user_id:user.id,
+    name:profile&&profile.name||user.email,
+    media_url:mediaUrl,
+    media_type:mime,
+    caption:(el('story-text')&&el('story-text').value||'').trim(),
+    expires_at:new Date(Date.now()+86400000).toISOString()
+   });
    if(saved.error)throw saved.error;
    form.reset();if(el('story-selected-file'))el('story-selected-file').classList.add('hidden');
-   toast('Story live है—24 घंटे बाद expire होगी');await loadStories();
+   toast('Story Google Drive में live है—24 घंटे बाद expire होगी');await loadStories();
   }catch(error){
-   if(path){try{await db.storage.from('rathod-stories').remove([path])}catch(cleanupError){console.warn('Story cleanup failed',cleanupError)}}
-   console.error('Story upload failed:',error);toast(error.message||'Story failed',false);
+   if(driveFile&&driveFile.id){try{await deleteFromGoogleDrive(driveFile.id)}catch(cleanupError){console.warn('Google Drive Story cleanup failed',cleanupError)}}
+   console.error('Google Drive Story upload failed:',error);
+   var message=error.message||'Google Drive Story upload failed.';
+   if(/invalid_grant|invalid credentials|oauth failed/i.test(message))message='Google Drive refresh token expire/revoke ho gaya hai. Google account ko re-authorize karke GOOGLE_REFRESH_TOKEN update karna hoga. Story Google Drive पर ही रहेगी.';
+   toast(message,false);
   }finally{button.disabled=false;button.innerHTML='<i class="fa-solid fa-paper-plane mr-2"></i>Share Story'}
  })();
 },true);
