@@ -110,13 +110,13 @@ function renderDrawer(){
    '<div class="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-3" id="rh-community-comment-list">'+rows+'</div>'+
    '<form class="border-t border-slate-800 bg-slate-950/90 p-3" onsubmit="event.preventDefault();rhSendCommunityComment(\''+txt(post.id)+'\')">'+replyInfo+
     '<textarea id="rh-community-comment-input" rows="2" maxlength="1000" oninput="rhUpdateCommunityDraft(this.value)" placeholder="'+(replyTarget?'Write a reply…':'Write a comment…')+'" class="w-full resize-none rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-400"></textarea>'+
-    '<div class="mt-2 flex items-center justify-between gap-2"><label class="flex cursor-pointer items-center gap-2 text-xs text-slate-400 hover:text-white"><i class="fa-regular fa-image text-lg"></i> Attach image<input id="rh-community-comment-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" class="hidden" onchange="rhCommunitySelectedCommentFile=this.files&&this.files[0]||null;document.getElementById(\'rh-community-comment-file-name\').textContent=rhCommunitySelectedCommentFile?rhCommunitySelectedCommentFile.name:\'\'"></label><span id="rh-community-comment-file-name" class="min-w-0 flex-1 truncate text-[10px] text-slate-500">'+txt(selectedCommentFile?selectedCommentFile.name:'')+'</span><button class="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-xs font-black text-white"><i class="fa-solid fa-paper-plane mr-1"></i>'+(replyTarget?'Reply':'Comment')+'</button></div>'+
+    '<div class="mt-2 flex items-center justify-between gap-2"><label class="flex cursor-pointer items-center gap-2 text-xs text-slate-400 hover:text-white"><i class="fa-regular fa-image text-lg"></i> Attach image<input id="rh-community-comment-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" class="hidden" onchange="rhSetCommunityCommentFile(this)"></label><span id="rh-community-comment-file-name" class="min-w-0 flex-1 truncate text-[10px] text-slate-500">'+txt(selectedCommentFile?selectedCommentFile.name:'')+'</span><button class="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-xs font-black text-white"><i class="fa-solid fa-paper-plane mr-1"></i>'+(replyTarget?'Reply':'Comment')+'</button></div>'+
    '</form></aside></div>';
  var input=el('rh-community-comment-input');if(input&&commentDraft)input.value=commentDraft;
  var list=el('rh-community-comment-list');if(list)list.scrollTop=list.scrollHeight;
 }
-function openComments(id){activePostId=String(id);replyTarget=null;editingComment=null;commentDraft='';selectedCommentFile=null;openCommentMenu=null;renderDrawer()}
-function closeComments(){activePostId=null;replyTarget=null;editingComment=null;commentDraft='';selectedCommentFile=null;openCommentMenu=null;var host=el('rh-community-comment-drawer');if(host)host.innerHTML=''}
+function openComments(id){activePostId=String(id);replyTarget=null;editingComment=null;commentDraft='';selectedCommentFile=null;window.rhCommunitySelectedCommentFile=null;openCommentMenu=null;renderDrawer()}
+function closeComments(){activePostId=null;replyTarget=null;editingComment=null;commentDraft='';selectedCommentFile=null;window.rhCommunitySelectedCommentFile=null;openCommentMenu=null;var host=el('rh-community-comment-drawer');if(host)host.innerHTML=''}
 function postMenuToggle(id){openPostMenu=openPostMenu===String(id)?null:String(id);window.renderPosts()}
 function commentMenuToggle(id){openCommentMenu=openCommentMenu===String(id)?null:String(id);renderDrawer()}
 function replySet(postId,rootCommentId){var found=getComment(getPost(postId),rootCommentId);replyTarget={commentId:String(rootCommentId),author:found&&found.comment?found.comment.author:'comment'};editingComment=null;renderDrawer();el('rh-community-comment-input')&&el('rh-community-comment-input').focus()}
@@ -216,6 +216,7 @@ function communityMenuBind(){window.renderPosts=newRenderPosts;window.toggleComm
  window.rhDeleteCommunityComment=commentDelete;window.rhToggleCommunityCommentLike=commentLike;
  window.rhToggleCommunityReplies=commentRepliesToggle;window.rhSendCommunityComment=sendComment;
  window.rhEditCommunityPost=postEdit;
+ window.rhSetCommunityCommentFile=function(input){selectedCommentFile=input&&input.files&&input.files[0]||null;window.rhCommunitySelectedCommentFile=selectedCommentFile;var label=el('rh-community-comment-file-name');if(label)label.textContent=selectedCommentFile?selectedCommentFile.name:''};
  window.rhUpdateCommunityDraft=function(value){commentDraft=String(value||'')};
 }
 communityMenuBind();
