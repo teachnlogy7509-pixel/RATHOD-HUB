@@ -3484,7 +3484,7 @@ const aiAgentImagePreviewUrls=new Set();
 
 function handleAIAgentImage(event){
  const file=event?.target?.files?.[0];if(!file)return;
- if(!/^image\\/(jpeg|png|webp|gif)$/i.test(file.type||'')){
+ if(!/^image\/(jpeg|png|webp|gif)$/i.test(file.type||'')){
   toast('JPG, PNG, WebP या GIF image चुनें।',false);event.target.value='';return;
  }
  if(file.size>12*1024*1024){
@@ -3555,7 +3555,19 @@ async function askAI(){
  const userQuestion=q||(aiAgentMode==='app'
   ? 'Is screenshot ko dekhkar batao ki RATHOD HUB me kya karna hai.'
   : 'Is screenshot me dikh rahe question ko solve karke samjhao.');
- ai const recent=aiAgentHistory.slice(-9).map(x=>(x.role==='user'?'User':'Agent')+': '+x.text+(x.hasImage?' [Screenshot/photo attached]':'')).join('\\n');
+ aiAgentBusy=true;
+ if(button){button.disabled=true;button.classList.add('opacity-60','cursor-wait');}
+ out.classList.remove('hidden');
+ aiAgentHistory.push({role:'user',text:userQuestion,mode:aiAgentMode,hasImage:!!selectedImage,imagePreview:selectedImage?.previewUrl||null});
+ renderAIAgentHistory(true);
+ if(input)input.value='';
+ if(selectedImage){
+  aiAgentSelectedImage=null;
+  const picker=document.getElementById('ai-image-input');if(picker)picker.value='';
+  const preview=document.getElementById('ai-image-preview');if(preview){preview.classList.add('hidden');preview.innerHTML=''}
+ }
+
+ const recent=aiAgentHistory.slice(-9).map(x=>(x.role==='user'?'User':'Agent')+': '+x.text+(x.hasImage?' [Screenshot/photo attached]':'')).join('\n');
  const question=aiAgentMode==='app'
   ? RATHOD_APP_CONTEXT+'\n\nConversation so far:\n'+recent+'\n\nAnswer the latest user message.'
   : "You are RATHOD HUB's careful NEET/NCERT tutor. Reply warmly in the student's language, explain concepts clearly, and use the existing AI Doctor personality and teaching rules. Do not fabricate citations. Use the conversation context for follow-ups.\n\nConversation so far:\n"+recent;
