@@ -10,7 +10,7 @@
   let historyBusy = false;
 
   function shortTitle(value) {
-    const title = String(value || 'New chat').replace(/\\s+/g, ' ').trim();
+    const title = String(value || 'New chat').replace(/\s+/g, ' ').trim();
     return title.length > 58 ? title.slice(0, 55) + '…' : (title || 'New chat');
   }
 
@@ -112,7 +112,7 @@
       aiAgentHistory = (messagesResult.data || []).reverse().map(function (message) {
         return {
           role: message.role,
-          text: String(message.content || '') + (message.has_image ? '\\n📷 [इस पुराने message में image attach थी; image file save नहीं की गई थी।]' : ''),
+          text: String(message.content || '') + (message.has_image ? '\n📷 [इस पुराने message में image attach थी; image file save नहीं की गई थी।]' : ''),
           mode: message.mode || chatResult.data.mode || 'doubt',
           hasImage: !!message.has_image,
           at: new Date(message.created_at).getTime()
