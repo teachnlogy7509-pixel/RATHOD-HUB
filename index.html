@@ -1288,7 +1288,15 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
   <div class="relative mt-5 grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/25 p-1.5"><button id="ai-mode-app" onclick="setAIAgentMode('app')" class="rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-3 py-3 text-xs font-black">🧭 App के बारे में</button><button id="ai-mode-doubt" onclick="setAIAgentMode('doubt')" class="rounded-xl px-3 py-3 text-xs font-black text-slate-400">🧠 Study Doubt</button></div>
   <div id="ai-agent-welcome" class="relative mt-3 rounded-2xl border border-cyan-400/15 bg-cyan-500/5 p-4"><b class="text-sm text-cyan-200">👋 मैं RATHOD Guide Agent हूँ</b><p class="mt-1 text-[11px] leading-5 text-slate-400">पूछें: quiz कैसे शुरू करें, Mistake Vault कहाँ है, XP कैसे मिलता है, Study Room कैसे join करें या app का कोई feature कैसे use करें।</p></div>
   <div id="ai-quick-prompts" class="relative mt-3 grid grid-cols-2 sm:grid-cols-5 gap-2"></div>
-  <div class="relative mt-3 rounded-2xl border border-violet-400/20 bg-black/25 p-2"><textarea id="ai-input" rows="4" class="w-full resize-none rounded-xl border-0 bg-transparent p-3 text-sm outline-none" placeholder="RATHOD HUB कैसे use करें?"></textarea><button id="ai-ask-button" onclick="askAI()" class="w-full rounded-xl bg-gradient-to-r from-cyan-600 via-indigo-600 to-fuchsia-600 py-3 text-sm font-black shadow-lg shadow-indigo-900/30 hover:brightness-110"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Ask RATHOD Agent</button></div>
+  <div class="relative mt-3 rounded-2xl border border-violet-400/20 bg-black/25 p-2">
+   <div class="relative">
+    <textarea id="ai-input" rows="4" class="w-full resize-none rounded-xl border-0 bg-transparent p-3 pb-14 pr-14 text-sm outline-none" placeholder="RATHOD HUB कैसे use करें?"></textarea>
+    <button type="button" onclick="document.getElementById('ai-image-input').click()" class="absolute bottom-3 right-3 grid h-10 w-10 place-items-center rounded-xl border border-cyan-400/25 bg-slate-800/90 text-cyan-200 shadow-lg hover:bg-slate-700" aria-label="Upload screenshot or photo" title="Screenshot / Photo जोड़ें"><i class="fa-solid fa-camera text-lg"></i></button>
+    <input id="ai-image-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif" capture="environment" class="hidden" onchange="handleAIAgentImage(event)">
+   </div>
+   <div id="ai-image-preview" class="hidden mb-2 rounded-xl border border-cyan-400/20 bg-slate-900/80 p-2"></div>
+   <button id="ai-ask-button" onclick="askAI()" class="w-full rounded-xl bg-gradient-to-r from-cyan-600 via-indigo-600 to-fuchsia-600 py-3 text-sm font-black shadow-lg shadow-indigo-900/30 hover:brightness-110"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Ask RATHOD Agent</button>
+  </div>
   <div id="ai-output" class="relative mt-4 hidden rounded-2xl border border-cyan-400/20 bg-slate-950/85 p-4 sm:p-5 shadow-inner"><div class="mb-3 flex items-center justify-between"><div id="ai-output-label" class="text-[9px] font-black uppercase tracking-[.2em] text-cyan-300">Agent conversation</div><button onclick="clearAIAgentChat()" class="rounded-lg bg-white/5 px-2 py-1 text-[9px] text-slate-400">Clear chat</button></div><div id="ai-agent-history" class="space-y-3"></div><div id="ai-output-text" class="hidden"></div></div>
  </div>
 </section>
@@ -3411,7 +3419,7 @@ function renderLeagueSetupRequired(error){const box=document.getElementById('lea
 
 let aiAgentMode='app',aiAgentHistory=[];
 const AI_AGENT_QUICK={
- app:[['👨‍💻 Developer','RATHOD HUB के developer कौन हैं? उनका परिचय बताओ।'],['🧭 App Tour','RATHOD HUB के सभी main features और उन्हें use करने का आसान तरीका बताओ।'],['⚡ XP Guide','XP कैसे earn और use कर सकते हैं?'],['🎥 Study Room','Study Room में voice और camera कैसे चलाएँ?'],['🏅 Badges','Badge Library और question badges कैसे unlock होते हैं?']],
+ app:[['👨‍💻 Developer','RATHOD HUB के developer कौन हैं? उनका परिचय बताओ।'],['🧭 App Tour','RATHOD HUB के सभी main features और उन्हें use करने का आसान तरीका बताओ।'],['⚡ XP Guide','XP कैसे earn और use कर सकते हैं?'],['🎥 Study Room','Study Room में voice और camera कैसे चलाएँ?'],],
  doubt:[['📖 Explain','इस concept को NCERT examples के साथ simple Hindi में समझाओ: '],['🎯 NEET Traps','इस topic के important NEET traps और mnemonics बताओ: '],['⚡ Solve','इस question को step-by-step solve करो: '],['✅ Verify','इस statement को NCERT के अनुसार verify करो: ']]
 };
 const RATHOD_APP_CONTEXT=`You are RATHOD Guide Agent, the official in-app guide for RATHOD HUB, a NEET preparation and student-community app.
@@ -3471,21 +3479,83 @@ function useAIQuickPrompt(i){const row=AI_AGENT_QUICK[aiAgentMode]?.[Number(i)];
 function setAIDoubtPrompt(text){const input=document.getElementById('ai-input');if(!input)return;input.value=text;input.focus()}
 let aiAgentBusy=false;
 let aiAgentAbortController=null;
+let aiAgentSelectedImage=null;
+const aiAgentImagePreviewUrls=new Set();
+
+function handleAIAgentImage(event){
+ const file=event?.target?.files?.[0];if(!file)return;
+ if(!/^image\\/(jpeg|png|webp|gif)$/i.test(file.type||'')){
+  toast('JPG, PNG, WebP या GIF image चुनें।',false);event.target.value='';return;
+ }
+ if(file.size>12*1024*1024){
+  toast('Screenshot 12 MB से छोटा रखें।',false);event.target.value='';return;
+ }
+ if(aiAgentSelectedImage?.previewUrl){
+  URL.revokeObjectURL(aiAgentSelectedImage.previewUrl);
+  aiAgentImagePreviewUrls.delete(aiAgentSelectedImage.previewUrl);
+ }
+ const previewUrl=URL.createObjectURL(file);aiAgentImagePreviewUrls.add(previewUrl);
+ aiAgentSelectedImage={file,previewUrl};
+ const preview=document.getElementById('ai-image-preview');
+ if(preview){
+  preview.classList.remove('hidden');
+  preview.innerHTML='<div class="flex items-center gap-3"><img src="'+esc(previewUrl)+'" alt="Selected screenshot" class="h-14 w-14 rounded-lg border border-slate-700 object-cover"><div class="min-w-0 flex-1"><b class="block truncate text-xs text-cyan-200">Screenshot attached</b><span class="block truncate text-[10px] text-slate-400">'+esc(file.name||'Photo')+'</span><span class="text-[9px] text-slate-500">AI Doctor इसे देखकर जवाब देगा</span></div><button type="button" onclick="removeAIAgentImage()" class="grid h-8 w-8 place-items-center rounded-lg bg-slate-800 text-slate-300" aria-label="Remove image"><i class="fa-solid fa-xmark"></i></button></div>';
+ }
+}
+function removeAIAgentImage(){
+ if(aiAgentSelectedImage?.previewUrl){
+  URL.revokeObjectURL(aiAgentSelectedImage.previewUrl);
+  aiAgentImagePreviewUrls.delete(aiAgentSelectedImage.previewUrl);
+ }
+ aiAgentSelectedImage=null;
+ const input=document.getElementById('ai-image-input');if(input)input.value='';
+ const preview=document.getElementById('ai-image-preview');if(preview){preview.classList.add('hidden');preview.innerHTML=''}
+}
+function readAIAgentBlobAsDataUrl(blob){
+ return new Promise((resolve,reject)=>{
+  const reader=new FileReader();
+  reader.onload=()=>resolve(String(reader.result||''));
+  reader.onerror=()=>reject(new Error('Screenshot पढ़ा नहीं जा सका। फिर से चुनें।'));
+  reader.readAsDataURL(blob);
+ });
+}
+async function makeAIAgentImageDataUrl(file){
+ const allowed=['image/jpeg','image/png','image/webp','image/gif'];
+ if(!file||!allowed.includes(file.type))throw new Error('JPG, PNG, WebP या GIF screenshot चुनें।');
+ if(file.size<=4.5*1024*1024)return await readAIAgentBlobAsDataUrl(file);
+ const objectUrl=URL.createObjectURL(file);
+ try{
+  const image=new Image();image.src=objectUrl;
+  await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(new Error('Screenshot decode नहीं हो पाया।'))});
+  const maxSide=2200,scale=Math.min(1,maxSide/Math.max(image.naturalWidth,image.naturalHeight));
+  const canvas=document.createElement('canvas');
+  canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+  const ctx=canvas.getContext('2d');if(!ctx)throw new Error('Image processing is not supported in this browser.');
+  ctx.drawImage(image,0,0,canvas.width,canvas.height);
+  let blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.9));
+  if(!blob)throw new Error('Screenshot compress नहीं हो पाया।');
+  if(blob.size>4.5*1024*1024){
+   const smaller=document.createElement('canvas'),scale2=Math.min(1,1700/Math.max(canvas.width,canvas.height));
+   smaller.width=Math.max(1,Math.round(canvas.width*scale2));smaller.height=Math.max(1,Math.round(canvas.height*scale2));
+   const smallerCtx=smaller.getContext('2d');if(!smallerCtx)throw new Error('Image processing is not supported in this browser.');
+   smallerCtx.drawImage(canvas,0,0,smaller.width,smaller.height);
+   blob=await new Promise(resolve=>smaller.toBlob(resolve,'image/jpeg',0.82));
+  }
+  if(!blob||blob.size>4.8*1024*1024)throw new Error('Image अभी भी बड़ी है। छोटा screenshot चुनें।');
+  return await readAIAgentBlobAsDataUrl(blob);
+ }finally{URL.revokeObjectURL(objectUrl)}
+}
 
 async function askAI(){
  const input=document.getElementById('ai-input');
  const button=document.getElementById('ai-ask-button');
  const q=input?.value.trim(),out=document.getElementById('ai-output');
- if(!q||!out||aiAgentBusy)return;
-
- aiAgentBusy=true;
- if(button){button.disabled=true;button.classList.add('opacity-60','cursor-wait');}
- out.classList.remove('hidden');
- aiAgentHistory.push({role:'user',text:q,mode:aiAgentMode});
- renderAIAgentHistory(true);
- input.value='';
-
- const recent=aiAgentHistory.slice(-9).map(x=>(x.role==='user'?'User':'Agent')+': '+x.text).join('\n');
+ const selectedImage=aiAgentSelectedImage;
+ if((!q&&!selectedImage)||!out||aiAgentBusy)return;
+ const userQuestion=q||(aiAgentMode==='app'
+  ? 'Is screenshot ko dekhkar batao ki RATHOD HUB me kya karna hai.'
+  : 'Is screenshot me dikh rahe question ko solve karke samjhao.');
+ ai const recent=aiAgentHistory.slice(-9).map(x=>(x.role==='user'?'User':'Agent')+': '+x.text+(x.hasImage?' [Screenshot/photo attached]':'')).join('\\n');
  const question=aiAgentMode==='app'
   ? RATHOD_APP_CONTEXT+'\n\nConversation so far:\n'+recent+'\n\nAnswer the latest user message.'
   : "You are RATHOD HUB's careful NEET/NCERT tutor. Reply warmly in the student's language, explain concepts clearly, and use the existing AI Doctor personality and teaching rules. Do not fabricate citations. Use the conversation context for follow-ups.\n\nConversation so far:\n"+recent;
@@ -3531,6 +3601,7 @@ async function askAI(){
   const accessToken=authData?.session?.access_token;
   if(!accessToken)throw new Error('Login session expired. Please login again.');
 
+  const imageDataUrl=selectedImage?await makeAIAgentImageDataUrl(selectedImage.file):null;
   const response=await fetch(SUPABASE_URL+'/functions/v1/ai-chat',{
    method:'POST',
    headers:{
@@ -3539,7 +3610,7 @@ async function askAI(){
     'Content-Type':'application/json',
     Accept:'text/event-stream'
    },
-   body:JSON.stringify({question:question,stream:true}),
+   body:JSON.stringify({question:question,stream:true,...(imageDataUrl?{imageDataUrl}: {})}),
    signal:aiAgentAbortController.signal
   });
   if(!response.ok){
@@ -3700,13 +3771,13 @@ function renderAIAgentHistory(thinking=false){
  });
  box.innerHTML=visibleRows.map(function(x){
   if(x.role==='user'){
-   return '<div class="ml-auto max-w-[88%] rounded-2xl rounded-br-md bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-3 text-xs leading-5 text-white"><div class="mb-1 text-[8px] font-black uppercase text-indigo-200">You</div>'+esc(x.text)+'</div>';
+   return '<div class="ml-auto max-w-[88%] rounded-2xl rounded-br-md bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-3 text-xs leading-5 text-white"><div class="mb-1 text-[8px] font-black uppercase text-indigo-200">You</div>'+esc(x.text)+(x.imagePreview?'<img src="'+esc(x.imagePreview)+'" alt="Uploaded screenshot" class="mt-2 max-h-44 max-w-full rounded-xl border border-white/20 object-contain">':'')+'</div>';
   }
   return '<div class="max-w-[94%] rounded-2xl rounded-bl-md border '+(x.error?'border-rose-400/20 bg-rose-500/5':'border-cyan-400/15 bg-cyan-500/5')+' px-4 py-3 text-xs leading-6 text-slate-200"><div class="mb-1 text-[8px] font-black uppercase '+(x.error?'text-rose-300':'text-cyan-300')+'">🤖 RATHOD Agent</div><div class="ai-rich-reply">'+formatAIAgentReply(x.text)+'</div></div>';
  }).join('')+(thinking?'<div class="max-w-[70%] rounded-2xl rounded-bl-md border border-cyan-400/15 bg-cyan-500/5 px-4 py-3 text-xs text-cyan-200"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>सोच रहा हूँ…</div>':'');
  box.lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
-function clearAIAgentChat(){if(aiAgentAbortController)aiAgentAbortController.abort();aiAgentHistory=[];const box=document.getElementById('ai-agent-history');if(box)box.innerHTML='';document.getElementById('ai-output')?.classList.add('hidden');toast('Agent chat cleared')}
+function clearAIAgentChat(){if(aiAgentAbortController)aiAgentAbortController.abort();aiAgentHistory=[];removeAIAgentImage();aiAgentImagePreviewUrls.forEach(url=>URL.revokeObjectURL(url));aiAgentImagePreviewUrls.clear();const box=document.getElementById('ai-agent-history');if(box)box.innerHTML='';document.getElementById('ai-output')?.classList.add('hidden');toast('Agent chat cleared')}
 
 function rhQuizHistoryKey(){
   return `rh_quiz_recent_${user?.id||'guest'}`;
