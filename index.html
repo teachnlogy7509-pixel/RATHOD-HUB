@@ -3567,7 +3567,8 @@ async function askAI(){
   const preview=document.getElementById('ai-image-preview');if(preview){preview.classList.add('hidden');preview.innerHTML=''}
  }
 
- const recent=aiAgentHistory.slice(-20).map(x=>(x.role==='user'?'User':'Agent')+': '+x.text+(x.hasImage?' [Screenshot/photo attached]':'')).join('\n');
+ const recentLimit=aiAgentMode==='app'?3200:7600;
+ const recent=aiAgentHistory.slice(-20).map(x=>(x.role==='user'?'User':'Agent')+': '+x.text+(x.hasImage?' [Screenshot/photo attached]':'')).join('\n').slice(-recentLimit);
  const question=aiAgentMode==='app'
   ? RATHOD_APP_CONTEXT+'\n\nConversation so far:\n'+recent+'\n\nAnswer the latest user message.'
   : "You are RATHOD HUB's careful NEET/NCERT tutor. Reply warmly in the student's language, explain concepts clearly, and use the existing AI Doctor personality and teaching rules. Do not fabricate citations. Use the conversation context for follow-ups.\n\nConversation so far:\n"+recent;
@@ -7008,6 +7009,6 @@ window.loadStudyWar=loadStudyWar;window.createStudyWar=createStudyWar;window.joi
 })();
 </script>
 <script defer src="rathod-community-premium.js?v=3"></script>
-<script defer src="ai-doctor-history.js?v=1"></script>
+<script defer src="ai-doctor-history.js?v=2"></script>
 </body>
 </html>
