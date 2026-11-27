@@ -138,7 +138,7 @@ async function sendComment(postId){
  try{
   var imageUrl=null;
   if(file){
-   if(!/^image\\/(jpeg|png|webp|gif|avif)$/i.test(file.type||''))throw new Error('Choose a JPG, PNG, WebP, GIF or AVIF image.');
+   if(!/^image\/(jpeg|png|webp|gif|avif)$/i.test(file.type||''))throw new Error('Choose a JPG, PNG, WebP, GIF or AVIF image.');
    if(file.size>15*1024*1024)throw new Error('Comment image must be 15 MB or smaller.');
    var path=uploadPath(file);
    var uploaded=await db.storage.from('rathod-community-media').upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type});
@@ -253,7 +253,7 @@ document.addEventListener('submit',function(event){
  (async function(){
   try{
    var mime=file.type||'';
-   if(!/^(image|video)\\//i.test(mime))throw new Error('केवल image/video story allowed.');
+   if(!/^(image|video)\//i.test(mime))throw new Error('केवल image/video story allowed.');
    if(file.size>500*1024*1024)throw new Error('Story maximum 500 MB रखें.');
    driveFile=await uploadToGoogleDrive('Stories',file);
    if(!driveFile||!driveFile.id)throw new Error('Google Drive did not return a file ID.');
