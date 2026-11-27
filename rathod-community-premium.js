@@ -109,7 +109,7 @@ function renderDrawer(){
    preview+
    '<div class="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-3" id="rh-community-comment-list">'+rows+'</div>'+
    '<form class="border-t border-slate-800 bg-slate-950/90 p-3" onsubmit="event.preventDefault();rhSendCommunityComment(\''+txt(post.id)+'\')">'+replyInfo+
-    '<textarea id="rh-community-comment-input" rows="2" maxlength="1000" oninput="rhCommunityCommentDraft=this.value" placeholder="'+(replyTarget?'Write a reply…':'Write a comment…')+'" class="w-full resize-none rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-400"></textarea>'+
+    '<textarea id="rh-community-comment-input" rows="2" maxlength="1000" oninput="rhUpdateCommunityDraft(this.value)" placeholder="'+(replyTarget?'Write a reply…':'Write a comment…')+'" class="w-full resize-none rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-400"></textarea>'+
     '<div class="mt-2 flex items-center justify-between gap-2"><label class="flex cursor-pointer items-center gap-2 text-xs text-slate-400 hover:text-white"><i class="fa-regular fa-image text-lg"></i> Attach image<input id="rh-community-comment-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" class="hidden" onchange="rhCommunitySelectedCommentFile=this.files&&this.files[0]||null;document.getElementById(\'rh-community-comment-file-name\').textContent=rhCommunitySelectedCommentFile?rhCommunitySelectedCommentFile.name:\'\'"></label><span id="rh-community-comment-file-name" class="min-w-0 flex-1 truncate text-[10px] text-slate-500">'+txt(selectedCommentFile?selectedCommentFile.name:'')+'</span><button class="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-xs font-black text-white"><i class="fa-solid fa-paper-plane mr-1"></i>'+(replyTarget?'Reply':'Comment')+'</button></div>'+
    '</form></aside></div>';
  var input=el('rh-community-comment-input');if(input&&commentDraft)input.value=commentDraft;
@@ -125,7 +125,7 @@ function editStart(postId,commentId){var found=getComment(getPost(postId),commen
 function editCancel(){editingComment=null;renderDrawer()}
 function applyPost(raw){var row=Array.isArray(raw)?raw[0]:raw;if(!row||!row.id)return;var i=posts.findIndex(function(p){return String(p.id)===String(row.id)});if(i>=0)posts[i]=Object.assign({},posts[i],row);else posts.unshift(row);window.renderPosts()}
 async function sendComment(postId){
- var input=el('rh-community-comment-input'),text=input?input.value.trim():'',file=selectedCommentFile;
+ var input=el('rh-community-comment-input'),text=input?input.value.trim():'',file=window.rhCommunitySelectedCommentFile||selectedCommentFile;
  if(!text&&!file)return;
  if(!user)return toast('Please login to comment.',false);
  var post=getPost(postId);if(!post)return toast('Post not found.',false);
@@ -144,7 +144,7 @@ async function sendComment(postId){
    ? {p_post_id:Number(post.id),p_parent_comment_id:replyTarget.commentId,p_text:text,p_image_url:imageUrl}
    : {p_post_id:Number(post.id),p_text:text,p_image_url:imageUrl};
   var result=await db.rpc(rpc,args);if(result.error)throw result.error;
-  commentDraft='';selectedCommentFile=null;replyTarget=null;applyPost(result.data);
+  commentDraft='';selectedCommentFile=null;window.rhCommunitySelectedCommentFile=null;replyTarget=null;applyPost(result.data);
   if(String(post.author_id)!==String(user.id))await sendPersonalHubNotification(post.author_id,(profile&&profile.name||'Someone')+' commented on your post',text||'Shared an image','community','community',{post_id:post.id,actor_id:user.id});
   toast('Comment posted ✓');
  }catch(e){console.error(e);toast(e.message||'Comment could not be sent.',false)}
@@ -216,6 +216,7 @@ function communityMenuBind(){window.renderPosts=newRenderPosts;window.toggleComm
  window.rhDeleteCommunityComment=commentDelete;window.rhToggleCommunityCommentLike=commentLike;
  window.rhToggleCommunityReplies=commentRepliesToggle;window.rhSendCommunityComment=sendComment;
  window.rhEditCommunityPost=postEdit;
+ window.rhUpdateCommunityDraft=function(value){commentDraft=String(value||'')};
 }
 communityMenuBind();
 
