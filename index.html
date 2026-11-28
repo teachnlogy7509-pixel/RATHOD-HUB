@@ -1408,14 +1408,24 @@ class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-lg px-3
  <div class="flex items-center justify-between gap-3 px-4 py-4 border-b border-slate-800"><div><h3 class="font-black text-white text-lg">Student Discussion Channel</h3><p class="text-[11px] text-slate-400 mt-1">NEET students ke posts, reactions aur discussions.</p></div><div class="flex items-center gap-2"><button onclick="toggleHubNotifications()" class="rh-icon-btn" title="Community notifications"><i class="fa-regular fa-bell"></i></button><button onclick="toggleCommunityComposer()" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-xl text-xs font-black">+ Create Post</button></div></div>
  <div class="flex items-center border-b border-slate-800 px-2 overflow-x-auto"><button id="community-tab-all" onclick="setCommunityFeed('all')" class="px-3 sm:px-4 py-3 text-xs font-black text-indigo-300 border-b-2 border-indigo-400 whitespace-nowrap">All Posts</button><button id="community-tab-mine" onclick="setCommunityFeed('mine')" class="px-3 sm:px-4 py-3 text-xs font-bold text-slate-500 border-b-2 border-transparent whitespace-nowrap">My Posts</button><button id="community-tab-people" onclick="setCommunityFeed('people')" class="px-3 sm:px-4 py-3 text-xs font-bold text-slate-500 border-b-2 border-transparent whitespace-nowrap"><i class="fa-solid fa-user-group mr-1"></i>People</button><span id="post-count" class="ml-auto pl-2 text-[10px] text-slate-500 whitespace-nowrap"></span></div>
 </div>
-<div id="community-composer" class="hidden bg-slate-800/95 border border-teal-500/30 rounded-2xl p-5">
-<h3 class="text-teal-300 font-bold mb-3">Create Community Post</h3>
-<form id="post-form" class="space-y-3">
-<input id="post-title" required placeholder="Title" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
-<textarea id="post-desc" required rows="3" placeholder="Write something..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm"></textarea>
-<input id="post-file" type="file" accept="image/*,.pdf,.doc,.docx,.txt" class="text-xs text-slate-400">
-<div class="flex gap-2"><button type="button" id="record-btn" onclick="toggleRecording()" class="bg-purple-600 px-3 py-2 rounded-lg text-xs font-bold">🎙 Record Voice</button><span id="rec-status" class="text-xs text-slate-400 self-center"></span></div>
-<button id="post-btn" class="w-full bg-teal-600 hover:bg-teal-500 py-3 rounded-lg text-sm font-bold">Post</button>
+<div id="community-composer" class="hidden relative overflow-hidden rounded-3xl border border-indigo-400/25 bg-gradient-to-br from-slate-950 via-indigo-950/70 to-slate-900 p-4 sm:p-5 shadow-2xl">
+<div class="pointer-events-none absolute -right-12 -top-14 h-40 w-40 rounded-full bg-cyan-500/10 blur-3xl"></div>
+<div class="pointer-events-none absolute -bottom-16 -left-10 h-36 w-36 rounded-full bg-violet-500/10 blur-3xl"></div>
+<div class="relative mb-4 flex items-start justify-between gap-3">
+ <div><div class="text-[9px] font-black uppercase tracking-[.22em] text-cyan-300">RATHOD HUB • COMMUNITY</div><h3 class="mt-1 text-lg font-black text-white">✨ Share with the community</h3><p class="mt-1 text-[11px] text-slate-400">अपना thought, study win, notes या सवाल share करें।</p></div>
+ <span class="shrink-0 rounded-full border border-indigo-300/20 bg-indigo-400/10 px-2.5 py-1 text-[9px] font-black text-indigo-200">VIP POST</span>
+</div>
+<form id="post-form" class="relative space-y-3">
+ <div class="rounded-2xl border border-white/10 bg-black/30 p-2.5 focus-within:border-cyan-400/40">
+  <textarea id="post-desc" required rows="5" placeholder="आज क्या share करना चाहते हो? अपनी बात यहाँ लिखो…" class="min-h-[130px] w-full resize-y border-0 bg-transparent px-2 py-2 text-sm leading-6 text-white outline-none placeholder:text-slate-500"></textarea>
+  <div class="flex items-center justify-between border-t border-white/10 px-2 pt-2"><span class="text-[9px] text-slate-500">Be kind • Stay curious • Help each other</span><span class="text-[9px] text-cyan-300">Your community space</span></div>
+ </div>
+ <div class="flex flex-wrap items-center gap-2">
+  <label for="post-file" class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-cyan-400/25 bg-cyan-500/10 px-3 py-2.5 text-[11px] font-bold text-cyan-200 hover:bg-cyan-500/15"><i class="fa-solid fa-paperclip"></i><span id="post-file-label">Add photo / file</span><input id="post-file" type="file" accept="image/*,.pdf,.doc,.docx,.txt" class="hidden" onchange="document.getElementById('post-file-label').textContent=this.files[0]?.name||'Add photo / file'"></label>
+  <button type="button" id="record-btn" onclick="toggleRecording()" class="inline-flex items-center gap-2 rounded-xl border border-fuchsia-400/25 bg-fuchsia-500/10 px-3 py-2.5 text-[11px] font-bold text-fuchsia-200 hover:bg-fuchsia-500/15"><i class="fa-solid fa-microphone"></i> Record voice</button>
+  <span id="rec-status" class="text-[10px] text-slate-400"></span>
+ </div>
+ <button id="post-btn" class="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 via-violet-600 to-cyan-600 py-3.5 text-sm font-black text-white shadow-lg shadow-indigo-950/40 transition hover:brightness-110"><i class="fa-solid fa-paper-plane"></i> Publish post</button>
 </form>
 </div>
 <div id="posts-box" class="space-y-4"></div>
@@ -2551,10 +2561,10 @@ document.getElementById('post-form').addEventListener('submit',async e=>{
   const file=document.getElementById('post-file').files[0];let url=null,type=null,name=null;
   if(file){const drive=await uploadToGoogleDrive('Community',file);url=file.type?.startsWith('image/')?driveImageUrl(drive.id):driveViewUrl(drive.id);type=file.type;name=file.name}
    let voiceUrl=null;if(recordedAudioBlob){const voiceFile=new File([recordedAudioBlob],`voice_${crypto.randomUUID()}.webm`,{type:'audio/webm'});const drive=await uploadToGoogleDrive('Community',voiceFile);voiceUrl=driveDownloadUrl(drive.id)}
-  const postTitle=document.getElementById('post-title').value.trim(),postDesc=document.getElementById('post-desc').value.trim();
-  const {error}=await db.from('posts').insert({author_id:user.id,author:profile.name,pfp_url:profile.pfp_url,title:postTitle,desc:postDesc,file_name:name,file_url:url,file_type:type,voice_url:voiceUrl,is_material:false});
-  if(error)throw error;document.getElementById('post-form').reset();recordedAudioBlob=null;document.getElementById('community-composer')?.classList.add('hidden');toast('Post published');
-  if(profile?.role==='admin')await sendHubNotification('📣 Admin Update',postTitle||postDesc.slice(0,120)||'RATHOD HUB par naya update','admin','community',{type:'community_post'});
+  const postDesc=document.getElementById('post-desc').value.trim();
+  const {error}=await db.from('posts').insert({author_id:user.id,author:profile.name,pfp_url:profile.pfp_url,title:'',desc:postDesc,file_name:name,file_url:url,file_type:type,voice_url:voiceUrl,is_material:false});
+  if(error)throw error;document.getElementById('post-form').reset();const postFileLabel=document.getElementById('post-file-label');if(postFileLabel)postFileLabel.textContent='Add photo / file';recordedAudioBlob=null;document.getElementById('community-composer')?.classList.add('hidden');toast('Post published');
+  if(profile?.role==='admin')await sendHubNotification('📣 Admin Update',postDesc.slice(0,120)||'RATHOD HUB par naya update','admin','community',{type:'community_post'});
   await loadPosts();
  }catch(err){toast(err.message||'Post failed',false)}finally{btn.disabled=false;btn.textContent='Post'}
 });
