@@ -122,10 +122,10 @@ html,body{overflow-x:clip!important;overflow-y:auto!important;touch-action:pan-y
 @media (min-width:1400px){.rh-sidebar{flex-basis:270px}.rh-content{max-width:1320px}.rh-feature-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media (min-width:901px){.rh-mobile-bottom{display:none!important}.rh-sidebar{display:block}.rh-content{padding-left:26px;padding-right:26px}}
 @media (max-width:900px){
-  .rh-sidebar{width:82px;flex-basis:82px;padding:14px 8px;}
+  /* Phone/tablet navigation uses the bottom dock + Modules drawer.
+     Hiding the compact sidebar prevents duplicate AI/NEET shortcuts. */
+  .rh-sidebar{display:none!important}
   .rh-side-title,.rh-nav-btn span{display:none}
-  .rh-nav-btn{justify-content:center;padding:12px 8px;min-height:44px}
-  .rh-nav-btn i{width:auto;font-size:18px}
   .rh-main{min-width:0}
   .rh-content{padding:16px}
   .rh-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -1849,9 +1849,24 @@ function toast(msg,ok=true){const t=document.getElementById('toast');t.textConte
 function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function safeUrl(u){try{const x=new URL(u);return ['https:','http:'].includes(x.protocol)?x.href:'#'}catch{return '#'}}
 
+function dedupeMobileModuleEntries(){
+  const drawer=document.getElementById('mobile-menu-drawer');
+  const grid=drawer?.querySelector('.grid');
+  if(!grid)return;
+  const seen=new Set();
+  grid.querySelectorAll('button,a,[role="button"]').forEach(item=>{
+    const action=String(item.getAttribute('onclick')||'').match(/switchTab\\(['"]([^'"]+)['"]\\)/);
+    const label=String(item.textContent||'').replace(/\\s+/g,' ').trim().toLowerCase();
+    const key=action?'tab:'+action[1]:(label?'label:'+label:'');
+    if(!key)return;
+    if(seen.has(key)){item.remove();return}
+    seen.add(key);
+  });
+}
 function openMobileMenu(){
   const d=document.getElementById('mobile-menu-drawer');
   if(!d)return;
+  dedupeMobileModuleEntries();
   d.classList.remove('hidden');
   d.classList.add('rh-open');
   document.body.classList.add('rh-menu-open');
@@ -1863,8 +1878,19 @@ function closeMobileMenu(){
   d.classList.add('hidden');
   document.body.classList.remove('rh-menu-open');
 }
-
-
+// Close before a module's inline action runs. This remains reliable even if
+// switchTab triggers an unrelated module error while opening its destination.
+(function bindMobileDrawerSelection(){
+  const drawer=document.getElementById('mobile-menu-drawer');
+  if(!drawer||drawer.dataset.rhCloseBound==='1')return;
+  drawer.dataset.rhCloseBound='1';
+  drawer.addEventListener('click',function(event){
+    const control=event.target.closest('button,a,[role="button"]');
+    if(!control||!drawer.contains(control))return;
+    closeMobileMenu();
+  },true);
+  dedupeMobileModuleEntries();
+})();
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMobileMenu()});
 
 function showAuth(mode){
@@ -2038,6 +2064,7 @@ async function loadHubCouponAccess(){if(!user)return;try{const{data,error}=await
 async function redeemHubCoupon(){if(!user)return toast('Pehle login karein.',false);const input=document.getElementById('coupon-code-input'),code=input?.value.trim().toUpperCase();if(!code)return toast('Coupon code likhein.',false);try{const{data,error}=await db.rpc('redeem_hub_coupon',{p_code:code});if(error)throw error;if(!data?.success)throw new Error(data?.error||'Coupon invalid ya expire ho gaya.');hubCouponAccess={expires_at:data.expires_at,code:data.code};renderCouponAccess();toast('✅ Premium features 1 month ke liye unlock ho gaye')}catch(e){toast(e.message||'Coupon redeem failed',false)}}
 async function createHubCoupon(){if(profile?.role!=='admin')return toast('Admin only',false);const input=document.getElementById('admin-coupon-code'),code=input?.value.trim().toUpperCase()||null;try{const{data,error}=await db.rpc('create_hub_coupon',{p_code:code});if(error)throw error;const out=document.getElementById('admin-coupon-result');if(out){out.classList.remove('hidden');out.innerHTML=`<b>New Coupon:</b> <code class="text-white">${esc(data.code)}</code><br><span class="text-[10px] text-slate-400">Redeem before ${new Date(data.expires_at).toLocaleString()} • Premium access 30 days after redeem</span>`}if(input)input.value='';toast('Coupon generated ✓')}catch(e){toast(e.message||'Coupon create failed',false)}}
 function switchTab(tab){
+  if(document.getElementById('mobile-menu-drawer')?.classList.contains('rh-open'))closeMobileMenu();
   if(COUPON_LOCKED_TABS.has(tab)&&!hasHubCouponAccess()){toast('🎟️ Pehle valid Coupon/Gift Card redeem karein.',false);setTimeout(()=>document.getElementById('coupon-code-input')?.focus(),50);tab='home'}
   try{
     window.scrollTo({top:0,left:0,behavior:'instant'});
