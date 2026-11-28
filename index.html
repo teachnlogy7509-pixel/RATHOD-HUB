@@ -1855,8 +1855,8 @@ function dedupeMobileModuleEntries(){
   if(!grid)return;
   const seen=new Set();
   grid.querySelectorAll('button,a,[role="button"]').forEach(item=>{
-    const action=String(item.getAttribute('onclick')||'').match(/switchTab\\(['"]([^'"]+)['"]\\)/);
-    const label=String(item.textContent||'').replace(/\\s+/g,' ').trim().toLowerCase();
+    const action=String(item.getAttribute('onclick')||'').match(/switchTab\(['"]([^'"]+)['"]\)/);
+    const label=String(item.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
     const key=action?'tab:'+action[1]:(label?'label:'+label:'');
     if(!key)return;
     if(seen.has(key)){item.remove();return}
