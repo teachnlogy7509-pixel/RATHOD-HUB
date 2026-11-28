@@ -29,11 +29,13 @@
       const active = String(chat.id) === String(aiAgentChatId);
       const modeLabel = chat.mode === 'app' ? '🧭 App Guide' : '🧠 Study Doubt';
       const date = chat.updated_at ? new Date(chat.updated_at).toLocaleDateString([], {day:'2-digit',month:'short'}) : '';
-      return '<button type="button" onclick="openAIAgentChat(\'' + String(chat.id) + '\')" class="w-full min-w-0 rounded-xl border px-3 py-2.5 text-left transition ' +
+      return '<div class="flex min-w-0 items-stretch gap-2 rounded-xl border p-2 transition ' +
         (active ? 'border-cyan-400/40 bg-cyan-500/10' : 'border-white/10 bg-slate-950/45 hover:border-cyan-400/25') + '">' +
+        '<button type="button" onclick="openAIAgentChat(\\'' + String(chat.id) + '\\')" class="min-w-0 flex-1 text-left">' +
         '<span class="flex items-center justify-between gap-2"><b class="min-w-0 truncate text-[11px] text-slate-200">' + esc(chat.title || 'New chat') + '</b>' +
         '<span class="shrink-0 text-[9px] text-slate-500">' + esc(date) + '</span></span>' +
-        '<span class="mt-1 block text-[9px] text-slate-500">' + modeLabel + (active ? ' · OPEN' : '') + '</span></button>';
+        '<span class="mt-1 block text-[9px] text-slate-500">' + modeLabel + (active ? ' · OPEN' : '') + '</span></button>' +
+        '<button type="button" onclick="deleteAIAgentChat(event, \\'' + String(chat.id) + '\\')" title="Permanently delete this chat" aria-label="Permanently delete chat" class="grid h-9 w-9 shrink-0 place-items-center self-center rounded-lg border border-rose-400/20 bg-rose-500/5 text-rose-300 hover:bg-rose-500/15"><i class="fa-solid fa-trash-can"></i></button></div>';
     }).join('');
   }
 
@@ -87,6 +89,34 @@
       .update({updated_at:new Date().toISOString(), mode:item.mode === 'app' ? 'app' : 'doubt'})
       .eq('id', aiAgentChatId).eq('user_id', user.id);
     if (updated.error) throw updated.error;
+  }
+
+  async function deleteAIAgentChat(event, id) {
+    if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
+    if (!user || !user.id) return toast('Delete करने के लिए login करें।', false);
+    const chat = aiAgentChatList.find(function (item) { return String(item.id) === String(id); });
+    const title = chat && chat.title ? chat.title : 'this chat';
+    if (!confirm('“' + title + '” को permanently delete करना है? इस chat के सभी messages भी हट जाएंगे। यह वापस नहीं आएगी।')) return;
+    try {
+      const messages = await db.from('ai_doctor_messages').delete().eq('chat_id', id).eq('user_id', user.id);
+      if (messages.error) throw messages.error;
+      const deleted = await db.from('ai_doctor_chats').delete().eq('id', id).eq('user_id', user.id).select('id');
+      if (deleted.error) throw deleted.error;
+      if (!deleted.data || !deleted.data.length) throw new Error('Chat delete नहीं हुई।');
+      aiAgentChatList = aiAgentChatList.filter(function (item) { return String(item.id) !== String(id); });
+      if (String(aiAgentChatId) === String(id)) {
+        aiAgentChatId = null;
+        aiAgentChatTitle = '';
+        aiAgentHistory = [];
+        renderAIAgentHistory(false);
+      }
+      renderAIAgentChatList();
+      await loadAIAgentChats();
+      toast('Chat permanently delete हो गई।');
+    } catch (error) {
+      console.error('AI Doctor permanent delete failed:', error);
+      toast((error && error.message) || 'Chat delete नहीं हो सकी।', false);
+    }
   }
 
   async function openAIAgentChat(id) {
@@ -148,11 +178,11 @@
     const welcome = document.getElementById('ai-agent-welcome');
     if (!welcome || document.getElementById('ai-agent-history-panel')) return;
     welcome.insertAdjacentHTML('afterend',
-      '<div id="ai-agent-history-panel" class="relative mt-3 rounded-2xl border border-cyan-400/15 bg-slate-950/55 p-3">' +
-      '<div class="mb-2 flex items-center justify-between gap-2"><div><b class="text-[11px] text-cyan-200">💬 Recent chats</b><span class="ml-2 text-[9px] text-slate-500">Last 5</span></div>' +
-      '<button id="ai-agent-new-chat" type="button" onclick="startNewAIAgentChat()" class="rounded-lg border border-cyan-400/25 bg-cyan-500/10 px-3 py-1.5 text-[10px] font-black text-cyan-200">＋ New chat</button></div>' +
+      '<details id="ai-agent-history-panel" class="relative mt-3 rounded-2xl border border-cyan-400/15 bg-slate-950/55 p-3">' +
+      '<summary class="flex cursor-pointer list-none items-center justify-between gap-2 rounded-xl py-1 outline-none"><span><b class="text-[11px] text-cyan-200">💬 Recent chats</b><span class="ml-2 text-[9px] text-slate-500">Last 5</span><i class="fa-solid fa-chevron-down ml-2 text-[9px] text-cyan-300"></i></span><span class="text-[9px] font-bold text-cyan-300">Tap to view</span></summary>' +
+      '<div class="mb-2 mt-3 flex justify-end"><button id="ai-agent-new-chat" type="button" onclick="startNewAIAgentChat()" class="rounded-lg border border-cyan-400/25 bg-cyan-500/10 px-3 py-1.5 text-[10px] font-black text-cyan-200">＋ New chat</button></div>' +
       '<div id="ai-agent-saved-chats" class="grid gap-2 sm:grid-cols-2"></div>' +
-      '<p class="mt-2 text-[9px] leading-4 text-slate-500">आपकी chats account में save रहेंगी। पुरानी chats अपने-आप delete नहीं होंगी।</p></div>'
+      '<p class="mt-2 text-[9px] leading-4 text-slate-500">पुरानी chats सुरक्षित रहेंगी। 🗑️ दबाने पर सिर्फ चुनी हुई chat permanently delete होगी।</p></details>'
     );
     const clearButton = document.querySelector('#ai-output button[onclick="clearAIAgentChat()"]');
     if (clearButton) {
@@ -206,6 +236,7 @@
 
   window.startNewAIAgentChat = startNewAIAgentChat;
   window.openAIAgentChat = openAIAgentChat;
+  window.deleteAIAgentChat = deleteAIAgentChat;
   window.loadAIAgentChats = loadAIAgentChats;
   window.clearAIAgentChat = startNewAIAgentChat;
 
