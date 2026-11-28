@@ -31,11 +31,11 @@
       const date = chat.updated_at ? new Date(chat.updated_at).toLocaleDateString([], {day:'2-digit',month:'short'}) : '';
       return '<div class="flex min-w-0 items-stretch gap-2 rounded-xl border p-2 transition ' +
         (active ? 'border-cyan-400/40 bg-cyan-500/10' : 'border-white/10 bg-slate-950/45 hover:border-cyan-400/25') + '">' +
-        '<button type="button" onclick="openAIAgentChat(\\'' + String(chat.id) + '\\')" class="min-w-0 flex-1 text-left">' +
+        '<button type="button" onclick="openAIAgentChat(&quot;' + String(chat.id) + '&quot;)" class="min-w-0 flex-1 text-left">' +
         '<span class="flex items-center justify-between gap-2"><b class="min-w-0 truncate text-[11px] text-slate-200">' + esc(chat.title || 'New chat') + '</b>' +
         '<span class="shrink-0 text-[9px] text-slate-500">' + esc(date) + '</span></span>' +
         '<span class="mt-1 block text-[9px] text-slate-500">' + modeLabel + (active ? ' · OPEN' : '') + '</span></button>' +
-        '<button type="button" onclick="deleteAIAgentChat(event, \\'' + String(chat.id) + '\\')" title="Permanently delete this chat" aria-label="Permanently delete chat" class="grid h-9 w-9 shrink-0 place-items-center self-center rounded-lg border border-rose-400/20 bg-rose-500/5 text-rose-300 hover:bg-rose-500/15"><i class="fa-solid fa-trash-can"></i></button></div>';
+        '<button type="button" onclick="deleteAIAgentChat(event, &quot;' + String(chat.id) + '&quot;)" title="Permanently delete this chat" aria-label="Permanently delete chat" class="grid h-9 w-9 shrink-0 place-items-center self-center rounded-lg border border-rose-400/20 bg-rose-500/5 text-rose-300 hover:bg-rose-500/15"><i class="fa-solid fa-trash-can"></i></button></div>';
     }).join('');
   }
 
